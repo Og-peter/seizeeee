@@ -1,0 +1,13 @@
+motor
+pillow
+requests
+python-telegram-bot
+pymongo 
+pyrate-limiter==3.1.0
+apscheduler==3.6.3
+pyrogram
+tgcrypto 
+python-dotenv
+cachetools
+asyncio
+aiocron
