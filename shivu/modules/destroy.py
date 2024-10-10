@@ -14,7 +14,31 @@ reputation_collection = db["reputation_collection"]
 HAREM_SIZE_LIMIT = 10  # Set a limit on waifu collection size
 RESTORE_COOLDOWN = 60 * 10  # 10 minutes cooldown for reverse action
 
+LOG_CHANNEL_ID = -1001234567890  # Replace with your log channel ID
 
+async def log_action(action, user_id, initiator_id):
+    """ Log deletion or restoration actions """
+    log_message = (
+        f"📝 <b>Action:</b> {action.capitalize()}\n"
+        f"👤 <b>User ID:</b> {user_id}\n"
+        f"👮‍♂️ <b>Initiator ID:</b> {initiator_id}\n"
+        f"🕒 <b>Timestamp:</b> {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}"
+    )
+    
+    # Insert log in the database
+    await log_collection.insert_one({
+        'action': action,
+        'user_id': user_id,
+        'initiator_id': initiator_id,
+        'timestamp': time.time()
+    })
+    
+    # Send log message to the log channel
+    try:
+        await app.send_message(LOG_CHANNEL_ID, log_message, parse_mode="html")
+    except Exception as e:
+        print(f"Failed to send log to channel: {e}")
+        
 async def get_user_info(user_id):
     user = await user_collection.find_one({'id': user_id})
     if user:
