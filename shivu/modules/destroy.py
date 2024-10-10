@@ -14,7 +14,7 @@ reputation_collection = db["reputation_collection"]
 HAREM_SIZE_LIMIT = 10  # Set a limit on waifu collection size
 RESTORE_COOLDOWN = 60 * 10  # 10 minutes cooldown for reverse action
 
-LOG_CHANNEL_ID = -1001234567890  # Replace with your log channel ID
+LOG_CHANNEL_ID = -1002446048543  # Replace with your log channel ID
 
 async def log_action(action, user_id, initiator_id):
     """ Log deletion or restoration actions """
