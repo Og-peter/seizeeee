@@ -14,6 +14,10 @@ play_fee = 50000  # Fee for playing the mines game
 user_cooldowns = {}  # Dictionary to track user cooldowns
 ban_user_ids = {1234567890}  # List of banned users
 
+# Initialize bot.user_data if not already initialized
+if not hasattr(bot, "user_data"):
+    bot.user_data = {}
+
 # Helper function to generate a grid with mines
 def generate_mines_grid(size, mine_count):
     grid = [['🟩' for _ in range(size)] for _ in range(size)]
@@ -83,10 +87,10 @@ async def reveal_spot(_, message: t.Message):
     if user_id not in bot.user_data:
         return await message.reply_text("You are not currently in a game. Start one by typing /mines.")
 
-    game_data = bot.user_data[user_id]
-    grid = game_data['grid']
-    revealed_grid = game_data['revealed_grid']
-    safe_spots_to_reveal = game_data['safe_spots_to_reveal']
+    game_data = bot.user_data.get(user_id)
+    grid = game_data.get('grid')
+    revealed_grid = game_data.get('revealed_grid')
+    safe_spots_to_reveal = game_data.get('safe_spots_to_reveal')
 
     # Parse the user's move (e.g., /reveal A1)
     if len(message.command) < 2:
@@ -123,6 +127,3 @@ async def reveal_spot(_, message: t.Message):
         if safe_spots_to_reveal == 0:
             await message.reply_text(f"🎉 Congratulations, {mention}! You revealed all safe spots and won the game!\n\n{format_grid(revealed_grid)}")
             del bot.user_data[user_id]  # Clear game state
-
-# Start the bot
-bot.run()
