@@ -1,4 +1,5 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, ParseMode
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters
 from telegram.helpers import mention_html
 from shivu import user_collection, collection, application
