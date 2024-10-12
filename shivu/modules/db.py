@@ -14,33 +14,6 @@ plant_image_urls = {
     60: "https://telegra.ph/file/f9b1607ffe259b8aaac3d.png"
 }
 
-# Function to handle button click for claiming rewards
-@shivuu.on_callback_query(filters.create(lambda _, __, query: query.data == "claim"))
-async def claim_reward_button(client, callback_query):
-    user_id = callback_query.from_user.id
-
-    # Retrieve user's plant data
-    user_data = user_plants.get(user_id)
-
-    if user_data:
-        last_claim_time = user_data.get('last_claim_time')
-        if last_claim_time and datetime.now() - last_claim_time < timedelta(days=1):
-            await callback_query.answer("You have already claimed your coins for today.")
-        else:
-            coins = calculate_coins(user_data['level'])
-            
-            # Update user's balance
-            user_balance_data = user_collection.get(user_id, {'balance': 0})
-            user_balance_data['balance'] += coins
-            user_balance_data['last_claim_time'] = datetime.now()
-            user_collection[user_id] = user_balance_data
-
-            user_data['last_claim_time'] = datetime.now()  # Update last claim time
-            await callback_query.edit_message_text(text=f"🎉 You have claimed {coins} coins!")
-    else:
-        await callback_query.edit_message_text(text="You don't have a plant.")
-
-
 # Function to handle /myplant command
 async def my_plant(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
