@@ -1,69 +1,157 @@
-import random
-from pyrogram import filters, Client, types as t
-from shivu import shivuu as bot
-from shivu import user_collection, backup_collection  # Assuming waifu_collection is where waifu data is stored
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CommandHandler, CallbackContext, Updater, CallbackQueryHandler
+from datetime import datetime, timedelta
+from pyrogram import filters
 
-# Settings for the Guess Waifu game
-ban_user_ids = {1234567890}  # List of banned user IDs
+# Simulate user data storage with in-memory dictionaries
+user_plants = {}
+user_collection = {}
 
-# Initialize bot.user_data if not already initialized
-if not hasattr(bot, "user_data"):
-    bot.user_data = {}
+plant_image_urls = {
+    1: "https://telegra.ph/file/8b017c909aca80620dd70.png",
+    20: "https://telegra.ph/file/5c3b67113186e532effa1.jpg",
+    40: "https://telegra.ph/file/5ae2de95199e349bc5a05.jpg",
+    60: "https://telegra.ph/file/f9b1607ffe259b8aaac3d.png"
+}
 
-# Helper function to get a random waifu from the database
-async def get_random_waifu():
-    waifus = await backup_collection.aggregate([{"$sample": {"size": 1}}]).to_list(length=1)
-    return waifus[0] if waifus else None
+# Function to handle button click for claiming rewards
+@shivuu.on_callback_query(filters.create(lambda _, __, query: query.data == "claim"))
+async def claim_reward_button(client, callback_query):
+    user_id = callback_query.from_user.id
 
-# Command to start the guessing game
-@bot.on_message(filters.command(["guesswaifu"]))
-async def guess_waifu_game(_, message: t.Message):
-    user_id = message.from_user.id
-    mention = message.from_user.mention
+    # Retrieve user's plant data
+    user_data = user_plants.get(user_id)
 
-    # Check if the user is banned
-    if user_id in ban_user_ids:
-        return await message.reply_text("Sorry, you are banned from this command.")
+    if user_data:
+        last_claim_time = user_data.get('last_claim_time')
+        if last_claim_time and datetime.now() - last_claim_time < timedelta(days=1):
+            await callback_query.answer("You have already claimed your coins for today.")
+        else:
+            coins = calculate_coins(user_data['level'])
+            
+            # Update user's balance
+            user_balance_data = user_collection.get(user_id, {'balance': 0})
+            user_balance_data['balance'] += coins
+            user_balance_data['last_claim_time'] = datetime.now()
+            user_collection[user_id] = user_balance_data
 
-    # Select a random waifu from the database
-    waifu = await get_random_waifu()
-    if not waifu:
-        return await message.reply_text("No waifu data found. Please try again later.")
-
-    # Check if 'image_url' exists in waifu data
-    if 'image_url' not in waifu:
-        return await message.reply_text("The selected waifu does not have an image. Please try again.")
-
-    # Send the waifu image and prompt the user to guess
-    await message.reply_photo(waifu["image_url"], caption=f"🧠 Guess the Waifu, {mention}!\n\nType `/guess <name>` to submit your guess.")
-
-    # Store the game state
-    bot.user_data[user_id] = {
-        'waifu': waifu
-    }
-
-# Command to submit a guess
-@bot.on_message(filters.command(["guess"]))
-async def submit_guess(_, message: t.Message):
-    user_id = message.from_user.id
-    mention = message.from_user.mention
-
-    # Check if the user is currently playing
-    if user_id not in bot.user_data:
-        return await message.reply_text("You are not currently in a game. Start one by typing /guesswaifu.")
-
-    game_data = bot.user_data.get(user_id)
-    waifu = game_data.get('waifu')
-
-    # Parse the user's guess
-    if len(message.command) < 2:
-        return await message.reply_text("Please specify your guess (e.g., /guess Rem).")
-
-    user_guess = " ".join(message.command[1:]).strip()
-
-    # Check the user's guess
-    if user_guess.lower() == waifu['name'].lower():
-        await message.reply_text(f"🎉 Congratulations, {mention}! You guessed it right. The waifu is {waifu['name']}!")
-        del bot.user_data[user_id]  # Clear game state
+            user_data['last_claim_time'] = datetime.now()  # Update last claim time
+            await callback_query.edit_message_text(text=f"🎉 You have claimed {coins} coins!")
     else:
-        await message.reply_text(f"❌ Wrong guess! Try again.")
+        await callback_query.edit_message_text(text="You don't have a plant.")
+
+
+# Function to handle /myplant command
+async def my_plant(update: Update, context: CallbackContext):
+    user_id = update.effective_user.id
+    user_name = update.effective_user.first_name
+
+    # Retrieve user's plant data
+    user_data = user_plants.get(user_id)
+
+    if user_data:
+        plant_level = user_data['level']
+        plant_image_url = get_plant_image_url(plant_level)
+        message = f"🌱 Your plant, {user_name}, is currently at level {plant_level}. Keep growing it!\n\nYour unique code: {user_id}"
+
+        # Create inline keyboard with a "Claim Reward" button
+        keyboard = [[InlineKeyboardButton("Claim Reward", callback_data='claim')]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        # Send message with plant image, user's plant level, and the inline keyboard
+        await update.message.reply_photo(photo=plant_image_url, caption=message, reply_markup=reply_markup)
+    else:
+        # If user doesn't have a plant, create one with initial level 1
+        new_plant = {"user_id": user_id, "level": 1}
+        user_plants[user_id] = new_plant
+        plant_image_url = plant_image_urls[1]
+        message = f"🌱 Welcome, {user_name}! Your new plant has been planted. Keep nurturing it to help it grow!\nYour code: {user_id}"
+
+        # Send message with plant image
+        await update.message.reply_photo(photo=plant_image_url, caption=message)
+
+
+# Function to handle /code command
+async def code(update: Update, context: CallbackContext):
+    user_id = update.effective_user.id
+
+    if not context.args:
+        await update.message.reply_text("Please provide a target user's ID.")
+        return
+
+    target_user_id = int(context.args[0])
+
+    if target_user_id == user_id:
+        await update.message.reply_text("You cannot use the /code command with your own user ID.")
+        return
+
+    # Check if the user has already used the code
+    user_data = user_plants.get(user_id)
+
+    if user_data and user_data.get('code_used', False):
+        await update.message.reply_text("You have already used your code.")
+        return
+
+    # Retrieve target user's plant data
+    target_user_data = user_plants.get(target_user_id)
+
+    if not target_user_data:
+        await update.message.reply_text("The specified user does not exist or does not have a plant yet.")
+        return
+
+    # Increase target user's plant level by 1
+    target_user_data['level'] += 1
+    updated_level = target_user_data['level']
+
+    # Mark the user's code as used
+    user_data['code_used'] = True
+    await update.message.reply_text(f"🌿 Congratulations! The plant belonging to user ID {target_user_id} has leveled up to level {updated_level}!")
+
+
+# Function to handle /mycode command
+async def my_code(update: Update, context: CallbackContext):
+    user_id = update.effective_user.id
+    await update.message.reply_text(f"Your user ID is: {user_id}")
+
+
+# Function to calculate coins earned based on plant level
+def calculate_coins(level):
+    return level * 100
+
+
+# Function to get plant image URL based on level
+def get_plant_image_url(level):
+    for threshold in sorted(plant_image_urls.keys(), reverse=True):
+        if level >= threshold:
+            return plant_image_urls[threshold]
+    return plant_image_urls[1]
+
+
+# Function to display top plant levels
+async def top_plant_levels(update: Update, context: CallbackContext):
+    # Sort users by plant level in descending order
+    top_users = sorted(user_plants.items(), key=lambda x: x[1]['level'], reverse=True)[:10]
+
+    top_users_info = []
+    for idx, (user_id, data) in enumerate(top_users, start=1):
+        user = await context.bot.get_chat(user_id)
+        full_name = user.first_name + (f" {user.last_name}" if user.last_name else "")
+        user_link = f'<a href="tg://user?id={user.id}">{full_name}</a>'
+        top_users_info.append(f"{user_link} - Level: {data['level']}")
+
+    if top_users_info:
+        message = "\n".join(top_users_info)
+        pic = "https://telegra.ph/file/f466f1fdab10ab5a0fc11.jpg"
+        await update.message.reply_photo(photo=pic, caption=f"Top 10 Users by Plant Level:\n\n{message}", parse_mode="HTML")
+    else:
+        await update.message.reply_text("No users found.")
+
+
+# Set up the application with command handlers
+application.add_handler(CommandHandler("myplant", my_plant))
+application.add_handler(CommandHandler("mycode", my_code))
+application.add_handler(CommandHandler("code", code))
+application.add_handler(CommandHandler("ptop", top_plant_levels))
+
+# Add the callback query handler for the claim reward button
+application.add_handler(CallbackQueryHandler(claim_reward_button, pattern='claim'))
