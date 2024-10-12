@@ -29,12 +29,12 @@ if not hasattr(app, 'user_data'):
     app.user_data = {}
 
 @app.on_message(filters.command("fav"))
-async def fav(client, message):
+async def fav(client: Client, message):
     user_id = message.from_user.id
 
     # Check if the command has enough arguments
     if len(message.command) < 2:
-        await message.reply_text(f'❌ Invalid usage. Use /fav (waifu_id) to set your favourite waifu.\nExample: /fav 32.')
+        await message.reply_text(f'{random.choice(CANCEL_EMOJIS)} Invalid usage. Use /fav (waifu_id) to set your favourite waifu.\nExample: /fav 32.')
         return
 
     character_id = message.command[1]
@@ -73,7 +73,7 @@ async def fav(client, message):
     client.user_data["fav_confirmations"][confirmation_message.message_id] = character_id
 
 @app.on_callback_query(filters.regex(r"^fav_(yes|no)_.+"))
-async def handle_fav_confirmation(client, callback_query):
+async def handle_fav_confirmation(client: Client, callback_query):
     data_parts = callback_query.data.split("_")
 
     # Validate data format
@@ -140,7 +140,7 @@ async def handle_fav_confirmation(client, callback_query):
     logging.info(f"User {user_id} handled favorite confirmation successfully.")
 
 @app.on_message(filters.command("unfav"))
-async def unfav(client, message):
+async def unfav(client: Client, message):
     user_id = message.from_user.id
     
     # Reset user's favorite in the database
@@ -149,5 +149,5 @@ async def unfav(client, message):
     await message.reply_text(f'✅ Your favorite character has been reset! {random.choice(ANIMATED_EMOJIS)}')
 
 # Function to add some excitement to the fav command's messages
-def generate_exciting_message(base_message):
+def generate_exciting_message(base_message: str) -> str:
     return f"{random.choice(ANIMATED_EMOJIS)} {base_message} {random.choice(ANIMATED_EMOJIS)}"
