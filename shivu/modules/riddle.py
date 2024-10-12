@@ -1,5 +1,5 @@
 from telegram import Update, InputMediaPhoto
-from telegram.ext import CommandHandler, CallbackContext, MessageHandler, Filters
+from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters
 from pyrogram import Client, filters
 from shivu import user_collection, collection, application
 import asyncio
