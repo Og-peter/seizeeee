@@ -1,4 +1,4 @@
-from telegram import Update, InputMediaPhoto
+from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters
 from shivu import user_collection, collection, application
 import asyncio
@@ -91,8 +91,7 @@ async def guess_text_handler(update: Update, context: CallbackContext):
 
     # Check if there is an active game in this chat
     if chat_id not in active_guesses:
-        await update.message.reply_text("There is no active game right now.")
-        return
+        return  # Ignore guesses if there is no active game
 
     correct_answer = active_guesses[chat_id]['correct_answer']
     correct_first_name = correct_answer.split()[0].lower()  # Extract and lowercase the first name
@@ -109,8 +108,8 @@ async def guess_text_handler(update: Update, context: CallbackContext):
         # End the game
         del active_guesses[chat_id]
     else:
-        # Incorrect guess
-        await update.message.reply_text(f"❌ {update.message.from_user.first_name}, incorrect guess! Try again.")
+        # Incorrect guess, provide feedback
+        await update.message.reply_text(f"❌ {update.message.from_user.first_name}, that's incorrect! Try again.")
 
 # Add command handler for starting the anime guess game
 application.add_handler(CommandHandler("animeguess", start_anime_guess_cmd, block=False))
