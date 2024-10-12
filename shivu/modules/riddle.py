@@ -13,7 +13,7 @@ user_cooldowns = {}
 async def get_random_character():
     try:
         pipeline = [
-            {'$sample': {'size': 1}}  # Adjust size if needed
+            {'$sample': {'size': 1}}  # Get one random character
         ]
         cursor = collection.aggregate(pipeline)
         characters = await cursor.to_list(length=1)
@@ -44,33 +44,35 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
 
     # Store the active guess for this chat
     active_guesses[update.message.chat_id] = {
-        'correct_answer': correct_character['name'],
+        'correct_answer': correct_character['name'],  # Store the full name of the character
         'start_time': current_time
     }
 
-    # Set the cooldown for the user (30 seconds as an example)
+    # Set the cooldown for the user (e.g., 30 seconds)
     user_cooldowns[user_id] = current_time + timedelta(seconds=30)
 
     # Send the question with the character's image
     question = "<b>🧩 Guess the Anime Character! 🧩</b>\n\nReply with the correct name:"
     sent_message = await context.bot.send_photo(
         chat_id=update.message.chat_id,
-        photo=correct_character['img_url'],
+        photo=correct_character['img_url'],  # Character image URL from the DB
         caption=question,
         parse_mode='HTML'
     )
 
-    # Schedule timeout for guessing (e.g., 15 seconds)
+    # Schedule a timeout for guessing (e.g., 15 seconds)
     asyncio.create_task(guess_timeout(context, update.message.chat_id, sent_message.message_id))
 
 # Function to handle the guess timeout
 async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int):
     await asyncio.sleep(15)
 
+    # Check if there is still an active game after 15 seconds
     if chat_id in active_guesses:
         correct_answer = active_guesses[chat_id]['correct_answer']
-        del active_guesses[chat_id]
+        del active_guesses[chat_id]  # Remove active guess after timeout
 
+        # Edit the message to indicate the time is up
         try:
             await context.bot.edit_message_caption(
                 chat_id=chat_id,
@@ -93,7 +95,7 @@ async def guess_text_handler(update: Update, context: CallbackContext):
         return
 
     correct_answer = active_guesses[chat_id]['correct_answer']
-    correct_first_name = correct_answer.split()[0].lower()  # Extract the first name and lowercase it
+    correct_first_name = correct_answer.split()[0].lower()  # Extract and lowercase the first name
 
     # Check if the user's answer matches the first name (case-insensitive)
     if user_answer.lower() == correct_first_name:
