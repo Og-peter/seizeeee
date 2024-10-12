@@ -73,18 +73,15 @@ harem_message = f"<b>{escape(update.effective_user.first_name)}'s Harem 📜 - P
 
 # Add characters to the harem message grouped by anime
 for anime, characters in current_grouped_characters.items():
-    # Add a decorative title with emojis and bold anime names
     harem_message += f'\n<b>✤ {anime} ﹝{len(characters)}/{await collection.count_documents({"anime": anime})}〕</b>\n'
     harem_message += '••────────────────•\n'
     
-    # For each character, display their name in italics and their ID in monospace
     for character in characters:
         count = character_counts.get(character.get('id'), 0)
         rarity = character.get('rarity', 'Unknown')
         rarity_emoji = rarity_emojis.get(rarity, rarity)
         character_id = character.get("id", "Unknown")
         
-        # Apply italics for the character's name and monospace for the ID
         harem_message += (
             f'✥  ⌠ {rarity_emoji} ⌡   : <code>{character_id}</code>  <i>{character.get("name", "Unknown")}</i> ×{count}\n'
         )
