@@ -160,9 +160,10 @@ anime_characters = counts[0]['_id'] if counts else 0  # Adjust this based on you
                            f"❄️ ᴄʜᴀʀᴀᴄᴛᴇʀ ɪᴅ: <b>{character['id']}</b>")
                 unique_id = str(time.time())  # Unique identifier for cache
                 character_id_cache[unique_id] = character['id']  # Store the character ID in cache
-                keyboard = InlineKeyboardMarkup(
-                    [[InlineKeyboardButton("★ ᴡʜᴏ ᴄᴏʟʟᴇᴄᴛᴇᴅ ★", callback_data=f"top_grabbers:{unique_id}")]]
-                )
+                if not query.startswith('collection.'):
+    keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("★ ᴡʜᴏ ᴄᴏʟʟᴇᴄᴛᴇᴅ ★", callback_data=f"top_grabbers:{unique_id}")]]
+    )
                # Check for tags in character's name
                 if '🐰' in character['name']:
                     caption += "\n\n🐰 𝑩𝒖𝒏𝒏𝒚 🐰"
