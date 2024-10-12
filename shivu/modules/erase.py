@@ -12,7 +12,7 @@ logs_collection = db["logs_collection"]
 COOLDOWN_TIME = timedelta(minutes=5)
 reward_for_restoring = 1000  # Reward for reversing an erase operation
 erase_cost = 200  # Cost to erase a character
-LOG_CHANNEL_ID = -1001234567890  # Replace with your actual log channel ID
+LOG_CHANNEL_ID = -1002446048543  # Replace with your actual log channel ID
 
 # Helper function to log actions
 async def log_action(eraser_id, target_id, action, details=""):
