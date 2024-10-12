@@ -10,18 +10,16 @@ from datetime import datetime, timedelta
 active_guesses = {}
 user_cooldowns = {}
 user_streaks = {}
-character_message_links = {}  # Store links to character images
+character_message_links = {}
 
-# Define allowed group and support group URL
+# Allowed group and support group URL
 ALLOWED_GROUP_ID = -1002104939708  # Replace with your allowed group's chat ID
 SUPPORT_GROUP_URL = "https://t.me/dynamic_gangs"  # Replace with your actual support group URL
 
 # Function to fetch a random anime character from the database
 async def get_random_character():
     try:
-        pipeline = [
-            {'$sample': {'size': 1}}  # Get one random character
-        ]
+        pipeline = [{'$sample': {'size': 1}}]
         cursor = collection.aggregate(pipeline)
         characters = await cursor.to_list(length=1)
         if characters:
@@ -47,10 +45,12 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
         )
         return
 
-    # Check if there is an active game in the chat
+    # Check if there is an active game in the chat and if the game has properly concluded
     if chat_id in active_guesses:
-        await update.message.reply_text("⚠️ You need to finish the current game before starting a new one!")
-        return
+        game_data = active_guesses[chat_id]
+        if game_data.get('active', False):
+            await update.message.reply_text("⚠️ You need to finish the current game before starting a new one!")
+            return
 
     # Check if the user is on cooldown
     cooldown_duration = 30 - user_streaks.get(user_id, 0)  # Reduce cooldown with streaks
@@ -67,9 +67,10 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
 
     # Store the active guess for this chat
     active_guesses[chat_id] = {
-        'correct_answer': correct_character['name'],  # Store the full name of the character
+        'correct_answer': correct_character['name'],
         'start_time': current_time,
-        'hint_given': False
+        'hint_given': False,
+        'active': True  # Mark the game as active
     }
     
     # Store the character image link for use with the "See Character" button
@@ -82,7 +83,7 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     question = "<b>🏮 Guess the Anime Character! 🏮</b>\n\nReply with the correct name:"
     sent_message = await context.bot.send_photo(
         chat_id=chat_id,
-        photo=correct_character['img_url'],  # Character image URL from the DB
+        photo=correct_character['img_url'],
         caption=question,
         parse_mode='HTML'
     )
@@ -100,6 +101,9 @@ async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int)
         correct_answer = active_guesses[chat_id]['correct_answer']
         del active_guesses[chat_id]  # Remove active guess after timeout
 
+        # Mark game as inactive
+        active_guesses[chat_id] = {'active': False}
+
         # Edit the message to indicate the time is up
         try:
             await context.bot.edit_message_caption(
@@ -116,7 +120,7 @@ async def provide_hint(context: CallbackContext, chat_id: int):
     await asyncio.sleep(10)
     if chat_id in active_guesses and not active_guesses[chat_id]['hint_given']:
         correct_answer = active_guesses[chat_id]['correct_answer']
-        hint = correct_answer[0] + "_" * (len(correct_answer) - 2) + correct_answer[-1]  # First and last letter as a hint
+        hint = correct_answer[0] + "_" * (len(correct_answer) - 2) + correct_answer[-1]
         active_guesses[chat_id]['hint_given'] = True
         await context.bot.send_message(chat_id, text=f"🔍 Hint: {hint}", parse_mode='HTML')
 
@@ -131,17 +135,15 @@ async def guess_text_handler(update: Update, context: CallbackContext):
         return  # Ignore guesses if there is no active game
 
     correct_answer = active_guesses[chat_id]['correct_answer']
-    correct_answer_parts = correct_answer.lower().split()  # Split the correct answer into parts (first and last name)
+    correct_answer_parts = correct_answer.lower().split()
 
-    # Get the user's mention (username or first name)
     user_mention = mention_html(update.message.from_user.id, update.message.from_user.first_name)
 
-    # Check if the user's answer matches either the first or last name (case-insensitive)
+    # Check if the user's answer matches
     if user_answer.lower() in correct_answer_parts:
-        # Increase streak and tokens
         streak = user_streaks.get(user_id, 0) + 1
         user_streaks[user_id] = streak
-        tokens_earned = 10 + (streak * 10)  # Bonus tokens based on streak
+        tokens_earned = 10 + (streak * 10)
 
         await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': tokens_earned}})
         await context.bot.send_message(
@@ -149,7 +151,9 @@ async def guess_text_handler(update: Update, context: CallbackContext):
             text=f"🎉 {user_mention} guessed correctly! The answer was <b>{correct_answer}</b>. You've earned {tokens_earned} tokens! Your streak is now {streak}.",
             parse_mode='HTML'
         )
-        del active_guesses[chat_id]  # End the game after the correct answer
+        # End the game after the correct answer
+        active_guesses[chat_id] = {'active': False}
+
     else:
         # Incorrect guess, show a "See Character" button
         message_link = character_message_links.get(chat_id, "#")
