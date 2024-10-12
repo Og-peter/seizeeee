@@ -11,7 +11,7 @@ from shivu import user_collection, collection, application, db
 import asyncio
 
 # Configure logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.WARNING)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 # Define a lock for concurrency control
 lock = asyncio.Lock()
@@ -91,12 +91,8 @@ async def inlinequery(update: Update, context: CallbackContext) -> None:
                 logging.warning(f"Invalid user_id format: {user_id}")
         else:
             if query:
-        all_characters_cache:
-        all_characters = all_characters_cache[query]
-    else:
-        regex = re.compile(query, re.IGNORECASE)
-        all_characters = list(await collection.find({"$or": [{"name": regex}, {"anime": regex}]}).to_list(length=None))
-        all_characters_cache[query] = all_characters  # Cache the result for future use
+                regex = re.compile(query, re.IGNORECASE)
+                all_characters = list(await collection.find({"$or": [{"name": regex}, {"anime": regex}]}).to_list(length=None))
             else:
                 if 'all_characters' in all_characters_cache:
                     all_characters = all_characters_cache['all_characters']
@@ -111,13 +107,7 @@ async def inlinequery(update: Update, context: CallbackContext) -> None:
         next_offset = str(end_index) if len(characters) == results_per_page else ""
         results = []
         for character in characters:
-            counts = await user_collection.aggregate([
-    {'$match': {'characters.id': character['id']}},
-    {'$group': {'_id': '$characters.anime', 'global_count': {'$sum': 1}}},
-]).to_list(length=None)
-
-global_count = counts[0]['global_count'] if counts else 0
-anime_characters = counts[0]['_id'] if counts else 0  # Adjust this based on your data structure
+            global_count = await user_collection.count_documents({'characters.id': character['id']})
             anime_characters = await collection.count_documents({'anime': character['anime']})
 
             rarity_formatted = get_rarity_formatted(character.get('rarity', ''))
@@ -160,10 +150,9 @@ anime_characters = counts[0]['_id'] if counts else 0  # Adjust this based on you
                            f"❄️ ᴄʜᴀʀᴀᴄᴛᴇʀ ɪᴅ: <b>{character['id']}</b>")
                 unique_id = str(time.time())  # Unique identifier for cache
                 character_id_cache[unique_id] = character['id']  # Store the character ID in cache
-                if not query.startswith('collection.'):
-    keyboard = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("★ ᴡʜᴏ ᴄᴏʟʟᴇᴄᴛᴇᴅ ★", callback_data=f"top_grabbers:{unique_id}")]]
-    )
+                keyboard = InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("★ ᴡʜᴏ ᴄᴏʟʟᴇᴄᴛᴇᴅ ★", callback_data=f"top_grabbers:{unique_id}")]]
+                )
                # Check for tags in character's name
                 if '🐰' in character['name']:
                     caption += "\n\n🐰 𝑩𝒖𝒏𝒏𝒚 🐰"
