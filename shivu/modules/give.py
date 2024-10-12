@@ -8,7 +8,6 @@ import random
 import time
 
 backup_collection = db["backup_collection"]
-LOG_CHANNEL_ID = -1002446048543  # Replace with your log channel ID
 
 async def backup_characters(user_id):
     user = await user_collection.find_one({'id': user_id})
@@ -35,12 +34,6 @@ async def send_action_notification(message: str):
             await app.send_message(user_id, message, reply_markup=keyboard)
         except Exception as e:
             print(f"Failed to send message to {user_id}: {e}")
-
-    # Log action to the log channel
-    try:
-        await app.send_message(LOG_CHANNEL_ID, message)
-    except Exception as e:
-        print(f"Failed to log action to channel: {e}")
 
 async def give_character_batch(receiver_id, character_ids):
     characters = await collection.find({'id': {'$in': character_ids}}).to_list(length=len(character_ids))
@@ -103,17 +96,61 @@ async def give_character_command(client, message):
                 f"Character ID: {character[0]['id']}"
             )
             await send_action_notification(notification_message)
-
-            # Log the action in the log channel
-            log_message = f"Character given by {message.from_user.first_name} to {receiver_first_name} (ID: {receiver_id}). Character ID: {character[0]['id']}."
-            await app.send_message(LOG_CHANNEL_ID, log_message)
-            
     except IndexError:
         await message.reply_text("Please provide a character ID.")
     except ValueError as e:
         await message.reply_text(str(e))
     except Exception as e:
         print(f"Error in give_character_command: {e}")
+        await message.reply_text("An error occurred while processing the command.")
+
+@app.on_message(filters.command(["kill"]) & filters.reply)
+async def remove_character_command(client, message):
+    if str(message.from_user.id) not in SPECIALGRADE and str(message.from_user.id) not in GRADE1:
+        await message.reply_text("This command can only be used by Special Grade and Grade 1 sorcerers.")
+        return
+
+    try:
+        if not message.reply_to_message:
+            await message.reply_text("You need to reply to a user's message to remove a character!")
+            return
+
+        character_id = str(message.text.split()[1])
+        receiver_id = message.reply_to_message.from_user.id
+
+        # Ensure the bot has interacted with the receiver
+        try:
+            await client.get_chat(receiver_id)
+        except Exception as e:
+            await message.reply_text(f"Error interacting with the receiver: {e}")
+            return
+
+        # Backup user characters before removing
+        await backup_characters(receiver_id)
+
+        character = await collection.find_one({'id': character_id})
+
+        if character:
+            await user_collection.update_one({'id': receiver_id}, {'$pull': {'characters': {'id': character_id}}})
+
+            await update_user_rank(receiver_id)  # Update user rank after removing character
+
+            await message.reply_text(f"Successfully removed character ID {character_id} from user {receiver_id}.")
+
+            # Send notification to SPECIALGRADE users
+            notification_message = (
+                f"Action: Remove Character\n"
+                f"Removed by: {message.from_user.first_name}\n"
+                f"Receiver ID: {receiver_id}\n"
+                f"Character ID: {character_id}"
+            )
+            await send_action_notification(notification_message)
+        else:
+            await message.reply_text("Character not found.")
+    except (IndexError, ValueError) as e:
+        await message.reply_text(str(e))
+    except Exception as e:
+        print(f"Error in remove_character_command: {e}")
         await message.reply_text("An error occurred while processing the command.")
 
 @app.on_message(filters.command(["given"]))
@@ -184,64 +221,11 @@ async def random_characters_command(client, message):
         )
         await send_action_notification(notification_message)
 
-        # Log the action in the log channel
-        log_message = f"Random characters (Amount: {amount}) given by {message.from_user.first_name} to {message.reply_to_message.from_user.first_name} (ID: {receiver_id})."
-        await app.send_message(LOG_CHANNEL_ID, log_message)
-
         await message.reply_text(f"Success! {amount} character(s) added to {user_link}'s collection.")
     except Exception as e:
         print(f"Error in random_characters_command: {e}")
         await message.reply_text("An error occurred while processing the command.")
-        
-@app.on_message(filters.command(["kill"]) & filters.reply)
-async def remove_character_command(client, message):
-    if str(message.from_user.id) not in SPECIALGRADE and str(message.from_user.id) not in GRADE1:
-        await message.reply_text("This command can only be used by Special Grade and Grade 1 sorcerers.")
-        return
 
-    try:
-        if not message.reply_to_message:
-            await message.reply_text("You need to reply to a user's message to remove a character!")
-            return
-
-        character_id = str(message.text.split()[1])
-        receiver_id = message.reply_to_message.from_user.id
-
-        # Ensure the bot has interacted with the receiver
-        try:
-            await client.get_chat(receiver_id)
-        except Exception as e:
-            await message.reply_text(f"Error interacting with the receiver: {e}")
-            return
-
-        # Backup user characters before removing
-        await backup_characters(receiver_id)
-
-        character = await collection.find_one({'id': character_id})
-
-        if character:
-            await user_collection.update_one({'id': receiver_id}, {'$pull': {'characters': {'id': character_id}}})
-
-            await update_user_rank(receiver_id)  # Update user rank after removing character
-
-            await message.reply_text(f"Successfully removed character ID {character_id} from user {receiver_id}.")
-
-            # Send notification to SPECIALGRADE users
-            notification_message = (
-                f"Action: Remove Character\n"
-                f"Removed by: {message.from_user.first_name}\n"
-                f"Receiver ID: {receiver_id}\n"
-                f"Character ID: {character_id}"
-            )
-            await send_action_notification(notification_message)
-        else:
-            await message.reply_text("Character not found.")
-    except (IndexError, ValueError) as e:
-        await message.reply_text(str(e))
-    except Exception as e:
-        print(f"Error in remove_character_command: {e}")
-        await message.reply_text("An error occurred while processing the command.")
-        
 @app.on_callback_query(filters.regex(r'^reverse_\d+\.\d+$'))
 async def reverse_action(client, callback_query: CallbackQuery):
     timestamp = float(callback_query.data.split("_")[1])
