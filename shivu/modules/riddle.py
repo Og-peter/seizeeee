@@ -6,10 +6,11 @@ from shivu import user_collection, collection, application
 import asyncio
 from datetime import datetime, timedelta
 
-# Dictionary to store active guesses
+# Dictionary to store active guesses and cooldowns
 active_guesses = {}
-# Dictionary to store user cooldowns
 user_cooldowns = {}
+user_streaks = {}
+character_message_links = {}  # Store links to character images
 
 # Define allowed group and support group URL
 ALLOWED_GROUP_ID = -1002104939708  # Replace with your allowed group's chat ID
@@ -38,7 +39,6 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
 
     # Check if the command is used in the allowed group
     if chat_id != ALLOWED_GROUP_ID:
-        # Send message with a button linking to the support group
         keyboard = [[InlineKeyboardButton("Join Support Group", url=SUPPORT_GROUP_URL)]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text(
@@ -47,7 +47,13 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
         )
         return
 
+    # Check if there is an active game in the chat
+    if chat_id in active_guesses:
+        await update.message.reply_text("⚠️ You need to finish the current game before starting a new one!")
+        return
+
     # Check if the user is on cooldown
+    cooldown_duration = 30 - user_streaks.get(user_id, 0)  # Reduce cooldown with streaks
     if user_id in user_cooldowns and current_time < user_cooldowns[user_id]:
         remaining_time = (user_cooldowns[user_id] - current_time).total_seconds()
         await update.message.reply_text(f"⏳ Please wait {int(remaining_time)} seconds before starting a new guess.")
@@ -55,7 +61,6 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
 
     # Get the correct anime character
     correct_character = await get_random_character()
-
     if not correct_character:
         await update.message.reply_text("⚠️ Could not fetch characters at this time. Please try again later.")
         return
@@ -63,11 +68,15 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     # Store the active guess for this chat
     active_guesses[chat_id] = {
         'correct_answer': correct_character['name'],  # Store the full name of the character
-        'start_time': current_time
+        'start_time': current_time,
+        'hint_given': False
     }
+    
+    # Store the character image link for use with the "See Character" button
+    character_message_links[chat_id] = correct_character['img_url']
 
-    # Set the cooldown for the user (e.g., 30 seconds)
-    user_cooldowns[user_id] = current_time + timedelta(seconds=30)
+    # Set the cooldown for the user
+    user_cooldowns[user_id] = current_time + timedelta(seconds=cooldown_duration)
 
     # Send the question with the character's image
     question = "<b>🏮 Guess the Anime Character! 🏮</b>\n\nReply with the correct name:"
@@ -78,8 +87,9 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
         parse_mode='HTML'
     )
 
-    # Schedule a timeout for guessing (e.g., 15 seconds)
+    # Schedule a timeout for guessing (e.g., 15 seconds) and a hint after 10 seconds
     asyncio.create_task(guess_timeout(context, chat_id, sent_message.message_id))
+    asyncio.create_task(provide_hint(context, chat_id))
 
 # Function to handle the guess timeout
 async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int):
@@ -101,6 +111,15 @@ async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int)
         except Exception as e:
             print(f"Failed to edit message: {e}")
 
+# Function to provide a hint after 10 seconds
+async def provide_hint(context: CallbackContext, chat_id: int):
+    await asyncio.sleep(10)
+    if chat_id in active_guesses and not active_guesses[chat_id]['hint_given']:
+        correct_answer = active_guesses[chat_id]['correct_answer']
+        hint = correct_answer[0] + "_" * (len(correct_answer) - 2) + correct_answer[-1]  # First and last letter as a hint
+        active_guesses[chat_id]['hint_given'] = True
+        await context.bot.send_message(chat_id, text=f"🔍 Hint: {hint}", parse_mode='HTML')
+
 # Message handler to process text guesses
 async def guess_text_handler(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
@@ -119,18 +138,26 @@ async def guess_text_handler(update: Update, context: CallbackContext):
 
     # Check if the user's answer matches the first name (case-insensitive)
     if user_answer.lower() == correct_first_name:
-        # Correct answer
-        await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': 80}})
+        # Increase streak and tokens
+        streak = user_streaks.get(user_id, 0) + 1
+        user_streaks[user_id] = streak
+        tokens_earned = 80 + (streak * 10)  # Bonus tokens based on streak
+
+        await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': tokens_earned}})
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"🎉 {user_mention} guessed correctly! The answer was <b>{correct_answer}</b>. You've earned 10 tokens!",
+            text=f"🎉 {user_mention} guessed correctly! The answer was <b>{correct_answer}</b>. You've earned {tokens_earned} tokens! Your streak is now {streak}.",
             parse_mode='HTML'
         )
-        # End the game
-        del active_guesses[chat_id]
+        del active_guesses[chat_id]  # End the game after the correct answer
     else:
-        # Incorrect guess, provide feedback with the username mention
-        await update.message.reply_text(f"❌ {user_mention}, that's incorrect! Try again.", parse_mode='HTML')
+        # Incorrect guess, show a "See Character" button
+        message_link = character_message_links.get(chat_id, "#")
+        keyboard = [[InlineKeyboardButton("ᴡʜᴇʀᴇ ɪs ᴄʜᴀʀᴀᴄᴛᴇʀ ? ", url=message_link)]]
+        await update.message.reply_text(
+            'ғɪɴᴅ ᴄʜᴀʀᴀᴄᴛᴇʀ 💎',
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
 
 # Add command handler for starting the anime guess game
 application.add_handler(CommandHandler("guess", start_anime_guess_cmd, block=False))
