@@ -11,7 +11,7 @@ from shivu import user_collection, collection, application, db
 import asyncio
 
 # Configure logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.WARNING)
 
 # Define a lock for concurrency control
 lock = asyncio.Lock()
