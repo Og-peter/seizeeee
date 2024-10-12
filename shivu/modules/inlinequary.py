@@ -91,8 +91,12 @@ async def inlinequery(update: Update, context: CallbackContext) -> None:
                 logging.warning(f"Invalid user_id format: {user_id}")
         else:
             if query:
-                regex = re.compile(query, re.IGNORECASE)
-                all_characters = list(await collection.find({"$or": [{"name": regex}, {"anime": regex}]}).to_list(length=None))
+    if query in all_characters_cache:
+        all_characters = all_characters_cache[query]
+    else:
+        regex = re.compile(query, re.IGNORECASE)
+        all_characters = list(await collection.find({"$or": [{"name": regex}, {"anime": regex}]}).to_list(length=None))
+        all_characters_cache[query] = all_characters  # Cache the result for future use
             else:
                 if 'all_characters' in all_characters_cache:
                     all_characters = all_characters_cache['all_characters']
@@ -107,7 +111,13 @@ async def inlinequery(update: Update, context: CallbackContext) -> None:
         next_offset = str(end_index) if len(characters) == results_per_page else ""
         results = []
         for character in characters:
-            global_count = await user_collection.count_documents({'characters.id': character['id']})
+            counts = await user_collection.aggregate([
+    {'$match': {'characters.id': character['id']}},
+    {'$group': {'_id': '$characters.anime', 'global_count': {'$sum': 1}}},
+]).to_list(length=None)
+
+global_count = counts[0]['global_count'] if counts else 0
+anime_characters = counts[0]['_id'] if counts else 0  # Adjust this based on your data structure
             anime_characters = await collection.count_documents({'anime': character['anime']})
 
             rarity_formatted = get_rarity_formatted(character.get('rarity', ''))
