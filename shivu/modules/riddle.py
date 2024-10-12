@@ -123,7 +123,7 @@ async def guess_text_handler(update: Update, context: CallbackContext):
         await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': 80}})
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"🎉 {user_mention} guessed correctly! The answer was <b>{correct_answer}</b>. You've earned 80 tokens!",
+            text=f"🎉 {user_mention} guessed correctly! The answer was <b>{correct_answer}</b>. You've earned 10 tokens!",
             parse_mode='HTML'
         )
         # End the game
