@@ -1,6 +1,5 @@
 from telegram import Update, InputMediaPhoto
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters
-# Removed the conflicting import of filters from pyrogram
 from shivu import user_collection, collection, application
 import asyncio
 import random
@@ -44,11 +43,14 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
         await update.message.reply_text("⚠️ Could not fetch characters at this time. Please try again later.")
         return
 
-    # Store the active guess for all users
+    # Store the active guess for this chat
     active_guesses[update.message.chat_id] = {
         'correct_answer': correct_character['name'],
         'start_time': current_time
     }
+
+    # Set the cooldown for the user (30 seconds as an example)
+    user_cooldowns[user_id] = current_time + timedelta(seconds=30)
 
     # Send the question with the character's image
     question = "<b>🧩 Guess the Anime Character! 🧩</b>\n\nReply with the correct name:"
@@ -59,7 +61,7 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
         parse_mode='HTML'
     )
 
-    # Schedule timeout
+    # Schedule timeout for guessing (e.g., 15 seconds)
     asyncio.create_task(guess_timeout(context, update.message.chat_id, sent_message.message_id))
 
 # Function to handle the guess timeout
@@ -86,6 +88,7 @@ async def guess_text_handler(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     user_answer = update.message.text.strip()
 
+    # Check if there is an active game in this chat
     if chat_id not in active_guesses:
         await update.message.reply_text("There is no active game right now.")
         return
