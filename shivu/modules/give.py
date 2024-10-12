@@ -8,6 +8,7 @@ import random
 import time
 
 backup_collection = db["backup_collection"]
+LOG_CHANNEL_ID = -1002446048543  # Replace with your log channel ID
 
 async def backup_characters(user_id):
     user = await user_collection.find_one({'id': user_id})
@@ -34,6 +35,12 @@ async def send_action_notification(message: str):
             await app.send_message(user_id, message, reply_markup=keyboard)
         except Exception as e:
             print(f"Failed to send message to {user_id}: {e}")
+
+    # Log action to the log channel
+    try:
+        await app.send_message(LOG_CHANNEL_ID, message)
+    except Exception as e:
+        print(f"Failed to log action to channel: {e}")
 
 async def give_character_batch(receiver_id, character_ids):
     characters = await collection.find({'id': {'$in': character_ids}}).to_list(length=len(character_ids))
@@ -152,80 +159,7 @@ async def remove_character_command(client, message):
     except Exception as e:
         print(f"Error in remove_character_command: {e}")
         await message.reply_text("An error occurred while processing the command.")
-
-@app.on_message(filters.command(["given"]))
-async def random_characters_command(client, message):
-    if str(message.from_user.id) not in SPECIALGRADE and str(message.from_user.id) not in GRADE1:
-        await message.reply_text("This command can only be used by Special Grade and Grade 1 sorcerers.")
-        return
-
-    try:
-        if not message.reply_to_message:
-            await message.reply_text("You need to reply to a user's message to give characters!")
-            return
-
-        if len(message.command) < 2:
-            await message.reply_text("Please provide the amount of random characters to give.")
-            return
-
-        try:
-            amount = int(message.command[1])
-        except ValueError:
-            await message.reply_text("Invalid amount. Please provide a valid number.")
-            return
-
-        amount = min(amount, 2000)
-
-        receiver_id = message.reply_to_message.from_user.id
-
-        # Ensure the bot has interacted with the receiver
-        try:
-            await client.get_chat(receiver_id)
-        except Exception as e:
-            await message.reply_text(f"Error interacting with the receiver: {e}")
-            return
-
-        # Backup user characters before giving
-        await backup_characters(receiver_id)
-
-        all_characters_cursor = collection.find({})
-        all_characters = await all_characters_cursor.to_list(length=None)
-
-        # Check for 'id' field presence
-        all_characters = [character for character in all_characters if 'id' in character]
-
-        if len(all_characters) < amount:
-            await message.reply_text("Not enough characters available to give.")
-            return
-
-        random_characters = random.sample(all_characters, amount)
-        random_character_ids = [character['id'] for character in random_characters]
-
-        # Process tasks in batches to optimize performance
-        batch_size = 100  # Adjust batch size as needed
-        tasks = [
-            give_character_batch(receiver_id, random_character_ids[i:i + batch_size])
-            for i in range(0, amount, batch_size)
-        ]
-
-        await asyncio.gather(*tasks)
-
-        user_link = f"[{message.reply_to_message.from_user.first_name}](tg://user?id={receiver_id})"
-
-        # Send summary notification to the owner
-        notification_message = (
-            f"Action: Give Random Characters\n"
-            f"Given by: {message.from_user.first_name}\n"
-            f"Amount: {amount}\n"
-            f"Receiver: {user_link}\n"
-        )
-        await send_action_notification(notification_message)
-
-        await message.reply_text(f"Success! {amount} character(s) added to {user_link}'s collection.")
-    except Exception as e:
-        print(f"Error in random_characters_command: {e}")
-        await message.reply_text("An error occurred while processing the command.")
-
+        
 @app.on_callback_query(filters.regex(r'^reverse_\d+\.\d+$'))
 async def reverse_action(client, callback_query: CallbackQuery):
     timestamp = float(callback_query.data.split("_")[1])
