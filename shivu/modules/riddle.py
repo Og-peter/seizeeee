@@ -1,5 +1,5 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, InputMediaPhoto
-from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
+from telegram import Update, InputMediaPhoto
+from telegram.ext import CommandHandler, CallbackContext, MessageHandler, Filters
 from pyrogram import Client, filters
 from shivu import user_collection, collection, application
 import asyncio
@@ -28,8 +28,8 @@ async def get_random_character():
 
 # Command handler to start the anime guess game
 async def start_anime_guess_cmd(update: Update, context: CallbackContext):
-    user_id = update.effective_user.id
     current_time = datetime.now()
+    user_id = update.effective_user.id
 
     # Check if the user is on cooldown
     if user_id in user_cooldowns and current_time < user_cooldowns[user_id]:
@@ -44,51 +44,31 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
         await update.message.reply_text("⚠️ Could not fetch characters at this time. Please try again later.")
         return
 
-    # Generate wrong options by fetching random characters
-    wrong_characters = []
-    while len(wrong_characters) < 3:
-        character = await get_random_character()
-        if character and character['_id'] != correct_character['_id']:
-            wrong_characters.append(character)
-
-    # Combine correct and wrong answers, then shuffle
-    answers = [correct_character['name']] + [char['name'] for char in wrong_characters]
-    random.shuffle(answers)
-
-    # Store the active guess
-    active_guesses[user_id] = {
+    # Store the active guess for all users
+    active_guesses[update.message.chat_id] = {
         'correct_answer': correct_character['name'],
         'start_time': current_time
     }
 
-    # Display the image and provide the user with answer options
-    question = "<b>🧩 Guess the Anime Character! 🧩</b>\n\nChoose the correct name below:"
-    keyboard = InlineKeyboardMarkup(
-        [
-            [InlineKeyboardButton(str(answers[0]), callback_data=f'guess_answer_{user_id}_{answers[0]}'), InlineKeyboardButton(str(answers[1]), callback_data=f'guess_answer_{user_id}_{answers[1]}')],
-            [InlineKeyboardButton(str(answers[2]), callback_data=f'guess_answer_{user_id}_{answers[2]}'), InlineKeyboardButton(str(answers[3]), callback_data=f'guess_answer_{user_id}_{answers[3]}')],
-        ]
-    )
-
     # Send the question with the character's image
+    question = "<b>🧩 Guess the Anime Character! 🧩</b>\n\nReply with the correct name:"
     sent_message = await context.bot.send_photo(
         chat_id=update.message.chat_id,
         photo=correct_character['img_url'],
         caption=question,
-        reply_markup=keyboard,
         parse_mode='HTML'
     )
 
     # Schedule timeout
-    asyncio.create_task(guess_timeout(context, user_id, sent_message.chat_id, sent_message.message_id))
+    asyncio.create_task(guess_timeout(context, update.message.chat_id, sent_message.message_id))
 
 # Function to handle the guess timeout
-async def guess_timeout(context: CallbackContext, user_id: int, chat_id: int, message_id: int):
+async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int):
     await asyncio.sleep(15)
 
-    if user_id in active_guesses:
-        correct_answer = active_guesses[user_id]['correct_answer']
-        del active_guesses[user_id]
+    if chat_id in active_guesses:
+        correct_answer = active_guesses[chat_id]['correct_answer']
+        del active_guesses[chat_id]
 
         try:
             await context.bot.edit_message_caption(
@@ -100,38 +80,33 @@ async def guess_timeout(context: CallbackContext, user_id: int, chat_id: int, me
         except Exception as e:
             print(f"Failed to edit message: {e}")
 
-# Callback handler to process the anime guess answer
-async def guess_answer_callback(update: Update, context: CallbackContext):
-    query = update.callback_query
-    user_id = query.from_user.id
-    data = query.data.split('_')
-    guess_user_id = int(data[2])
-    answer = data[3]
+# Message handler to process text guesses
+async def guess_text_handler(update: Update, context: CallbackContext):
+    chat_id = update.message.chat_id
+    user_id = update.message.from_user.id
+    user_answer = update.message.text.strip()
 
-    if user_id != guess_user_id:
-        await query.answer("This guess is not for you.", show_alert=True)
+    if chat_id not in active_guesses:
+        await update.message.reply_text("There is no active game right now.")
         return
 
-    if guess_user_id not in active_guesses:
-        await query.answer("You are not currently participating in any guess.", show_alert=True)
-        return
+    correct_answer = active_guesses[chat_id]['correct_answer']
 
-    correct_answer = active_guesses[guess_user_id]['correct_answer']
-
-    if answer == correct_answer:
+    if user_answer.lower() == correct_answer.lower():
         # Correct answer
         await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': 80}})
-        await query.message.edit_caption("🎉 Correct guess! You got 80 tokens.", parse_mode='HTML')
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"🎉 {update.message.from_user.first_name} guessed correctly! The answer was <b>{correct_answer}</b>. You've earned 80 tokens!",
+            parse_mode='HTML'
+        )
+        # End the game
+        del active_guesses[chat_id]
     else:
-        # Incorrect answer
-        await query.message.edit_caption(f"❌ Incorrect guess. The correct answer was <b>{correct_answer}</b>.", parse_mode='HTML')
-
-    # Remove the active guess
-    del active_guesses[guess_user_id]
-    # Set user cooldown for 30 seconds
-    user_cooldowns[guess_user_id] = datetime.now() + timedelta(seconds=30)
+        # Incorrect guess
+        await update.message.reply_text(f"❌ {update.message.from_user.first_name}, incorrect guess! Try again.")
 
 # Add command handler for starting the anime guess game
 application.add_handler(CommandHandler("animeguess", start_anime_guess_cmd, block=False))
-# Add callback query handler for the anime guess answers
-application.add_handler(CallbackQueryHandler(guess_answer_callback, pattern=r'guess_answer_', block=False))
+# Add message handler for processing text-based guesses
+application.add_handler(MessageHandler(Filters.text & ~Filters.command, guess_text_handler, block=False))
