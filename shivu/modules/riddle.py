@@ -109,4 +109,4 @@ async def guess_text_handler(update: Update, context: CallbackContext):
 # Add command handler for starting the anime guess game
 application.add_handler(CommandHandler("animeguess", start_anime_guess_cmd, block=False))
 # Add message handler for processing text-based guesses
-application.add_handler(MessageHandler(filters.text & ~filters.command, guess_text_handler, block=False))
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, guess_text_handler, block=False))
