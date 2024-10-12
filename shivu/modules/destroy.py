@@ -187,16 +187,36 @@ async def callback_confirm_delete(client, callback_query):
 
     success = await delete_harem(client, user_id)
     if success:
+        # Notify the user that their harem was deleted
         await callback_query.message.edit_text("🔫 <b>Harem successfully eliminated.</b>")
+        
+        # Log the action in the database
         await log_action('delete', user_id, callback_user_id)
+        
+        # Get the eraser's name and target's name for the notification
         eraser_name = callback_query.from_user.first_name
         target_name = (await app.get_users(user_id)).first_name
+        
+        # Send notification to SpecialGrade users
         await send_notification_to_specialgrade(callback_user_id, eraser_name, user_id, target_name)
+        
+        # Notify the user whose harem was deleted
         await notify_user(user_id, "⚔️ Your harem has been deleted by a Special Grade sorcerer.")
-        await increase_reputation(callback_user_id, 1)  # Add reputation for successful action
+        
+        # Add reputation for the eraser
+        await increase_reputation(callback_user_id, 1)
+
+        # Send log to the log channel
+        log_message = (
+            f"🚨 <b>Action:</b> Delete Harem\n"
+            f"👤 <b>Eraser:</b> <a href='tg://user?id={callback_user_id}'>{eraser_name}</a>\n"
+            f"🎯 <b>Target:</b> <a href='tg://user?id={user_id}'>{target_name}</a>\n"
+            "⚔️ The user's harem has been <b>eliminated</b>."
+        )
+        await app.send_message(LOG_CHANNEL_ID, log_message, parse_mode="html")
+
     else:
         await callback_query.message.edit_text("❌ <b>Failed to delete harem. User not found.</b>")
-
 
 @app.on_callback_query(filters.regex(r'^cancel_delete_'))
 async def callback_cancel_delete(client, callback_query):
