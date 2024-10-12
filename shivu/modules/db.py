@@ -17,61 +17,61 @@ anime_questions = [
         "question": "Who is the main protagonist of 'Naruto'?",
         "answers": ["Naruto Uzumaki", "Sasuke Uchiha", "Kakashi Hatake", "Sakura Haruno"],
         "correct_answer": "Naruto Uzumaki",
-        "image_url": "https://telegra.ph/file/7959c4cb32a33ceda8077.png"
+        "image_url": "https://files.catbox.moe/sbyjpl.jpg"
     },
     {
         "question": "In 'Dragon Ball Z', what is Goku's Saiyan name?",
         "answers": ["Vegeta", "Broly", "Kakarot", "Raditz"],
         "correct_answer": "Kakarot",
-        "image_url": "https://telegra.ph/file/06f49ccbf0fda31ad8a6e.png"
+        "image_url": "https://files.catbox.moe/4i812w.jpg"
     },
     {
         "question": "Who is the captain of the 'Straw Hat Pirates' in 'One Piece'?",
         "answers": ["Zoro", "Luffy", "Sanji", "Nami"],
         "correct_answer": "Luffy",
-        "image_url": "https://telegra.ph/file/28219cc76de077a48d110.png"
+        "image_url": "https://files.catbox.moe/3c3c0o.jpg"
     },
     {
         "question": "In 'Attack on Titan', who is the protagonist?",
         "answers": ["Eren Yeager", "Mikasa Ackerman", "Armin Arlert", "Levi Ackerman"],
         "correct_answer": "Eren Yeager",
-        "image_url": "https://telegra.ph/file/attack-on-titan.png"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/00ezy3.jpg"  # Replace with a valid image URL
     },
     {
         "question": "Who is the main antagonist of the 'Death Note' series?",
         "answers": ["L", "Ryuk", "Light Yagami", "Misa Amane"],
         "correct_answer": "Light Yagami",
-        "image_url": "https://telegra.ph/file/death-note.png"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/sbyjpl.jpg"  # Replace with a valid image URL
     },
     {
         "question": "In 'My Hero Academia', what is the quirk of the main protagonist, Izuku Midoriya?",
         "answers": ["One For All", "Explosion", "Zero Gravity", "Engine"],
         "correct_answer": "One For All",
-        "image_url": "https://telegra.ph/file/my-hero-academia.png"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/4i812w.jpg"  # Replace with a valid image URL
     },
     {
         "question": "In 'Fullmetal Alchemist', what is the forbidden act Edward and Alphonse Elric performed?",
         "answers": ["Human Transmutation", "Alchemy Amplification", "Soul Binding", "Homunculus Creation"],
         "correct_answer": "Human Transmutation",
-        "image_url": "https://telegra.ph/file/fullmetal-alchemist.png"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/3c3c0o.jpg"  # Replace with a valid image URL
     },
     {
         "question": "What is the name of the village where Naruto Uzumaki was born?",
         "answers": ["Konoha", "Suna", "Iwa", "Kumo"],
         "correct_answer": "Konoha",
-        "image_url": "https://telegra.ph/file/naruto-village.png"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/00ezy3.jpg"  # Replace with a valid image URL
     },
     {
         "question": "Who is the strongest S-Class hero in 'One Punch Man'?",
         "answers": ["Blast", "Tatsumaki", "Bang", "Genos"],
         "correct_answer": "Blast",
-        "image_url": "https://telegra.ph/file/one-punch-man.png"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/sbyjpl.jpg"  # Replace with a valid image URL
     },
     {
         "question": "In 'Tokyo Ghoul', what organ was transplanted into Kaneki to turn him into a ghoul?",
         "answers": ["Kidney", "Liver", "Eye", "Heart"],
         "correct_answer": "Eye",
-        "image_url": "https://telegra.ph/file/tokyo-ghoul.png"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/4i812w.jpg"  # Replace with a valid image URL
     }
     # Add more questions as needed
 ]
