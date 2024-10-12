@@ -99,10 +99,9 @@ async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int)
     # Check if there is still an active game after 15 seconds
     if chat_id in active_guesses:
         correct_answer = active_guesses[chat_id]['correct_answer']
-        del active_guesses[chat_id]  # Remove active guess after timeout
 
-        # Mark game as inactive
-        active_guesses[chat_id] = {'active': False}
+        # Remove the active game after the timeout
+        del active_guesses[chat_id]
 
         # Edit the message to indicate the time is up
         try:
@@ -151,8 +150,10 @@ async def guess_text_handler(update: Update, context: CallbackContext):
             text=f"🎉 {user_mention} guessed correctly! The answer was <b>{correct_answer}</b>. You've earned {tokens_earned} tokens! Your streak is now {streak}.",
             parse_mode='HTML'
         )
-        # End the game after the correct answer
-        active_guesses[chat_id] = {'active': False}
+
+        # Remove the active game after the correct guess
+        if chat_id in active_guesses:
+            del active_guesses[chat_id]
 
     else:
         # Incorrect guess, show a "See Character" button
