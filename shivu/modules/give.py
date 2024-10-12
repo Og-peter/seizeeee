@@ -115,6 +115,7 @@ async def give_character_command(client, message):
     except Exception as e:
         print(f"Error in give_character_command: {e}")
         await message.reply_text("An error occurred while processing the command.")
+
 @app.on_message(filters.command(["given"]))
 async def random_characters_command(client, message):
     if str(message.from_user.id) not in SPECIALGRADE and str(message.from_user.id) not in GRADE1:
