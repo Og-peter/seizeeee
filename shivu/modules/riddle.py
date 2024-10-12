@@ -131,13 +131,13 @@ async def guess_text_handler(update: Update, context: CallbackContext):
         return  # Ignore guesses if there is no active game
 
     correct_answer = active_guesses[chat_id]['correct_answer']
-    correct_first_name = correct_answer.split()[0].lower()  # Extract and lowercase the first name
+    correct_answer_parts = correct_answer.lower().split()  # Split the correct answer into parts (first and last name)
 
     # Get the user's mention (username or first name)
     user_mention = mention_html(update.message.from_user.id, update.message.from_user.first_name)
 
-    # Check if the user's answer matches the first name (case-insensitive)
-    if user_answer.lower() == correct_first_name:
+    # Check if the user's answer matches either the first or last name (case-insensitive)
+    if user_answer.lower() in correct_answer_parts:
         # Increase streak and tokens
         streak = user_streaks.get(user_id, 0) + 1
         user_streaks[user_id] = streak
