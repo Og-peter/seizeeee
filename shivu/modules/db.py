@@ -132,6 +132,96 @@ anime_questions = [
         "answers": ["Setter", "Libero", "Spiker", "Middle Blocker"],
         "correct_answer": "Spiker",
         "image_url": "https://files.catbox.moe/example10.jpg"  # Replace with a valid image URL
+    },
+    {
+        "question": "What is the name of the protagonist in 'Sword Art Online'?",
+        "answers": ["Kirito", "Asuna", "Heathcliff", "Sinon"],
+        "correct_answer": "Kirito",
+        "image_url": "https://files.catbox.moe/example11.jpg"
+    },
+    {
+        "question": "In 'Attack on Titan', what is Levi's rank in the Survey Corps?",
+        "answers": ["Captain", "Commander", "Lieutenant", "Corporal"],
+        "correct_answer": "Captain",
+        "image_url": "https://files.catbox.moe/example12.jpg"
+    },
+    {
+        "question": "Who is known as the 'Hero of the Leaf' in 'Naruto'?",
+        "answers": ["Minato Namikaze", "Naruto Uzumaki", "Kakashi Hatake", "Jiraiya"],
+        "correct_answer": "Minato Namikaze",
+        "image_url": "https://files.catbox.moe/example13.jpg"
+    },
+    {
+        "question": "In 'Dragon Ball Super', which character achieved Ultra Instinct?",
+        "answers": ["Vegeta", "Frieza", "Gohan", "Goku"],
+        "correct_answer": "Goku",
+        "image_url": "https://files.catbox.moe/example14.jpg"
+    },
+    {
+        "question": "Who is the creator of the 'One For All' quirk in 'My Hero Academia'?",
+        "answers": ["All Might", "Izuku Midoriya", "All For One", "Shigaraki"],
+        "correct_answer": "All For One",
+        "image_url": "https://files.catbox.moe/example15.jpg"
+    },
+    {
+        "question": "In 'Tokyo Revengers', what is the name of Takemichi's gang?",
+        "answers": ["Tokyo Manji Gang", "Black Dragons", "Valhalla", "Tenjiku"],
+        "correct_answer": "Tokyo Manji Gang",
+        "image_url": "https://files.catbox.moe/example16.jpg"
+    },
+    {
+        "question": "In 'Jujutsu Kaisen', who is the strongest sorcerer?",
+        "answers": ["Satoru Gojo", "Sukuna", "Megumi Fushiguro", "Yuji Itadori"],
+        "correct_answer": "Satoru Gojo",
+        "image_url": "https://files.catbox.moe/example17.jpg"
+    },
+    {
+        "question": "What is the true form of the 'Beast Titan' in 'Attack on Titan'?",
+        "answers": ["Eren Yeager", "Zeke Yeager", "Reiner Braun", "Bertholdt Hoover"],
+        "correct_answer": "Zeke Yeager",
+        "image_url": "https://files.catbox.moe/example18.jpg"
+    },
+    {
+        "question": "In 'One Piece', what is the name of the sword used by Roronoa Zoro?",
+        "answers": ["Shusui", "Enma", "Wado Ichimonji", "Kitetsu"],
+        "correct_answer": "Wado Ichimonji",
+        "image_url": "https://files.catbox.moe/example19.jpg"
+    },
+    {
+        "question": "Who is the God of Destruction in 'Dragon Ball Super'?",
+        "answers": ["Beerus", "Whis", "Zeno", "Toppo"],
+        "correct_answer": "Beerus",
+        "image_url": "https://files.catbox.moe/example20.jpg"
+    },
+    {
+        "question": "In 'Fairy Tail', what type of magic does Natsu Dragneel use?",
+        "answers": ["Ice-Make Magic", "Sky Dragon Slayer Magic", "Fire Dragon Slayer Magic", "Celestial Spirit Magic"],
+        "correct_answer": "Fire Dragon Slayer Magic",
+        "image_url": "https://files.catbox.moe/example21.jpg"
+    },
+    {
+        "question": "In 'Steins;Gate', who is the creator of the time machine?",
+        "answers": ["Okabe Rintarou", "Kurisu Makise", "Daru Hashida", "Mayuri Shiina"],
+        "correct_answer": "Kurisu Makise",
+        "image_url": "https://files.catbox.moe/example22.jpg"
+    },
+    {
+        "question": "In 'JoJo's Bizarre Adventure', what is the name of Jotaro's Stand?",
+        "answers": ["Star Platinum", "Silver Chariot", "The World", "Hermit Purple"],
+        "correct_answer": "Star Platinum",
+        "image_url": "https://files.catbox.moe/example23.jpg"
+    },
+    {
+        "question": "In 'The Promised Neverland', who is the mastermind behind the escape plan?",
+        "answers": ["Emma", "Ray", "Norman", "Isabella"],
+        "correct_answer": "Norman",
+        "image_url": "https://files.catbox.moe/example24.jpg"
+    },
+    {
+        "question": "Who is the leader of the Phantom Troupe in 'Hunter x Hunter'?",
+        "answers": ["Chrollo Lucilfer", "Hisoka", "Pakunoda", "Feitan"],
+        "correct_answer": "Chrollo Lucilfer",
+        "image_url": "https://files.catbox.moe/example25.jpg"
     }
 ]
 
