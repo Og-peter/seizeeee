@@ -72,8 +72,67 @@ anime_questions = [
         "answers": ["Kidney", "Liver", "Eye", "Heart"],
         "correct_answer": "Eye",
         "image_url": "https://files.catbox.moe/4i812w.jpg"  # Replace with a valid image URL
+    },
+    {
+        "question": "In 'Bleach', who is the captain of the 13th Division?",
+        "answers": ["Byakuya Kuchiki", "Ukitake Jūshirō", "Shunsui Kyōraku", "Kenpachi Zaraki"],
+        "correct_answer": "Ukitake Jūshirō",
+        "image_url": "https://files.catbox.moe/example1.jpg"  # Replace with a valid image URL
+    },
+    {
+        "question": "Who is the main antagonist in 'Naruto Shippuden'?",
+        "answers": ["Madara Uchiha", "Orochimaru", "Obito Uchiha", "Pain"],
+        "correct_answer": "Madara Uchiha",
+        "image_url": "https://files.catbox.moe/example2.jpg"  # Replace with a valid image URL
+    },
+    {
+        "question": "In 'Hunter x Hunter', what is Killua's primary ability?",
+        "answers": ["Zetsu", "Nen", "Lightning", "Enhancement"],
+        "correct_answer": "Lightning",
+        "image_url": "https://files.catbox.moe/example3.jpg"  # Replace with a valid image URL
+    },
+    {
+        "question": "In 'Sword Art Online', what is Kirito's real name?",
+        "answers": ["Kazuto Kirigaya", "Asuna Yuuki", "Heathcliff", "Sinon"],
+        "correct_answer": "Kazuto Kirigaya",
+        "image_url": "https://files.catbox.moe/example4.jpg"  # Replace with a valid image URL
+    },
+    {
+        "question": "What is the strongest Nen category in 'Hunter x Hunter'?",
+        "answers": ["Enhancement", "Transmutation", "Conjuration", "Specialization"],
+        "correct_answer": "Specialization",
+        "image_url": "https://files.catbox.moe/example5.jpg"  # Replace with a valid image URL
+    },
+    {
+        "question": "In 'Demon Slayer', what is Tanjiro's primary breathing technique?",
+        "answers": ["Water Breathing", "Flame Breathing", "Beast Breathing", "Wind Breathing"],
+        "correct_answer": "Water Breathing",
+        "image_url": "https://files.catbox.moe/example6.jpg"  # Replace with a valid image URL
+    },
+    {
+        "question": "In 'Black Clover', what is Asta's primary weapon?",
+        "answers": ["Grimoire", "Magic Staff", "Demon Slayer Sword", "Anti-Magic Bow"],
+        "correct_answer": "Demon Slayer Sword",
+        "image_url": "https://files.catbox.moe/example7.jpg"  # Replace with a valid image URL
+    },
+    {
+        "question": "In 'Fate/Stay Night', who is Shirou Emiya's Servant?",
+        "answers": ["Saber", "Rider", "Lancer", "Archer"],
+        "correct_answer": "Saber",
+        "image_url": "https://files.catbox.moe/example8.jpg"  # Replace with a valid image URL
+    },
+    {
+        "question": "In 'Re:Zero', what is Subaru's unique ability?",
+        "answers": ["Gate of Babylon", "Return by Death", "Magic Eyes", "Command Seals"],
+        "correct_answer": "Return by Death",
+        "image_url": "https://files.catbox.moe/example9.jpg"  # Replace with a valid image URL
+    },
+    {
+        "question": "In 'Haikyuu!!', what position does Hinata Shoyo play?",
+        "answers": ["Setter", "Libero", "Spiker", "Middle Blocker"],
+        "correct_answer": "Spiker",
+        "image_url": "https://files.catbox.moe/example10.jpg"  # Replace with a valid image URL
     }
-    # Add more questions as needed
 ]
 
 # Command handler to start the anime quiz
