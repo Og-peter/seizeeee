@@ -2,7 +2,6 @@ from telegram import Update, InputMediaPhoto
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters
 from shivu import user_collection, collection, application
 import asyncio
-import random
 from datetime import datetime, timedelta
 
 # Dictionary to store active guesses
@@ -94,8 +93,10 @@ async def guess_text_handler(update: Update, context: CallbackContext):
         return
 
     correct_answer = active_guesses[chat_id]['correct_answer']
+    correct_first_name = correct_answer.split()[0].lower()  # Extract the first name and lowercase it
 
-    if user_answer.lower() == correct_answer.lower():
+    # Check if the user's answer matches the first name (case-insensitive)
+    if user_answer.lower() == correct_first_name:
         # Correct answer
         await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': 80}})
         await context.bot.send_message(
