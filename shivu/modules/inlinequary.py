@@ -91,7 +91,7 @@ async def inlinequery(update: Update, context: CallbackContext) -> None:
                 logging.warning(f"Invalid user_id format: {user_id}")
         else:
             if query:
-    if query in all_characters_cache:
+        all_characters_cache:
         all_characters = all_characters_cache[query]
     else:
         regex = re.compile(query, re.IGNORECASE)
