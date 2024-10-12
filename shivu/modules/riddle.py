@@ -1,5 +1,6 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, ParseMode
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters
+from telegram.helpers import mention_html
 from shivu import user_collection, collection, application
 import asyncio
 from datetime import datetime, timedelta
@@ -68,7 +69,7 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     user_cooldowns[user_id] = current_time + timedelta(seconds=30)
 
     # Send the question with the character's image
-    question = "<b>🧩 Guess the Anime Character! 🧩</b>\n\nReply with the correct name:"
+    question = "<b>🏮 Guess the Anime Character! 🏮</b>\n\nReply with the correct name:"
     sent_message = await context.bot.send_photo(
         chat_id=chat_id,
         photo=correct_character['img_url'],  # Character image URL from the DB
@@ -112,20 +113,23 @@ async def guess_text_handler(update: Update, context: CallbackContext):
     correct_answer = active_guesses[chat_id]['correct_answer']
     correct_first_name = correct_answer.split()[0].lower()  # Extract and lowercase the first name
 
+    # Get the user's mention (username or first name)
+    user_mention = mention_html(update.message.from_user.id, update.message.from_user.first_name)
+
     # Check if the user's answer matches the first name (case-insensitive)
     if user_answer.lower() == correct_first_name:
         # Correct answer
         await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': 80}})
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"🎉 {update.message.from_user.first_name} guessed correctly! The answer was <b>{correct_answer}</b>. You've earned 80 tokens!",
+            text=f"🎉 {user_mention} guessed correctly! The answer was <b>{correct_answer}</b>. You've earned 80 tokens!",
             parse_mode='HTML'
         )
         # End the game
         del active_guesses[chat_id]
     else:
-        # Incorrect guess, provide feedback
-        await update.message.reply_text(f"❌ {update.message.from_user.first_name}, that's incorrect! Try again.")
+        # Incorrect guess, provide feedback with the username mention
+        await update.message.reply_text(f"❌ {user_mention}, that's incorrect! Try again.", parse_mode='HTML')
 
 # Add command handler for starting the anime guess game
 application.add_handler(CommandHandler("guess", start_anime_guess_cmd, block=False))
