@@ -351,6 +351,6 @@ async def quiz_answer_callback(update: Update, context: CallbackContext):
     user_cooldowns[quiz_user_id] = datetime.now() + timedelta(seconds=30)
 
 # Add command handler for starting anime quiz
-application.add_handler(CommandHandler("trivia", start_anime_quiz_cmd, block=False))
+application.add_handler(CommandHandler("quiz", start_anime_quiz_cmd, block=False))
 # Add callback query handler for quiz answers
 application.add_handler(CallbackQueryHandler(quiz_answer_callback, pattern=r'quiz_answer_', block=False))
