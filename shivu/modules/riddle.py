@@ -6,105 +6,89 @@ import asyncio
 import random
 from datetime import datetime, timedelta
 
-# Dictionary to store active riddles
-active_riddles = {}
+# Dictionary to store active guesses
+active_guesses = {}
 # Dictionary to store user cooldowns
 user_cooldowns = {}
 
-# List of random image URLs
-image_urls = [
-    "https://i.ibb.co/TT1hJYv/6402009857-1726149422.jpg",
-    "https://i.ibb.co/GTszrVh/6402009857-1726149424.jpg",
-    "https://i.ibb.co/bLwJY9R/6402009857-1726149847.jpg",
-    # Add more image URLs as needed
-]
+# Function to fetch a random anime character from the database
+async def get_random_character():
+    try:
+        pipeline = [
+            {'$sample': {'size': 1}}  # Adjust size if needed
+        ]
+        cursor = collection.aggregate(pipeline)
+        characters = await cursor.to_list(length=1)
+        if characters:
+            return characters[0]
+        return None
+    except Exception as e:
+        print(f"Error fetching characters: {e}")
+        return None
 
-# Command handler to start the riddle
-async def start_riddle_cmd(update: Update, context: CallbackContext):
+# Command handler to start the anime guess game
+async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     current_time = datetime.now()
 
     # Check if the user is on cooldown
     if user_id in user_cooldowns and current_time < user_cooldowns[user_id]:
         remaining_time = (user_cooldowns[user_id] - current_time).total_seconds()
-        await update.message.reply_text(f"⏳ Please wait {int(remaining_time)} seconds before starting a new riddle.")
+        await update.message.reply_text(f"⏳ Please wait {int(remaining_time)} seconds before starting a new guess.")
         return
 
-    # Generate a varied math question with addition, subtraction, multiplication, or division
-    num1 = random.randint(1, 10)
-    num2 = random.randint(1, 10)
-    num3 = random.randint(1, 10)
-    operators = ['+', '-', '*', '/']
-    op1 = random.choice(operators)
-    op2 = random.choice(operators)
-    
-    # Ensure division does not result in fractions or division by zero
-    if op2 == '/' and num3 == 0:
-        num3 = 1
+    # Get the correct anime character
+    correct_character = await get_random_character()
 
-    # Generate the expression and calculate the result
-    expression = f"{num1} {op1} {num2} {op2} {num3}"
-    result = eval(expression)
+    if not correct_character:
+        await update.message.reply_text("⚠️ Could not fetch characters at this time. Please try again later.")
+        return
 
-    # Ensure result is an integer, if not, regenerate the question
-    while not isinstance(result, int):
-        num1 = random.randint(1, 10)
-        num2 = random.randint(1, 10)
-        num3 = random.randint(1, 10)
-        op1 = random.choice(operators)
-        op2 = random.choice(operators)
+    # Generate wrong options by fetching random characters
+    wrong_characters = []
+    while len(wrong_characters) < 3:
+        character = await get_random_character()
+        if character and character['_id'] != correct_character['_id']:
+            wrong_characters.append(character)
 
-        if op2 == '/' and num3 == 0:
-            num3 = 1
-
-        expression = f"{num1} {op1} {num2} {op2} {num3}"
-        result = eval(expression)
-
-    correct_answer = result
-    # Add fancy text using Unicode and emojis for better user experience
-    question = f"<b>🧠 ( {num1} {op1} {num2} ) {op2} {num3} = ? 🤔</b>\n\nAnswer within 15 seconds!"
-
-    # Generate answer options
-    answers = [correct_answer, correct_answer + random.randint(1, 10), correct_answer - random.randint(1, 10), correct_answer + random.randint(11, 20)]
+    # Combine correct and wrong answers, then shuffle
+    answers = [correct_character['name']] + [char['name'] for char in wrong_characters]
     random.shuffle(answers)
 
-    # Store the active riddle
-    active_riddles[user_id] = {
-        'question': question,
-        'correct_answer': correct_answer,
+    # Store the active guess
+    active_guesses[user_id] = {
+        'correct_answer': correct_character['name'],
         'start_time': current_time
     }
 
-    # Create buttons in a 2x2 layout with an additional URL button
+    # Display the image and provide the user with answer options
+    question = "<b>🧩 Guess the Anime Character! 🧩</b>\n\nChoose the correct name below:"
     keyboard = InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton(str(answers[0]), callback_data=f'riddle_answer_{user_id}_{answers[0]}'), InlineKeyboardButton(str(answers[1]), callback_data=f'riddle_answer_{user_id}_{answers[1]}')],
-            [InlineKeyboardButton(str(answers[2]), callback_data=f'riddle_answer_{user_id}_{answers[2]}'), InlineKeyboardButton(str(answers[3]), callback_data=f'riddle_answer_{user_id}_{answers[3]}')],
+            [InlineKeyboardButton(str(answers[0]), callback_data=f'guess_answer_{user_id}_{answers[0]}'), InlineKeyboardButton(str(answers[1]), callback_data=f'guess_answer_{user_id}_{answers[1]}')],
+            [InlineKeyboardButton(str(answers[2]), callback_data=f'guess_answer_{user_id}_{answers[2]}'), InlineKeyboardButton(str(answers[3]), callback_data=f'guess_answer_{user_id}_{answers[3]}')],
         ]
     )
 
-    # Select a random image
-    image_url = random.choice(image_urls)
-
-    # Send the question with the image
+    # Send the question with the character's image
     sent_message = await context.bot.send_photo(
         chat_id=update.message.chat_id,
-        photo=image_url,
+        photo=correct_character['img_url'],
         caption=question,
         reply_markup=keyboard,
         parse_mode='HTML'
     )
 
     # Schedule timeout
-    asyncio.create_task(riddle_timeout(context, user_id, sent_message.chat_id, sent_message.message_id))
+    asyncio.create_task(guess_timeout(context, user_id, sent_message.chat_id, sent_message.message_id))
 
-# Function to handle riddle timeout
-async def riddle_timeout(context: CallbackContext, user_id: int, chat_id: int, message_id: int):
+# Function to handle the guess timeout
+async def guess_timeout(context: CallbackContext, user_id: int, chat_id: int, message_id: int):
     await asyncio.sleep(15)
 
-    if user_id in active_riddles:
-        correct_answer = active_riddles[user_id]['correct_answer']
-        del active_riddles[user_id]
+    if user_id in active_guesses:
+        correct_answer = active_guesses[user_id]['correct_answer']
+        del active_guesses[user_id]
 
         try:
             await context.bot.edit_message_caption(
@@ -116,40 +100,38 @@ async def riddle_timeout(context: CallbackContext, user_id: int, chat_id: int, m
         except Exception as e:
             print(f"Failed to edit message: {e}")
 
-# Callback handler to process the riddle answer
-async def riddle_answer_callback(update: Update, context: CallbackContext):
+# Callback handler to process the anime guess answer
+async def guess_answer_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     user_id = query.from_user.id
     data = query.data.split('_')
-    riddle_user_id = int(data[2])
-    answer = float(data[3])  # Convert answer to float to handle division results
+    guess_user_id = int(data[2])
+    answer = data[3]
 
-    if user_id != riddle_user_id:
-        await query.answer("This riddle is not for you.", show_alert=True)
+    if user_id != guess_user_id:
+        await query.answer("This guess is not for you.", show_alert=True)
         return
 
-    if riddle_user_id not in active_riddles:
-        await query.answer("You are not currently participating in any riddle.", show_alert=True)
+    if guess_user_id not in active_guesses:
+        await query.answer("You are not currently participating in any guess.", show_alert=True)
         return
 
-    correct_answer = active_riddles[riddle_user_id]['correct_answer']
+    correct_answer = active_guesses[guess_user_id]['correct_answer']
 
-    # Allow for a small tolerance for floating-point comparison
-    tolerance = 1e-6
-    if abs(answer - correct_answer) < tolerance:
+    if answer == correct_answer:
         # Correct answer
         await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': 80}})
-        await query.message.edit_caption("🎉 Correct answer! You got 80 tokens.", parse_mode='HTML')
+        await query.message.edit_caption("🎉 Correct guess! You got 80 tokens.", parse_mode='HTML')
     else:
         # Incorrect answer
-        await query.message.edit_caption(f"❌ Incorrect answer. The correct answer was <b>{correct_answer}</b>.", parse_mode='HTML')
+        await query.message.edit_caption(f"❌ Incorrect guess. The correct answer was <b>{correct_answer}</b>.", parse_mode='HTML')
 
-    # Remove the active riddle
-    del active_riddles[riddle_user_id]
+    # Remove the active guess
+    del active_guesses[guess_user_id]
     # Set user cooldown for 30 seconds
-    user_cooldowns[riddle_user_id] = datetime.now() + timedelta(seconds=30)
+    user_cooldowns[guess_user_id] = datetime.now() + timedelta(seconds=30)
 
-# Add command handler for starting riddles
-application.add_handler(CommandHandler("riddle", start_riddle_cmd, block=False))
-# Add callback query handler for riddle answers
-application.add_handler(CallbackQueryHandler(riddle_answer_callback, pattern=r'riddle_answer_', block=False))
+# Add command handler for starting the anime guess game
+application.add_handler(CommandHandler("animeguess", start_anime_guess_cmd, block=False))
+# Add callback query handler for the anime guess answers
+application.add_handler(CallbackQueryHandler(guess_answer_callback, pattern=r'guess_answer_', block=False))
