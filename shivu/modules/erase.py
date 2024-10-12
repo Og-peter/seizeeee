@@ -12,6 +12,7 @@ logs_collection = db["logs_collection"]
 COOLDOWN_TIME = timedelta(minutes=5)
 reward_for_restoring = 1000  # Reward for reversing an erase operation
 erase_cost = 200  # Cost to erase a character
+LOG_CHANNEL_ID = -1001234567890  # Replace with your actual log channel ID
 
 # Helper function to log actions
 async def log_action(eraser_id, target_id, action, details=""):
@@ -156,6 +157,17 @@ async def confirm_erase(client, callback_query: CallbackQuery):
         await send_notification_to_specialgrade(eraser_id, eraser_name, target_id, target_name, num_characters_to_erase)
         await log_action(eraser_id, target_id, "erase", f"Erased {num_characters_to_erase} characters.")
         erase_timestamps[eraser_id] = datetime.utcnow()
+
+        # Log the erase operation in the log channel
+        log_message = (
+            f"🚨 **Erase Operation Log** 🚨\n"
+            f"👤 **Eraser:** <a href='tg://user?id={eraser_id}'>{eraser_name}</a>\n"
+            f"🎯 **Target:** <a href='tg://user?id={target_id}'>{target_name}</a>\n"
+            f"🧹 **Characters Erased:** {num_characters_to_erase}\n"
+            f"💥 **Cost:** {erase_cost * num_characters_to_erase} coins\n"
+            f"🕒 **Time:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+        )
+        await app.send_message(LOG_CHANNEL_ID, log_message)
 
     else:
         await callback_query.message.edit_text("❌ Unable to erase characters.")
