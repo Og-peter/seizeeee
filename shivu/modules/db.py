@@ -77,181 +77,181 @@ anime_questions = [
         "question": "In 'Bleach', who is the captain of the 13th Division?",
         "answers": ["Byakuya Kuchiki", "Ukitake Jūshirō", "Shunsui Kyōraku", "Kenpachi Zaraki"],
         "correct_answer": "Ukitake Jūshirō",
-        "image_url": "https://files.catbox.moe/example1.jpg"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/00ezy3.jpg"  # Replace with a valid image URL
     },
     {
         "question": "Who is the main antagonist in 'Naruto Shippuden'?",
         "answers": ["Madara Uchiha", "Orochimaru", "Obito Uchiha", "Pain"],
         "correct_answer": "Madara Uchiha",
-        "image_url": "https://files.catbox.moe/example2.jpg"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/3c3c0o.jpg"  # Replace with a valid image URL
     },
     {
         "question": "In 'Hunter x Hunter', what is Killua's primary ability?",
         "answers": ["Zetsu", "Nen", "Lightning", "Enhancement"],
         "correct_answer": "Lightning",
-        "image_url": "https://files.catbox.moe/example3.jpg"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/4i812w.jpg"  # Replace with a valid image URL
     },
     {
         "question": "In 'Sword Art Online', what is Kirito's real name?",
         "answers": ["Kazuto Kirigaya", "Asuna Yuuki", "Heathcliff", "Sinon"],
         "correct_answer": "Kazuto Kirigaya",
-        "image_url": "https://files.catbox.moe/example4.jpg"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/sbyjpl.jpg"  # Replace with a valid image URL
     },
     {
         "question": "What is the strongest Nen category in 'Hunter x Hunter'?",
         "answers": ["Enhancement", "Transmutation", "Conjuration", "Specialization"],
         "correct_answer": "Specialization",
-        "image_url": "https://files.catbox.moe/example5.jpg"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/00ezy3.jpg"  # Replace with a valid image URL
     },
     {
         "question": "In 'Demon Slayer', what is Tanjiro's primary breathing technique?",
         "answers": ["Water Breathing", "Flame Breathing", "Beast Breathing", "Wind Breathing"],
         "correct_answer": "Water Breathing",
-        "image_url": "https://files.catbox.moe/example6.jpg"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/3c3c0o.jpg"  # Replace with a valid image URL
     },
     {
         "question": "In 'Black Clover', what is Asta's primary weapon?",
         "answers": ["Grimoire", "Magic Staff", "Demon Slayer Sword", "Anti-Magic Bow"],
         "correct_answer": "Demon Slayer Sword",
-        "image_url": "https://files.catbox.moe/example7.jpg"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/4i812w.jpg"  # Replace with a valid image URL
     },
     {
         "question": "In 'Fate/Stay Night', who is Shirou Emiya's Servant?",
         "answers": ["Saber", "Rider", "Lancer", "Archer"],
         "correct_answer": "Saber",
-        "image_url": "https://files.catbox.moe/example8.jpg"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/sbyjpl.jpg"  # Replace with a valid image URL
     },
     {
         "question": "In 'Re:Zero', what is Subaru's unique ability?",
         "answers": ["Gate of Babylon", "Return by Death", "Magic Eyes", "Command Seals"],
         "correct_answer": "Return by Death",
-        "image_url": "https://files.catbox.moe/example9.jpg"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/00ezy3.jpg"  # Replace with a valid image URL
     },
     {
         "question": "In 'Haikyuu!!', what position does Hinata Shoyo play?",
         "answers": ["Setter", "Libero", "Spiker", "Middle Blocker"],
         "correct_answer": "Spiker",
-        "image_url": "https://files.catbox.moe/example10.jpg"  # Replace with a valid image URL
+        "image_url": "https://files.catbox.moe/3c3c0o.jpg"  # Replace with a valid image URL
     },
     {
         "question": "What is the name of the protagonist in 'Sword Art Online'?",
         "answers": ["Kirito", "Asuna", "Heathcliff", "Sinon"],
         "correct_answer": "Kirito",
-        "image_url": "https://files.catbox.moe/example11.jpg"
+        "image_url": "https://files.catbox.moe/sbyjpl.jpg"
     },
     {
         "question": "In 'Attack on Titan', what is Levi's rank in the Survey Corps?",
         "answers": ["Captain", "Commander", "Lieutenant", "Corporal"],
         "correct_answer": "Captain",
-        "image_url": "https://files.catbox.moe/example12.jpg"
+        "image_url": "https://files.catbox.moe/00ezy3.jpg"
     },
     {
         "question": "Who is known as the 'Hero of the Leaf' in 'Naruto'?",
         "answers": ["Minato Namikaze", "Naruto Uzumaki", "Kakashi Hatake", "Jiraiya"],
         "correct_answer": "Minato Namikaze",
-        "image_url": "https://files.catbox.moe/example13.jpg"
+        "image_url": "https://files.catbox.moe/3c3c0o.jpg"
     },
     {
         "question": "In 'Dragon Ball Super', which character achieved Ultra Instinct?",
         "answers": ["Vegeta", "Frieza", "Gohan", "Goku"],
         "correct_answer": "Goku",
-        "image_url": "https://files.catbox.moe/example14.jpg"
+        "image_url": "https://files.catbox.moe/4i812w.jpg"
     },
     {
         "question": "Who is the creator of the 'One For All' quirk in 'My Hero Academia'?",
         "answers": ["All Might", "Izuku Midoriya", "All For One", "Shigaraki"],
         "correct_answer": "All For One",
-        "image_url": "https://files.catbox.moe/example15.jpg"
+        "image_url": "https://files.catbox.moe/sbyjpl.jpg"
     },
     {
         "question": "In 'Tokyo Revengers', what is the name of Takemichi's gang?",
         "answers": ["Tokyo Manji Gang", "Black Dragons", "Valhalla", "Tenjiku"],
         "correct_answer": "Tokyo Manji Gang",
-        "image_url": "https://files.catbox.moe/example16.jpg"
+        "image_url": "https://files.catbox.moe/00ezy3.jpg"
     },
     {
         "question": "In 'Jujutsu Kaisen', who is the strongest sorcerer?",
         "answers": ["Satoru Gojo", "Sukuna", "Megumi Fushiguro", "Yuji Itadori"],
         "correct_answer": "Satoru Gojo",
-        "image_url": "https://files.catbox.moe/example17.jpg"
+        "image_url": "https://files.catbox.moe/3c3c0o.jpg"
     },
     {
         "question": "What is the true form of the 'Beast Titan' in 'Attack on Titan'?",
         "answers": ["Eren Yeager", "Zeke Yeager", "Reiner Braun", "Bertholdt Hoover"],
         "correct_answer": "Zeke Yeager",
-        "image_url": "https://files.catbox.moe/example18.jpg"
+        "image_url": "https://files.catbox.moe/4i812w.jpg"
     },
     {
         "question": "In 'One Piece', what is the name of the sword used by Roronoa Zoro?",
         "answers": ["Shusui", "Enma", "Wado Ichimonji", "Kitetsu"],
         "correct_answer": "Wado Ichimonji",
-        "image_url": "https://files.catbox.moe/example19.jpg"
+        "image_url": "https://files.catbox.moe/sbyjpl.jpg"
     },
     {
         "question": "Who is the God of Destruction in 'Dragon Ball Super'?",
         "answers": ["Beerus", "Whis", "Zeno", "Toppo"],
         "correct_answer": "Beerus",
-        "image_url": "https://files.catbox.moe/example20.jpg"
+        "image_url": "https://files.catbox.moe/00ezy3.jpg"
     },
     {
         "question": "In 'Fairy Tail', what type of magic does Natsu Dragneel use?",
         "answers": ["Ice-Make Magic", "Sky Dragon Slayer Magic", "Fire Dragon Slayer Magic", "Celestial Spirit Magic"],
         "correct_answer": "Fire Dragon Slayer Magic",
-        "image_url": "https://files.catbox.moe/example21.jpg"
+        "image_url": "https://files.catbox.moe/3c3c0o.jpg"
     },
     {
         "question": "In 'Steins;Gate', who is the creator of the time machine?",
         "answers": ["Okabe Rintarou", "Kurisu Makise", "Daru Hashida", "Mayuri Shiina"],
         "correct_answer": "Kurisu Makise",
-        "image_url": "https://files.catbox.moe/example22.jpg"
+        "image_url": "https://files.catbox.moe/4i812w.jpg"
     },
     {
         "question": "In 'JoJo's Bizarre Adventure', what is the name of Jotaro's Stand?",
         "answers": ["Star Platinum", "Silver Chariot", "The World", "Hermit Purple"],
         "correct_answer": "Star Platinum",
-        "image_url": "https://files.catbox.moe/example23.jpg"
+        "image_url": "https://files.catbox.moe/sbyjpl.jpg"
     },
     {
         "question": "In 'The Promised Neverland', who is the mastermind behind the escape plan?",
         "answers": ["Emma", "Ray", "Norman", "Isabella"],
         "correct_answer": "Norman",
-        "image_url": "https://files.catbox.moe/example24.jpg"
+        "image_url": "https://files.catbox.moe/00ezy3.jpg"
     },
     {
         "question": "Who is the leader of the Phantom Troupe in 'Hunter x Hunter'?",
         "answers": ["Chrollo Lucilfer", "Hisoka", "Pakunoda", "Feitan"],
         "correct_answer": "Chrollo Lucilfer",
-        "image_url": "https://files.catbox.moe/example25.jpg"
+        "image_url": "https://files.catbox.moe/00ezy3.jpg"
     },
     {
     "question": "In 'Naruto', what is Kakashi's signature jutsu?",
     "answers": ["Chidori", "Rasengan", "Shadow Clone Jutsu", "Fireball Jutsu"],
     "correct_answer": "Chidori",
-    "image_url": "https://files.catbox.moe/example26.jpg"
+    "image_url": "https://files.catbox.moe/3c3c0o.jpg"
 },
 {
     "question": "In 'Dragon Ball Z', who killed Frieza on Namek?",
     "answers": ["Goku", "Vegeta", "Piccolo", "Future Trunks"],
     "correct_answer": "Future Trunks",
-    "image_url": "https://files.catbox.moe/example27.jpg"
+    "image_url": "https://files.catbox.moe/4i812w.jpg"
 },
 {
     "question": "In 'One Punch Man', who is Saitama's disciple?",
     "answers": ["Genos", "King", "Bang", "Fubuki"],
     "correct_answer": "Genos",
-    "image_url": "https://files.catbox.moe/example28.jpg"
+    "image_url": "https://files.catbox.moe/sbyjpl.jpg"
 },
 {
     "question": "In 'Attack on Titan', what is the name of the first Titan Eren fights?",
     "answers": ["Colossal Titan", "Armored Titan", "Female Titan", "Smiling Titan"],
     "correct_answer": "Smiling Titan",
-    "image_url": "https://files.catbox.moe/example29.jpg"
+    "image_url": "https://files.catbox.moe/00ezy3.jpg"
 },
 {
     "question": "In 'Naruto', who is the founder of the Akatsuki?",
     "answers": ["Pain", "Itachi", "Madara", "Nagato"],
     "correct_answer": "Nagato",
-    "image_url": "https://files.catbox.moe/example30.jpg"
+    "image_url": "https://files.catbox.moe/3c3c0o.jpg"
 }
 ]
 
