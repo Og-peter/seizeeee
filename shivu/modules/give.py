@@ -103,6 +103,11 @@ async def give_character_command(client, message):
                 f"Character ID: {character[0]['id']}"
             )
             await send_action_notification(notification_message)
+
+            # Log the action in the log channel
+            log_message = f"Character given by {message.from_user.first_name} to {receiver_first_name} (ID: {receiver_id}). Character ID: {character[0]['id']}."
+            await app.send_message(LOG_CHANNEL_ID, log_message)
+            
     except IndexError:
         await message.reply_text("Please provide a character ID.")
     except ValueError as e:
@@ -110,7 +115,83 @@ async def give_character_command(client, message):
     except Exception as e:
         print(f"Error in give_character_command: {e}")
         await message.reply_text("An error occurred while processing the command.")
+@app.on_message(filters.command(["given"]))
+async def random_characters_command(client, message):
+    if str(message.from_user.id) not in SPECIALGRADE and str(message.from_user.id) not in GRADE1:
+        await message.reply_text("This command can only be used by Special Grade and Grade 1 sorcerers.")
+        return
 
+    try:
+        if not message.reply_to_message:
+            await message.reply_text("You need to reply to a user's message to give characters!")
+            return
+
+        if len(message.command) < 2:
+            await message.reply_text("Please provide the amount of random characters to give.")
+            return
+
+        try:
+            amount = int(message.command[1])
+        except ValueError:
+            await message.reply_text("Invalid amount. Please provide a valid number.")
+            return
+
+        amount = min(amount, 2000)
+
+        receiver_id = message.reply_to_message.from_user.id
+
+        # Ensure the bot has interacted with the receiver
+        try:
+            await client.get_chat(receiver_id)
+        except Exception as e:
+            await message.reply_text(f"Error interacting with the receiver: {e}")
+            return
+
+        # Backup user characters before giving
+        await backup_characters(receiver_id)
+
+        all_characters_cursor = collection.find({})
+        all_characters = await all_characters_cursor.to_list(length=None)
+
+        # Check for 'id' field presence
+        all_characters = [character for character in all_characters if 'id' in character]
+
+        if len(all_characters) < amount:
+            await message.reply_text("Not enough characters available to give.")
+            return
+
+        random_characters = random.sample(all_characters, amount)
+        random_character_ids = [character['id'] for character in random_characters]
+
+        # Process tasks in batches to optimize performance
+        batch_size = 100  # Adjust batch size as needed
+        tasks = [
+            give_character_batch(receiver_id, random_character_ids[i:i + batch_size])
+            for i in range(0, amount, batch_size)
+        ]
+
+        await asyncio.gather(*tasks)
+
+        user_link = f"[{message.reply_to_message.from_user.first_name}](tg://user?id={receiver_id})"
+
+        # Send summary notification to the owner
+        notification_message = (
+            f"Action: Give Random Characters\n"
+            f"Given by: {message.from_user.first_name}\n"
+            f"Amount: {amount}\n"
+            f"Receiver: {user_link}\n"
+        )
+        await send_action_notification(notification_message)
+
+        # Log the action in the log channel
+        log_message = f"Random characters (Amount: {amount}) given by {message.from_user.first_name} to {message.reply_to_message.from_user.first_name} (ID: {receiver_id})."
+        await app.send_message(LOG_CHANNEL_ID, log_message)
+
+        await message.reply_text(f"Success! {amount} character(s) added to {user_link}'s collection.")
+    except Exception as e:
+        print(f"Error in random_characters_command: {e}")
+        await message.reply_text("An error occurred while processing the command.")
+        
 @app.on_message(filters.command(["kill"]) & filters.reply)
 async def remove_character_command(client, message):
     if str(message.from_user.id) not in SPECIALGRADE and str(message.from_user.id) not in GRADE1:
