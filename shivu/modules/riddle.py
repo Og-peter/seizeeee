@@ -1,6 +1,6 @@
 from telegram import Update, InputMediaPhoto
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters
-from pyrogram import Client, filters
+# Removed the conflicting import of filters from pyrogram
 from shivu import user_collection, collection, application
 import asyncio
 import random
