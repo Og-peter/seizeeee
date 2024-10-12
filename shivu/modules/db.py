@@ -222,7 +222,37 @@ anime_questions = [
         "answers": ["Chrollo Lucilfer", "Hisoka", "Pakunoda", "Feitan"],
         "correct_answer": "Chrollo Lucilfer",
         "image_url": "https://files.catbox.moe/example25.jpg"
-    }
+    },
+    {
+    "question": "In 'Naruto', what is Kakashi's signature jutsu?",
+    "answers": ["Chidori", "Rasengan", "Shadow Clone Jutsu", "Fireball Jutsu"],
+    "correct_answer": "Chidori",
+    "image_url": "https://files.catbox.moe/example26.jpg"
+},
+{
+    "question": "In 'Dragon Ball Z', who killed Frieza on Namek?",
+    "answers": ["Goku", "Vegeta", "Piccolo", "Future Trunks"],
+    "correct_answer": "Future Trunks",
+    "image_url": "https://files.catbox.moe/example27.jpg"
+},
+{
+    "question": "In 'One Punch Man', who is Saitama's disciple?",
+    "answers": ["Genos", "King", "Bang", "Fubuki"],
+    "correct_answer": "Genos",
+    "image_url": "https://files.catbox.moe/example28.jpg"
+},
+{
+    "question": "In 'Attack on Titan', what is the name of the first Titan Eren fights?",
+    "answers": ["Colossal Titan", "Armored Titan", "Female Titan", "Smiling Titan"],
+    "correct_answer": "Smiling Titan",
+    "image_url": "https://files.catbox.moe/example29.jpg"
+},
+{
+    "question": "In 'Naruto', who is the founder of the Akatsuki?",
+    "answers": ["Pain", "Itachi", "Madara", "Nagato"],
+    "correct_answer": "Nagato",
+    "image_url": "https://files.catbox.moe/example30.jpg"
+}
 ]
 
 # Command handler to start the anime quiz
