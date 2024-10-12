@@ -1,4 +1,4 @@
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters
 from shivu import user_collection, collection, application
 import asyncio
@@ -8,6 +8,10 @@ from datetime import datetime, timedelta
 active_guesses = {}
 # Dictionary to store user cooldowns
 user_cooldowns = {}
+
+# Define allowed group and support group URL
+ALLOWED_GROUP_ID = -1002104939708  # Replace with your allowed group's chat ID
+SUPPORT_GROUP_URL = "https://t.me/dynamic_gangs"  # Replace with your actual support group URL
 
 # Function to fetch a random anime character from the database
 async def get_random_character():
@@ -28,6 +32,18 @@ async def get_random_character():
 async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     current_time = datetime.now()
     user_id = update.effective_user.id
+    chat_id = update.message.chat_id
+
+    # Check if the command is used in the allowed group
+    if chat_id != ALLOWED_GROUP_ID:
+        # Send message with a button linking to the support group
+        keyboard = [[InlineKeyboardButton("Join Support Group", url=SUPPORT_GROUP_URL)]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await update.message.reply_text(
+            "⚠️ This feature is only available in our support group. Join here:",
+            reply_markup=reply_markup
+        )
+        return
 
     # Check if the user is on cooldown
     if user_id in user_cooldowns and current_time < user_cooldowns[user_id]:
@@ -43,7 +59,7 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
         return
 
     # Store the active guess for this chat
-    active_guesses[update.message.chat_id] = {
+    active_guesses[chat_id] = {
         'correct_answer': correct_character['name'],  # Store the full name of the character
         'start_time': current_time
     }
@@ -54,14 +70,14 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     # Send the question with the character's image
     question = "<b>🧩 Guess the Anime Character! 🧩</b>\n\nReply with the correct name:"
     sent_message = await context.bot.send_photo(
-        chat_id=update.message.chat_id,
+        chat_id=chat_id,
         photo=correct_character['img_url'],  # Character image URL from the DB
         caption=question,
         parse_mode='HTML'
     )
 
     # Schedule a timeout for guessing (e.g., 15 seconds)
-    asyncio.create_task(guess_timeout(context, update.message.chat_id, sent_message.message_id))
+    asyncio.create_task(guess_timeout(context, chat_id, sent_message.message_id))
 
 # Function to handle the guess timeout
 async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int):
