@@ -141,7 +141,7 @@ async def guess_text_handler(update: Update, context: CallbackContext):
         # Increase streak and tokens
         streak = user_streaks.get(user_id, 0) + 1
         user_streaks[user_id] = streak
-        tokens_earned = 80 + (streak * 10)  # Bonus tokens based on streak
+        tokens_earned = 10 + (streak * 10)  # Bonus tokens based on streak
 
         await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': tokens_earned}})
         await context.bot.send_message(
