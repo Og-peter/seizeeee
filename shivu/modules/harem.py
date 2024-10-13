@@ -6,13 +6,6 @@ from html import escape
 import random
 from itertools import groupby
 
-# Define stylish font options
-BOLD = "𝗕𝗼𝗹𝗱"
-ITALIC = "𝐼𝑡𝑎𝑙𝑖𝑐"
-BOLD_ITALIC = "𝑩𝒐𝒍𝒅 𝑰𝒕𝒂𝒍𝒊𝒄"
-MONO = "𝙈𝙤𝙣𝙤"
-SERIF_BOLD = "𝐒𝐞𝐫𝐢𝐟 𝐁𝐨𝐥𝐝"
-CURSIVE = "𝒞𝓊𝓇𝓈𝒾𝓋𝑒"
 
 # Harem function to display the user's collection of characters
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
@@ -23,11 +16,11 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     
     # If no user found, send a message
     if not user:
-        message = f"<b>{BOLD}You haven't captured any characters yet... 😢{BOLD}</b>"
+        message = 'You have not seized any characters yet..'
         if update.message:
-            await update.message.reply_text(message, parse_mode='HTML')
+            await update.message.reply_text(message)
         else:
-            await update.callback_query.edit_message_text(message, parse_mode='HTML')
+            await update.callback_query.edit_message_text(message)
         return
 
     # Sort characters by anime and ID
@@ -52,7 +45,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         page = 0
 
     # Start building the harem message
-    harem_message = f"<b>{CURSIVE}{escape(update.effective_user.first_name)}'s {BOLD_ITALIC}Harem - {SERIF_BOLD}Page {page+1}/{total_pages}</b>\n"
+    harem_message = f"<b>{escape(update.effective_user.first_name)}'s Harem - Page {page+1}/{total_pages}</b>\n"
 
     # Slice the list of characters for the current page
     current_characters = unique_characters[page*15:(page+1)*15]
@@ -75,31 +68,31 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     # Add characters to the harem message grouped by anime
     for anime, characters in current_grouped_characters.items():
-        harem_message += f'\n<b>{MONO}✤ {anime} ({len(characters)}/{await collection.count_documents({"anime": anime})})</b>\n'
-        harem_message += f'••──────────••\n'
+        harem_message += f'\n<b>✤ {anime} ﹝{len(characters)}/{await collection.count_documents({"anime": anime})}〕</b>\n'
+        harem_message += '••────────────────•\n'
         for character in characters:
             count = character_counts.get(character.get('id'), 0)
             rarity = character.get('rarity', 'Unknown')
             rarity_emoji = rarity_emojis.get(rarity, rarity)
             character_id = character.get("id", "Unknown")
-            harem_message += f'✥ {rarity_emoji} {MONO} : {character_id}  {character.get("name", "Unknown")} x{count}\n'
+            harem_message += f'✥  ⌠ {rarity_emoji} ⌡   : {character_id}  {character.get("name", "Unknown")} ×{count}\n'
     
     # Total number of characters seized
     total_count = len(user['characters'])
 
     # Inline keyboard with options to navigate through pages
-    keyboard = [[InlineKeyboardButton(f"💠 {ITALIC}See Full Collection ({total_count})", switch_inline_query_current_chat=f"collection.{user_id}")]]
+    keyboard = [[InlineKeyboardButton(f"See Characters 🏮 ({total_count})", switch_inline_query_current_chat=f"collection.{user_id}")]]
     if total_pages > 1:
         nav_buttons = []
         if page > 0:
-            nav_buttons.append(InlineKeyboardButton(f"◀ {MONO}Previous", callback_data=f"harem:{page-1}:{user_id}"))
+            nav_buttons.append(InlineKeyboardButton("◀ Previous", callback_data=f"harem:{page-1}:{user_id}"))
         if page < total_pages - 1:
-            nav_buttons.append(InlineKeyboardButton(f"{MONO}Next ▶", callback_data=f"harem:{page+1}:{user_id}"))
+            nav_buttons.append(InlineKeyboardButton("Next ▶", callback_data=f"harem:{page+1}:{user_id}"))
         keyboard.append(nav_buttons)
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    # Check for favorite character
+# If the user has a favorite character
     if 'favorites' in user and user['favorites']:
         fav_character_id = user['favorites'][0]
         fav_character = next((c for c in user['characters'] if c.get('id') == fav_character_id), None)
@@ -118,7 +111,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
             else:
                 await update.callback_query.edit_message_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
 
-    # If no favorite character, choose a random one
+    # If there is no favorite, choose a random character or display message
     else:
         if user['characters']:
             random_character = random.choice(user['characters'])
@@ -134,12 +127,12 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
                 if update.message:
                     await update.message.reply_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
                 else:
-                    await update.callback_query.edit_message_text(harem_message, reply_markup=reply_markup)
+                    await update.callback_query.edit_message_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
         else:
             if update.message:
-                await update.message.reply_text(f"{MONO}⬤ Your list is still empty, time to seize some characters! 😏")
+                await update.message.reply_text("⬤ Your list is so empty :)")
             else:
-                await update.callback_query.edit_message_text(f"{MONO}⬤ Your list is still empty, time to seize some characters! 😏")
+                await update.callback_query.edit_message_text("⬤ Your list is so empty :)")
 
 # Callback function for handling harem pagination
 async def harem_callback(update: Update, context: CallbackContext) -> None:
@@ -154,11 +147,19 @@ async def harem_callback(update: Update, context: CallbackContext) -> None:
 
     # Ensure users cannot interact with other users' harems
     if query.from_user.id != user_id:
-        await query.answer(f"{MONO}⬤ Stay away from others' harems!", show_alert=True)
+        await query.answer("⬤ Don't stalk other user's harem", show_alert=True)
         return
 
+    # Determine the next page
+    if "next" in data:
+        page = current_page + 1
+    elif "prev" in data:
+        page = current_page - 1
+    else:
+        page = current_page
+
     # Display the harem with the new page
-    await harem(update, context, current_page)
+    await harem(update, context, page)
 
 # Register handlers
 application.add_handler(CommandHandler(["harem", "collection"], harem, block=False))
