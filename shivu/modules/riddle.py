@@ -1,16 +1,17 @@
+from datetime import datetime
+import asyncio
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters
 from telegram.helpers import mention_html
+
 from shivu import user_collection, collection, application
-import asyncio
-from datetime import datetime, timedelta
 
 # Dictionary to store active guesses and user data
 active_guesses = {}
 user_streaks = {}
 character_message_links = {}
-user_profiles = {}
 
 # Allowed group and support group URL
 ALLOWED_GROUP_ID = -1002104939708  # Replace with your allowed group's chat ID
@@ -22,9 +23,7 @@ async def get_random_character():
         pipeline = [{'$sample': {'size': 1}}]
         cursor = collection.aggregate(pipeline)
         characters = await cursor.to_list(length=1)
-        if characters:
-            return characters[0]
-        return None
+        return characters[0] if characters else None
     except Exception as e:
         print(f"Error fetching characters: {e}")
         return None
@@ -43,13 +42,13 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
         await update.message.reply_text(
             f"<b>⚠️ {user_mention}, this feature is only available in our support group. Join here:</b>",
             reply_markup=reply_markup,
-            parse_mode='HTML'
+            parse_mode=ParseMode.HTML
         )
         return
 
     # Check if there is an active game in the chat
     if chat_id in active_guesses and active_guesses[chat_id].get('active', False):
-        await update.message.reply_text(f"<b>⚠️ {user_mention}, you need to finish the current game before starting a new one!</b>", parse_mode='HTML')
+        await update.message.reply_text(f"<b>⚠️ {user_mention}, you need to finish the current game before starting a new one!</b>", parse_mode=ParseMode.HTML)
         return
 
     # Get the correct anime character
@@ -75,7 +74,7 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
         chat_id=chat_id,
         photo=correct_character['img_url'],
         caption=question,
-        parse_mode='HTML'
+        parse_mode=ParseMode.HTML
     )
 
     # Schedule hint and timeout tasks
@@ -100,7 +99,7 @@ async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int)
                 chat_id=chat_id,
                 message_id=message_id,
                 caption=f"⏰ <b>Time's up!</b> The correct answer was <b><u>{correct_answer}</u></b>.",
-                parse_mode='HTML'
+                parse_mode=ParseMode.HTML
             )
         except Exception as e:
             print(f"Failed to edit message: {e}")
@@ -123,7 +122,7 @@ async def provide_hint(context: CallbackContext, chat_id: int, delay: int):
             return  # No more hints after 2 stages
 
         active_guesses[chat_id]['hint_stage'] += 1
-        await context.bot.send_message(chat_id, text=f"{hint_text}🔍 <b>{hint}</b>", parse_mode='HTML')
+        await context.bot.send_message(chat_id, text=f"{hint_text}🔍 <b>{hint}</b>", parse_mode=ParseMode.HTML)
 
 # Function to handle streaks and provide user profile data
 async def guess_text_handler(update: Update, context: CallbackContext):
@@ -156,7 +155,7 @@ async def guess_text_handler(update: Update, context: CallbackContext):
                  f"🔑 The answer was: <b><u>{correct_answer}</u></b>\n"
                  f"🏅 You've earned <b>{tokens_earned} tokens!</b>\n"
                  f"🔥 Your streak is now <b>{streak}</b>. {badges}",
-            parse_mode='HTML'
+            parse_mode=ParseMode.HTML
         )
 
         # Remove the active game after the correct guess
@@ -169,7 +168,7 @@ async def guess_text_handler(update: Update, context: CallbackContext):
         await update.message.reply_text(
             f'💎 {user_mention}, <b>Find the character and try again!</b>',
             reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode='HTML'
+            parse_mode=ParseMode.HTML
         )
 
 # Award badges based on streaks
