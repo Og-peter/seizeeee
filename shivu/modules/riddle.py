@@ -98,7 +98,7 @@ async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int)
             await context.bot.edit_message_caption(
                 chat_id=chat_id,
                 message_id=message_id,
-                caption=f"⏰ <b>Time's up!</b> The correct answer was <b><u>{correct_answer}</u></b>.",
+                caption=f"⏰ <b>Time's up!</b> The correct answer was <b><u>`{correct_answer}`</u></b>.",
                 parse_mode=ParseMode.HTML
             )
         except Exception as e:
@@ -152,9 +152,9 @@ async def guess_text_handler(update: Update, context: CallbackContext):
         await context.bot.send_message(
             chat_id=chat_id,
             text=f"🎉 {user_mention} <b>guessed correctly!</b>\n\n"
-                 f"🔑 The answer was: <b><u>{correct_answer}</u></b>\n"
-                 f"🏅 You've earned <b>{tokens_earned} tokens!</b>\n"
-                 f"🔥 Your streak is now <b>{streak}</b>. {badges}",
+                 f"🔑 The answer was: <b><u>`{correct_answer}`</u></b>\n"
+                 f"🏅 You've earned <b>`{tokens_earned}` tokens!</b>\n"
+                 f"🔥 Your streak is now <b>`{streak}`</b>. `{badges}`",
             parse_mode=ParseMode.HTML
         )
 
