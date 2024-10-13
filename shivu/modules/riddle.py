@@ -152,9 +152,9 @@ async def guess_text_handler(update: Update, context: CallbackContext):
         await context.bot.send_message(
             chat_id=chat_id,
             text=f"🎉 {user_mention} <b>guessed correctly!</b>\n\n"
-                 f"🔑 The answer was: <b><u>`{correct_answer}`</u></b>\n"
-                 f"🏅 You've earned <b>`{tokens_earned}` tokens!</b>\n"
-                 f"🔥 Your streak is now <b>`{streak}`</b>. `{badges}`",
+                 f"🔑 The answer was: <b><u>{correct_answer}</u></b>\n"
+                 f"🏅 You've earned <b>{tokens_earned} tokens!</b>\n"
+                 f"🔥 Your streak is now <b>`{streak}`</b>. `{badges}`\n",
             parse_mode=ParseMode.HTML
         )
 
