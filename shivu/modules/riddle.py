@@ -1,6 +1,5 @@
 from datetime import datetime
 import asyncio
-
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters
@@ -78,13 +77,13 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     )
 
     # Schedule hint and timeout tasks using the correct data structure
-    context.job_queue.run_once(guess_timeout, 30, data={'chat_id': chat_id, 'message_id': sent_message.message_id})
-    context.job_queue.run_once(provide_hint, 10, data={'chat_id': chat_id, 'hint_stage': 0})  # First hint after 10 seconds
-    context.job_queue.run_once(provide_hint, 20, data={'chat_id': chat_id, 'hint_stage': 1})  # Second hint after 20 seconds
+    context.job_queue.run_once(guess_timeout, 30, context={'chat_id': chat_id, 'message_id': sent_message.message_id})
+    context.job_queue.run_once(provide_hint, 10, context={'chat_id': chat_id, 'hint_stage': 0})  # First hint after 10 seconds
+    context.job_queue.run_once(provide_hint, 20, context={'chat_id': chat_id, 'hint_stage': 1})  # Second hint after 20 seconds
 
 # Function to handle guess timeout
 async def guess_timeout(context: CallbackContext):
-    job_data = context.job.data  # Access job data
+    job_data = context.job.context  # Access job data
     chat_id = job_data['chat_id']
     message_id = job_data['message_id']
 
@@ -108,7 +107,7 @@ async def guess_timeout(context: CallbackContext):
 
 # Function to provide hints at different stages
 async def provide_hint(context: CallbackContext):
-    job_data = context.job.data  # Access job data
+    job_data = context.job.context  # Access job data
     chat_id = job_data['chat_id']
     hint_stage = job_data['hint_stage']
 
@@ -191,4 +190,4 @@ async def award_badges(user_id, streak):
 # Add command handler for starting the anime guess game
 application.add_handler(CommandHandler("guess", start_anime_guess_cmd, block=False))
 # Add message handler for processing text-based guesses
-application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, guess_text_handler, block=False))
+application.add_handler(MessageHandler(filters.TEXT
