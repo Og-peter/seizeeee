@@ -1,5 +1,6 @@
 from datetime import datetime
 import asyncio
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters
@@ -76,16 +77,14 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
         parse_mode=ParseMode.HTML
     )
 
-    # Schedule hint and timeout tasks using the correct data structure
-    context.job_queue.run_once(guess_timeout, 30, context={'chat_id': chat_id, 'message_id': sent_message.message_id})
-    context.job_queue.run_once(provide_hint, 10, context={'chat_id': chat_id, 'hint_stage': 0})  # First hint after 10 seconds
-    context.job_queue.run_once(provide_hint, 20, context={'chat_id': chat_id, 'hint_stage': 1})  # Second hint after 20 seconds
+    # Schedule hint and timeout tasks
+    asyncio.create_task(guess_timeout(context, chat_id, sent_message.message_id))
+    asyncio.create_task(provide_hint(context, chat_id, 10))  # First hint after 10 seconds
+    asyncio.create_task(provide_hint(context, chat_id, 20))  # Second hint after 20 seconds
 
 # Function to handle guess timeout
-async def guess_timeout(context: CallbackContext):
-    job_data = context.job.context  # Access job data
-    chat_id = job_data['chat_id']
-    message_id = job_data['message_id']
+async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int):
+    await asyncio.sleep(30)
 
     # Check if there's still an active game after 30 seconds
     if chat_id in active_guesses:
@@ -99,20 +98,18 @@ async def guess_timeout(context: CallbackContext):
             await context.bot.edit_message_caption(
                 chat_id=chat_id,
                 message_id=message_id,
-                caption=f"⏰ <b>Time's up!</b> The correct answer was <b><u>{correct_answer}</u></b>.",
+                caption=f"⏰ <b>Time's up!</b> The correct answer was <b><u>`{correct_answer}`</u></b>.",
                 parse_mode=ParseMode.HTML
             )
         except Exception as e:
             print(f"Failed to edit message: {e}")
 
 # Function to provide hints at different stages
-async def provide_hint(context: CallbackContext):
-    job_data = context.job.context  # Access job data
-    chat_id = job_data['chat_id']
-    hint_stage = job_data['hint_stage']
-
+async def provide_hint(context: CallbackContext, chat_id: int, delay: int):
+    await asyncio.sleep(delay)
     if chat_id in active_guesses:
         correct_answer = active_guesses[chat_id]['correct_answer']
+        hint_stage = active_guesses[chat_id]['hint_stage']
 
         # Provide different hints based on stage
         if hint_stage == 0:
@@ -126,7 +123,6 @@ async def provide_hint(context: CallbackContext):
         else:
             return  # No more hints after 2 stages
 
-        # Update the hint stage
         active_guesses[chat_id]['hint_stage'] += 1
         await context.bot.send_message(chat_id, text=f"{hint_text}🔍 <b>{hint}</b>", parse_mode=ParseMode.HTML)
 
@@ -160,7 +156,7 @@ async def guess_text_handler(update: Update, context: CallbackContext):
             text=f"🎉 {user_mention} <b>guessed correctly!</b>\n\n"
                  f"🔑 The answer was: <b><u>{correct_answer}</u></b>\n"
                  f"🏅 You've earned <b>{tokens_earned} tokens!</b>\n"
-                 f"🔥 Your streak is now <b>{streak}</b>. {badges}\n",
+                 f"🔥 Your streak is now <b>`{streak}`</b>. `{badges}`\n",
             parse_mode=ParseMode.HTML
         )
 
