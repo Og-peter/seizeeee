@@ -75,7 +75,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
             rarity = character.get('rarity', 'Unknown')
             rarity_emoji = rarity_emojis.get(rarity, rarity)
             character_id = character.get("id", "Unknown")
-            harem_message += f'✥  ⌠ {rarity_emoji} ⌡   : {character_id}  {character.get("name", "Unknown")} ×{count}\n'
+            harem_message += f'❖  ⌠ {rarity_emoji} ⌡ : {character_id}  {character.get("name", "Unknown")} ×{count}\n'
             harem_message += f'╰── ⋅ ⋅ ──── ✩ ──── ⋅ ⋅ ──╯\n'
     # Total number of characters seized
     total_count = len(user['characters'])
