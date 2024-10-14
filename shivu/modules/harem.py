@@ -15,10 +15,17 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     if not user:
         message = 'You have not seized any characters yet..'
-        await update.message.reply_text(message) if update.message else await update.callback_query.edit_message_text(message)
+        if update.message:
+            await update.message.reply_text(message)
+        else:
+            await update.callback_query.edit_message_text(message)
         return
 
-    characters = user['characters']
+    characters = user.get('characters', [])
+
+    if not characters:
+        await update.message.reply_text("⬤ Your list is so empty :)") if update.message else await update.callback_query.edit_message_text("⬤ Your list is so empty :)")
+        return
 
     characters = sorted(characters, key=lambda x: (x.get('anime', ''), x.get('id', '')))
 
@@ -52,10 +59,10 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         '💞 Valentine': '💞'
     }
 
-    for anime, characters in current_grouped_characters.items():
-        harem_message += f'\n<b> ᯽{anime} ﹝{len(characters)}/{await collection.count_documents({"anime": anime})}〕</b>\n'
+    for anime, chars in current_grouped_characters.items():
+        harem_message += f'\n<b> ᯽{anime} ﹝{len(chars)}/{await collection.count_documents({"anime": anime})}〕</b>\n'
         harem_message += '╭── ⋅ ⋅ ──── ✩ ──── ⋅ ⋅ ──╮\n'
-        for character in characters:
+        for character in chars:
             count = character_counts.get(character.get('id'), 0)
             rarity = character.get('rarity', 'Unknown')
             rarity_emoji = rarity_emojis.get(rarity, rarity)
@@ -65,8 +72,6 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     total_count = len(user['characters'])
 
-    keyboard = filter_buttons + [[InlineKeyboardButton(f"See Characters 🏮 ({total_count})", switch_inline_query_current_chat=f"collection.{user_id}")]]
-    
     # Button logic (pagination, fast forward, etc.)
     keyboard = []
 
@@ -74,11 +79,11 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     if total_pages > 1:
         nav_buttons = []
         if page > 0:
-            nav_buttons.append(InlineKeyboardButton("1x ⬅️", callback_data=f"harem:{page-1}:{user_id}"))
+            nav_buttons.append(InlineKeyboardButton("⬅️ 1x", callback_data=f"harem:{page-1}:{user_id}"))
         if page < total_pages - 1:
             nav_buttons.append(InlineKeyboardButton("1x ➡️", callback_data=f"harem:{page+1}:{user_id}"))
         keyboard.append(nav_buttons)
-    
+
     # Current Page Indicator
     keyboard.append([InlineKeyboardButton(f"{page+1}/{total_pages}", callback_data="noop")])
 
@@ -86,11 +91,8 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     if page < total_pages - 2:
         keyboard.append([InlineKeyboardButton("FAST ⏩", callback_data=f"harem:{page+2}:{user_id}")])
 
-    # Globe Button (Placeholder: Modify this as per your need)
-    keyboard.append([InlineKeyboardButton("🌐", callback_data="global_view")])
-
-    # Trash/Delete Button (Placeholder: Implement your own logic for deleting)
-    keyboard.append([InlineKeyboardButton("🗑️", callback_data=f"delete_harem:{user_id}")])
+    # Add character count button
+    keyboard.append([InlineKeyboardButton(f"See Characters 🏮 ({total_count})", switch_inline_query_current_chat=f"collection.{user_id}")])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -112,7 +114,6 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
                 await update.message.reply_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
             else:
                 await update.callback_query.edit_message_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
-
     else:
         random_character = random.choice(user['characters']) if user['characters'] else None
         if random_character and 'img_url' in random_character:
