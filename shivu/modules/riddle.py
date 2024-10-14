@@ -78,14 +78,12 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     )
 
     # Schedule hint and timeout tasks
-    asyncio.create_task(guess_timeout(context, chat_id, sent_message.message_id))
-    asyncio.create_task(provide_hint(context, chat_id, 10))  # First hint after 10 seconds
-    asyncio.create_task(provide_hint(context, chat_id, 20))  # Second hint after 20 seconds
+    context.application.job_queue.run_once(lambda c: guess_timeout(c, chat_id, sent_message.message_id), 30)
+    context.application.job_queue.run_once(lambda c: provide_hint(c, chat_id), 10)  # First hint after 10 seconds
+    context.application.job_queue.run_once(lambda c: provide_hint(c, chat_id), 20)  # Second hint after 20 seconds
 
 # Function to handle guess timeout
 async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int):
-    await asyncio.sleep(30)
-
     # Check if there's still an active game after 30 seconds
     if chat_id in active_guesses:
         correct_answer = active_guesses[chat_id]['correct_answer']
@@ -98,15 +96,14 @@ async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int)
             await context.bot.edit_message_caption(
                 chat_id=chat_id,
                 message_id=message_id,
-                caption=f"⏰ <b>Time's up!</b> The correct answer was <b><u>`{correct_answer}`</u></b>.",
+                caption=f"⏰ <b>Time's up!</b> The correct answer was <b><u>{correct_answer}</u></b>.",
                 parse_mode=ParseMode.HTML
             )
         except Exception as e:
             print(f"Failed to edit message: {e}")
 
 # Function to provide hints at different stages
-async def provide_hint(context: CallbackContext, chat_id: int, delay: int):
-    await asyncio.sleep(delay)
+async def provide_hint(context: CallbackContext, chat_id: int):
     if chat_id in active_guesses:
         correct_answer = active_guesses[chat_id]['correct_answer']
         hint_stage = active_guesses[chat_id]['hint_stage']
@@ -156,7 +153,7 @@ async def guess_text_handler(update: Update, context: CallbackContext):
             text=f"🎉 {user_mention} <b>guessed correctly!</b>\n\n"
                  f"🔑 The answer was: <b><u>{correct_answer}</u></b>\n"
                  f"🏅 You've earned <b>{tokens_earned} tokens!</b>\n"
-                 f"🔥 Your streak is now <b>`{streak}`</b>. `{badges}`\n",
+                 f"🔥 Your streak is now <b>{streak}</b>. {badges}\n",
             parse_mode=ParseMode.HTML
         )
 
