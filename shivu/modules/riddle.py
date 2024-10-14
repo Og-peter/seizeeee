@@ -77,15 +77,16 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
         parse_mode=ParseMode.HTML
     )
 
-    # Schedule hint and timeout tasks
+    # Schedule hint and timeout tasks using the correct data structure
     context.job_queue.run_once(guess_timeout, 30, data={'chat_id': chat_id, 'message_id': sent_message.message_id})
     context.job_queue.run_once(provide_hint, 10, data={'chat_id': chat_id, 'hint_stage': 0})  # First hint after 10 seconds
     context.job_queue.run_once(provide_hint, 20, data={'chat_id': chat_id, 'hint_stage': 1})  # Second hint after 20 seconds
 
 # Function to handle guess timeout
 async def guess_timeout(context: CallbackContext):
-    chat_id = context.job.data['chat_id']
-    message_id = context.job.data['message_id']
+    job_data = context.job.data  # Access job data
+    chat_id = job_data['chat_id']
+    message_id = job_data['message_id']
 
     # Check if there's still an active game after 30 seconds
     if chat_id in active_guesses:
@@ -107,8 +108,9 @@ async def guess_timeout(context: CallbackContext):
 
 # Function to provide hints at different stages
 async def provide_hint(context: CallbackContext):
-    chat_id = context.job.data['chat_id']
-    hint_stage = context.job.data['hint_stage']
+    job_data = context.job.data  # Access job data
+    chat_id = job_data['chat_id']
+    hint_stage = job_data['hint_stage']
 
     if chat_id in active_guesses:
         correct_answer = active_guesses[chat_id]['correct_answer']
@@ -125,6 +127,7 @@ async def provide_hint(context: CallbackContext):
         else:
             return  # No more hints after 2 stages
 
+        # Update the hint stage
         active_guesses[chat_id]['hint_stage'] += 1
         await context.bot.send_message(chat_id, text=f"{hint_text}🔍 <b>{hint}</b>", parse_mode=ParseMode.HTML)
 
