@@ -7,7 +7,7 @@ import random
 from itertools import groupby
 
 
-# Enhanced Harem function
+# Enhanced Harem function with filter options
 async def harem(update: Update, context: CallbackContext, page=0, filter_anime=None, filter_rarity=None) -> None:
     user_id = update.effective_user.id
 
@@ -71,15 +71,15 @@ async def harem(update: Update, context: CallbackContext, page=0, filter_anime=N
             harem_message += f'╰── ⋅ ⋅ ──── ✩ ──── ⋅ ⋅ ──╯\n'
 
     total_count = len(user['characters'])
-    
+
     # Adding filter options
     filter_buttons = [
-        [InlineKeyboardButton("Filter by Rarity", callback_data=f"filter_rarity:{user_id}")],
-        [InlineKeyboardButton("Filter by Anime", callback_data=f"filter_anime:{user_id}")]
+        [InlineKeyboardButton("Filter by Rarity", callback_data=f"filter_rarity:{user_id}:{page}")],
+        [InlineKeyboardButton("Filter by Anime", callback_data=f"filter_anime:{user_id}:{page}")]
     ]
-    
+
     keyboard = filter_buttons + [[InlineKeyboardButton(f"See Characters 🏮 ({total_count})", switch_inline_query_current_chat=f"collection.{user_id}")]]
-    
+
     if total_pages > 1:
         nav_buttons = []
         if page > 0:
@@ -138,16 +138,8 @@ async def harem_callback(update: Update, context: CallbackContext) -> None:
         await query.answer("⬤ Don't stalk other user's harem", show_alert=True)
         return
 
-    # Determine the next page
-    if "next" in data:
-        page = current_page + 1
-    elif "prev" in data:
-        page = current_page - 1
-    else:
-        page = current_page
-
-    # Display the harem with the new page
-    await harem(update, context, page)
+    # Display the harem with the selected page
+    await harem(update, context, current_page)
 
 
 # Filter callback function for harem filters
@@ -158,11 +150,13 @@ async def filter_harem(update: Update, context: CallbackContext):
     user_id = query.from_user.id
 
     if data.startswith("filter_rarity"):
-        # Present options for filtering by rarity (show inline buttons)
-        pass  # Add logic to filter by rarity
+        # Filter by rarity
+        _, user_id, page_str = data.split(':')
+        await harem(update, context, int(page_str), filter_rarity="⚪️ Common")
     elif data.startswith("filter_anime"):
-        # Present options for filtering by anime
-        pass  # Add logic to filter by anime
+        # Filter by anime
+        _, user_id, page_str = data.split(':')
+        await harem(update, context, int(page_str), filter_anime="Naruto")  # Example filter
 
 
 # Register handlers after defining all functions
