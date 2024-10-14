@@ -6,6 +6,7 @@ from html import escape
 import random
 from itertools import groupby
 
+
 # Enhanced Harem function
 async def harem(update: Update, context: CallbackContext, page=0, filter_anime=None, filter_rarity=None) -> None:
     user_id = update.effective_user.id
@@ -120,7 +121,36 @@ async def harem(update: Update, context: CallbackContext, page=0, filter_anime=N
         else:
             await update.message.reply_text("⬤ Your list is so empty :)") if update.message else await update.callback_query.edit_message_text("⬤ Your list is so empty :)")
 
-# Register filter callback
+
+# Callback function for handling harem pagination
+async def harem_callback(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    data = query.data
+
+    # Extract page and user ID from the callback data
+    _, page_str, user_id = data.split(':')
+
+    current_page = int(page_str)
+    user_id = int(user_id)
+
+    # Ensure users cannot interact with other users' harems
+    if query.from_user.id != user_id:
+        await query.answer("⬤ Don't stalk other user's harem", show_alert=True)
+        return
+
+    # Determine the next page
+    if "next" in data:
+        page = current_page + 1
+    elif "prev" in data:
+        page = current_page - 1
+    else:
+        page = current_page
+
+    # Display the harem with the new page
+    await harem(update, context, page)
+
+
+# Filter callback function for harem filters
 async def filter_harem(update: Update, context: CallbackContext):
     query = update.callback_query
     data = query.data
@@ -134,6 +164,8 @@ async def filter_harem(update: Update, context: CallbackContext):
         # Present options for filtering by anime
         pass  # Add logic to filter by anime
 
+
+# Register handlers after defining all functions
 application.add_handler(CommandHandler(["harem", "collection"], harem, block=False))
-application.add_handler(CallbackQueryHandler(filter_harem, pattern='^filter_', block=False))
 application.add_handler(CallbackQueryHandler(harem_callback, pattern='^harem', block=False))
+application.add_handler(CallbackQueryHandler(filter_harem, pattern='^filter_', block=False))
