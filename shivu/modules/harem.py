@@ -1,4 +1,4 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
 from shivu import collection, user_collection, application
 import math
@@ -6,9 +6,8 @@ from html import escape
 import random
 from itertools import groupby
 
-
-# Enhanced Harem function with filter options
-async def harem(update: Update, context: CallbackContext, page=0, filter_anime=None, filter_rarity=None) -> None:
+# Enhanced Harem function without filters
+async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
 
     # Fetch user data
@@ -20,12 +19,6 @@ async def harem(update: Update, context: CallbackContext, page=0, filter_anime=N
         return
 
     characters = user['characters']
-
-    # Apply filters if provided
-    if filter_anime:
-        characters = [char for char in characters if char.get('anime') == filter_anime]
-    if filter_rarity:
-        characters = [char for char in characters if char.get('rarity') == filter_rarity]
 
     characters = sorted(characters, key=lambda x: (x.get('anime', ''), x.get('id', '')))
 
@@ -72,24 +65,34 @@ async def harem(update: Update, context: CallbackContext, page=0, filter_anime=N
 
     total_count = len(user['characters'])
 
-    # Adding filter options
-    filter_buttons = [
-        [InlineKeyboardButton("Filter by Rarity", callback_data=f"filter_rarity:{user_id}:{page}")],
-        [InlineKeyboardButton("Filter by Anime", callback_data=f"filter_anime:{user_id}:{page}")]
-    ]
+    # Button logic (pagination, fast forward, etc.)
+    keyboard = []
 
-    keyboard = filter_buttons + [[InlineKeyboardButton(f"See Characters 🏮 ({total_count})", switch_inline_query_current_chat=f"collection.{user_id}")]]
-
+    # Pagination Buttons
     if total_pages > 1:
         nav_buttons = []
         if page > 0:
-            nav_buttons.append(InlineKeyboardButton("◀ Previous", callback_data=f"harem:{page-1}:{user_id}"))
+            nav_buttons.append(InlineKeyboardButton("1x ⬅️", callback_data=f"harem:{page-1}:{user_id}"))
         if page < total_pages - 1:
-            nav_buttons.append(InlineKeyboardButton("Next ▶", callback_data=f"harem:{page+1}:{user_id}"))
+            nav_buttons.append(InlineKeyboardButton("1x ➡️", callback_data=f"harem:{page+1}:{user_id}"))
         keyboard.append(nav_buttons)
+    
+    # Current Page Indicator
+    keyboard.append([InlineKeyboardButton(f"{page+1}/{total_pages}", callback_data="noop")])
+
+    # Fast Forward Button
+    if page < total_pages - 2:
+        keyboard.append([InlineKeyboardButton("FAST ⏩", callback_data=f"harem:{page+2}:{user_id}")])
+
+    # Globe Button (Placeholder: Modify this as per your need)
+    keyboard.append([InlineKeyboardButton("🌐", callback_data="global_view")])
+
+    # Trash/Delete Button (Placeholder: Implement your own logic for deleting)
+    keyboard.append([InlineKeyboardButton("🗑️", callback_data=f"delete_harem:{user_id}")])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
+    # Handling favorite character image display
     if 'favorites' in user and user['favorites']:
         fav_character_id = user['favorites'][0]
         fav_character = next((c for c in user['characters'] if c.get('id') == fav_character_id), None)
@@ -121,7 +124,6 @@ async def harem(update: Update, context: CallbackContext, page=0, filter_anime=N
         else:
             await update.message.reply_text("⬤ Your list is so empty :)") if update.message else await update.callback_query.edit_message_text("⬤ Your list is so empty :)")
 
-
 # Callback function for handling harem pagination
 async def harem_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
@@ -141,25 +143,6 @@ async def harem_callback(update: Update, context: CallbackContext) -> None:
     # Display the harem with the selected page
     await harem(update, context, current_page)
 
-
-# Filter callback function for harem filters
-async def filter_harem(update: Update, context: CallbackContext):
-    query = update.callback_query
-    data = query.data
-
-    user_id = query.from_user.id
-
-    if data.startswith("filter_rarity"):
-        # Filter by rarity
-        _, user_id, page_str = data.split(':')
-        await harem(update, context, int(page_str), filter_rarity="⚪️ Common")
-    elif data.startswith("filter_anime"):
-        # Filter by anime
-        _, user_id, page_str = data.split(':')
-        await harem(update, context, int(page_str), filter_anime="Naruto")  # Example filter
-
-
 # Register handlers after defining all functions
 application.add_handler(CommandHandler(["harem", "collection"], harem, block=False))
 application.add_handler(CallbackQueryHandler(harem_callback, pattern='^harem', block=False))
-application.add_handler(CallbackQueryHandler(filter_harem, pattern='^filter_', block=False))
