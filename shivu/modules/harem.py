@@ -43,7 +43,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     harem_message = f"<b>{escape(update.effective_user.first_name)}'s Harem - Page [{page+1}/{total_pages}]</b>\n"
 
     # Paginate and group by anime
-    current_characters = unique_characters[page*15:(page+1)*15]
+    current_characters = unique_characters[page * 15:(page + 1) * 15]
     current_grouped_characters = {k: list(v) for k, v in groupby(current_characters, key=lambda x: x.get('anime', ''))}
 
     rarity_emojis = {
@@ -79,20 +79,21 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     if total_pages > 1:
         nav_buttons = []
         if page > 0:
-            nav_buttons.append(InlineKeyboardButton("⬅️ 1x", callback_data=f"harem:{page-1}:{user_id}"))
+            nav_buttons.append(InlineKeyboardButton("1x⬅️", callback_data=f"harem:{page-1}:{user_id}"))
+        nav_buttons.append(InlineKeyboardButton(f"{page + 1}/{total_pages}", callback_data="noop"))  # Current Page
         if page < total_pages - 1:
-            nav_buttons.append(InlineKeyboardButton("1x ➡️", callback_data=f"harem:{page+1}:{user_id}"))
+            nav_buttons.append(InlineKeyboardButton("1x➡️", callback_data=f"harem:{page + 1}:{user_id}"))
         keyboard.append(nav_buttons)
 
-    # Current Page Indicator
-    keyboard.append([InlineKeyboardButton(f"{page+1}/{total_pages}", callback_data="noop")])
+    # Share Button
+    keyboard.append([InlineKeyboardButton("🌐", switch_inline_query_current_chat=f"collection.{user_id}")])
 
     # Fast Forward Button
     if page < total_pages - 2:
-        keyboard.append([InlineKeyboardButton("FAST ⏩", callback_data=f"harem:{page+2}:{user_id}")])
+        keyboard.append([InlineKeyboardButton("FAST ⏩", callback_data=f"harem:{page + 2}:{user_id}")])
 
-    # Add character count button
-    keyboard.append([InlineKeyboardButton(f"See Characters 🏮 ({total_count})", switch_inline_query_current_chat=f"collection.{user_id}")])
+    # Trash Button
+    keyboard.append([InlineKeyboardButton("🗑️", callback_data=f"trash:{user_id}")])  # Example callback for trash
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
