@@ -78,12 +78,15 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     )
 
     # Schedule hint and timeout tasks
-    context.application.job_queue.run_once(lambda c: guess_timeout(c, chat_id, sent_message.message_id), 30)
-    context.application.job_queue.run_once(lambda c: provide_hint(c, chat_id), 10)  # First hint after 10 seconds
-    context.application.job_queue.run_once(lambda c: provide_hint(c, chat_id), 20)  # Second hint after 20 seconds
+    context.job_queue.run_once(guess_timeout, 30, chat_id=chat_id, message_id=sent_message.message_id)
+    context.job_queue.run_once(provide_hint, 10, chat_id=chat_id)  # First hint after 10 seconds
+    context.job_queue.run_once(provide_hint, 20, chat_id=chat_id)  # Second hint after 20 seconds
 
 # Function to handle guess timeout
-async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int):
+async def guess_timeout(context: CallbackContext):
+    chat_id = context.job.chat_id
+    message_id = context.job.data['message_id']
+
     # Check if there's still an active game after 30 seconds
     if chat_id in active_guesses:
         correct_answer = active_guesses[chat_id]['correct_answer']
@@ -103,7 +106,9 @@ async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int)
             print(f"Failed to edit message: {e}")
 
 # Function to provide hints at different stages
-async def provide_hint(context: CallbackContext, chat_id: int):
+async def provide_hint(context: CallbackContext):
+    chat_id = context.job.chat_id
+
     if chat_id in active_guesses:
         correct_answer = active_guesses[chat_id]['correct_answer']
         hint_stage = active_guesses[chat_id]['hint_stage']
