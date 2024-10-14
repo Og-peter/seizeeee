@@ -61,7 +61,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     for anime, chars in current_grouped_characters.items():
         harem_message += f'\n<b> ᯽{anime} ﹝{len(chars)}/{await collection.count_documents({"anime": anime})}〕</b>\n'
-        harem_message += '•── ⋅ ⋅ ──── ✩ ──── ⋅ ⋅ ──•\n'
+        harem_message += '•── ⋅ ⋅ ──────── ⋅ ⋅ ──•\n'
         for character in chars:
             count = character_counts.get(character.get('id'), 0)
             rarity = character.get('rarity', 'Unknown')
