@@ -139,8 +139,8 @@ async def guess_text_handler(update: Update, context: CallbackContext):
 
     correct_answer = active_guesses[chat_id]['correct_answer'].lower()
 
-    # Check if the user's answer matches
-    if user_answer == correct_answer:
+    # Check if the user's answer matches any word in the correct answer
+    if user_answer in correct_answer.split():  # Check if the user's answer is part of the correct answer
         streak = user_streaks.get(user_id, 0) + 1
         user_streaks[user_id] = streak
         tokens_earned = 10 + (streak * 5)  # Bonus tokens for streaks
