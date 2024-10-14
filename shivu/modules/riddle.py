@@ -190,4 +190,4 @@ async def award_badges(user_id, streak):
 # Add command handler for starting the anime guess game
 application.add_handler(CommandHandler("guess", start_anime_guess_cmd, block=False))
 # Add message handler for processing text-based guesses
-application.add_handler(MessageHandler(filters.TEXT
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, guess_text_handler, block=False))
