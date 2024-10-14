@@ -113,10 +113,12 @@ async def provide_hint(context: CallbackContext, chat_id: int, delay: int):
 
         # Provide different hints based on stage
         if hint_stage == 0:
-            hint = correct_answer[0] + "_" * (len(correct_answer) - 2) + correct_answer[-1]
+            # Reveal the last character
+            hint = "_" * (len(correct_answer) - 1) + correct_answer[-1]
             hint_text = "<i>First Hint:</i> "
         elif hint_stage == 1:
-            hint = correct_answer[:2] + "_" * (len(correct_answer) - 3) + correct_answer[-1]
+            # Reveal the first character
+            hint = correct_answer[0] + "_" * (len(correct_answer) - 2) + correct_answer[-1]
             hint_text = "<i>Second Hint:</i> "
         else:
             return  # No more hints after 2 stages
