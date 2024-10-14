@@ -69,14 +69,14 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     # Add characters to the harem message grouped by anime
     for anime, characters in current_grouped_characters.items():
         harem_message += f'\n<b> ᯽{anime} ﹝{len(characters)}/{await collection.count_documents({"anime": anime})}〕</b>\n'
-        harem_message += '╭── ⋅ ⋅ ───── ✩ ───── ⋅ ⋅ ──╮\n'
+        harem_message += '╭── ⋅ ⋅ ──── ✩ ──── ⋅ ⋅ ──╮\n'
         for character in characters:
             count = character_counts.get(character.get('id'), 0)
             rarity = character.get('rarity', 'Unknown')
             rarity_emoji = rarity_emojis.get(rarity, rarity)
             character_id = character.get("id", "Unknown")
             harem_message += f'✥  ⌠ {rarity_emoji} ⌡   : {character_id}  {character.get("name", "Unknown")} ×{count}\n'
-            harem_message += f'╰── ⋅ ⋅ ───── ✩ ───── ⋅ ⋅ ──╯\n'
+            harem_message += f'╰── ⋅ ⋅ ──── ✩ ──── ⋅ ⋅ ──╯\n'
     # Total number of characters seized
     total_count = len(user['characters'])
 
