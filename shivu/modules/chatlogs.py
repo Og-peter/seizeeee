@@ -130,7 +130,7 @@ async def spam_filter(client: Client, message: Message):
 async def schedule_reminders():
     while True:
         await asyncio.sleep(3600)  # Remind every hour
-        chat_id = -1001234567890  # Replace with your group chat ID
+        chat_id = -1002104939708  # Replace with your group chat ID
         await app.send_message(chat_id=chat_id, text=RULES)
 
 # Start the bot and schedule tasks
