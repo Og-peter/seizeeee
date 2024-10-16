@@ -178,3 +178,25 @@ async def profile(client, message):
     await message.reply_photo(photo, caption=info_text, reply_markup=keyboard)
     await m.delete()
     os.remove(photo)
+
+# Check if the user has a custom profile photo set
+custom_photo = existing_user.get('profile_pic')
+
+# Use custom profile picture if it exists, otherwise use the Telegram photo
+if custom_photo:
+    photo_id = custom_photo
+else:
+    photo_id = user.photo.big_file_id if user.photo else None
+
+@shivuu.on_message(filters.command("setpfp") & filters.reply)
+async def set_profile_pic(client, message):
+    if message.reply_to_message.photo:
+        photo_id = message.reply_to_message.photo.file_id
+        user_id = message.from_user.id
+        
+        # Save the profile picture in the database
+        await user_collection.update_one({'id': user_id}, {'$set': {'profile_pic': photo_id}}, upsert=True)
+        
+        await message.reply_text("✅ Custom profile picture set successfully!")
+    else:
+        await message.reply_text("❌ Please reply to a photo to set it as your profile picture.")
