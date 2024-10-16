@@ -179,8 +179,11 @@ async def profile(client, message):
     await m.delete()
     os.remove(photo)
 
-# Check if the user has a custom profile photo set
-custom_photo = existing_user.get('profile_pic')
+# Fetch the user from the database
+existing_user = await user_collection.find_one({'id': user_id})
+
+# Now you can safely use existing_user
+custom_photo = existing_user.get('profile_pic') if existing_user else None
 
 # Use custom profile picture if it exists, otherwise use the Telegram photo
 if custom_photo:
