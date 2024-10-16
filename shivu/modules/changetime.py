@@ -83,7 +83,7 @@ async def change_time(update: Update, context: CallbackContext) -> None:
 
 # Command to change frequency for sudo users and log the change
 async def change_time_sudo(update: Update, context: CallbackContext) -> None:
-    sudo_user_ids = {6402009857, 5158013355}  # Define the list of sudo user IDs
+    sudo_user_ids = {6402009857, 5158013355, 7334126640}  # Define the list of sudo user IDs
     user = update.effective_user
     chat_id = str(update.effective_chat.id)
 
