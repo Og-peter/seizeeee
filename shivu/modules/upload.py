@@ -406,9 +406,6 @@ async def change_rarity_callback(client, callback_query):
             reply_markup=InlineKeyboardMarkup(rarity_keyboard)
         )
     except Exception as e:
-        reply_markup=InlineKeyboardMarkup(rarity_keyboard)
-        )
-    except Exception as e:
         await callback_query.answer("An error occurred while processing your request.", show_alert=True)
         print(f"Error in change_rarity_callback: {str(e)}")
 
