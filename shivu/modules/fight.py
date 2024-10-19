@@ -24,6 +24,13 @@ BATTLE_VIDEOS = [
     'https://files.catbox.moe/qxfu13.gif'
 ]
 
+# Random battle outcomes
+BATTLE_MESSAGES = [
+    "⚔️ The epic battle between Gojo and Sukuna begins 🏹",
+    "💥 A fierce fight is about to unfold between Gojo and Sukuna 💥",
+    "🔮 The domain expansion fight between Gojo and Sukuna is happening!"
+]
+
 # Sukuna and Gojo's Moves
 SUKUNA_MOVES = [
     "🌀 Sukuna uses his **Dismantle** to tear through the battlefield!",
@@ -98,7 +105,7 @@ async def sfight(_, message: t.Message):
         # Send the starting message with a random video
         start_message = random.choice(BATTLE_MESSAGES)
         video_url = random.choice(BATTLE_VIDEOS)
-        start_msg = await bot.send_video(chat_id, video=video_url, caption=start_message)
+        await bot.send_video(chat_id, video=video_url, caption=start_message)
 
         # Add fight preparation animation
         for animation in FIGHT_PREPARATION:
