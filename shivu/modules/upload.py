@@ -225,38 +225,6 @@ async def receive_photo(client, message):
         )
 
         user_states.pop(message.from_user.id, None)
-        
-@app.on_message(filters.private & filters.photo)
-async def receive_photo(client, message):
-    try:
-        user_data = user_states.get(message.from_user.id)
-
-        if user_data:
-            if user_data["state"] == "awaiting_waifu_image" and user_data["name"] and user_data["rarity"]:
-                # This condition handles adding a new waifu when awaiting the image
-                photo_file_id = message.photo.file_id
-                id = str(await get_next_sequence_number('character_id')).zfill(2)
-                character = {
-                    'img_url': photo_file_id,
-                    'name': user_data["name"],
-                    'anime': user_data["anime"],
-                    'rarity': user_data["rarity"],
-                    'id': id
-                }
-                await collection.insert_one(character)
-                await message.reply_text("⏳ Adding Character...")
-                await app.send_photo(
-                    chat_id=CHARA_CHANNEL_ID,
-                    photo=photo_file_id,
-                    caption=f'➼ <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> Added New Character\nTake a look at this character!\n\n</b>{user_data["anime"]}\n</b>{id}: {user_data["name"]}\n(𝙍𝘼𝙍𝙄𝙏𝙔:</b>{user_data["rarity"]})</a>',
-                )
-                await app.send_photo(
-                    chat_id=SUPPORT_CHAT,
-                    photo=photo_file_id,
-                    caption=f'➼ <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> Added New Character\nTake a look at this character!\n\n</b>{user_data["anime"]}\n</b>{id}: {user_data["name"]}\n(𝙍𝘼𝙍𝙄𝙏𝙔:</b>{user_data["rarity"]})</a>',
-                )
-                await message.reply_text("✅ Character added successfully.")
-                user_states.pop(message.from_user.id, None)
             elif user_data["state"] == "changing_image" and user_data["waifu_id"]:
                 # This condition handles changing the image of an existing waifu
                 waifu_id = user_data["waifu_id"]
