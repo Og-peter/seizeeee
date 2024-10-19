@@ -396,14 +396,15 @@ async def receive_text_message(client, message):
 
 @app.on_callback_query(filters.regex('^add_waifu_'))
 async def choose_anime_callback(client, callback_query):
-    selected_anime = callback_query.data.split('_', 2)[-1]
+    selected_anime = callback_query.data.split('_', 2)[-1]  # Capture the anime from callback
     user_states[callback_query.from_user.id] = {
         "state": "awaiting_waifu_name",
-        "anime": selected_anime,
+        "anime": selected_anime,  # Now, 'selected_anime' is properly set
         "name": None,
         "rarity": None,
         "event": None  # Add event tracking
     }
+
     await app.send_message(
         chat_id=callback_query.from_user.id,
         text=f"You've selected {selected_anime}. Now, please enter the new Character's name:",
