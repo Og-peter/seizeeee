@@ -406,4 +406,127 @@ async def change_rarity_callback(client, callback_query):
             reply_markup=InlineKeyboardMarkup(rarity_keyboard)
         )
     except Exception as e:
-        await callback_qu
+        reply_markup=InlineKeyboardMarkup(rarity_keyboard)
+        )
+    except Exception as e:
+        await callback_query.answer("An error occurred while processing your request.", show_alert=True)
+        print(f"Error in change_rarity_callback: {str(e)}")
+
+@app.on_callback_query(filters.regex('^set_rarity_'))
+async def set_rarity_callback(client, callback_query):
+    try:
+        # Extracting the rarity and waifu_id from the callback data
+        _, new_rarity, waifu_id = callback_query.data.rsplit('_', 2)
+
+        # Now you have the new_rarity and waifu_id, you can proceed with your logic here
+        waifu = await collection.find_one({"id": waifu_id})
+        
+        if not waifu:
+            await callback_query.answer("Waifu not found.", show_alert=True)
+            return
+
+        old_rarity = waifu["rarity"]
+        await collection.update_one({"id": waifu_id}, {"$set": {"rarity": new_rarity}})
+        
+        updated_waifu = await collection.find_one({"id": waifu_id})
+
+        # Send update message to the sudo user
+        update_message = (
+            f"Rarity changed for {updated_waifu['name']}.\n"
+            f"Old Rarity: {old_rarity}\n"
+            f"New Rarity: {new_rarity}"
+        )
+        await app.send_photo(callback_query.from_user.id, photo=updated_waifu["img_url"], caption=update_message)
+
+        # Send update message to CHARA_CHANNEL_ID and SUPPORT_CHAT
+        await app.send_photo(CHARA_CHANNEL_ID, photo=updated_waifu["img_url"], caption=update_message)
+        await app.send_photo(SUPPORT_CHAT, photo=updated_waifu["img_url"], caption=update_message)
+
+        await callback_query.message.edit_text(f"Rarity changed to {new_rarity} successfully.")
+    except Exception as e:
+        await callback_query.answer("An error occurred while processing your request.", show_alert=True)
+        print(f"Error in set_rarity_callback: {str(e)}")
+
+@app.on_callback_query(filters.regex('^reset_waifu_'))
+async def reset_waifu_callback(client, callback_query):
+    waifu_id = callback_query.data.split('_', 2)[-1]
+    user_states[callback_query.from_user.id] = {"state": "confirming_reset", "waifu_id": waifu_id}
+    await callback_query.message.edit_text(
+        f"Are you sure you want to reset the waifu ID '{waifu_id}' to global grabbed 0?",
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton("Yes", callback_data=f"confirm_reset_waifu_{waifu_id}")],
+                [InlineKeyboardButton("No", callback_data="cancel_reset_waifu")]
+            ]
+        )
+    )
+
+@app.on_callback_query(filters.regex('^confirm_reset_waifu_'))
+async def confirm_reset_waifu_callback(client, callback_query):
+    waifu_id = callback_query.data.split('_', 3)[-1]  # Extract waifu ID
+    user_data = user_states.get(callback_query.from_user.id)
+    if user_data and user_data.get("state") == "confirming_reset" and user_data.get("waifu_id") == waifu_id:
+        waifu = await collection.find_one_and_update(
+            {"id": waifu_id},
+            {"$set": {"global_grabbed": 0}},
+            return_document=ReturnDocument.AFTER
+        )
+        if waifu:
+            # Remove from everyone's harem
+            await collection.update_many({}, {"$pull": {"harem": waifu_id}})
+            await callback_query.message.edit_text(f"The waifu ID '{waifu_id}' has been reset successfully.")
+            await app.send_photo(
+                chat_id=CHARA_CHANNEL_ID,
+                photo=waifu["img_url"],
+                caption=f"📢 <a href='tg://user?id={callback_query.from_user.id}'>{callback_query.from_user.first_name}</a> reset the global grabbed of character '{waifu['name']}' to 0."
+            )
+        else:
+            await callback_query.message.edit_text("Failed to reset the waifu.")
+        user_states.pop(callback_query.from_user.id, None)
+
+@app.on_callback_query(filters.regex('^cancel_reset_waifu$'))
+async def cancel_reset_waifu_callback(client, callback_query):
+    user_states.pop(callback_query.from_user.id, None)
+    await callback_query.message.edit_text("Operation canceled successfully.")
+
+@app.on_callback_query(filters.regex('^remove_waifu_'))
+async def remove_waifu_callback(client, callback_query):
+    waifu_id = callback_query.data.split('_', 2)[-1]
+    user_states[callback_query.from_user.id] = {"state": "confirming_waifu_removal", "waifu_id": waifu_id}
+    await callback_query.message.edit_text(
+        f"Are you sure you want to remove the character ID '{waifu_id}'?",
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton("Yes", callback_data="confirm_remove_waifu")],
+                [InlineKeyboardButton("No", callback_data="cancel_remove_waifu")]
+            ]
+        )
+    )
+
+@app.on_callback_query(filters.regex('^confirm_remove_waifu$'))
+async def confirm_remove_waifu_callback(client, callback_query):
+    user_data = user_states.get(callback_query.from_user.id)
+    if user_data and user_data.get("state") == "confirming_waifu_removal" and user_data.get("waifu_id"):
+        waifu_id = user_data["waifu_id"]
+        waifu = await collection.find_one_and_delete({"id": waifu_id})
+        if waifu:
+            await callback_query.message.edit_text(f"The Character ID '{waifu_id}' has been removed successfully.")
+            await app.send_photo(
+                chat_id=CHARA_CHANNEL_ID,
+                photo=waifu["img_url"],
+                caption=f"📢 The sudo user removed the Character '{waifu['name']}'."
+            )
+            await app.send_photo(
+                chat_id=SUPPORT_CHAT,
+                photo=waifu["img_url"],
+                caption=f"📢 The sudo user removed the Character '{waifu['name']}'."
+            )
+        else:
+            await callback_query.message.edit_text("Failed to remove the waifu.")
+        user_states.pop(callback_query.from_user.id, None)
+
+@app.on_callback_query(filters.regex('^cancel_remove_waifu$'))
+async def cancel_remove_waifu_callback(client, callback_query):
+    user_states.pop(callback_query.from_user.id, None)
+    await callback_query.message.edit_text("Operation canceled successfully.")
+         
