@@ -46,7 +46,7 @@ async def fav(client: Client, message):
         return
 
     # Find the character in the user's collection
-    character = next((c for c in user['characters'] if c.get('id') == character_id), None)
+    character = next((c for c in user['characters'] if str(c.get('id')) == character_id), None)
     if not character:
         await message.reply_text('This character is not in your harem 🙄')
         return
@@ -69,8 +69,8 @@ async def fav(client: Client, message):
     )
 
     # Store the character ID with the message for callback
-    client.user_data.setdefault("fav_confirmations", {})
-    client.user_data["fav_confirmations"][confirmation_message.message_id] = character_id
+    app.user_data.setdefault("fav_confirmations", {})
+    app.user_data["fav_confirmations"][confirmation_message.message_id] = character_id
 
 @app.on_callback_query(filters.regex(r"^fav_(yes|no)_.+"))
 async def handle_fav_confirmation(client: Client, callback_query):
@@ -91,7 +91,7 @@ async def handle_fav_confirmation(client: Client, callback_query):
         await callback_query.answer("You haven't seized any characters yet.")
         return
 
-    character = next((c for c in user['characters'] if c.get('id') == character_id), None)
+    character = next((c for c in user['characters'] if str(c.get('id')) == character_id), None)
     if not character:
         logging.error(f"Character ID {character_id} not found in user's collection.")
         await callback_query.answer("This character is not in your collection.")
