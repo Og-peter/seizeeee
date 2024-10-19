@@ -32,9 +32,23 @@ rarity_emojis = {
     '💞 Valentine': '💞'
 }
 
+event_emojis = {
+    '🎃 Halloween': '🎃',
+    '🎄 Christmas': '🎄',
+    '🧧 New Year': '🧧',
+    '🎉 Anniversary': '🎉'
+}
+
 # Dictionary to store the selected anime for each user
 user_states = {}
 
+user_states[callback_query.from_user.id] = {
+    "state": "awaiting_waifu_name",
+    "anime": selected_anime,
+    "name": None,
+    "rarity": None,
+    "event": None  # Add event tracking
+}
 
 @app.on_message(filters.command("start") & filters.private)
 async def start(client, message):
@@ -133,6 +147,85 @@ async def select_rarity_callback(client, callback_query):
         )
     )
 
+@app.on_callback_query(filters.regex('^select_rarity_'))
+async def select_rarity_callback(client, callback_query):
+    selected_rarity = callback_query.data.split('_', 2)[-1]
+    user_states[callback_query.from_user.id]["rarity"] = selected_rarity
+    user_states[callback_query.from_user.id]["state"] = "awaiting_waifu_event"
+
+    # Display event selection keyboard
+    event_keyboard = [
+        [InlineKeyboardButton(event, callback_data=f"select_event_{event}")]
+        for event in event_emojis.keys()
+    ]
+    
+    await callback_query.message.edit_text(
+        "Now, choose the event for the character:",
+        reply_markup=InlineKeyboardMarkup(event_keyboard)
+    )
+
+@app.on_callback_query(filters.regex('^select_event_'))
+async def select_event_callback(client, callback_query):
+    selected_event = callback_query.data.split('_', 2)[-1]
+    user_states[callback_query.from_user.id]["event"] = selected_event
+    user_states[callback_query.from_user.id]["state"] = "awaiting_waifu_image"
+    
+    await callback_query.message.edit_text(
+        "Now, send the waifu's image:",
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("Cancel", callback_data="cancel_add_waifu")]]
+        )
+    )
+
+@app.on_message(filters.private & filters.photo)
+async def receive_photo(client, message):
+    user_data = user_states.get(message.from_user.id)
+
+    if user_data and user_data["state"] == "awaiting_waifu_image":
+        # Get selected event
+        selected_event = user_data.get("event", "No event")  # Default to 'No event'
+        event_emoji = event_emojis.get(selected_event, '')
+
+        character = {
+            'img_url': message.photo.file_id,
+            'name': user_data["name"],
+            'anime': user_data["anime"],
+            'rarity': user_data["rarity"],
+            'event': selected_event,  # Save event
+            'id': await get_next_sequence_number('character_id')
+        }
+
+        # Insert character in the database
+        await collection.insert_one(character)
+        await message.reply_text("✅ Character added successfully.")
+
+        # Update caption for channels
+        caption = (
+            f'➼ <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> '
+            f'Added New Character\n'
+            f'Anime: {character["anime"]}\n'
+            f'ID: {character["id"]} | Name: {character["name"]}\n'
+            f'Rarity: {rarity_emojis.get(character["rarity"], "Unknown")}\n'
+            f'Event: {event_emoji} {selected_event}'
+        )
+
+        # Send to CHARA_CHANNEL_ID and SUPPORT_CHAT
+        await app.send_photo(
+            chat_id=CHARA_CHANNEL_ID,
+            photo=character["img_url"],
+            caption=caption,
+            parse_mode="html"
+        )
+
+        await app.send_photo(
+            chat_id=SUPPORT_CHAT,
+            photo=character["img_url"],
+            caption=caption,
+            parse_mode="html"
+        )
+
+        user_states.pop(message.from_user.id, None)
+        
 @app.on_message(filters.private & filters.photo)
 async def receive_photo(client, message):
     try:
@@ -192,6 +285,40 @@ async def receive_photo(client, message):
         await message.reply_text("An error occurred while processing your request.")
         print(f"Error in receive_photo: {str(e)}")
 
+@app.on_callback_query(filters.regex('^set_event_'))
+async def set_event_callback(client, callback_query):
+    new_event, waifu_id = callback_query.data.rsplit('_', 1)
+    event_emoji = event_emojis.get(new_event, '')
+
+    # Update event in the database
+    await collection.update_one({"id": waifu_id}, {"$set": {"event": new_event}})
+    
+    # Fetch updated character
+    updated_waifu = await collection.find_one({"id": waifu_id})
+
+    caption = (
+        f"Event changed for {updated_waifu['name']}.\n"
+        f"New Event: {event_emoji} {new_event}\n"
+        f"Rarity: {rarity_emojis.get(updated_waifu['rarity'], 'Unknown')}"
+    )
+
+    # Send updated details to CHARA_CHANNEL_ID and SUPPORT_CHAT
+    await app.send_photo(
+        chat_id=CHARA_CHANNEL_ID,
+        photo=updated_waifu["img_url"],
+        caption=caption,
+        parse_mode="html"
+    )
+
+    await app.send_photo(
+        chat_id=SUPPORT_CHAT,
+        photo=updated_waifu["img_url"],
+        caption=caption,
+        parse_mode="html"
+    )
+
+    await callback_query.message.edit_text(f"Event updated to {new_event} successfully.")
+    
 @app.on_inline_query()
 async def search_anime(client, inline_query):
     if str(inline_query.from_user.id) not in sudo_users:
