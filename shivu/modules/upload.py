@@ -179,76 +179,77 @@ async def select_event_callback(client, callback_query):
 
 @app.on_message(filters.private & filters.photo)
 async def receive_photo(client, message):
-    user_data = user_states.get(message.from_user.id)
+    try:
+        user_data = user_states.get(message.from_user.id)
 
-    if user_data and user_data["state"] == "awaiting_waifu_image":
-        # Get selected event
-        selected_event = user_data.get("event", "No event")  # Default to 'No event'
-        event_emoji = event_emojis.get(selected_event, '')
+        if user_data and user_data["state"] == "awaiting_waifu_image":
+            # Get selected event
+            selected_event = user_data.get("event", "No event")  # Default to 'No event'
+            event_emoji = event_emojis.get(selected_event, '')
 
-        character = {
-            'img_url': message.photo.file_id,
-            'name': user_data["name"],
-            'anime': user_data["anime"],
-            'rarity': user_data["rarity"],
-            'event': selected_event,  # Save event
-            'id': await get_next_sequence_number('character_id')
-        }
+            character = {
+                'img_url': message.photo.file_id,
+                'name': user_data["name"],
+                'anime': user_data["anime"],
+                'rarity': user_data["rarity"],
+                'event': selected_event,  # Save event
+                'id': await get_next_sequence_number('character_id')
+            }
 
-        # Insert character in the database
-        await collection.insert_one(character)
-        await message.reply_text("✅ Character added successfully.")
+            # Insert character in the database
+            await collection.insert_one(character)
+            await message.reply_text("✅ Character added successfully.")
 
-        # Update caption for channels
-        caption = (
-            f'➼ <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> '
-            f'Added New Character\n'
-            f'Anime: {character["anime"]}\n'
-            f'ID: {character["id"]} | Name: {character["name"]}\n'
-            f'Rarity: {rarity_emojis.get(character["rarity"], "Unknown")}\n'
-            f'Event: {event_emoji} {selected_event}'
-        )
+            # Update caption for channels
+            caption = (
+                f'➼ <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> '
+                f'Added New Character\n'
+                f'Anime: {character["anime"]}\n'
+                f'ID: {character["id"]} | Name: {character["name"]}\n'
+                f'Rarity: {rarity_emojis.get(character["rarity"], "Unknown")}\n'
+                f'Event: {event_emoji} {selected_event}'
+            )
 
-        # Send to CHARA_CHANNEL_ID and SUPPORT_CHAT
-        await app.send_photo(
-            chat_id=CHARA_CHANNEL_ID,
-            photo=character["img_url"],
-            caption=caption,
-            parse_mode="html"
-        )
+            # Send to CHARA_CHANNEL_ID and SUPPORT_CHAT
+            await app.send_photo(
+                chat_id=CHARA_CHANNEL_ID,
+                photo=character["img_url"],
+                caption=caption,
+                parse_mode="html"
+            )
 
-        await app.send_photo(
-            chat_id=SUPPORT_CHAT,
-            photo=character["img_url"],
-            caption=caption,
-            parse_mode="html"
-        )
+            await app.send_photo(
+                chat_id=SUPPORT_CHAT,
+                photo=character["img_url"],
+                caption=caption,
+                parse_mode="html"
+            )
 
-        user_states.pop(message.from_user.id, None)
-    elif user_data["state"] == "changing_image" and user_data["waifu_id"]:
-                # This condition handles changing the image of an existing waifu
-                waifu_id = user_data["waifu_id"]
-                new_image = message.photo.file_id
-                waifu = await collection.find_one_and_update(
-                    {"id": waifu_id},
-                    {"$set": {"img_url": new_image}},
-                    return_document=ReturnDocument.AFTER
+            user_states.pop(message.from_user.id, None)
+        elif user_data["state"] == "changing_image" and user_data["waifu_id"]:
+            # This condition handles changing the image of an existing waifu
+            waifu_id = user_data["waifu_id"]
+            new_image = message.photo.file_id
+            waifu = await collection.find_one_and_update(
+                {"id": waifu_id},
+                {"$set": {"img_url": new_image}},
+                return_document=ReturnDocument.AFTER
+            )
+            if waifu:
+                await message.reply_text("The Character's image has been changed successfully.")
+                await app.send_photo(
+                    chat_id=CHARA_CHANNEL_ID,
+                    photo=new_image,
+                    caption=f"#𝗖𝗛𝗔𝗡𝗚𝗘𝗗𝗣𝗜𝗖\n\n» User: <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a>\nCharacter Name: '{waifu['name']}'."
                 )
-                if waifu:
-                    await message.reply_text("The Character's image has been changed successfully.")
-                    await app.send_photo(
-                        chat_id=CHARA_CHANNEL_ID,
-                        photo=new_image,
-                        caption=f"#𝗖𝗛𝗔𝗡𝗚𝗘𝗗𝗣𝗜𝗖\n\n» User: <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a>\n</b>Character Name: '{waifu['name']}'."
-                    )
-                    await app.send_photo(
-                        chat_id=SUPPORT_CHAT,
-                        photo=new_image,
-                        caption=f"#𝗖𝗛𝗔𝗡𝗚𝗘𝗗𝗣𝗜𝗖\n\n» User: <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a>\n</b>Character Name: '{waifu['name']}'."
-                    )
-                else:
-                    await message.reply_text("Failed to change the waifu's image.")
-                user_states.pop(message.from_user.id, None)
+                await app.send_photo(
+                    chat_id=SUPPORT_CHAT,
+                    photo=new_image,
+                    caption=f"#𝗖𝗛𝗔𝗡𝗚𝗘𝗗𝗣𝗜𝗖\n\n» User: <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a>\nCharacter Name: '{waifu['name']}'."
+                )
+            else:
+                await message.reply_text("Failed to change the waifu's image.")
+            user_states.pop(message.from_user.id, None)
     except Exception as e:
         await message.reply_text("An error occurred while processing your request.")
         print(f"Error in receive_photo: {str(e)}")
@@ -396,7 +397,13 @@ async def receive_text_message(client, message):
 @app.on_callback_query(filters.regex('^add_waifu_'))
 async def choose_anime_callback(client, callback_query):
     selected_anime = callback_query.data.split('_', 2)[-1]
-    user_states[callback_query.from_user.id] = {"state": "awaiting_waifu_name", "anime": selected_anime, "name": None, "rarity": None}
+    user_states[callback_query.from_user.id] = {
+        "state": "awaiting_waifu_name",
+        "anime": selected_anime,
+        "name": None,
+        "rarity": None,
+        "event": None  # Add event tracking
+    }
     await app.send_message(
         chat_id=callback_query.from_user.id,
         text=f"You've selected {selected_anime}. Now, please enter the new Character's name:",
