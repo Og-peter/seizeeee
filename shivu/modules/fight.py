@@ -24,11 +24,17 @@ BATTLE_VIDEOS = [
     'https://files.catbox.moe/qxfu13.gif'
 ]
 
-# Random battle outcomes
-BATTLE_MESSAGES = [
-    "⚔️ The epic battle between Gojo and Sukuna begins 🏹",
-    "💥 A fierce fight is about to unfold between Gojo and Sukuna 💥",
-    "🔮 The domain expansion fight between Gojo and Sukuna is happening!"
+# Sukuna and Gojo's Moves
+SUKUNA_MOVES = [
+    "🌀 Sukuna uses his **Dismantle** to tear through the battlefield!",
+    "💀 Sukuna unleashes **Malevolent Shrine** engulfing Gojo in a destructive domain!",
+    "🔥 Sukuna summons **Cleave** to slice through Gojo's defenses!"
+]
+
+GOJO_MOVES = [
+    "🔵 Gojo activates **Infinity**, blocking Sukuna's attack with an impenetrable barrier!",
+    "🌌 Gojo uses **Hollow Purple**, erasing everything in its path!",
+    "⚡ Gojo performs **Red Reversal**, sending Sukuna flying!"
 ]
 
 # Fight preparation animations
@@ -36,13 +42,6 @@ FIGHT_PREPARATION = [
     "⚔️ Preparing your team... 🛡️",
     "💥 Powering up your domain expansion... 🌌",
     "🔥 Gathering your strongest warriors... 💪"
-]
-
-# Fight outcome animations
-FIGHT_OUTCOME_ANIMATIONS = [
-    "💥 The clash is intense! 💥",
-    "🔥 Your warriors strike with precision! ⚔️",
-    "🌀 Sukuna is unleashing a powerful move! 💀"
 ]
 
 # Function to get random characters from the database
@@ -106,6 +105,16 @@ async def sfight(_, message: t.Message):
             await message.reply_text(animation)
             await asyncio.sleep(1)
 
+        # Battle simulation with moves
+        for i in range(3):  # 3 rounds of moves
+            sukuna_move = random.choice(SUKUNA_MOVES)
+            gojo_move = random.choice(GOJO_MOVES)
+
+            await message.reply_text(sukuna_move)
+            await asyncio.sleep(1)
+            await message.reply_text(gojo_move)
+            await asyncio.sleep(1)
+
         # Determine if the user wins or loses the battle
         if random.random() < (WIN_RATE_PERCENTAGE / 100):
             # User wins the fight
@@ -129,11 +138,6 @@ async def sfight(_, message: t.Message):
 
             for img_url, caption in zip(img_urls, captions):
                 await message.reply_photo(photo=img_url, caption=caption)
-
-            # Send outcome animation
-            for animation in FIGHT_OUTCOME_ANIMATIONS:
-                await message.reply_text(animation)
-                await asyncio.sleep(1)
 
             # Add a retry button
             retry_button = InlineKeyboardMarkup(
