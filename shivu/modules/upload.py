@@ -28,7 +28,7 @@ rarity_emojis = {
         '🟡 Legendary': '🟡',
         '🟠 Rare': '🟠',
         '🔵 Medium': '🔵',
-        '🎐 Astral': '💠',
+        '🎐 Astral': '🎐',
         '💞 Valentine': '💞'
 }
 
