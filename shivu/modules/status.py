@@ -71,7 +71,7 @@ async def get_user_info(user, already=False):
 ┣ 🌐 **Chat Position:** `{global_coin_rank}`
 ┣ 🔥 **Login Streak:** {streak} days
 ┃
-╰──────────────────╯
+╰─────────────────╯
 """
         return info_text, photo_id
     except Exception as e:
