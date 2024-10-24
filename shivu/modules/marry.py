@@ -14,6 +14,9 @@ roll_streaks = {}
 # Rarities that can be targeted
 target_rarities = ['⚪️ Common', '🔵 Medium', '🟠 Rare', '🟡 Legendary', '👶 Chibi', '💮 Exclusive']
 
+# Logs Channel ID (replace with actual channel ID)
+LOGS_CHANNEL_ID = -1001234567890  # Replace with your logs channel's chat ID
+
 # Function to fetch unique characters
 async def get_unique_characters(receiver_id, target_rarities=target_rarities):
     try:
@@ -62,6 +65,10 @@ async def dice(_: bot, message: t.Message):
     chat_id = message.chat.id
     mention = message.from_user.mention
     user_id = message.from_user.id
+
+    # Log the usage of the command
+    log_message = f"🎲 <b>Marry Command Used</b>\n\n👤 User: {mention} (ID: <code>{user_id}</code>)\n💬 Chat ID: <code>{chat_id}</code>"
+    await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message, parse_mode="html")
 
     # Check if the user is in cooldown
     if user_id in cooldowns and time.time() - cooldowns[user_id] < 60:  # Adjust cooldown time
