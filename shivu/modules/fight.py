@@ -80,7 +80,7 @@ async def sfight(_, message: t.Message):
 
     # Log the usage of the command
     log_message = f"⚔️ <b>Fight Command Used</b>\n\n👤 User: {mention} (ID: <code>{user_id}</code>)\n💬 Chat ID: <code>{chat_id}</code>"
-    await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message, parse_mode="html")
+    await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message)
 
     # Check if the user is banned
     if user_id in BAN_USER_IDS:
