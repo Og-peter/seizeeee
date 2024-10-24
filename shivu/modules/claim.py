@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 DEVS = [6402009857]
 
 GROUP_ID = -1002104939708
+LOG_CHANNEL_ID = -1001234567890  # Replace with your actual log channel ID
 
 async def send_error_to_devs(error_message):
     for dev_id in DEVS:
@@ -16,6 +17,12 @@ async def send_error_to_devs(error_message):
             await bot.send_message(dev_id, error_message)
         except Exception as e:
             print(f"Error sending message to dev {dev_id}: {e}")
+
+async def send_log_message(log_message):
+    try:
+        await bot.send_message(LOG_CHANNEL_ID, log_message)
+    except Exception as e:
+        print(f"Error sending log message: {e}")
 
 async def get_unique_characters(receiver_id, target_rarities=None):
     if target_rarities is None:
@@ -49,7 +56,7 @@ async def process_claim(user_id, chat_id, user_first_name):
             f"🧩 Name: {character['name']}\n"
             f"👾 Rarity: {character['rarity']}\n"
             f"🏖️ Anime: {character['anime']}\n\n"
-            f"𝖢𝗈𝗆𝖾 𝖻𝖺𝖼𝗄 𝗍𝗈𝗆𝗈𝗋𝗋𝗈𝗐 𝗍𝗈 𝖱𝖾𝖼𝗅𝖺𝗂𝗆! ⏳\n"
+            f"𝖢𝗈𝗆𝖾 𝖻𝖺𝖼𝗄 𝗍𝗈𝗆𝗈𝗋𝗋𝗈𝗎 𝗍𝗈 𝖱𝖾𝖼𝗅𝖺𝗂𝗆! ⏳\n"
             for character in unique_characters
         ]
         for img_url, caption in zip(img_urls, captions):
@@ -99,4 +106,7 @@ async def claim_waifu(_, message: t.Message):
         await animation_message.edit_text(msg)
 
     await process_claim(user_id, chat_id, user_first_name)
-      
+
+    # Send a log message about the claim
+    log_message = f"User {user_first_name} (ID: {user_id}) claimed their waifu in chat {chat_id}."
+    await send_log_message(log_message)
