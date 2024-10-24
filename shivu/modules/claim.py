@@ -116,5 +116,5 @@ async def claim_waifu(_, message: t.Message):
     f"🎉 <i>Another waifu has been claimed!</i> 🌸"
 )
 
-# Send the log message
-await send_log_message(log_message)
+    # Send the log message
+    await send_log_message(log_message)
