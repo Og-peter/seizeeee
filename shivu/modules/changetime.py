@@ -4,6 +4,7 @@ from pymongo import ReturnDocument
 from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext
 from shivu import application, OWNER_ID, user_totals_collection
+from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -14,7 +15,6 @@ MIN_FREQUENCY = 100
 MAX_FREQUENCY = 10000
 DEFAULT_FREQUENCY = 1000  # Default frequency for resetting
 CHANGE_COOLDOWN = 60 * 60  # 1 hour cooldown before another change
-BOOST_DURATION = 60 * 30  # 30 minutes for boost
 last_change_time = {}  # Dictionary to track last frequency change time per chat
 
 # Telegram chat ID of the logs group where notifications will be sent
@@ -83,8 +83,14 @@ async def change_time(update: Update, context: CallbackContext) -> None:
             await update.message.reply_text(f'✅ Character spawn rate changed to every {new_frequency} messages 🎉')
 
             # Log the change
-            await send_log_message(f"📝 Admin {user.mention_html()} changed the frequency in chat {chat_id} to {new_frequency} messages.", parse_mode='HTML')
-
+            await send_log_message(
+                f"📝 <b>Admin Action:</b>\n\n"
+                f"👤 <b>Admin:</b> {user.mention_html()}\n"
+                f"🏠 <b>Chat ID:</b> <code>{chat_id}</code>\n"
+                f"🔄 <b>Frequency Changed:</b> {new_frequency} messages\n"
+                f"📅 <b>Date & Time:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                f"🎉 <i>Character spawn rate updated successfully!</i>"
+            )
         else:
             await update.message.reply_text('❌ Failed to update the spawn rate.')
 
@@ -126,7 +132,14 @@ async def change_time_sudo(update: Update, context: CallbackContext) -> None:
             await update.message.reply_text(f'✅ Sudo: Character spawn rate changed to every {new_frequency} messages 🔥')
 
             # Send a log message to the logs group
-            await send_log_message(f"📝 Sudo user {user.mention_html()} has changed the frequency in chat {chat_id} to {new_frequency} messages.", parse_mode='HTML')
+            await send_log_message(
+                f"🔥 <b>Sudo Action:</b>\n\n"
+                f"👑 <b>Sudo User:</b> {user.mention_html()}\n"
+                f"🏠 <b>Chat ID:</b> <code>{chat_id}</code>\n"
+                f"🔧 <b>Frequency Changed:</b> {new_frequency} messages\n"
+                f"📅 <b>Date & Time:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                f"🚀 <i>Sudo user successfully updated the spawn rate!</i>"
+            )
         else:
             await update.message.reply_text('❌ Failed to update the spawn rate.')
 
@@ -143,7 +156,15 @@ async def reset_frequency(update: Update, context: CallbackContext) -> None:
         chat_frequency = await update_frequency(chat_id, DEFAULT_FREQUENCY)
         if chat_frequency:
             await update.message.reply_text(f'🔄 Frequency reset to default: Every {DEFAULT_FREQUENCY} messages 🌀')
-            await send_log_message(f"🔄 Frequency reset to default: Every {DEFAULT_FREQUENCY} messages in chat {chat_id}.")
+
+            # Send log message
+            await send_log_message(
+                f"🔄 <b>Frequency Reset:</b>\n\n"
+                f"🏠 <b>Chat ID:</b> <code>{chat_id}</code>\n"
+                f"🔙 <b>Reset to Default:</b> {DEFAULT_FREQUENCY} messages\n"
+                f"📅 <b>Date & Time:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                f"🔧 <i>The frequency has been reset to the default successfully.</i>"
+            )
         else:
             await update.message.reply_text('❌ Failed to reset the spawn rate.')
 
@@ -151,35 +172,7 @@ async def reset_frequency(update: Update, context: CallbackContext) -> None:
         logger.error(f"Error resetting frequency for chat {chat_id}: {e}")
         await update.message.reply_text('❌ Failed to reset the spawn rate.')
 
-# Command to temporarily boost frequency
-async def temporary_boost(update: Update, context: CallbackContext) -> None:
-    chat = update.effective_chat
-    chat_id = str(chat.id)
-
-    try:
-        current_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
-        if current_frequency and 'message_frequency' in current_frequency:
-            boosted_frequency = max(current_frequency['message_frequency'] // 2, MIN_FREQUENCY)
-            chat_frequency = await update_frequency(chat_id, boosted_frequency)
-            if chat_frequency:
-                await update.message.reply_text(f'⚡ Boost Mode Activated! Frequency reduced to {boosted_frequency} for 30 minutes 🎉')
-
-                # Send a log message to the logs group
-                await send_log_message(f"⚡ Boost mode activated in chat {chat_id}. Frequency reduced to {boosted_frequency} for 30 minutes.")
-
-                # Reset frequency after boost duration
-                await context.job_queue.run_once(lambda _: update_frequency(chat_id, current_frequency['message_frequency']), BOOST_DURATION)
-            else:
-                await update.message.reply_text('❌ Failed to activate boost mode.')
-        else:
-            await update.message.reply_text('ℹ️ No frequency set to boost.')
-
-    except Exception as e:
-        logger.error(f"Error boosting frequency for chat {chat_id}: {e}")
-        await update.message.reply_text('❌ Failed to activate boost mode.')
-
 # Register command handlers
 application.add_handler(CommandHandler("ctime", change_time_sudo, block=False))
 application.add_handler(CommandHandler("changetime", change_time, block=False))
 application.add_handler(CommandHandler("resettime", reset_frequency, block=False))
-application.add_handler(CommandHandler("boosttime", temporary_boost, block=False))
