@@ -6,13 +6,14 @@ from html import escape
 import random
 from itertools import groupby
 
-# Enhanced Harem function without filters
+# Harem function to display the user's collection of characters
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
 
-    # Fetch user data
+    # Fetch user from the database
     user = await user_collection.find_one({'id': user_id})
-
+    
+    # If no user found, send a message
     if not user:
         message = 'You have not seized any characters yet..'
         if update.message:
@@ -21,22 +22,24 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
             await update.callback_query.edit_message_text(message)
         return
 
-    characters = user.get('characters', [])
+    # Sort characters by anime and ID
+    characters = sorted(user['characters'], key=lambda x: (x.get('anime', ''), x.get('id', '')))
 
-    if not characters:
-        await update.message.reply_text("⬤ Your list is so empty :)") if update.message else await update.callback_query.edit_message_text("⬤ Your list is so empty :)")
-        return
+    # Filter based on rarity preference if present
+    if 'rarity_preference' in user:
+        rarity = user['rarity_preference']
+        characters = [char for char in characters if char.get('rarity') == rarity]
 
-    characters = sorted(characters, key=lambda x: (x.get('anime', ''), x.get('id', '')))
-
-    # Group characters by ID for counting
+    # Count occurrences of characters by their ID
     character_counts = {k: len(list(v)) for k, v in groupby(characters, key=lambda x: x.get('id'))}
 
-    # Unique characters
-    unique_characters = list({char['id']: char for char in characters}.values())
+    # Create a list of unique characters
+    unique_characters = list({character.get('id'): character for character in characters}.values())
 
+    # Calculate the total number of pages
     total_pages = math.ceil(len(unique_characters) / 15)
 
+    # Ensure the page number is within bounds
     if page < 0 or page >= total_pages:
         page = 0
 
@@ -96,7 +99,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    # Handling favorite character image display
+    # If the user has a favorite character
     if 'favorites' in user and user['favorites']:
         fav_character_id = user['favorites'][0]
         fav_character = next((c for c in user['characters'] if c.get('id') == fav_character_id), None)
@@ -114,19 +117,30 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
                 await update.message.reply_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
             else:
                 await update.callback_query.edit_message_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
-    else:
-        random_character = random.choice(user['characters']) if user['characters'] else None
-        if random_character and 'img_url' in random_character:
-            if update.message:
-                await update.message.reply_photo(photo=random_character['img_url'], caption=harem_message, reply_markup=reply_markup, parse_mode='HTML')
-            else:
-                if update.callback_query.message.photo:
-                    await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup, parse_mode='HTML')
-                else:
-                    await update.callback_query.edit_message_text(harem_message, reply_markup=reply_markup, parse_mode='HTML')
-        else:
-            await update.message.reply_text("⬤ Your list is so empty :)") if update.message else await update.callback_query.edit_message_text("⬤ Your list is so empty :)")
 
+    # If there is no favorite, choose a random character or display message
+    else:
+        if user['characters']:
+            random_character = random.choice(user['characters'])
+            if 'img_url' in random_character:
+                if update.message:
+                    await update.message.reply_photo(photo=random_character['img_url'], caption=harem_message, reply_markup=reply_markup, parse_mode='HTML')
+                else:
+                    if update.callback_query.message.photo:
+                        await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup, parse_mode='HTML')
+                    else:
+                        await update.callback_query.edit_message_text(harem_message, reply_markup=reply_markup, parse_mode='HTML')
+            else:
+                if update.message:
+                    await update.message.reply_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
+                else:
+                    await update.callback_query.edit_message_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
+        else:
+            if update.message:
+                await update.message.reply_text("⬤ Your list is so empty :)")
+            else:
+                await update.callback_query.edit_message_text("⬤ Your list is so empty :)")
+        
 # Callback function for handling harem pagination
 async def harem_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
