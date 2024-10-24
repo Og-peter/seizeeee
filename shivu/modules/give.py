@@ -111,7 +111,7 @@ async def give_character_command(client, message):
                 f"🎁 <b>Receiver:</b> [{receiver_first_name}](tg://user?id={receiver_id})\n"
                 f"🍿 <b>Character ID:</b> {character[0]['id']}\n"
                                 )
-   await send_log_message(log_message)
+            await send_log_message(log_message)
 
     except IndexError:
         await message.reply_text("Please provide a character ID.")
