@@ -55,12 +55,12 @@ async def get_user_info(user, already=False):
 
         # Profile display
         info_text = f"""
-╭───────★ User's Profile ★───────╮
+╭───★ User's Profile ★────╮
 ┃
 ┣ 👤 **Name:** {first_name}
 ┣ 🆔 **ID:** `{user_id}`
 ┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━━
+┣━━━━━━━━━━━━━━━━━━━━━
 ┣ 🌟 **Total Waifus:** {total_count} / {global_count}
 ┣ 📊 **Waifu Percentage:** `{round((total_count / global_count) * 100, 2)}%`
 ┣ 📈 **Level:** `{level}`
@@ -71,7 +71,7 @@ async def get_user_info(user, already=False):
 ┣ 🌐 **Chat Position:** `{global_coin_rank}`
 ┣ 🔥 **Login Streak:** {streak} days
 ┃
-╰──────────────────────────────╯
+╰───────────────────────╯
 """
         return info_text, photo_id
     except Exception as e:
