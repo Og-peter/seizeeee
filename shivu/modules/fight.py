@@ -11,6 +11,9 @@ WIN_RATE_PERCENTAGE = 30  # Set the win rate percentage here
 COOLDOWN_DURATION = 300  # Set the cooldown duration in seconds (5 minutes)
 FIGHT_FEE = 30000  # Set the fee for the fight command
 
+# Logs Channel ID (replace with actual channel ID)
+LOGS_CHANNEL_ID = -1002446048543  # Replace with your logs channel's chat ID
+
 # Tracking cooldowns
 user_cooldowns = {}  # Dictionary to track user cooldowns
 
@@ -74,6 +77,10 @@ async def sfight(_, message: t.Message):
     mention = message.from_user.mention
     user_id = message.from_user.id
     current_time = time.time()
+
+    # Log the usage of the command
+    log_message = f"⚔️ <b>Fight Command Used</b>\n\n👤 User: {mention} (ID: <code>{user_id}</code>)\n💬 Chat ID: <code>{chat_id}</code>"
+    await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message, parse_mode="html")
 
     # Check if the user is banned
     if user_id in BAN_USER_IDS:
