@@ -490,7 +490,11 @@ async def confirm_reset_waifu_callback(client, callback_query):
             await app.send_photo(
                 chat_id=CHARA_CHANNEL_ID,
                 photo=waifu["img_url"],
-                caption=f"📢 <a href='tg://user?id={callback_query.from_user.id}'>{callback_query.from_user.first_name}</a> reset the global grabbed of character '{waifu['name']}' to 0."
+                caption=f'🔄 ʀᴇꜱᴇᴛ ɴᴏᴛɪᴄᴇ 🔄\n'
+                        f'🆔 <b>ID:</b> {waifu_id}\n'
+                        f'👤 <b>Name:</b> {waifu["name"]}\n'
+                        f'🎌 <b>Anime:</b> {waifu["anime"]}\n\n'
+                        f'⚠️ <i>Tʜɪꜱ ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀꜱ ʙᴇᴇɴ ʀᴇꜱᴇᴛ ᴀɴᴅ ɪꜱ ʀᴇᴀᴅʏ ꜰᴏʀ ɴᴇᴡ ᴏᴡɴᴇʀꜱ!</i>',
             )
         else:
             await callback_query.message.edit_text("Failed to reset the waifu.")
@@ -526,12 +530,18 @@ async def confirm_remove_waifu_callback(client, callback_query):
             await app.send_photo(
                 chat_id=CHARA_CHANNEL_ID,
                 photo=waifu["img_url"],
-                caption=f"📢 The sudo user removed the Character '{waifu['name']}'."
+                caption=f'🗑️ ᴡᴀɪꜰᴜ ʀᴇᴍᴏᴠᴀʟ 🗑️\n'
+                        f'👤 <b>Name:</b> {waifu["name"]}\n'
+                        f'🎌 <b>Anime:</b> {waifu["anime"]}\n\n'
+                        f'❌ <i>Tʜɪꜱ ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀꜱ ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ ꜰʀᴏᴍ ᴛʜᴇ ʟɪꜱᴛ!</i>',
             )
             await app.send_photo(
                 chat_id=SUPPORT_CHAT,
                 photo=waifu["img_url"],
-                caption=f"📢 The sudo user removed the Character '{waifu['name']}'."
+                caption=f'🗑️ ᴡᴀɪꜰᴜ ʀᴇᴍᴏᴠᴀʟ 🗑️\n'
+                        f'👤 <b>Name:</b> {waifu["name"]}\n'
+                        f'🎌 <b>Anime:</b> {waifu["anime"]}\n\n'
+                        f'❌ <i>Tʜɪꜱ ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀꜱ ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ ꜰʀᴏᴍ ᴛʜᴇ ʟɪꜱᴛ!</i>',
             )
         else:
             await callback_query.message.edit_text("Failed to remove the waifu.")
