@@ -10,38 +10,41 @@ from telegram.ext import (
 from shivu import application, collection
 from pymongo.errors import PyMongoError
 
-# Character List Command
-async def chlist(update: Update, context: CallbackContext):
-    await display_character_list(update, context, 0)
+# Anime List by Alphabet Command
+async def animelist(update: Update, context: CallbackContext):
+    await display_anime_list(update, context, 0)
 
-# Function to display character list with pagination
-async def display_character_list(update: Update, context: CallbackContext, page: int):
+# Function to display anime list with pagination based on the first letter
+async def display_anime_list(update: Update, context: CallbackContext, page: int):
     try:
-        # Fetch all characters from the database
-        all_characters = await collection.find({}).to_list(length=None)
+        # Fetch all anime from the database
+        all_anime = await collection.find({}).distinct('anime')  # Fetch unique anime names
     except PyMongoError as e:
         await update.message.reply_text(f"Database Error: {e}")
         return
     
-    grouped_characters = {}
-    
-    # Group characters by anime
-    for character in all_characters:
-        if character['anime'] not in grouped_characters:
-            grouped_characters[character['anime']] = []
-        grouped_characters[character['anime']].append(character)
+    # Sort anime alphabetically
+    all_anime = sorted(all_anime)
 
-    total_animes = len(grouped_characters)
-    total_pages = (total_animes // 10) + (1 if total_animes % 10 != 0 else 0)
+    # Group by the first letter of the anime
+    grouped_anime = {}
+    for anime in all_anime:
+        first_letter = anime[0].upper()
+        if first_letter not in grouped_anime:
+            grouped_anime[first_letter] = []
+        grouped_anime[first_letter].append(anime)
+
+    alphabet_list = list(grouped_anime.keys())
+    total_pages = len(alphabet_list) // 10 + (len(alphabet_list) % 10 > 0)
 
     # Ensure valid page range
     if page < 0 or page >= total_pages:
         page = 0
 
-    # Create the keyboard with anime list and navigation buttons
+    # Create the keyboard with anime list by alphabet and navigation buttons
     keyboard = [
-        [InlineKeyboardButton(f"{anime} ({len(grouped_characters[anime])})", callback_data=f"chlist:{page}:{i}")]
-        for i, anime in enumerate(list(grouped_characters.keys())[page * 10:(page + 1) * 10])
+        [InlineKeyboardButton(f"{letter}", callback_data=f"animelist:{page}:{i}")]
+        for i, letter in enumerate(alphabet_list[page * 10:(page + 1) * 10])
     ]
 
     keyboard.append([InlineKeyboardButton("🔍 Search", switch_inline_query_current_chat="")])
@@ -49,10 +52,10 @@ async def display_character_list(update: Update, context: CallbackContext, page:
     # Add navigation buttons
     navigation_buttons = []
     if page > 0:
-        navigation_buttons.append(InlineKeyboardButton("⬅️", callback_data=f"chlist:{page - 1}:0"))
+        navigation_buttons.append(InlineKeyboardButton("⬅️", callback_data=f"animelist:{page - 1}:0"))
     if page < total_pages - 1:
-        navigation_buttons.append(InlineKeyboardButton("➡️", callback_data=f"chlist:{page + 1}:0"))
-    
+        navigation_buttons.append(InlineKeyboardButton("➡️", callback_data=f"animelist:{page + 1}:0"))
+
     if navigation_buttons:
         keyboard.append(navigation_buttons)
 
@@ -60,12 +63,12 @@ async def display_character_list(update: Update, context: CallbackContext, page:
 
     # Handle initial message or callback
     if update.message:
-        await update.message.reply_text("Select an anime to view its characters:", reply_markup=reply_markup)
+        await update.message.reply_text("Select a letter to view anime starting with that letter:", reply_markup=reply_markup)
     else:
-        await update.callback_query.edit_message_text("Select an anime to view its characters:", reply_markup=reply_markup)
+        await update.callback_query.edit_message_text("Select a letter to view anime starting with that letter:", reply_markup=reply_markup)
 
-# Callback to handle character selection
-async def character_list_callback(update: Update, context: CallbackContext):
+# Callback to handle anime selection by alphabet
+async def anime_list_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     data = query.data.split(":")
     page = int(data[1])
@@ -73,40 +76,42 @@ async def character_list_callback(update: Update, context: CallbackContext):
 
     # If index is 0, go back to anime list
     if index == 0:
-        await display_character_list(update, context, page)
+        await display_anime_list(update, context, page)
         return
 
     try:
-        # Fetch all characters
-        all_characters = await collection.find({}).to_list(length=None)
+        # Fetch all anime
+        all_anime = await collection.find({}).distinct('anime')
     except PyMongoError as e:
         await query.message.reply_text(f"Database Error: {e}")
         return
 
-    # Group characters by anime
-    grouped_characters = {}
-    for character in all_characters:
-        if character['anime'] not in grouped_characters:
-            grouped_characters[character['anime']] = []
-        grouped_characters[character['anime']].append(character)
+    # Group by the first letter
+    grouped_anime = {}
+    all_anime = sorted(all_anime)
+    for anime in all_anime:
+        first_letter = anime[0].upper()
+        if first_letter not in grouped_anime:
+            grouped_anime[first_letter] = []
+        grouped_anime[first_letter].append(anime)
 
-    anime_list = list(grouped_characters.keys())
+    alphabet_list = list(grouped_anime.keys())
 
-    if page * 10 + index >= len(anime_list):
+    if page * 10 + index >= len(alphabet_list):
         await query.answer("Invalid selection!")
         return
 
-    anime = anime_list[page * 10 + index]
-    characters = sorted(grouped_characters[anime], key=lambda x: x['rarity'], reverse=True)
+    selected_letter = alphabet_list[page * 10 + index]
+    anime_in_letter = sorted(grouped_anime[selected_letter])
 
-    # Display character information
-    message = f"<b>{anime}</b>\n\n"
-    for character in characters:
-        message += f"{character['id']} {character['name']} ({character['rarity']})\n"
+    # Display anime starting with the selected letter
+    message = f"<b>Anime starting with '{selected_letter}':</b>\n\n"
+    for anime in anime_in_letter:
+        message += f"{anime}\n"
 
-    # Provide a back button to return to the anime list
+    # Provide a back button to return to the alphabet list
     keyboard = [
-        [InlineKeyboardButton("🔙 Back", callback_data=f"chlist:{page}:0")]
+        [InlineKeyboardButton("🔙 Back", callback_data=f"animelist:{page}:0")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -119,34 +124,34 @@ async def inline_search(update: Update, context: CallbackContext):
         return
 
     try:
-        # Fetch matching characters based on query
-        all_characters = await collection.find({}).to_list(length=None)
+        # Fetch matching anime based on query
+        all_anime = await collection.find({}).distinct('anime')
     except PyMongoError as e:
         await update.inline_query.answer([])
         return
 
-    matching_characters = [
-        char for char in all_characters if query.lower() in char['name'].lower()
+    matching_anime = [
+        anime for anime in all_anime if anime.lower().startswith(query.lower())
     ]
-    matching_characters = sorted(matching_characters, key=lambda x: x['rarity'], reverse=True)
+    matching_anime = sorted(matching_anime)
 
     # Create inline search results
     results = [
         InlineQueryResultArticle(
-            id=str(char['_id']),
-            title=f"{char['name']} ({char['rarity']})",
+            id=str(i),
+            title=f"{anime}",
             input_message_content=InputTextMessageContent(
-                f"{char['id']} {char['name']} ({char['rarity']})"
+                f"{anime}"
             )
         )
-        for char in matching_characters[:50]
+        for i, anime in enumerate(matching_anime[:50])
     ]
 
     await update.inline_query.answer(results)
 
 # Handlers
-application.add_handler(CommandHandler("chlist", chlist, block=False))
-application.add_handler(CallbackQueryHandler(character_list_callback, pattern="^chlist", block=False))
+application.add_handler(CommandHandler("animelist", animelist, block=False))
+application.add_handler(CallbackQueryHandler(anime_list_callback, pattern="^animelist", block=False))
 application.add_handler(InlineQueryHandler(inline_search, block=False))
 
 # End
