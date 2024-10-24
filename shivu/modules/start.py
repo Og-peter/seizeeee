@@ -1,10 +1,11 @@
 import random
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import CallbackContext, CommandHandler
+from telegram.ext import CallbackContext, CommandHandler, ApplicationBuilder
 from shivu import application, PHOTO_URL, SUPPORT_CHAT, GROUP_ID, sudo_users  # unified to sudo_users
 from shivu import user_collection, refeer_collection
 
+# Define the /start command handler
 async def start(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
     first_name = escape(update.effective_user.first_name)  # escaped in HTML context
@@ -73,6 +74,7 @@ async def start(update: Update, context: CallbackContext) -> None:
         await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=f"""𝙃𝙚𝙮 𝙩𝙝𝙚𝙧𝙚! {first_name}\n\n✨𝙄 𝘼𝙈 𝘼𝙡𝙞𝙫𝙚 𝘽𝙖𝙗𝙮""", reply_markup=reply_markup)
 
 
+# Define the function to notify bot restart
 async def notify_restart(context: CallbackContext):
     support_group_message = "🚀 Bot has restarted successfully!"
     
@@ -89,11 +91,17 @@ async def notify_restart(context: CallbackContext):
         except Exception as e:
             print(f"Failed to notify sudo user {sudo_user}: {e}")
 
-# Create the CommandHandler for the start command
+# Initialize the bot application with ApplicationBuilder
+application = ApplicationBuilder().token("YOUR_BOT_TOKEN").build()
+
+# Create the CommandHandler for the /start command
 start_handler = CommandHandler('start', start, block=False)
 
 # Register the handler before adding to the application
 application.add_handler(start_handler)
 
-# Register the function to run after the bot starts
+# Set up the JobQueue for scheduled tasks
 application.job_queue.run_once(notify_restart, 0)  # Notify immediately after restart
+
+# Start the bot
+application.run_polling()
