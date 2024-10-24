@@ -3,7 +3,7 @@ import random
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackContext, CommandHandler, ApplicationBuilder, ContextTypes
-from shivu import application, PHOTO_URL, SUPPORT_CHAT, GROUP_ID, sudo_users  # unified to sudo_users
+from shivu import application, PHOTO_URL, GROUP_ID, sudo_users  # removed SUPPORT_CHAT
 from shivu import user_collection, refeer_collection
 
 # Define the /start command handler
@@ -76,18 +76,10 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 # Define the function to notify bot restart
 async def notify_restart(context: ContextTypes.DEFAULT_TYPE):
-    support_group_message = "🚀 Bot has restarted successfully!"
-    
-    # Notify support group
-    try:
-        await context.bot.send_message(chat_id=GROUP_ID, text=support_group_message)
-    except Exception as e:
-        print(f"Failed to notify support group: {e}. Check if the chat ID is valid and the bot has sufficient permissions.")
-    
-    # Notify SUDO users
+    # Notify SUDO users only
     for sudo_user in sudo_users:  # Use the correct 'sudo_users' variable
         try:
-            await context.bot.send_message(chat_id=sudo_user, text=support_group_message)
+            await context.bot.send_message(chat_id=sudo_user, text="🚀 Bot has restarted successfully!")
         except Exception as e:
             print(f"Failed to notify sudo user {sudo_user}: {e}")
 
