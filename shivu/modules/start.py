@@ -91,6 +91,3 @@ application.add_handler(start_handler)
 
 # Set up the JobQueue for scheduled tasks
 application.job_queue.run_once(notify_restart, 0)  # Notify immediately after restart
-
-# Start the bot
-application.run_polling()
