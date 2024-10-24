@@ -5,7 +5,7 @@ from shivu import SUPPORT_CHAT, user_collection, collection
 import os
 from datetime import datetime
 
-# Function to get detailed user information (Modified for style)
+# Function to get detailed user information
 async def get_user_info(user, already=False):
     if not already:
         user = await shivuu.get_users(user)
@@ -17,14 +17,14 @@ async def get_user_info(user, already=False):
     existing_user = await user_collection.find_one({'id': user_id})
     first_name = user.first_name
     mention = user.mention("Link")
-    global_rank = await get_global_rank(user_id)
+    global_rank = await get_global_rank(user_id)  # Make sure this function exists
     global_count = await collection.count_documents({})
     total_count = len(existing_user.get('characters', []))
     photo_id = user.photo.big_file_id if user.photo else None
-    balance = await get_user_balance(user_id)
+    balance = await get_user_balance(user_id)  # Make sure this function exists
     global_coin_rank = await user_collection.count_documents({'balance': {'$gt': balance}}) + 1
     xp = existing_user.get('xp', 0)
-    level = calculate_user_level(xp)
+    level = calculate_user_level(xp)  # Ensure calculate_user_level exists
     last_login = existing_user.get('last_login', 'Unknown')
 
     # Formatting data
@@ -76,9 +76,9 @@ async def get_user_info(user, already=False):
 async def profile(client, message):
     if message.reply_to_message:
         user = message.reply_to_message.from_user.id
-    elif not message.reply_to_message and len(message.command) == 1:
+    elif len(message.command) == 1:
         user = message.from_user.id
-    elif not message.reply_to_message and len(message.command) != 1:
+    else:
         user = message.text.split(None, 1)[1]
 
     m = await message.reply_text("✨ Fetching Your Hunter License...")
@@ -92,12 +92,6 @@ async def profile(client, message):
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("💬 Support", url=f"https://t.me/{SUPPORT_CHAT}")]
     ])
-    
-    reply_markup = InlineKeyboardMarkup(
-        [
-            [InlineKeyboardButton("🚀 Start Me in PM First", url=f"https://t.me/{shivuu.me.username}?start=True")]
-        ]
-    )
     
     if photo_id is None:
         return await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
