@@ -1,7 +1,7 @@
 import random
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import CallbackContext, CommandHandler, ApplicationBuilder
+from telegram.ext import CallbackContext, CommandHandler, ApplicationBuilder, ContextTypes
 from shivu import application, PHOTO_URL, SUPPORT_CHAT, GROUP_ID, sudo_users  # unified to sudo_users
 from shivu import user_collection, refeer_collection
 
