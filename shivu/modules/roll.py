@@ -15,7 +15,6 @@ async def get_unique_characters(receiver_id, target_rarities=['🟡 Legendary', 
             {'$match': {'rarity': {'$in': target_rarities}, 'id': {'$nin': [char['id'] for char in (await user_collection.find_one({'id': receiver_id}, {'characters': 1}))['characters']]}}},
             {'$sample': {'size': 1}}  # Adjust Num
         ]
-
         cursor = collection.aggregate(pipeline)
         characters = await cursor.to_list(length=None)
         return characters
@@ -33,8 +32,8 @@ async def dice(_: bot, message: t.Message):
     user_id = message.from_user.id
 
     # Send logs notification
-    log_message = f"🎲 <b>Dice/Roll Command Used</b>\n\n👤 User: {mention} (ID: <code>{user_id}</code>)\n💬 Chat ID: <code>{chat_id}</code>"
-    await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message, parse_mode="Markdown")
+    log_message = f"🎲 Dice/Roll Command Used\n\n👤 User: {mention} (ID: {user_id})\n💬 Chat ID: {chat_id}"
+    await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message)
 
     # Check if the user is in cooldown
     if user_id in cooldowns and time.time() - cooldowns[user_id] < 60:  # Adjust the cooldown time (in seconds)
@@ -61,9 +60,9 @@ async def dice(_: bot, message: t.Message):
             img_urls = [character['img_url'] for character in unique_characters]
             captions = [
                 f"🏮 🎉 Yo {mention}, you hit the JACKPOT! 🎉 🏮\n\n"
-                f"🧩 Name: `{character['name']}`\n"
-                f"💠 Rarity: `{character['rarity']}`\n"
-                f"🏖️ Anime: `{character['anime']}`\n\n"
+                f"🧩 Name: {character['name']}\n"
+                f"💠 Rarity: {character['rarity']}\n"
+                f"🏖️ Anime: {character['anime']}\n\n"
                 f"━─━────༺༻────━─━\n"
                 for character in unique_characters
             ]
@@ -89,12 +88,12 @@ async def dice(_: bot, message: t.Message):
 
             img_urls = [character['img_url'] for character in unique_characters]
             captions = [
-                f"🎊✨ **JACKPOT!** ✨🎊\n"
+                f"🎊✨ JACKPOT! ✨🎊\n"
                 f"🎲 You rolled a {value}, {mention}!\n\n"
                 f"🎯 **Legendary Character Unlocked!** 🎯\n"
-                f"🧩 Name: `{character['name']}`\n"
-                f"💠 Rarity: `{character['rarity']}`\n"
-                f"🏖️ Anime: `{character['anime']}`\n\n"
+                f"🧩 Name: {character['name']}\n"
+                f"💠 Rarity: {character['rarity']}\n"
+                f"🏖️ Anime: {character['anime']}\n\n"
                 f"🚀 **Good luck on your next roll!** 🚀\n"
                 f"━─━────༺༻────━─━\n"
                 for character in unique_characters
@@ -124,4 +123,4 @@ async def dice(_: bot, message: t.Message):
                     f"Don't give up! Try again and aim for the stars! 🌠"
                 ),
                 quote=True
-        )
+            )
