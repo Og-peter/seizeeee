@@ -128,6 +128,10 @@ async def provide_hint(context: CallbackContext, chat_id: int, delay: int):
 
 # Function to handle streaks and provide user profile data
 async def guess_text_handler(update: Update, context: CallbackContext):
+    # Check if update.message is not None to avoid AttributeError
+    if update.message is None:
+        return  # Ignore if the update does not contain a message
+
     chat_id = update.message.chat_id
     user_id = update.message.from_user.id
     user_answer = update.message.text.strip().lower()
@@ -156,7 +160,7 @@ async def guess_text_handler(update: Update, context: CallbackContext):
             text=f"🎉 {user_mention} <b>guessed correctly!</b>\n\n"
                  f"🔑 The answer was: <b><u>{correct_answer}</u></b>\n"
                  f"🏅 You've earned <b>{tokens_earned} tokens!</b>\n"
-                 f"🔥 Your streak is now <b>`{streak}`</b>. `{badges}`\n",
+                 f"🔥 Your streak is now <b>{streak}</b>. {badges}\n",
             parse_mode=ParseMode.HTML
         )
 
