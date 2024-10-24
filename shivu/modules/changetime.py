@@ -20,6 +20,13 @@ last_change_time = {}  # Dictionary to track last frequency change time per chat
 # Telegram chat ID of the logs group where notifications will be sent
 LOGS_GROUP_CHAT_ID = -1001992198513  # Replace with your actual logs group chat ID
 
+# Utility function to send log messages to the log channel
+async def send_log_message(message: str):
+    try:
+        await application.bot.send_message(LOGS_GROUP_CHAT_ID, message)
+    except Exception as e:
+        logger.error(f"Failed to send log message: {e}")
+
 # Utility function to check cooldown period
 def is_cooldown_active(chat_id: str) -> bool:
     now = time.time()
@@ -74,6 +81,10 @@ async def change_time(update: Update, context: CallbackContext) -> None:
         if chat_frequency:
             last_change_time[chat_id] = time.time()  # Update cooldown
             await update.message.reply_text(f'✅ Character spawn rate changed to every {new_frequency} messages 🎉')
+
+            # Log the change
+            await send_log_message(f"📝 Admin {user.mention_html()} changed the frequency in chat {chat_id} to {new_frequency} messages.", parse_mode='HTML')
+
         else:
             await update.message.reply_text('❌ Failed to update the spawn rate.')
 
@@ -115,11 +126,7 @@ async def change_time_sudo(update: Update, context: CallbackContext) -> None:
             await update.message.reply_text(f'✅ Sudo: Character spawn rate changed to every {new_frequency} messages 🔥')
 
             # Send a log message to the logs group
-            await context.bot.send_message(
-                chat_id=LOGS_GROUP_CHAT_ID,
-                text=f"📝 Sudo user {user.mention_html()} has changed the frequency in chat {chat_id} to {new_frequency} messages.",
-                parse_mode='HTML'
-            )
+            await send_log_message(f"📝 Sudo user {user.mention_html()} has changed the frequency in chat {chat_id} to {new_frequency} messages.", parse_mode='HTML')
         else:
             await update.message.reply_text('❌ Failed to update the spawn rate.')
 
@@ -136,6 +143,7 @@ async def reset_frequency(update: Update, context: CallbackContext) -> None:
         chat_frequency = await update_frequency(chat_id, DEFAULT_FREQUENCY)
         if chat_frequency:
             await update.message.reply_text(f'🔄 Frequency reset to default: Every {DEFAULT_FREQUENCY} messages 🌀')
+            await send_log_message(f"🔄 Frequency reset to default: Every {DEFAULT_FREQUENCY} messages in chat {chat_id}.")
         else:
             await update.message.reply_text('❌ Failed to reset the spawn rate.')
 
@@ -155,6 +163,9 @@ async def temporary_boost(update: Update, context: CallbackContext) -> None:
             chat_frequency = await update_frequency(chat_id, boosted_frequency)
             if chat_frequency:
                 await update.message.reply_text(f'⚡ Boost Mode Activated! Frequency reduced to {boosted_frequency} for 30 minutes 🎉')
+
+                # Send a log message to the logs group
+                await send_log_message(f"⚡ Boost mode activated in chat {chat_id}. Frequency reduced to {boosted_frequency} for 30 minutes.")
 
                 # Reset frequency after boost duration
                 await context.job_queue.run_once(lambda _: update_frequency(chat_id, current_frequency['message_frequency']), BOOST_DURATION)
