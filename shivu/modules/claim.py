@@ -108,5 +108,13 @@ async def claim_waifu(_, message: t.Message):
     await process_claim(user_id, chat_id, user_first_name)
 
     # Send a log message about the claim
-    log_message = f"User {user_first_name} (ID: {user_id}) claimed their waifu in chat {chat_id}."
-    await send_log_message(log_message)
+    log_message = (
+    f"📢 <b>Waifu Claimed!</b>\n\n"
+    f"🧑‍🚀 <b>User:</b> {user_first_name} (ID: <code>{user_id}</code>)\n"
+    f"🗣 <b>Chat ID:</b> <code>{chat_id}</code>\n"
+    f"📅 <b>Date & Time:</b> {now.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+    f"🎉 <i>Another waifu has been claimed!</i> 🌸"
+)
+
+# Send the log message
+await send_log_message(log_message)
