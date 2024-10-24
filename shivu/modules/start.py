@@ -1,3 +1,4 @@
+import os
 import random
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -9,7 +10,7 @@ from shivu import user_collection, refeer_collection
 async def start(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
     first_name = escape(update.effective_user.first_name)  # escaped in HTML context
-    username = update.effective_user.username
+    username = update.effective_user.username or "Unknown"
     args = context.args
     referring_user_id = None
 
@@ -62,7 +63,7 @@ async def start(update: Update, context: CallbackContext) -> None:
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         video_url = "https://telegra.ph/file/40254b3883dfcaec52120.mp4"
-        sticker_url = "CAACAgUAAxkBAAEBeVpm-jtB-lkO8Oixy5SZHTAy1Ymp4QACEgwAAv75EFbYc5vQ3hQ1Ph4E"  # Sticker URL
+        sticker_url = "CAACAgUAAxkBAAEBeVpm-jtB-lkO8Oixy5SZHTAy1Ymp4QACEgwAAv75EFbYc5vQ3hQ1Ph4E"
         await context.bot.send_sticker(chat_id=update.effective_chat.id, sticker=sticker_url)
         await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=caption, reply_markup=reply_markup, parse_mode='MarkdownV2')
     else:
@@ -72,7 +73,6 @@ async def start(update: Update, context: CallbackContext) -> None:
         reply_markup = InlineKeyboardMarkup(keyboard)
         video_url = "https://telegra.ph/file/0b2e8e33d07a0d0e5914f.mp4"
         await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=f"""𝙃𝙚𝙮 𝙩𝙝𝙚𝙧𝙚! {first_name}\n\n✨𝙄 𝘼𝙈 𝘼𝙡𝙞𝙫𝙚 𝘽𝙖𝙗𝙮""", reply_markup=reply_markup)
-
 
 # Define the function to notify bot restart
 async def notify_restart(context: ContextTypes.DEFAULT_TYPE):
@@ -92,10 +92,11 @@ async def notify_restart(context: ContextTypes.DEFAULT_TYPE):
             print(f"Failed to notify sudo user {sudo_user}: {e}")
 
 # Initialize the bot application with ApplicationBuilder
-application = ApplicationBuilder().token("7335799800:AAHgRmfPm4BPHRnQby1G7tsGkhFLyAGlwEQ").build()
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")  # Use environment variable for token security
+application = ApplicationBuilder().token(TOKEN).build()
 
 # Create the CommandHandler for the /start command
-start_handler = CommandHandler('start', start, block=False)
+start_handler = CommandHandler('start', start)
 
 # Register the handler before adding to the application
 application.add_handler(start_handler)
