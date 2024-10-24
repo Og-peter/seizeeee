@@ -67,7 +67,7 @@ async def display_anime_list(update: Update, context: CallbackContext, page: int
     # Handle initial message or callback
     if update.message:
         await update.message.reply_text("Select a letter to view anime starting with that letter:", reply_markup=reply_markup)
-    else:
+    elif update.callback_query:
         await update.callback_query.edit_message_text("Select a letter to view anime starting with that letter:", reply_markup=reply_markup)
 
 # Callback to handle anime selection by alphabet and show characters of that anime
@@ -109,7 +109,7 @@ async def anime_list_callback(update: Update, context: CallbackContext):
 
     # Display anime starting with the selected letter
     message = f"<b>Anime starting with '{selected_letter}':</b>\n\n"
-    for i, anime in enumerate(anime_in_letter):  # Corrected here
+    for i, anime in enumerate(anime_in_letter):
         message += f"{i + 1}. {anime}\n"
         
     message += "\nSelect an anime to view its characters."
@@ -134,11 +134,11 @@ async def anime_characters_callback(update: Update, context: CallbackContext):
 
     try:
         # Fetch characters for the selected anime
-        characters = await collection.find_one({'anime': anime}, {'characters': 1})
-        if not characters or 'characters' not in characters:
+        anime_data = await collection.find_one({'anime': anime}, {'characters': 1})
+        if not anime_data or 'characters' not in anime_data:
             await query.answer(f"No characters found for this anime '{anime}'!")
             return
-        characters_list = sorted(characters['characters'])
+        characters_list = sorted(anime_data['characters'])
     except PyMongoError as e:
         await query.message.reply_text(f"Database Error: {e}")
         return
