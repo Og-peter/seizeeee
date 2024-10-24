@@ -178,12 +178,18 @@ async def receive_photo(client, message):
                     await app.send_photo(
                         chat_id=CHARA_CHANNEL_ID,
                         photo=new_image,
-                        caption=f"#𝗖𝗛𝗔𝗡𝗚𝗘𝗗𝗣𝗜𝗖\n\n» User: <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a>\n</b>» Waifu ID:</b> {id}\n</b>Character Name: '{waifu['name']}'."
+                        caption=f'🖼 ᴜᴘᴅᴀᴛᴇ! ᴀ ᴡᴀɪꜰᴜ ʜᴀꜱ ɢᴏᴛ ᴀ ɴᴇᴡ ʟᴏᴏᴋ! 🖼\n'
+                               f'🆔 <b>ID:</b> {waifu_id}\n'
+                               f'👤 <b>Name:</b> {waifu["name"]}\n'
+                               f'🎌 <b>Anime:</b> {waifu["anime"]}',
                     )
                     await app.send_photo(
                         chat_id=SUPPORT_CHAT,
                         photo=new_image,
-                        caption=f"#𝗖𝗛𝗔𝗡𝗚𝗘𝗗𝗣𝗜𝗖\n\n» User: <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a>\n</b>» Waifu ID:</b> {id}\n</b>Character Name: '{waifu['name']}'."
+                        caption=f'🖼 ᴜᴘᴅᴀᴛᴇ! ᴀ ᴡᴀɪꜰᴜ ʜᴀꜱ ɢᴏᴛ ᴀ ɴᴇᴡ ʟᴏᴏᴋ! 🖼\n'
+                               f'🆔 <b>ID:</b> {waifu_id}\n'
+                               f'👤 <b>Name:</b> {waifu["name"]}\n'
+                               f'🎌 <b>Anime:</b> {waifu["anime"]}',
                     )
                 else:
                     await message.reply_text("Failed to change the waifu's image.")
