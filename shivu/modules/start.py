@@ -91,10 +91,6 @@ async def notify_restart(context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             print(f"Failed to notify sudo user {sudo_user}: {e}")
 
-# Initialize the bot application with ApplicationBuilder
-TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")  # Use environment variable for token security
-application = ApplicationBuilder().token(TOKEN).build()
-
 # Create the CommandHandler for the /start command
 start_handler = CommandHandler('start', start)
 
