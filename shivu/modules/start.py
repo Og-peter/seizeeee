@@ -2,16 +2,16 @@ import random
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackContext, CommandHandler
-from shivu import application, PHOTO_URL, SUPPORT_CHAT, GROUP_ID, sudo_users
+from shivu import application, PHOTO_URL, SUPPORT_CHAT, GROUP_ID, sudo_users  # unified to sudo_users
 from shivu import user_collection, refeer_collection
 
 async def start(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
-    first_name = update.effective_user.first_name
+    first_name = escape(update.effective_user.first_name)  # escaped in HTML context
     username = update.effective_user.username
     args = context.args
     referring_user_id = None
-    
+
     if args and args[0].startswith('r_'):
         referring_user_id = int(args[0][2:])
 
@@ -30,14 +30,16 @@ async def start(update: Update, context: CallbackContext) -> None:
                     await context.bot.send_message(chat_id=referring_user_id, text=referrer_message)
                 except Exception as e:
                     print(f"Failed to send referral message: {e}")
-        
+
         await context.bot.send_message(chat_id=GROUP_ID, 
-                                       text=f"We Got New User \n#NEWUSER\n User: <a href='tg://user?id={user_id}'>{escape(first_name)}</a>", 
+                                       text=f"We Got New User \n#NEWUSER\n User: <a href='tg://user?id={user_id}'>{first_name}</a>", 
                                        parse_mode='HTML')
     else:
+        # Update the user's name or username if changed
         if user_data['first_name'] != first_name or user_data['username'] != username:
             await user_collection.update_one({"id": user_id}, {"$set": {"first_name": first_name, "username": username}})
 
+    # Send a welcome message in private chat
     if update.effective_chat.type == "private":
         caption = f"""❖ Kᴏɴ'ɴɪᴄʜɪᴡᴀ {first_name} sᴀɴ 💌 !!
 
@@ -59,9 +61,9 @@ async def start(update: Update, context: CallbackContext) -> None:
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         video_url = "https://telegra.ph/file/40254b3883dfcaec52120.mp4"
-        sticker_url = "CAACAgUAAxkBAAEBeVpm-jtB-lkO8Oixy5SZHTAy1Ymp4QACEgwAAv75EFbYc5vQ3hQ1Ph4E"  # Add sticker URL
+        sticker_url = "CAACAgUAAxkBAAEBeVpm-jtB-lkO8Oixy5SZHTAy1Ymp4QACEgwAAv75EFbYc5vQ3hQ1Ph4E"  # Sticker URL
         await context.bot.send_sticker(chat_id=update.effective_chat.id, sticker=sticker_url)
-        await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=caption, reply_markup=reply_markup, parse_mode='markdown')
+        await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=caption, reply_markup=reply_markup, parse_mode='MarkdownV2')
     else:
         keyboard = [
             [InlineKeyboardButton("PM", url=f'https://t.me/Character_seize_bot?start=true')],
@@ -81,7 +83,7 @@ async def notify_restart(context: CallbackContext):
         print(f"Failed to notify support group: {e}")
     
     # Notify SUDO users
-    for sudo_user in SUDO_USERS:
+    for sudo_user in sudo_users:  # Use the correct 'sudo_users' variable
         try:
             await context.bot.send_message(chat_id=sudo_user, text=support_group_message)
         except Exception as e:
