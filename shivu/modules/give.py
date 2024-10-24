@@ -104,12 +104,12 @@ async def give_character_command(client, message):
                 f"Character ID: {character[0]['id']}"
             )
             await send_action_notification(notification_message)
-  # Send log to logs channel
-  log_message = (
-      f"📝 <b>Character Given</b>\n\n"
-      f"👤 <b>By:</b> {message.from_user.first_name}\n"
-      f"🎁 <b>Receiver:</b> [{receiver_first_name}](tg://user?id={receiver_id})\n"
-      f"🍿 <b>Character ID:</b> {character[0]['id']}\n"
+            # Send log to logs channel
+            log_message = (
+                f"📝 <b>Character Given</b>\n\n"
+                f"👤 <b>By:</b> {message.from_user.first_name}\n"
+                f"🎁 <b>Receiver:</b> [{receiver_first_name}](tg://user?id={receiver_id})\n"
+                f"🍿 <b>Character ID:</b> {character[0]['id']}\n"
                                 )
    await send_log_message(log_message)
 
