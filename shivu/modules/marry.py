@@ -68,7 +68,7 @@ async def dice(_: bot, message: t.Message):
 
     # Log the usage of the command
     log_message = f"🎲 <b>Marry Command Used</b>\n\n👤 User: {mention} (ID: <code>{user_id}</code>)\n💬 Chat ID: <code>{chat_id}</code>"
-    await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message, parse_mode="Markdown")
+    await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message, parse_mode="html")
 
     # Check if the user is in cooldown
     if user_id in cooldowns and time.time() - cooldowns[user_id] < 60:  # Adjust cooldown time
@@ -80,8 +80,8 @@ async def dice(_: bot, message: t.Message):
 
     # Roll the dice with a fun emoji animation
     await message.reply_text("🎲 Rolling the dice... Let's see your luck!")
-    xx = await bot.send_dice(chat_id=chat_id)
-    value = int(xx.dice.value)
+    dice_msg = await bot.send_dice(chat_id=chat_id)
+    value = int(dice_msg.dice.value)
 
     # Process based on dice value
     if value in [1, 6]:  # Special success values (1 or 6)
