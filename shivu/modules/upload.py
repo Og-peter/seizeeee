@@ -155,24 +155,22 @@ async def receive_photo(client, message):
                 await app.send_photo(
                    chat_id=CHARA_CHANNEL_ID,
                    photo=photo_file_id,
-                   caption=f'🌸 ᴄᴏɴɢʀᴀᴛꜱ! ᴀ ʙʀᴀɴᴅ ɴᴇᴡ ᴡᴀɪꜰᴜ ʜᴀꜱ ʙᴇᴇɴ ᴀᴅᴅᴇᴅ! 🌸\n'
-                           f'➼ <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> ʜᴀꜱ ʙʀᴏᴜɢʜᴛ ᴜꜱ ᴀ ɴᴇᴡ ᴄʜᴀʀᴀᴄᴛᴇʀ!\n\n'
-                           f'🎌 <b>Anime:</b> {user_data["anime"]}\n'
-                           f'🆔 <b>ID:</b> {id}\n'
-                           f'👤 <b>Name:</b> {user_data["name"]}\n'
-                           f'🏅 <b>Rarity:</b> {user_data["rarity"]}\n\n'
-                           f'💖 ᴇɴᴊᴏʏ ᴄᴏʟʟᴇᴄᴛɪɴɢ ᴛʜɪs ᴡᴏɴᴅᴇʀꜰᴜʟ ᴄʜᴀʀᴀᴄᴛᴇʀ! 💖'
+                   caption=f'➼ <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> ʜᴀꜱ ʙʀᴏᴜɢʜᴛ ᴜꜱ ᴀ ɴᴇᴡ ᴄʜᴀʀᴀᴄᴛᴇʀ\n'
+                            f'Take a look at this character!\n\n'
+                            f'<b>Anime:</b> {user_data["anime"]}\n'
+                            f'<b>ID:</b> {id}\n'
+                            f'<b>Name:</b> {user_data["name"]}\n'
+                            f'<b>Rarity:</b> {user_data["rarity"]}'
                 )
                 await app.send_photo(
                     chat_id=SUPPORT_CHAT,
                     photo=photo_file_id,
-                    caption=f'🌸 ᴄᴏɴɢʀᴀᴛꜱ! ᴀ ʙʀᴀɴᴅ ɴᴇᴡ ᴡᴀɪꜰᴜ ʜᴀꜱ ʙᴇᴇɴ ᴀᴅᴅᴇᴅ! 🌸\n'
-                            f'➼ <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> ʜᴀꜱ ʙʀᴏᴜɢʜᴛ ᴜꜱ ᴀ ɴᴇᴡ ᴄʜᴀʀᴀᴄᴛᴇʀ!\n\n'
-                            f'🎌 <b>Anime:</b> {user_data["anime"]}\n'
-                            f'🆔 <b>ID:</b> {id}\n'
-                            f'👤 <b>Name:</b> {user_data["name"]}\n'
-                            f'🏅 <b>Rarity:</b> {user_data["rarity"]}\n\n'
-                            f'💖 ᴇɴᴊᴏʏ ᴄᴏʟʟᴇᴄᴛɪɴɢ ᴛʜɪs ᴡᴏɴᴅᴇʀꜰᴜʟ ᴄʜᴀʀᴀᴄᴛᴇʀ! 💖'
+                    caption=f'➼ <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> ʜᴀꜱ ʙʀᴏᴜɢʜᴛ ᴜꜱ ᴀ ɴᴇᴡ ᴄʜᴀʀᴀᴄᴛᴇʀ\n'
+                            f'Take a look at this character!\n\n'
+                            f'<b>Anime:</b> {user_data["anime"]}\n'
+                            f'<b>ID:</b> {id}\n'
+                            f'<b>Name:</b> {user_data["name"]}\n'
+                            f'<b>Rarity:</b> {user_data["rarity"]}'
                 )
                 await message.reply_text("✅ Waifu added successfully.")
                 user_states.pop(message.from_user.id, None)
