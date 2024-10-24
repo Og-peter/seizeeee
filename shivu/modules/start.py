@@ -75,14 +75,14 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 
 # Define the function to notify bot restart
-async def notify_restart(context: CallbackContext):
+async def notify_restart(context: ContextTypes.DEFAULT_TYPE):
     support_group_message = "🚀 Bot has restarted successfully!"
     
     # Notify support group
     try:
         await context.bot.send_message(chat_id=SUPPORT_CHAT, text=support_group_message)
     except Exception as e:
-        print(f"Failed to notify support group: {e}")
+        print(f"Failed to notify support group: {e}. Check if the chat ID is valid and the bot has sufficient permissions.")
     
     # Notify SUDO users
     for sudo_user in sudo_users:  # Use the correct 'sudo_users' variable
