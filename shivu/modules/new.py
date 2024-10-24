@@ -41,15 +41,18 @@ async def display_anime_list(update: Update, context: CallbackContext, page: int
     if page < 0 or page >= total_pages:
         page = 0
 
-    # Create the keyboard with anime list by alphabet and navigation buttons
+    # Create the keyboard with numbers and letters, like the screenshot you shared
     keyboard = [
-        [InlineKeyboardButton(f"{letter}", callback_data=f"animelist:{page}:{i}")]
+        [InlineKeyboardButton(f"{i}", callback_data=f"animelist:{page}:{i}") for i in range(10)]
+    ]
+    keyboard += [
+        [InlineKeyboardButton(f"{letter}", callback_data=f"animelist:{page}:{i+10}")]
         for i, letter in enumerate(alphabet_list[page * 10:(page + 1) * 10])
     ]
 
     keyboard.append([InlineKeyboardButton("🔍 Search", switch_inline_query_current_chat="")])
 
-    # Add navigation buttons
+    # Add navigation buttons like "⬅️" and "➡️" as shown
     navigation_buttons = []
     if page > 0:
         navigation_buttons.append(InlineKeyboardButton("⬅️", callback_data=f"animelist:{page - 1}:0"))
@@ -63,9 +66,9 @@ async def display_anime_list(update: Update, context: CallbackContext, page: int
 
     # Handle initial message or callback
     if update.message:
-        await update.message.reply_text("Select a letter to view anime starting with that letter:", reply_markup=reply_markup)
+        await update.message.reply_text("Choose a letter to go insight:", reply_markup=reply_markup)
     else:
-        await update.callback_query.edit_message_text("Select a letter to view anime starting with that letter:", reply_markup=reply_markup)
+        await update.callback_query.edit_message_text("Choose a letter to go insight:", reply_markup=reply_markup)
 
 # Callback to handle anime selection by alphabet
 async def anime_list_callback(update: Update, context: CallbackContext):
@@ -109,9 +112,9 @@ async def anime_list_callback(update: Update, context: CallbackContext):
     for anime in anime_in_letter:
         message += f"{anime}\n"
 
-    # Provide a back button to return to the alphabet list
+    # Provide a back button to return to the alphabet list like "↩ Back ↩"
     keyboard = [
-        [InlineKeyboardButton("🔙 Back", callback_data=f"animelist:{page}:0")]
+        [InlineKeyboardButton("↩ Back ↩", callback_data=f"animelist:{page}:0")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
