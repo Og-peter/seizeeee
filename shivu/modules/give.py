@@ -7,8 +7,16 @@ import asyncio
 import random
 import time
 
+LOGS_CHANNEL_ID = -1001234567890  # Replace with your actual logs channel ID
+
 backup_collection = db["backup_collection"]
 
+async def send_log_message(log_message: str):
+    try:
+        await app.send_message(LOGS_CHANNEL_ID, log_message)
+    except Exception as e:
+        print(f"Failed to send log message: {e}")
+        
 async def backup_characters(user_id):
     user = await user_collection.find_one({'id': user_id})
     if user:
@@ -96,6 +104,15 @@ async def give_character_command(client, message):
                 f"Character ID: {character[0]['id']}"
             )
             await send_action_notification(notification_message)
+  # Send log to logs channel
+log_message = (
+    f"📝 <b>Character Given</b>\n\n"
+    f"👤 <b>By:</b> {message.from_user.first_name}\n"
+    f"🎁 <b>Receiver:</b> [{receiver_first_name}](tg://user?id={receiver_id})\n"
+    f"🍿 <b>Character ID:</b> {character[0]['id']}\n"
+)
+await send_log_message(log_message)
+
     except IndexError:
         await message.reply_text("Please provide a character ID.")
     except ValueError as e:
@@ -145,6 +162,14 @@ async def remove_character_command(client, message):
                 f"Character ID: {character_id}"
             )
             await send_action_notification(notification_message)
+       # Send log to logs channel
+log_message = (
+    f"❌ <b>Character Removed</b>\n\n"
+    f"👤 <b>By:</b> {message.from_user.first_name}\n"
+    f"🎯 <b>From User:</b> {receiver_id}\n"
+    f"🍿 <b>Character ID:</b> {character_id}\n"
+)
+await send_log_message(log_message)
         else:
             await message.reply_text("Character not found.")
     except (IndexError, ValueError) as e:
@@ -221,6 +246,14 @@ async def random_characters_command(client, message):
         )
         await send_action_notification(notification_message)
 
+        # Send log to logs channel
+log_message = (
+    f"🎲 <b>Random Characters Given</b>\n\n"
+    f"👤 <b>By:</b> {message.from_user.first_name}\n"
+    f"🎁 <b>Receiver:</b> [{message.reply_to_message.from_user.first_name}](tg://user?id={receiver_id})\n"
+    f"🎯 <b>Amount:</b> {amount}\n"
+)
+await send_log_message(log_message)
         await message.reply_text(f"Success! {amount} character(s) added to {user_link}'s collection.")
     except Exception as e:
         print(f"Error in random_characters_command: {e}")
