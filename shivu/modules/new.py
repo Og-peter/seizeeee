@@ -1,4 +1,3 @@
-# Imports
 from telegram import (
     Update, InlineKeyboardButton, InlineKeyboardMarkup, 
     InputTextMessageContent, InlineQueryResultArticle
@@ -25,6 +24,10 @@ async def display_anime_list(update: Update, context: CallbackContext, page: int
     
     # Sort anime alphabetically
     all_anime = sorted(all_anime)
+
+    if not all_anime:
+        await update.message.reply_text("No anime found.")
+        return
 
     # Group by the first letter of the anime
     grouped_anime = {}
@@ -106,7 +109,7 @@ async def anime_list_callback(update: Update, context: CallbackContext):
 
     # Display anime starting with the selected letter
     message = f"<b>Anime starting with '{selected_letter}':</b>\n\n"
-    for i, anime in enumerate(anime_in_letter):
+    for i, anime in anime_in_letter:
         message += f"{i + 1}. {anime}\n"
         
     message += "\nSelect an anime to view its characters."
@@ -167,6 +170,10 @@ async def inline_search(update: Update, context: CallbackContext):
         return
 
     matching_characters = sorted(all_characters)
+
+    if not matching_characters:
+        await update.inline_query.answer([])
+        return
 
     # Create inline search results
     results = [
