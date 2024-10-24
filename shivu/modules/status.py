@@ -5,6 +5,20 @@ from shivu import SUPPORT_CHAT, user_collection, collection
 import os
 from datetime import datetime
 
+# Placeholder function for global rank
+async def get_global_rank(user_id):
+    # Implement logic to calculate global rank
+    return await user_collection.count_documents({'id': {'$lt': user_id}})
+
+# Placeholder function for user balance
+async def get_user_balance(user_id):
+    user = await user_collection.find_one({'id': user_id})
+    return user.get('balance', 0) if user else 0
+
+# Placeholder function for calculating user level
+def calculate_user_level(xp):
+    return xp // 100  # Example logic
+
 # Function to get detailed user information
 async def get_user_info(user, already=False):
     try:
@@ -14,45 +28,32 @@ async def get_user_info(user, already=False):
             return ["Deleted account", None]
 
         user_id = user.id
-        username = user.username
         existing_user = await user_collection.find_one({'id': user_id})
         if not existing_user:
             return ["User not found in the database.", None]
 
         first_name = user.first_name
-        mention = user.mention("Link")
-        global_rank = await get_global_rank(user_id)  # Make sure this function exists
+        global_rank = await get_global_rank(user_id)
         global_count = await collection.count_documents({})
         total_count = len(existing_user.get('characters', []))
         photo_id = user.photo.big_file_id if user.photo else None
-        balance = await get_user_balance(user_id)  # Make sure this function exists
+        balance = await get_user_balance(user_id)
         global_coin_rank = await user_collection.count_documents({'balance': {'$gt': balance}}) + 1
         xp = existing_user.get('xp', 0)
-        level = calculate_user_level(xp)  # Ensure calculate_user_level exists
-        last_login = existing_user.get('last_login', 'Unknown')
-
-        # Formatting data
-        balance_formatted = f"{balance:,}"
-        tokens = existing_user.get('tokens', 0)
-        tokens_formatted = f"{tokens:,}"
-
-        # Calculate login streak
+        level = calculate_user_level(xp)
         current_login = datetime.now()
         last_login_date = existing_user.get('last_login')
-        if last_login_date:
-            last_login_date = datetime.strptime(last_login_date, '%Y-%m-%d')
-            streak = existing_user.get('login_streak', 0)
-            if (current_login - last_login_date).days == 1:
-                streak += 1  # Increment streak
-            elif (current_login - last_login_date).days > 1:
-                streak = 1  # Reset streak
-        else:
-            streak = 1  # First login
+        streak = existing_user.get('login_streak', 0) if last_login_date else 1
 
-        # Update login info
+        # Update login info and streak logic
         await user_collection.update_one({'id': user_id}, {'$set': {'last_login': current_login.strftime('%Y-%m-%d'), 'login_streak': streak}})
 
-        # Using clean borders for the profile display
+        # Formatting data
+        tokens = existing_user.get('tokens', 0)
+        tokens_formatted = f"{tokens:,}"
+        balance_formatted = f"{balance:,}"
+
+        # Profile display
         info_text = f"""
 ╭───────★ User's Profile ★───────╮
 ┃
@@ -72,13 +73,12 @@ async def get_user_info(user, already=False):
 ┃
 ╰──────────────────────────────╯
 """
-
         return info_text, photo_id
     except Exception as e:
         print(f"Error in get_user_info: {e}")
         return ["Error fetching user information.", None]
 
-# Command to show user profile/status (Profile picture display and enhanced layout)
+# Command to show user profile/status
 @shivuu.on_message(filters.command("status"))
 async def profile(client, message):
     if message.reply_to_message:
