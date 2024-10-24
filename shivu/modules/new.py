@@ -109,7 +109,7 @@ async def anime_list_callback(update: Update, context: CallbackContext):
 
     # Display anime starting with the selected letter
     message = f"<b>Anime starting with '{selected_letter}':</b>\n\n"
-    for i, anime in anime_in_letter:
+    for i, anime in enumerate(anime_in_letter):  # Corrected here
         message += f"{i + 1}. {anime}\n"
         
     message += "\nSelect an anime to view its characters."
