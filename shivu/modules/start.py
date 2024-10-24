@@ -92,7 +92,7 @@ async def notify_restart(context: CallbackContext):
             print(f"Failed to notify sudo user {sudo_user}: {e}")
 
 # Initialize the bot application with ApplicationBuilder
-application = ApplicationBuilder().token("YOUR_BOT_TOKEN").build()
+application = ApplicationBuilder().token("7335799800:AAHgRmfPm4BPHRnQby1G7tsGkhFLyAGlwEQ").build()
 
 # Create the CommandHandler for the /start command
 start_handler = CommandHandler('start', start, block=False)
