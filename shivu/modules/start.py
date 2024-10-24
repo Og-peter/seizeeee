@@ -80,7 +80,7 @@ async def notify_restart(context: ContextTypes.DEFAULT_TYPE):
     
     # Notify support group
     try:
-        await context.bot.send_message(chat_id=SUPPORT_CHAT, text=support_group_message)
+        await context.bot.send_message(chat_id=GROUP_ID, text=support_group_message)
     except Exception as e:
         print(f"Failed to notify support group: {e}. Check if the chat ID is valid and the bot has sufficient permissions.")
     
