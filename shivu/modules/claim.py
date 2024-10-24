@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 DEVS = [6402009857]
 
 GROUP_ID = -1002104939708
-LOG_CHANNEL_ID = -1002208875879  # Replace with your actual log channel ID
+LOG_CHANNEL_ID = -1002446048543  # Replace with your actual log channel ID
 
 async def send_error_to_devs(error_message):
     for dev_id in DEVS:
