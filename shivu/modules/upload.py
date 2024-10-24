@@ -587,6 +587,3 @@ async def main():
 
     # Keep the bot running
     await app.idle()
-
-# Start the bot
-app.run(main())
