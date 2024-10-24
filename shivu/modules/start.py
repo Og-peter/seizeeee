@@ -1,8 +1,8 @@
 import random
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import CallbackContext, CallbackQueryHandler, CommandHandler
-from shivu import application, PHOTO_URL, SUPPORT_CHAT, UPDATE_CHAT, BOT_USERNAME, db, GROUP_ID, sudo_users
+from telegram.ext import CallbackContext, CommandHandler
+from shivu import application, PHOTO_URL, SUPPORT_CHAT, GROUP_ID, SUDO_USERS
 from shivu import user_collection, refeer_collection
 
 async def start(update: Update, context: CallbackContext) -> None:
@@ -63,7 +63,6 @@ async def start(update: Update, context: CallbackContext) -> None:
         await context.bot.send_sticker(chat_id=update.effective_chat.id, sticker=sticker_url)
         await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=caption, reply_markup=reply_markup, parse_mode='markdown')
     else:
-        photo_url = random.choice(PHOTO_URL)
         keyboard = [
             [InlineKeyboardButton("PM", url=f'https://t.me/Character_seize_bot?start=true')],
         ]
@@ -88,6 +87,11 @@ async def notify_restart(context: CallbackContext):
         except Exception as e:
             print(f"Failed to notify sudo user {sudo_user}: {e}")
 
-# Register the function to run after bot starts
+# Create the CommandHandler for the start command
+start_handler = CommandHandler('start', start, block=False)
+
+# Register the handler before adding to the application
 application.add_handler(start_handler)
+
+# Register the function to run after the bot starts
 application.job_queue.run_once(notify_restart, 0)  # Notify immediately after restart
