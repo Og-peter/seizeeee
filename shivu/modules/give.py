@@ -7,7 +7,7 @@ import asyncio
 import random
 import time
 
-LOGS_CHANNEL_ID = -1001234567890  # Replace with your actual logs channel ID
+LOGS_CHANNEL_ID = -1002446048543  # Replace with your actual logs channel ID
 
 backup_collection = db["backup_collection"]
 
