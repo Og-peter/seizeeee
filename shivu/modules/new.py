@@ -136,7 +136,7 @@ async def anime_characters_callback(update: Update, context: CallbackContext):
         # Fetch characters for the selected anime
         characters = await collection.find_one({'anime': anime}, {'characters': 1})
         if not characters or 'characters' not in characters:
-            await query.answer("No characters found for this anime!")
+            await query.answer(f"No characters found for this anime '{anime}'!")
             return
         characters_list = sorted(characters['characters'])
     except PyMongoError as e:
@@ -194,6 +194,3 @@ application.add_handler(CommandHandler("animelist", animelist, block=False))
 application.add_handler(CallbackQueryHandler(anime_list_callback, pattern="^animelist", block=False))
 application.add_handler(CallbackQueryHandler(anime_characters_callback, pattern="^anime_characters", block=False))
 application.add_handler(InlineQueryHandler(inline_search, block=False))
-
-# End
-# by https://github.com/lovetheticx
