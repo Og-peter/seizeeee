@@ -2,7 +2,7 @@ import random
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackContext, CommandHandler
-from shivu import application, PHOTO_URL, SUPPORT_CHAT, GROUP_ID, SUDO_USERS
+from shivu import application, PHOTO_URL, SUPPORT_CHAT, GROUP_ID, sudo_users
 from shivu import user_collection, refeer_collection
 
 async def start(update: Update, context: CallbackContext) -> None:
