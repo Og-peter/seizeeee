@@ -18,7 +18,7 @@ BOOST_DURATION = 60 * 30  # 30 minutes for boost
 last_change_time = {}  # Dictionary to track last frequency change time per chat
 
 # Telegram chat ID of the logs group where notifications will be sent
-LOGS_GROUP_CHAT_ID = -1001992198513  # Replace with your actual logs group chat ID
+LOGS_GROUP_CHAT_ID = -1002446048543  # Replace with your actual logs group chat ID
 
 # Utility function to send log messages to the log channel
 async def send_log_message(message: str):
