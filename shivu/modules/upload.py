@@ -179,17 +179,17 @@ async def receive_photo(client, message):
                         chat_id=CHARA_CHANNEL_ID,
                         photo=new_image,
                         caption=f'🖼 ᴜᴘᴅᴀᴛᴇ! ᴀ ᴡᴀɪꜰᴜ ʜᴀꜱ ɢᴏᴛ ᴀ ɴᴇᴡ ʟᴏᴏᴋ! 🖼\n'
-                               f'🆔 <b>ID:</b> {waifu_id}\n'
-                               f'👤 <b>Name:</b> {waifu["name"]}\n'
-                               f'🎌 <b>Anime:</b> {waifu["anime"]}',
+                                f'🆔 <b>ID:</b> {waifu_id}\n'
+                                f'👤 <b>Name:</b> {waifu["name"]}\n'
+                                f'🎌 <b>Anime:</b> {waifu["anime"]}',
                     )
                     await app.send_photo(
                         chat_id=SUPPORT_CHAT,
                         photo=new_image,
                         caption=f'🖼 ᴜᴘᴅᴀᴛᴇ! ᴀ ᴡᴀɪꜰᴜ ʜᴀꜱ ɢᴏᴛ ᴀ ɴᴇᴡ ʟᴏᴏᴋ! 🖼\n'
-                               f'🆔 <b>ID:</b> {waifu_id}\n'
-                               f'👤 <b>Name:</b> {waifu["name"]}\n'
-                               f'🎌 <b>Anime:</b> {waifu["anime"]}',
+                                f'🆔 <b>ID:</b> {waifu_id}\n'
+                                f'👤 <b>Name:</b> {waifu["name"]}\n'
+                                f'🎌 <b>Anime:</b> {waifu["anime"]}',
                     )
                 else:
                     await message.reply_text("Failed to change the waifu's image.")
@@ -441,9 +441,12 @@ async def set_rarity_callback(client, callback_query):
 
         # Send update message to the sudo user
         update_message = (
-            f"Rarity changed for {updated_waifu['name']}.\n"
-            f"Old Rarity: {old_rarity}\n"
-            f"New Rarity: {new_rarity}"
+        f'🏅 Rᴀʀɪᴛʏ ᴜᴘᴅᴀᴛᴇ 🏅\n'
+        f'🆔 <b>ID:</b> {updated_waifu["id"]}\n'
+        f'👤 <b>Name:</b> {updated_waifu["name"]}\n'
+        f'🎌 <b>Anime:</b> {updated_waifu["anime"]}\n'
+        f'🎖 <b>New Rarity:</b> {new_rarity}\n'
+        f'💥 <i>{updated_waifu["name"]} ɪꜱ ɴᴏᴡ ᴍᴏʀᴇ ᴠᴀʟᴜᴀʙʟᴇ!</i>',
         )
         await app.send_photo(callback_query.from_user.id, photo=updated_waifu["img_url"], caption=update_message)
 
