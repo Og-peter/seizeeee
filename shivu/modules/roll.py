@@ -6,6 +6,9 @@ import time
 
 DEVS = (6402009857)
 
+# Logs Channel ID (replace with actual channel ID)
+LOGS_CHANNEL_ID = -1002446048543  # Replace with your logs channel's chat ID
+
 async def get_unique_characters(receiver_id, target_rarities=['🟡 Legendary', '💮 Exclusive']):
     try:
         pipeline = [
@@ -28,6 +31,10 @@ async def dice(_: bot, message: t.Message):
     chat_id = message.chat.id
     mention = message.from_user.mention
     user_id = message.from_user.id
+
+    # Send logs notification
+    log_message = f"🎲 <b>Dice/Roll Command Used</b>\n\n👤 User: {mention} (ID: <code>{user_id}</code>)\n💬 Chat ID: <code>{chat_id}</code>"
+    await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message, parse_mode="html")
 
     # Check if the user is in cooldown
     if user_id in cooldowns and time.time() - cooldowns[user_id] < 60:  # Adjust the cooldown time (in seconds)
@@ -117,4 +124,4 @@ async def dice(_: bot, message: t.Message):
                     f"Don't give up! Try again and aim for the stars! 🌠"
                 ),
                 quote=True
-      )
+        )
