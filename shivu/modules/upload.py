@@ -3,6 +3,7 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQ
 from pymongo import ReturnDocument
 from shivu import user_collection, collection, CHARA_CHANNEL_ID, SUPPORT_CHAT, shivuu as app, sudo_users, db
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+from pyrogram.errors import BadRequest
 
 # Function to get the next sequence number for unique IDs
 async def get_next_sequence_number(sequence_name):
@@ -562,3 +563,24 @@ async def cancel_remove_waifu_callback(client, callback_query):
     user_states.pop(callback_query.from_user.id, None)
     await callback_query.message.edit_text("Operation canceled successfully.")
          
+# Function to notify bot restart
+async def notify_restart():
+    message_text = "🚨 Bot has restarted!"
+    
+    # Send a message to the logs channel
+    try:
+        await app.send_message(CHARA_CHANNEL_ID, message_text)
+    except BadRequest as e:
+        print(f"Failed to send message to channel: {e}")
+    
+    # Notify each sudo user about the bot restart
+    for sudo_user in sudo_users:
+        try:
+            await app.send_message(sudo_user, message_text)
+        except BadRequest as e:
+            print(f"Failed to notify sudo user {sudo_user}: {e}")
+
+# Call the notify_restart function on bot start
+@app.on_startup
+async def on_startup():
+    await notify_restart()
