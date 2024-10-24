@@ -34,7 +34,7 @@ async def dice(_: bot, message: t.Message):
 
     # Send logs notification
     log_message = f"🎲 <b>Dice/Roll Command Used</b>\n\n👤 User: {mention} (ID: <code>{user_id}</code>)\n💬 Chat ID: <code>{chat_id}</code>"
-    await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message, parse_mode="html")
+    await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message, parse_mode="Markdown")
 
     # Check if the user is in cooldown
     if user_id in cooldowns and time.time() - cooldowns[user_id] < 60:  # Adjust the cooldown time (in seconds)
