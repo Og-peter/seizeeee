@@ -580,9 +580,6 @@ async def notify_restart():
         except BadRequest as e:
             print(f"Failed to notify sudo user {sudo_user}: {e}")
 
-# Initialize the bot
-app = Client("bot_session")
-
 # Main function
 async def main():
     await notify_restart()
