@@ -7,7 +7,7 @@ from shivu import application, PHOTO_URL, GROUP_ID, sudo_users  # removed SUPPOR
 from shivu import user_collection, refeer_collection
 
 # Define the /start command handler
-async def start(update: Update, context: CallbackContext) -> None:
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     first_name = escape(update.effective_user.first_name)  # escaped in HTML context
     username = update.effective_user.username or "Unknown"
@@ -42,7 +42,7 @@ async def start(update: Update, context: CallbackContext) -> None:
             await user_collection.update_one({"id": user_id}, {"$set": {"first_name": first_name, "username": username}})
 
     # Send a welcome message in private chat
-    if update.effective_chat.type == "private":
+    if update.effective_chat and update.effective_chat.type == "private":
         caption = f"""❖ Kᴏɴ'ɴɪᴄʜɪᴡᴀ {first_name} sᴀɴ 💌 !!
 
 ๏ I'ᴍ [ᴄʜᴀʀᴀᴄᴛᴇʀ sᴇɪᴢᴇʀ ʙᴏᴛ](https://t.me/Character_seize_bot) ʏᴏᴜʀ ғʀɪᴇɴᴅʟʏ ᴡᴀɪғᴜ sᴇɪᴢᴇʀ ʙᴏᴛ ☄.
