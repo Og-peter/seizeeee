@@ -162,14 +162,14 @@ async def remove_character_command(client, message):
                 f"Character ID: {character_id}"
             )
             await send_action_notification(notification_message)
-       # Send log to logs channel
-log_message = (
-    f"❌ <b>Character Removed</b>\n\n"
-    f"👤 <b>By:</b> {message.from_user.first_name}\n"
-    f"🎯 <b>From User:</b> {receiver_id}\n"
-    f"🍿 <b>Character ID:</b> {character_id}\n"
-)
-await send_log_message(log_message)
+            # Send log to logs channel
+            log_message = (
+                f"❌ <b>Character Removed</b>\n\n"
+                f"👤 <b>By:</b> {message.from_user.first_name}\n"
+                f"🎯 <b>From User:</b> {receiver_id}\n"
+                f"🍿 <b>Character ID:</b> {character_id}\n"
+            )
+            await send_log_message(log_message)
         else:
             await message.reply_text("Character not found.")
     except (IndexError, ValueError) as e:
