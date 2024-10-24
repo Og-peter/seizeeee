@@ -15,7 +15,7 @@ roll_streaks = {}
 target_rarities = ['⚪️ Common', '🔵 Medium', '🟠 Rare', '🟡 Legendary', '👶 Chibi', '💮 Exclusive']
 
 # Logs Channel ID (replace with actual channel ID)
-LOGS_CHANNEL_ID = -1001234567890  # Replace with your logs channel's chat ID
+LOGS_CHANNEL_ID = -1002446048543  # Replace with your logs channel's chat ID
 
 # Function to fetch unique characters
 async def get_unique_characters(receiver_id, target_rarities=target_rarities):
