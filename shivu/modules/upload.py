@@ -456,7 +456,7 @@ async def set_rarity_callback(client, callback_query):
             f'👤 <b>Name:</b> {updated_waifu["name"]}\n'
             f'🎌 <b>Anime:</b> {updated_waifu["anime"]}\n'
             f'🎖 <b>New Rarity:</b> {new_rarity}\n'
-            f'💥 <i>{updated_waifu["name"]} ɪꜱ ɴᴏᴡ ᴍᴏʀᴇ ᴠᴀʟᴜᴀʙʟᴇ!</i>',
+            f'💥 <i>{updated_waifu["name"]} ɪꜱ ɴᴏᴡ ᴍᴏʀᴇ ᴠᴀʟᴜᴀʙʟᴇ!</i>'
         )
         await app.send_photo(callback_query.from_user.id, photo=updated_waifu["img_url"], caption=update_message)
 
