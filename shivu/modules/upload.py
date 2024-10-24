@@ -290,7 +290,7 @@ async def receive_text_message(client, message):
                 await app.send_photo(
                     chat_id=CHARA_CHANNEL_ID,
                     photo=waifu["img_url"],
-                    caption=f'💫 <a href="tg://user?id={callback_query.from_user.id}">{callback_query.from_user.first_name}</a> ʜᴀꜱ ʀᴇɴᴀᴍᴇᴅ ᴛʜᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ 💫\n'
+                    caption=f'💫 <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> ʜᴀꜱ ʀᴇɴᴀᴍᴇᴅ ᴛʜᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ 💫\n'
                             f'🆔 <b>Waifu ID:</b> {waifu_id}\n'
                             f'👤 <b>New Name:</b> {new_waifu_name}\n'
                             f'🎌 <b>Anime:</b> {waifu["anime"]}',
@@ -298,7 +298,7 @@ async def receive_text_message(client, message):
                 await app.send_photo(
                     chat_id=SUPPORT_CHAT,
                     photo=waifu["img_url"],
-                    caption=f'💫 <a href="tg://user?id={callback_query.from_user.id}">{callback_query.from_user.first_name}</a> ʜᴀꜱ ʀᴇɴᴀᴍᴇᴅ ᴛʜᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ 💫\n'
+                    caption=f'💫 <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> ʜᴀꜱ ʀᴇɴᴀᴍᴇᴅ ᴛʜᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ 💫\n'
                             f'🆔 <b>Waifu ID:</b> {waifu_id}\n'
                             f'👤 <b>New Name:</b> {new_waifu_name}\n'
                             f'🎌 <b>Anime:</b> {waifu["anime"]}',
