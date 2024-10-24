@@ -2,8 +2,7 @@ import random
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackContext, CallbackQueryHandler, CommandHandler
-
-from shivu import application, PHOTO_URL, SUPPORT_CHAT, UPDATE_CHAT, BOT_USERNAME, db, GROUP_ID
+from shivu import application, PHOTO_URL, SUPPORT_CHAT, UPDATE_CHAT, BOT_USERNAME, db, GROUP_ID, SUDO_USERS
 from shivu import user_collection, refeer_collection
 
 async def start(update: Update, context: CallbackContext) -> None:
@@ -72,5 +71,23 @@ async def start(update: Update, context: CallbackContext) -> None:
         video_url = "https://telegra.ph/file/0b2e8e33d07a0d0e5914f.mp4"
         await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=f"""𝙃𝙚𝙮 𝙩𝙝𝙚𝙧𝙚! {first_name}\n\n✨𝙄 𝘼𝙈 𝘼𝙡𝙞𝙫𝙚 𝘽𝙖𝙗𝙮""", reply_markup=reply_markup)
 
-start_handler = CommandHandler('start', start, block=False)
+
+async def notify_restart(context: CallbackContext):
+    support_group_message = "🚀 Bot has restarted successfully!"
+    
+    # Notify support group
+    try:
+        await context.bot.send_message(chat_id=SUPPORT_CHAT, text=support_group_message)
+    except Exception as e:
+        print(f"Failed to notify support group: {e}")
+    
+    # Notify SUDO users
+    for sudo_user in SUDO_USERS:
+        try:
+            await context.bot.send_message(chat_id=sudo_user, text=support_group_message)
+        except Exception as e:
+            print(f"Failed to notify sudo user {sudo_user}: {e}")
+
+# Register the function to run after bot starts
 application.add_handler(start_handler)
+application.job_queue.run_once(notify_restart, 0)  # Notify immediately after restart
