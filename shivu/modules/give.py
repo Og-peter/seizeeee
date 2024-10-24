@@ -246,12 +246,11 @@ async def random_characters_command(client, message):
         )
         await send_action_notification(notification_message)
 
-        # Send log to logs channel
 log_message = (
-    f"🎲 <b>Random Characters Given</b>\n\n"
+    f"📝 <b>Character Given</b>\n\n"
     f"👤 <b>By:</b> {message.from_user.first_name}\n"
-    f"🎁 <b>Receiver:</b> [{message.reply_to_message.from_user.first_name}](tg://user?id={receiver_id})\n"
-    f"🎯 <b>Amount:</b> {amount}\n"
+    f"🎁 <b>Receiver:</b> [{receiver_first_name}](tg://user?id={receiver_id})\n"
+    f"🍿 <b>Character ID:</b> {character[0]['id']}\n"
 )
 await send_log_message(log_message)
         await message.reply_text(f"Success! {amount} character(s) added to {user_link}'s collection.")
