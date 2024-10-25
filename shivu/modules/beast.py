@@ -32,11 +32,25 @@ async def get_user_data(user_id):
 cooldowns = {}
 
 @bot.on_message(filters.command(["beastshop"]))
-async def beastshop_cmd(_: bot, update: t.Update):
+async def beastshop_cmd(_: bot, update: Update):
     # Display a list of available beasts and their prices
-    beast_list_text = "\n".join([f"{beast_id}. {beast['name']} - 𝐑𝐚𝐜𝐞 : {beast['rarity']}, 𝐏𝐫𝐢𝐜𝐞 : Ŧ`{beast['price']}`" for beast_id, beast in beast_list.items()])
-    return await update.reply_text(f"⛩ Welcome To Beast Shop\n\n{beast_list_text}\n\nUse `/buybeast <beast_id>` to purchase a beast.")
-
+    beast_list_text = "\n".join([
+        f"🦁 **{beast_id}. {beast['name']}**\n"
+        f"   𝐑𝐚𝐜𝐞 : {beast['rarity']}\n"
+        f"   💰 **Price** : Ŧ`{beast['price']}`"
+        for beast_id, beast in beast_list.items()
+    ])
+    
+    # Sending the formatted message
+    message_text = (
+        "⛩️ **Welcome To Beast Shop!**\n\n"
+        "🦄 **Available Beasts:**\n"
+        "───────────────────────────\n"
+        f"{beast_list_text}\n\n"
+        "🛒 Use `/buybeast <beast_id>` to purchase a beast."
+    )
+    
+    return await update.reply_text(message_text, parse_mode='Markdown')
 @bot.on_message(filters.command(["buybeast"]))
 async def buybeast_cmd(_: bot, update: t.Update):
     user_id = update.from_user.id
