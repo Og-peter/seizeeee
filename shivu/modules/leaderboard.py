@@ -160,12 +160,11 @@ async def send_groups_document(update: Update, context: CallbackContext) -> None
     except Exception as e:
         await update.message.reply_text(f"An error occurred: {e}")
 
-# Function to show bot statistics
 async def stats(update: Update, context: CallbackContext) -> None:
     OWNER_ID = 6402009857  # Define your OWNER_ID here
 
     if update.effective_user.id != OWNER_ID:
-        await update.message.reply_text("You are not authorized to use this command.")
+        await update.message.reply_text("🚫 You are not authorized to use this command.", parse_mode="HTML")
         return
 
     user_count = await user_collection.count_documents({})
@@ -175,10 +174,17 @@ async def stats(update: Update, context: CallbackContext) -> None:
     adjusted_user_count = user_count + 40000
     adjusted_group_count = len(group_count) + 5900
 
-    await update.message.reply_text(
-        f'Total Users👤: {adjusted_user_count}\n'
-        f'Total Groups👥: {adjusted_group_count}\n'
+    # Enhanced stats message with stylish formatting
+    stats_message = (
+        f"<b>📊 𝘽𝙤𝙩 𝙎𝙩𝙖𝙩𝙞𝙨𝙩𝙞𝙘𝙨 📊</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"<b>👤 Total Users:</b> <code>{adjusted_user_count}</code>\n"
+        f"<b>👥 Total Groups:</b> <code>{adjusted_group_count}</code>\n"
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"<i>📈 Stay tuned for more updates!</i>"
     )
+
+    await update.message.reply_text(stats_message, parse_mode="HTML")
 
 # Register the command handlers
 application.add_handler(CommandHandler('ctop', ctop, block=False))
