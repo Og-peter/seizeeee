@@ -160,24 +160,28 @@ async def confirm_erase(client, callback_query: CallbackQuery):
         
         eraser_name = callback_query.from_user.first_name
         target_name = (await app.get_users(target_id)).first_name
+        
+        # Send notification to Special Grade users
         await send_notification_to_specialgrade(eraser_id, eraser_name, target_id, target_name, num_characters_to_erase)
+        
+        # Log the action
         await log_action(eraser_id, target_id, "erase", f"Erased {num_characters_to_erase} characters.")
         erase_timestamps[eraser_id] = datetime.utcnow()
 
         # Log the erase operation in the log channel
         log_message = (
-            f"🚨 **Erase Operation Log** 🚨\n"
-            f"👤 **Eraser:** <a href='tg://user?id={eraser_id}'>{eraser_name}</a>\n"
-            f"🎯 **Target:** <a href='tg://user?id={target_id}'>{target_name}</a>\n"
-            f"🧹 **Characters Erased:** {num_characters_to_erase}\n"
-            f"💥 **Cost:** {erase_cost * num_characters_to_erase} coins\n"
-            f"🕒 **Time:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+            f"🚨 <b>Erase Operation Log</b> 🚨\n"
+            f"👤 <b>Eraser:</b> <a href='tg://user?id={eraser_id}'>{eraser_name}</a>\n"
+            f"🎯 <b>Target:</b> <a href='tg://user?id={target_id}'>{target_name}</a>\n"
+            f"🧹 <b>Characters Erased:</b> {num_characters_to_erase}\n"
+            f"💰 <b>Cost:</b> {erase_cost * num_characters_to_erase} coins\n"
+            f"🕒 <b>Time:</b> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
         )
-        await app.send_message(LOG_CHANNEL_ID, log_message)
+        await app.send_message(LOG_CHANNEL_ID, log_message, parse_mode='HTML')
 
     else:
-        await callback_query.message.edit_text("❌ Unable to erase characters.")
-
+        await callback_query.message.edit_text("❌ <b>Unable to erase characters. Please try again later.</b>")
+        
 @app.on_callback_query(filters.regex(r"^reverse_\d+$"))
 async def reverse_erase(client, callback_query: CallbackQuery):
     target_id = int(callback_query.data.split("_")[1])
@@ -186,15 +190,17 @@ async def reverse_erase(client, callback_query: CallbackQuery):
     if str(eraser_id) in SPECIALGRADE:
         restored = await restore_characters(target_id)
         if restored:
-            await callback_query.answer("✅ The erase operation has been reversed. Characters restored! 💫")
-            await callback_query.edit_message_text("🔄 The erase operation has been successfully reversed.")
-            
+            await callback_query.answer("✅ <b>The erase operation has been successfully reversed!</b> Characters restored! 💫")
+            await callback_query.edit_message_text("🔄 <b>The erase operation has been successfully reversed.</b>")
+
             # Reward for restoring characters
             await user_collection.update_one({'id': target_id}, {'$inc': {'balance': reward_for_restoring}})
-            await callback_query.message.reply_text(f"🎁 {reward_for_restoring} coins have been rewarded to <a href='tg://user?id={target_id}'>the user</a> for reversing the erase operation.")
-            
+            await callback_query.message.reply_text(
+                f"🎁 <b>{reward_for_restoring} coins</b> have been rewarded to <a href='tg://user?id={target_id}'>the user</a> for reversing the erase operation. Thank you for restoring their collection! 🌟"
+            )
+
             await log_action(eraser_id, target_id, "restore", "Characters restored after erasure.")
         else:
-            await callback_query.answer("⚠️ No backup found to restore.", show_alert=True)
+            await callback_query.answer("⚠️ <b>No backup found to restore.</b> Please check if the characters were backed up before erasure.", show_alert=True)
     else:
-        await callback_query.answer("❌ You do not have permission to reverse this operation.", show_alert=True)
+        await callback_query.answer("❌ <b>You do not have permission to reverse this operation.</b> Only Special Grade users can perform this action.", show_alert=True)
