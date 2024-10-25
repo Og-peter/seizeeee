@@ -92,14 +92,14 @@ erase_timestamps = {}
 # Animation function after erasure
 async def send_erase_animation(message, user_id, num_characters):
     animation_steps = [
-        "💥 Erasing in progress... 💥",
-        "🧹 Cleaning up the characters... 🧹",
-        "🌀 Wiping traces from the universe... 🌀",
-        f"❌ {num_characters} characters from <a href='tg://user?id={user_id}'>the user</a> have been completely erased! 💀"
+        "💥 <b>Initiating Erasure...</b> 💥",
+        "🧹 <b>Cleaning up the characters...</b> 🧹",
+        "🌀 <b>Wiping all traces from existence...</b> 🌀",
+        f"❌ <b>{num_characters} characters from</b> <a href='tg://user?id={user_id}'>the user</a> <b>have been successfully erased! 💀</b>"
     ]
     
     for step in animation_steps:
-        await message.edit_text(step)
+        await message.edit_text(step, parse_mode='HTML')  # Ensure HTML parsing for bold text
         await asyncio.sleep(1.5)  # Delay for the animation effect
 
 @app.on_message(filters.command(["erase"]))
