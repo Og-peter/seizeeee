@@ -18,6 +18,10 @@ async def notify_sudo_users(application: Application):
         except Exception as e:
             print(f"Failed to send restart notification to user {user_id}: {e}")
 
+# Define the setup function to notify sudo users when bot starts
+async def setup(application: Application):
+    await notify_sudo_users(application)
+
 async def start(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
     first_name = update.effective_user.first_name
@@ -88,5 +92,5 @@ async def start(update: Update, context: CallbackContext) -> None:
 start_handler = CommandHandler('start', start, block=False)
 application.add_handler(start_handler)
 
-# Use post_init to call notify_sudo_users after bot startup
-application.post_init = lambda: notify_sudo_users(application)
+# Run the application with setup to notify sudo users on startup
+application.run_polling(allowed_updates=Update.ALL_TYPES, setup=setup)
