@@ -202,13 +202,15 @@ async def callback_confirm_delete(client, callback_query):
     callback_user_id = callback_query.from_user.id
 
     if str(callback_user_id) not in SPECIALGRADE:
-        await callback_query.answer("🚫 You cannot perform this action! ❌", show_alert=True)
+        await callback_query.answer("🚫 You lack the authority to perform this action! ❌", show_alert=True)
         return
 
     success = await delete_harem(client, user_id)
     if success:
-        # Notify the user that their harem was deleted
-        await callback_query.message.edit_text("🔫 <b>Harem successfully eliminated.</b>")
+        # Notify the user that their harem was deleted with a styled message
+        await callback_query.message.reply_text("🔫 <b>Your harem has been successfully eliminated!</b>\n\n"
+                                                "<i>Such is the fate of those who cross the Special Grade!</i>",
+                                                parse_mode="html")
         
         # Log the action in the database
         await log_action('delete', user_id, callback_user_id)
@@ -221,7 +223,8 @@ async def callback_confirm_delete(client, callback_query):
         await send_notification_to_specialgrade(callback_user_id, eraser_name, user_id, target_name)
         
         # Notify the user whose harem was deleted
-        await notify_user(user_id, "⚔️ Your harem has been deleted by a Special Grade sorcerer.")
+        await notify_user(user_id, f"⚔️ <b>Your harem has been deleted by Special Grade sorcerer <a href='tg://user?id={callback_user_id}'>{eraser_name}</a>.</b>",
+                          parse_mode="html")
         
         # Add reputation for the eraser
         await increase_reputation(callback_user_id, 1)
@@ -236,8 +239,8 @@ async def callback_confirm_delete(client, callback_query):
         await app.send_message(LOG_CHANNEL_ID, log_message, parse_mode="html")
 
     else:
-        await callback_query.message.edit_text("❌ <b>Failed to delete harem. User not found.</b>")
-
+        await callback_query.message.reply_text("❌ <b>Failed to delete harem. User not found or already eliminated.</b>", parse_mode="html")
+        
 @app.on_callback_query(filters.regex(r'^cancel_delete_'))
 async def callback_cancel_delete(client, callback_query):
     await callback_query.message.edit_text("💨 <b>Harem deletion cancelled.</b>")
