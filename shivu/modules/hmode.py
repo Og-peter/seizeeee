@@ -17,15 +17,16 @@ async def hmode(client, message):
 
     keyboard = [
         [
-           InlineKeyboardButton("🍜 Sort By Rarity", callback_data="sort_rarity"),
+            InlineKeyboardButton("🍜 **Sort By Rarity**", callback_data="sort_rarity"),
         ],
-           [InlineKeyboardButton("🌐 Reset Preference", callback_data="reset_preferences")],
-           [InlineKeyboardButton("🚮 Close", callback_data="close")]
+        [InlineKeyboardButton("🌐 **Reset Preferences**", callback_data="reset_preferences")],
+        [InlineKeyboardButton("🚮 **Close**", callback_data="close")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    message = await message.reply_photo(
+
+    await message.reply_photo(
         photo="https://telegra.ph/file/1fc98964f8a467b947853.jpg",
-        caption="Set Your Harem Mode:",
+        caption="🎉 **Set Your Harem Mode:**\n\nChoose your preferences using the buttons below!",
         reply_markup=reply_markup,
     )
 
@@ -37,7 +38,7 @@ async def hmode_callback(client, callback_query: CallbackQuery):
 
     # Authorization check
     if not hmode_user_id or user_id != hmode_user_id["id"]:
-        await callback_query.answer("You are not authorized to use this button.", show_alert=True)
+        await callback_query.answer("🚫 **You are not authorized to use this button.**", show_alert=True)
         return
 
     # Close handler
@@ -48,12 +49,36 @@ async def hmode_callback(client, callback_query: CallbackQuery):
     # Fetch user details from the database
     user = await user_collection.find_one({'id': user_id})
     if not user:
-        await callback_query.answer("You Have Not Seized Any Characters Yet.", show_alert=True)
+        await callback_query.answer("⚠️ **You Have Not Seized Any Characters Yet.**", show_alert=True)
         return
 
     # Sort by rarity
     if data == "sort_rarity":
         await send_rarity_preferences(callback_query)
+
+async def send_rarity_preferences(callback_query: CallbackQuery):
+    user_id = callback_query.from_user.id
+    # Fetch characters and sort by rarity (assuming you have a function to do this)
+    characters = await get_sorted_characters_by_rarity(user_id)
+
+    if not characters:
+        await callback_query.answer("📭 **No characters available to display.**", show_alert=True)
+        return
+
+    # Create a formatted message with sorted characters
+    message_text = "✨ **Your Characters Sorted By Rarity:**\n\n"
+    for character in characters:
+        message_text += f"🌟 **Name:** {character['name']}\n"
+        message_text += f"💎 **Rarity:** {character['rarity']}\n\n"
+
+    await callback_query.message.reply_text(message_text)
+
+async def get_sorted_characters_by_rarity(user_id):
+    # Function to fetch and sort characters by rarity
+    characters = await user_collection.find_one({'id': user_id})
+    if characters and 'characters' in characters:
+        return sorted(characters['characters'], key=lambda x: x['rarity'], reverse=True)
+    return []
 
 async def send_rarity_preferences(callback_query: CallbackQuery):
     rarity_order = [
