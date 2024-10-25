@@ -34,16 +34,17 @@ async def erase_characters_for_user(user_id, num_characters):
 
     if user:
         total_characters = len(user.get('characters', []))
-        
+
         if total_characters == 0:
-            return f"⚠️ <a href='tg://user?id={user_id}'>{user.get('first_name', 'User')}</a> has no characters to erase."
+            return f"⚠️ <a href='tg://user?id={user_id}'>{user.get('first_name', 'User')}</a> has no characters to erase. 🥺"
 
         num_characters_to_remove = min(num_characters, total_characters)
-        
+
         characters_to_remove = random.sample(user['characters'], num_characters_to_remove)
         user_characters = [character for character in user['characters'] if character not in characters_to_remove]
-        
+
         await backup_characters(user_id, user['characters'])  # Backup characters
+
         await user_collection.update_one(
             {'id': user_id},
             {'$set': {'characters': user_characters}}
@@ -52,7 +53,7 @@ async def erase_characters_for_user(user_id, num_characters):
         # Deduct balance for the erase operation
         await user_collection.update_one({'id': user_id}, {'$inc': {'balance': -erase_cost * num_characters_to_remove}})
 
-        return num_characters_to_remove, user.get('first_name', 'User')
+        return (num_characters_to_remove, user.get('first_name', 'User'))
 
     return 0, "not found"
 
