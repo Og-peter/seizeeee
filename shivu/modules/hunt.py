@@ -26,6 +26,22 @@ current_hunts = {}
 current_engagements = {}
 user_locks = {}
 
+def get_user_lock(user_id):
+    if user_id not in user_locks:
+        user_locks[user_id] = asyncio.Lock()
+    return user_locks[user_id]
+
+# Example of an async function using user locks
+async def hunt(update: Update, context: CallbackContext):
+    user_id = update.effective_user.id
+    lock = get_user_lock(user_id)
+
+    async with lock:
+        # Your code logic here
+        await update.message.reply_text("Hunting started!")  # Example response
+
+# Your other command handlers and application setup...
+
 async def get_random_waifu():
     target_rarities = ['🔮 Limited Edition', '🫧 Premium']  # Example rarities
     selected_rarity = random.choice(target_rarities)
