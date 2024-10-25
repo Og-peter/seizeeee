@@ -2,8 +2,8 @@ import os
 import random
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import ApplicationBuilder, CallbackContext, CommandHandler, ContextTypes
-from shivu import application, PHOTO_URL, GROUP_ID, sudo_users
+from telegram.ext import Application, CallbackContext, CommandHandler, ContextTypes
+from shivu import PHOTO_URL, GROUP_ID, sudo_users
 from shivu import user_collection, refeer_collection
 
 # Define the /start command handler
@@ -98,20 +98,23 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
 
 # Define the function to notify bot restart
-async def notify_restart(context: CallbackContext) -> None:
+async def notify_restart(application: Application) -> None:
     for sudo_user in sudo_users:
         try:
-            await context.bot.send_message(chat_id=sudo_user, text="🚀 Bot has restarted successfully!")
+            await application.bot.send_message(chat_id=sudo_user, text="🚀 Bot has restarted successfully!")
         except Exception as e:
             print(f"Failed to notify sudo user {sudo_user}: {e}")
 
 # Create an asynchronous function to start the bot and set up restart notification
 async def main():
+    # Create the application instance
+    application = Application.builder().token("YOUR_BOT_TOKEN").build()
+
     # Register the /start command handler
     application.add_handler(CommandHandler('start', start))
     
     # Schedule the restart notification to run immediately
-    application.job_queue.run_once(notify_restart, 1)  # Delay by 1 second to ensure bot is ready
+    application.job_queue.run_once(lambda context: notify_restart(application), 1)  # Delay by 1 second to ensure bot is ready
     
     # Start the bot
     await application.start()
