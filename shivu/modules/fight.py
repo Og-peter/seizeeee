@@ -29,15 +29,15 @@ BATTLE_VIDEOS = [
 
 # Random battle outcomes
 BATTLE_MESSAGES = [
-    "⚔️ The epic battle between Gojo and Sukuna begins 🏹",
-    "💥 A fierce fight is about to unfold between Gojo and Sukuna 💥",
+    "⚔️ The epic battle between Gojo and Sukuna begins! 🏹",
+    "💥 A fierce fight is about to unfold between Gojo and Sukuna! 💥",
     "🔮 The domain expansion fight between Gojo and Sukuna is happening!"
 ]
 
 # Sukuna and Gojo's Moves
 SUKUNA_MOVES = [
     "🌀 Sukuna uses his **Dismantle** to tear through the battlefield!",
-    "💀 Sukuna unleashes **Malevolent Shrine** engulfing Gojo in a destructive domain!",
+    "💀 Sukuna unleashes **Malevolent Shrine**, engulfing Gojo in a destructive domain!",
     "🔥 Sukuna summons **Cleave** to slice through Gojo's defenses!"
 ]
 
@@ -84,7 +84,7 @@ async def sfight(_, message: t.Message):
 
     # Check if the user is banned
     if user_id in BAN_USER_IDS:
-        return await message.reply_text("Sorry, you are banned from this command. Contact @dynamic_gangs for help.")
+        return await message.reply_text("❌ Sorry, you are banned from this command. Contact @dynamic_gangs for help.")
 
     # Check if the user is on cooldown
     if user_id in user_cooldowns and current_time - user_cooldowns[user_id] < COOLDOWN_DURATION:
@@ -144,9 +144,9 @@ async def sfight(_, message: t.Message):
             img_urls = [character['img_url'] for character in random_characters]
             captions = [
                 f"🔥 {mention}, you won the fight! 🔥\n"
-                f"Name: {character['name']}\n"
-                f"Rarity: {character['rarity']}\n"
-                f"Anime: {character['anime']}\n"
+                f"**Name:** {character['name']}\n"
+                f"**Rarity:** {character['rarity']}\n"
+                f"**Anime:** {character['anime']}\n"
                 for character in random_characters
             ]
 
@@ -167,7 +167,7 @@ async def sfight(_, message: t.Message):
             await bot.send_video(chat_id, video=loss_video, caption="💀 Tough loss, better luck next time!")
 
     except Exception as e:
-        print(f"Error during fight: {e}")
+        print(f"⚠️ Error during fight: {e}")
         await message.reply_text("⚠️ Something went wrong. Please try again later.")
 
 # Retry fight callback handler
