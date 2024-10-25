@@ -2,8 +2,8 @@ import os
 import random
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import CallbackContext, CommandHandler, ApplicationBuilder, ContextTypes
-from shivu import application, PHOTO_URL, GROUP_ID, sudo_users  # removed SUPPORT_CHAT
+from telegram.ext import ApplicationBuilder, CallbackContext, CommandHandler, ContextTypes
+from shivu import application, PHOTO_URL, GROUP_ID, sudo_users
 from shivu import user_collection, refeer_collection
 
 # Define the /start command handler
@@ -20,13 +20,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_data = await user_collection.find_one({"id": user_id})
 
     if user_data is None:
-        new_user = {"id": user_id, "first_name": first_name, "username": username, "tokens": 500, "characters": []}
+        new_user = {
+            "id": user_id,
+            "first_name": first_name,
+            "username": username,
+            "tokens": 500,
+            "characters": []
+        }
         await user_collection.insert_one(new_user)
 
         if referring_user_id:
             referring_user_data = await user_collection.find_one({"id": referring_user_id})
             if referring_user_data:
-                await user_collection.update_one({"id": referring_user_id}, {"$inc": {"tokens": 1000}})
+                await user_collection.update_one(
+                    {"id": referring_user_id},
+                    {"$inc": {"tokens": 1000}}
+                )
                 referrer_message = f"{first_name} referred you and you got 1000 tokens!"
                 try:
                     await context.bot.send_message(chat_id=referring_user_id, text=referrer_message)
@@ -34,14 +43,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                     print(f"Failed to send referral message: {e}")
 
         await context.bot.send_message(
-            chat_id=GROUP_ID, 
-            text=f"We Got New User \n#NEWUSER\n User: <a href='tg://user?id={user_id}'>{first_name}</a>", 
+            chat_id=GROUP_ID,
+            text=f"We Got New User \n#NEWUSER\n User: <a href='tg://user?id={user_id}'>{first_name}</a>",
             parse_mode='HTML'
         )
     else:
         # Update the user's name or username if changed
         if user_data['first_name'] != first_name or user_data['username'] != username:
-            await user_collection.update_one({"id": user_id}, {"$set": {"first_name": first_name, "username": username}})
+            await user_collection.update_one(
+                {"id": user_id},
+                {"$set": {"first_name": first_name, "username": username}}
+            )
 
     # Send a welcome message in private chat
     if update.effective_chat and update.effective_chat.type == "private":
@@ -59,37 +71,41 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         
         keyboard = [
             [InlineKeyboardButton("❖ Λᴅᴅ ᴍᴇ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ ❖", url=f'https://t.me/Character_seize_bot?startgroup=new')],
-            [InlineKeyboardButton("˹ sᴜᴘᴘᴏʀᴛ ˼", url=f'https://t.me/dynamic_gangs'),
-            InlineKeyboardButton("˹ ᴜᴘᴅᴀᴛᴇ ˼", url=f'https://t.me/Seizer_updates')],
-            [InlineKeyboardButton("˹ ғᴀǫ ˼", url=f'https://telegra.ph/Seizer-Faq-Menu-09-05')],
+            [InlineKeyboardButton("˹ sᴜᴘᴘᴏʀᴛ ˼", url='https://t.me/dynamic_gangs'),
+             InlineKeyboardButton("˹ ᴜᴘᴅᴀᴛᴇ ˼", url='https://t.me/Seizer_updates')],
+            [InlineKeyboardButton("˹ ғᴀǫ ˼", url='https://telegra.ph/Seizer-Faq-Menu-09-05')]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         video_url = "https://telegra.ph/file/40254b3883dfcaec52120.mp4"
         sticker_url = "CAACAgUAAxkBAAEBeVpm-jtB-lkO8Oixy5SZHTAy1Ymp4QACEgwAAv75EFbYc5vQ3hQ1Ph4E"
         await context.bot.send_sticker(chat_id=update.effective_chat.id, sticker=sticker_url)
-        await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=caption, reply_markup=reply_markup, parse_mode='MarkdownV2')
+        await context.bot.send_video(
+            chat_id=update.effective_chat.id,
+            video=video_url,
+            caption=caption,
+            reply_markup=reply_markup,
+            parse_mode='MarkdownV2'
+        )
     else:
-        keyboard = [
-            [InlineKeyboardButton("PM", url=f'https://t.me/Character_seize_bot?start=true')],
-        ]
+        keyboard = [[InlineKeyboardButton("PM", url='https://t.me/Character_seize_bot?start=true')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         video_url = "https://telegra.ph/file/0b2e8e33d07a0d0e5914f.mp4"
-        await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=f"""𝙃𝙚𝙮 𝙩𝙝𝙚𝙧𝙚! {first_name}\n\n✨𝙄 𝘼𝙈 𝘼𝙡𝙞𝙫𝙚 𝘽𝙖𝙗𝙮""", reply_markup=reply_markup)
+        await context.bot.send_video(
+            chat_id=update.effective_chat.id,
+            video=video_url,
+            caption=f"𝙃𝙚𝙮 𝙩𝙝𝙚𝙧𝙚! {first_name}\n\n✨𝙄 𝘼𝙈 𝘼𝙡𝙞𝙫𝙚 𝘽𝙖𝙗𝙮",
+            reply_markup=reply_markup
+        )
 
 # Define the function to notify bot restart
 async def notify_restart(context: ContextTypes.DEFAULT_TYPE):
-    # Notify SUDO users only
     for sudo_user in sudo_users:
         try:
             await context.bot.send_message(chat_id=sudo_user, text="🚀 Bot has restarted successfully!")
         except Exception as e:
             print(f"Failed to notify sudo user {sudo_user}: {e}")
 
-# Create the CommandHandler for the /start command
+# Register the /start command handler and notify restart job
 start_handler = CommandHandler('start', start)
-
-# Register the handler before adding to the application
 application.add_handler(start_handler)
-
-# Set up the JobQueue for scheduled tasks to notify restart immediately
-application.job_queue.run_once(notify_restart, 0)
+application.job_queue.run_once(notify_restart, 0)  # Runs immediately to notify on restart
