@@ -166,6 +166,6 @@ async def reset_frequency(update: Update, context: CallbackContext) -> None:
             parse_mode='HTML'
         )
 # Register command handlers
-application.add_handler(CommandHandler("ctime", change_time_sudo, block=False))
+application.add_handler(CommandHandler("ctime", change_time, block=False))
 application.add_handler(CommandHandler("changetime", change_time, block=False))
 application.add_handler(CommandHandler("resettime", reset_frequency, block=False))
