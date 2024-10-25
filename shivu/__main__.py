@@ -126,6 +126,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
 
+    # Reset list if all characters have been sent
     if len(sent_characters[chat_id]) == len(all_characters):
         sent_characters[chat_id] = []
 
@@ -140,6 +141,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
     available_characters = context.user_data['available_characters']
 
+    # Calculate cumulative weights based on character rarity
     cumulative_weights = []
     cumulative_weight = 0
     for character in available_characters:
@@ -154,7 +156,6 @@ async def send_image(update: Update, context: CallbackContext) -> None:
             break
 
     if not selected_character:
-        # If no character is selected, choose randomly from all characters
         selected_character = random.choice(all_characters)
 
     sent_characters[chat_id].append(selected_character['id'])
@@ -163,29 +164,41 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     if chat_id in first_correct_guesses:
         del first_correct_guesses[chat_id]
 
+    # Define rarity emoji and name mapping
     rarity_to_emoji = {
-        "⚪️ 𝘾𝙊𝙈𝙈𝙊𝙉": ("⚪️", "𝘾𝙊𝙈𝙈𝙊𝙉"),
-        "🔵 𝙈𝙀𝘿𝙄𝙐𝙈": ("🔵", "𝙈𝙀𝘿𝙄𝙐𝙈"),
-        "👶 𝘾𝙃𝙄𝘽𝙄": ("👶", "𝘾𝙃𝙄𝘽𝙄"),
-        "🟠 𝙍𝘼𝙍𝙀": ("🟠", "𝙍𝘼𝙍𝙀"),
-        "🟡 𝙇𝙀𝙂𝙀𝙉𝘿𝘼𝙍𝙔": ("🟡", "𝙇𝙀𝙂𝙀𝙉𝘿𝘼𝙍𝙔"),
-        "💮 𝙀𝙓𝘾𝙇𝙐𝙎𝙄𝙑𝙀": ("💮", "𝙀𝙓𝘾𝙇𝙐𝙎𝙄𝙑𝙀"),
-        "🫧 𝙋𝙍𝙀𝙈𝙄𝙐𝙈": ("🫧", "𝙋𝙍𝙀𝙈𝙄𝙐𝙈"),
-        "🔮 𝙇𝙄𝙈𝙄𝙏𝙀𝘿 𝙀𝘿𝙄𝙏𝙄𝙊𝙉": ("🔮", "𝙇𝙄𝙈𝙄𝙏𝙀𝘿 𝙀𝘿𝙄𝙏𝙄𝙊𝙉"),
-        "🌸 𝙀𝙓𝙊𝙏𝙄𝘾": ("🌸", "𝙀𝙓𝙊𝙏𝙄𝘾"),
-        "🎐 𝘼𝙎𝙏𝙍𝘼𝙇": ("🎐", "𝘼𝙎𝙏𝙍𝘼𝙇"),
-        "💞 𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀": ("💞", "𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀"),
+        "⚪️ Common": ("⚪️", "𝘾𝙊𝙈𝙈𝙊𝙉"),
+        "🔵 Medium": ("🔵", "𝙈𝙀𝘿𝙄𝙐𝙈"),
+        "👶 Chibi": ("👶", "𝘾𝙃𝙄𝘽𝙄"),
+        "🟠 Rare": ("🟠", "𝙍𝘼𝙍𝙀"),
+        "🟡 Legendary": ("🟡", "𝙇𝙀𝙂𝙀𝙉𝘿𝘼𝙍𝙔"),
+        "💮 Exclusive": ("💮", "𝙀𝙓𝘾𝙇𝙐𝙎𝙄𝙑𝙀"),
+        "🫧 Premium": ("🫧", "𝙋𝙍𝙀𝙈𝙄𝙐𝙈"),
+        "🔮 Limited Edition": ("🔮", "𝙇𝙄𝙈𝙄𝙏𝙀𝘿 𝙀𝘿𝙄𝙏𝙄𝙊𝙉"),
+        "🌸 Exotic": ("🌸", "𝙀𝙓𝙊𝙏𝙄𝘾"),
+        "🎐 Astral": ("🎐", "𝘼𝙎𝙏𝙍𝘼𝙇"),
+        "💞 Valentine": ("💞", "𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀"),
     }
 
     rarity_emoji, rarity_name = rarity_to_emoji.get(selected_character.get('rarity'), ("❓", "Unknown"))
-   
+
+    # Customized message format with advanced fonts
+    character_caption = (
+        f"**✨ 𝙉𝙞𝙘𝙤 𝙉𝙞𝙘𝙤 𝙉𝙞𝙞 ✨**\n\n"
+        f"A character of rarity **{rarity_emoji} {rarity_name}** has appeared in the chat!\n"
+        f"🎋 Name: **{selected_character.get('name', 'Unknown')}**\n"
+        f"🌸 𝘼𝙙𝙙 𝙩𝙝𝙞𝙨 𝙘𝙝𝙖𝙧𝙖𝙘𝙩𝙚𝙧 𝙩𝙤 𝙮𝙤𝙪𝙧 𝙝𝙖𝙧𝙚𝙢 𝙬𝙞𝙩𝙝 /seize [Name]!\n\n"
+        f"💌 Enjoy collecting your favorite characters! 💞"
+    )
+
+    # Send the character image and formatted caption
     message = await context.bot.send_photo(
         chat_id=chat_id,
         photo=selected_character['img_url'],
-        caption=f" ɴɪᴄᴏ ɴɪᴄᴏ ɴɪɪ ✨ ᴀ ( {character['rarity']} ) ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀs ᴊᴜsᴛ ᴀᴘᴘᴇᴀʀᴇᴅ ɪɴ ᴛʜᴇ ᴄʜᴀᴛ 🍜\nᴀᴅᴅ ᴛʜɪs ᴄʜᴀʀᴀᴄᴛᴇʀ ᴛᴏ ʏᴏᴜʀ ʜᴀʀᴇᴍ ʙʏ /seize [Name]",
+        caption=character_caption,
         parse_mode='Markdown'
     )
 
+    # Create message link
     if update.effective_chat.type == "private":
         message_link = f"https://t.me/c/{chat_id}/{message.message_id}"
     else:
