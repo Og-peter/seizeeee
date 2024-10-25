@@ -198,18 +198,18 @@ async def showbeastdetails_cmd(_, update: t.Update):
                 user_first_name = update.from_user.first_name
                 user_link = f'<a href="tg://user?id={user_id}">{escape(user_first_name)}</a>'
                 caption = (
-                    f"OWO! Check Out This {user_link}'s Beast!\n\n"
-                    f"🌸 Name: {selected_beast['name']}\n"
-                    f"🧬 Beast Race: {selected_beast['rarity']}\n"
-                    f"🔮 Power: `{selected_beast['power']}`\n"
-                    f"🆔 Beast ID: `{beast_id}`\n\n"
-                    "Use `/setbeast <id>` to set this as your main beast."
+                    f"🌟 **Beast Details for {user_link}** 🌟\n\n"
+                    f"🦄 **Name:** {selected_beast['name']}\n"
+                    f"🌈 **Beast Race:** {selected_beast['rarity']}\n"
+                    f"⚡ **Power:** `{selected_beast['power']}`\n"
+                    f"🆔 **Beast ID:** `{beast_id}`\n\n"
+                    "🌌 **Set as Main Beast:** Use `/setbeast <id>` to make this your main beast!"
                 )
-                await update.reply_photo(photo=selected_beast['img_url'], caption=caption)
+                await update.reply_photo(photo=selected_beast['img_url'], caption=caption, parse_mode='HTML')
                 return
-    
-    await update.reply_text("You don't own that beast. Use `/binfo` to see your available beasts.")
 
+    await update.reply_text("🚫 You don't own that beast. Use `/binfo` to see your available beasts.")
+    
 @bot.on_message(filters.command(["givebeast"]) & filters.user(6402009857))
 async def givebeast_cmd(_: bot, update: t.Update):
     try:
