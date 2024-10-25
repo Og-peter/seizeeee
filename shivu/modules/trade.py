@@ -331,7 +331,7 @@ def get_rarity_emoji(rarity_name):
         'Exclusive': '💮',
         'Premium': '🫧',
         'Limited Edition': '🔮',
-        'Exotic": '🌸',
+        'Exotic': '🌸',
         'Astral': '🎐',
         'Valentine': '💞'
        }
