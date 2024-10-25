@@ -316,23 +316,23 @@ async def top_beasts(_, message: Message):
     ]).to_list(10)
 
     if top_users:
-        response = "Top 10 Users With Most Beast's :\n\n"
+        response = "🏆 **Top 10 Users With The Most Beasts** 🐉:\n\n"
         for index, user_data in enumerate(top_users, start=1):
             first_name = user_data.get('first_name', 'N/A')
             num_beasts = user_data.get('num_beasts', 0)
             user_id = user_data.get('id')
             user_link = f'<a href="tg://user?id={user_id}">{escape(first_name)}</a>'
-            response += f"({index}) {user_link} ➾ `{num_beasts}` beast's\n"
+            response += f"**({index})** {user_link} ➾ **`{num_beasts}`** beast(s)\n"
 
         # Button to check your rank
-        my_rank_button = InlineKeyboardButton("Check Your Rank", callback_data="check_rank")
+        my_rank_button = InlineKeyboardButton("📊 Check Your Rank", callback_data="check_rank")
         keyboard = InlineKeyboardMarkup([[my_rank_button]])
 
         random_photo_url = "https://telegra.ph/file/049a2fb78ed521c8e1ff6.jpg"
 
         await message.reply_photo(photo=random_photo_url, caption=response, reply_markup=keyboard)
     else:
-        await message.reply_text("No users found.")
+        await message.reply_text("⚠️ No users found.")
 
 @bot.on_callback_query(filters.regex("check_rank"))
 async def check_rank_callback(_, callback_query: t.CallbackQuery):
