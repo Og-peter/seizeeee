@@ -134,7 +134,7 @@ async def send_log_message(client, log_message):
     try:
         await client.send_message(chat_id=LOG_GROUP_ID, text=log_message)
     except Exception as e:
-        print(f"Error sending log message: {str(e)}")
+        print(f"⚠️ Error sending log message: {str(e)}")
 
 
 async def addtokens(update: Update, context: CallbackContext) -> None:
@@ -142,12 +142,12 @@ async def addtokens(update: Update, context: CallbackContext) -> None:
 
     # Check if the user is a sudo user
     if not await is_user_sudo(user_id):
-        await update.message.reply_text("You don't have permission to add tokens.")
+        await update.message.reply_text("❌ You don't have permission to add tokens.")
         return
 
     # Check if the command includes the required arguments
     if len(context.args) != 2:
-        await update.message.reply_text("Invalid usage. Usage: /at <user_id> <amount>")
+        await update.message.reply_text("🔄 Invalid usage. Usage: /at <user_id> <amount>")
         return
 
     target_user_id = int(context.args[0])
@@ -156,24 +156,24 @@ async def addtokens(update: Update, context: CallbackContext) -> None:
     # Find the target user
     target_user = await user_collection.find_one({'id': target_user_id})
     if not target_user:
-        await update.message.reply_text("User not found.")
+        await update.message.reply_text("⚠️ User not found.")
         return
 
     # Update the balance by adding tokens
     await user_collection.update_one({'id': target_user_id}, {'$inc': {'tokens': amount}})
-    await update.message.reply_text(f"Added {amount} tokens to user {target_user_id}.")
+    await update.message.reply_text(f"✅ Added <b>{amount}</b> tokens to user <b>{target_user_id}</b>.")
 
 async def deletetokens(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
 
     # Check if the user is a sudo user
     if not await is_user_sudo(user_id):
-        await update.message.reply_text("You don't have permission to delete tokens.")
+        await update.message.reply_text("❌ You don't have permission to delete tokens.")
         return
 
     # Check if the command includes the required arguments
     if len(context.args) != 2:
-        await update.message.reply_text("Invalid usage. Usage: /dt <user_id> <amount>")
+        await update.message.reply_text("🔄 Invalid usage. Usage: /dt <user_id> <amount>")
         return
 
     target_user_id = int(context.args[0])
@@ -182,16 +182,15 @@ async def deletetokens(update: Update, context: CallbackContext) -> None:
     # Find the target user
     target_user = await user_collection.find_one({'id': target_user_id})
     if not target_user:
-        await update.message.reply_text("User not found.")
+        await update.message.reply_text("⚠️ User not found.")
         return
 
-
     if target_user['tokens'] < amount:
-        await update.message.reply_text("Insufficient tokens to delete.")
+        await update.message.reply_text("❌ Insufficient tokens to delete.")
         return
 
     await user_collection.update_one({'id': target_user_id}, {'$inc': {'tokens': -amount}})
-    await update.message.reply_text(f"Deleted {amount} tokens from user {target_user_id}.")
+    await update.message.reply_text(f"✅ Deleted <b>{amount}</b> tokens from user <b>{target_user_id}</b>.")
 
 application.add_handler(CommandHandler("at", addtokens, block=False))
 application.add_handler(CommandHandler("dt", deletetokens, block=False))
