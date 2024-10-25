@@ -52,7 +52,7 @@ async def beastshop_cmd(_: bot, update: Update):
     
     return await update.reply_text(message_text, parse_mode='Markdown')
 @bot.on_message(filters.command(["buybeast"]))
-async def buybeast_cmd(_: bot, update: t.Update):
+async def buybeast_cmd(_: bot, update: Update):
     user_id = update.from_user.id
     user_data = await get_user_data(user_id)
 
@@ -61,21 +61,42 @@ async def buybeast_cmd(_: bot, update: t.Update):
     if beast_id is not None:
         beast_type = beast_list[beast_id]['name'].lower()
         if 'beasts' in user_data and any(beast['name'].lower() == beast_type for beast in user_data.get('beasts', [])):
-            return await update.reply_text(f"You already own a {beast_type.capitalize()} beast. Choose a different type from /beastshop.")
+            return await update.reply_text(
+                f"❌ You already own a **{beast_type.capitalize()}** beast.\n"
+                f"Choose a different type from /beastshop."
+            )
 
     if beast_id not in beast_list:
-        return await update.reply_text("Usage : `/buybeast 1/which one you want`.")
+        return await update.reply_text(
+            "🚫 Invalid Beast ID.\n"
+            "Usage: `/buybeast <beast_id>`.\n"
+            "Check the available beasts at /beastshop."
+        )
 
     beast_price = beast_list[beast_id]['price']
     if user_data.get('balance', 0) < beast_price:
-        return await update.reply_text(f"You don't have enough tokens to buy this beast. You need {beast_price} tokens.")
+        return await update.reply_text(
+            f"💔 You don't have enough tokens to buy this beast.\n"
+            f"You need **Ŧ{beast_price}** tokens."
+        )
 
     # Inline buttons for confirmation
-    confirm_button = InlineKeyboardButton("Confirm", callback_data=f"confirm_buybeast_{beast_id}")
-    reject_button = InlineKeyboardButton("Reject", callback_data="reject")
+    confirm_button = InlineKeyboardButton("✅ Confirm", callback_data=f"confirm_buybeast_{beast_id}")
+    reject_button = InlineKeyboardButton("❌ Reject", callback_data="reject")
     keyboard = InlineKeyboardMarkup([[confirm_button, reject_button]])
 
-    await update.reply_photo(photo=beast_list[beast_id]['img_url'], caption=f"Do you want to buy {beast_list[beast_id]['name']} for Ŧ{beast_price}?", reply_markup=keyboard)
+    await update.reply_photo(
+        photo=beast_list[beast_id]['img_url'],
+        caption=(
+            f"🐉 **Do you want to buy this beast?**\n\n"
+            f"**Name:** {beast_list[beast_id]['name']}\n"
+            f"**Price:** Ŧ{beast_price}\n"
+            f"**Type:** {beast_list[beast_id]['rarity']}\n\n"
+            f"Click below to confirm your purchase!"
+        ),
+        reply_markup=keyboard,
+        parse_mode='Markdown'
+    )
 
 @bot.on_callback_query(filters.regex(r"confirm_buybeast_(\d+)"))
 async def confirm_buybeast_callback(_, callback_query: t.CallbackQuery):
