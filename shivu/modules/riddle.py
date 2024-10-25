@@ -87,10 +87,10 @@ async def guess_timeout(context: CallbackContext, chat_id: int):
         # Send a message to indicate time is up
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"⏰ <b>Time's up!</b> The correct answer was <b><u>{correct_answer}</u></b>.",
+            text=f"⏳ <b>Time's up!</b> The correct answer was <b><u>{correct_answer}</u></b>.",
             parse_mode=ParseMode.HTML
         )
-
+        
 # Function to handle user guesses and track attempts
 async def guess_text_handler(update: Update, context: CallbackContext):
     # Check if update.message is not None to avoid AttributeError
@@ -125,9 +125,9 @@ async def guess_text_handler(update: Update, context: CallbackContext):
 
         # Reply tagging the guesser directly
         await update.message.reply_text(
-            f"🎉 {user_mention} <b>guessed correctly in {attempts} attempts!</b>\n\n"
-            f"🔑 The answer was: <b><u>{correct_answer}</u></b>\n"
-            f"🏅 You've earned <b>{tokens_earned} tokens!</b>\n"
+            f"🌟 {user_mention} <b>correctly guessed in {attempts} attempts!</b>\n\n"
+            f"🎭 The answer was: <b><u>{correct_answer}</u></b>\n"
+            f"💰 You've earned <b>{tokens_earned} tokens!</b>\n"
             f"🔥 Your streak is now <b>{streak}</b>{badges}\n",
             parse_mode=ParseMode.HTML
         )
@@ -138,24 +138,26 @@ async def guess_text_handler(update: Update, context: CallbackContext):
     else:
         # Incorrect guess, show a "See Character" button
         message_link = character_message_links.get(chat_id, "#")
-        feedback = "💪 Keep trying!" if attempts < 3 else "🙌 Almost there, don't give up!"
-        keyboard = [[InlineKeyboardButton("🔍 ᴡʜᴇʀᴇ ɪs ᴄʜᴀʀᴀᴄᴛᴇʀ?", url=message_link)]]
+        feedback = "✨ Keep trying!" if attempts < 3 else "💪 Almost there, don't give up!"
+        keyboard = [[InlineKeyboardButton("🔍 𝗪𝗛𝗘𝗥𝗘 𝗜𝗦 𝗧𝗛𝗘 𝗖𝗛𝗔𝗥𝗔𝗖𝗧𝗘𝗥?", url=message_link)]]
         await update.message.reply_text(
-            f'{feedback} {user_mention}, <b>Find the character and try again!</b>',
+            f'{feedback} {user_mention}, <b>find the character and try again!</b>',
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode=ParseMode.HTML
         )
-
+        
 # Award badges based on streaks
 async def award_badges(user_id, streak):
-    if streak == 5:
-        return "<b>🏅 You've earned the Bronze Badge!</b>"
-    elif streak == 10:
-        return "<b>🏅 You've earned the Silver Badge!</b>"
-    elif streak == 20:
-        return "<b>🏅 You've earned the Gold Badge!</b>"
-    return ""
+    badge_message = ""
 
+    if streak == 5:
+        badge_message = "<b>🥉 Congratulations!</b> You've unlocked the <b>Bronze Badge</b> for reaching a streak of <u>5</u>! Keep it up!"
+    elif streak == 10:
+        badge_message = "<b>🥈 Amazing!</b> You've earned the <b>Silver Badge</b> for hitting a streak of <u>10</u>! You're on fire!"
+    elif streak == 20:
+        badge_message = "<b>🏆 Incredible!</b> You've achieved the <b>Gold Badge</b> for an outstanding streak of <u>20</u>! Legendary status unlocked!"
+
+    return badge_message
 # Add command handler for starting the anime guess game
 application.add_handler(CommandHandler("guess", start_anime_guess_cmd, block=False))
 # Add message handler for processing text-based guesses
