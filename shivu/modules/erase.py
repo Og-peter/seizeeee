@@ -60,18 +60,20 @@ async def erase_characters_for_user(user_id, num_characters):
 # Send notifications to SpecialGrade users
 async def send_notification_to_specialgrade(eraser_id, eraser_name, target_id, target_name, num_characters):
     message = (
-        f"⚔️ **Erase Characters Action** ⚔️\n"
+        f"⚔️ **Character Erasure Alert!** ⚔️\n\n"
         f"👤 **Eraser:** <a href='tg://user?id={eraser_id}'>{eraser_name}</a>\n"
         f"🎯 **Target:** <a href='tg://user?id={target_id}'>{target_name}</a>\n"
-        f"🧹 **Characters erased:** {num_characters}\n"
-        f"💥 Cost: {erase_cost * num_characters} coins"
+        f"🧹 **Total Characters Erased:** <b>{num_characters}</b>\n"
+        f"💰 **Total Cost:** <b>{erase_cost * num_characters} coins</b>\n\n"
+        f"🚨 <i>This action has been logged for accountability!</i> 🚨"
     )
+    
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔄 Reverse", callback_data=f"reverse_{target_id}")]
+        [InlineKeyboardButton("🔄 Reverse Erasure", callback_data=f"reverse_{target_id}")]
     ])
+    
     for user_id in SPECIALGRADE:
         await app.send_message(user_id, message, reply_markup=keyboard)
-
 # Restore erased characters
 async def restore_characters(user_id):
     backup = await backup_collection.find_one({'user_id': user_id})
