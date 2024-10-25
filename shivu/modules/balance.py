@@ -206,47 +206,65 @@ async def weekly_reward(_, message: Update, context: ContextTypes.DEFAULT_TYPE) 
     )
     
 user_last_command_times = {}
+
 @bot.on_message(filters.command("tesure"))
-async def daily_reward(_, message):
+async def tesure(_, message: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = message.from_user.id
     first_name = message.from_user.first_name.strip()
     last_name = message.from_user.last_name.strip() if message.from_user.last_name else ""
     current_time = datetime.utcnow()
+
     # Check if the user is sending commands too quickly
     if user_id in user_last_command_times and (current_time - user_last_command_times[user_id]).total_seconds() < 5:  # 5 seconds threshold
-        await message.reply_text("You are sending commands too quickly. Please wait for a moment.")
+        await message.reply_text("⏳ **You are sending commands too quickly. Please wait a moment!**")
         return
+
     # Update the last command time
     user_last_command_times[user_id] = current_time
     print(f"Debug: User's first name is '{first_name}', last name is '{last_name}'")  # Debug statement
+
     # Check for specific tags in both first name and last name
     if "⸻꯭፝֟͠DCS 𐀔" not in first_name and "⸻꯭፝֟͠DCS 𐀔" not in last_name:
-        await message.reply_text("Plz set `⸻꯭፝֟͠DCS 𐀔` in your first or last name to use this command.")
+        await message.reply_text("🚫 **Please set `⸻꯭፝֟͠DCS 𐀔` in your first or last name to use this command.**")
         return
+
     if "𝘿𝙍𝘼𝙂𝙊𝙉𝙎⃟🐉" in first_name or "𝘿𝙍𝘼𝙂𝙊𝙉𝙎⃟🐉" in last_name:
-        await message.reply_text("Plz remove other tags `𝘿𝙍𝘼𝙂𝙊𝙉𝙎⃟🐉` and only use `⸻꯭፝֟͠DCS 𐀔` in your first or last name to use this command.")
+        await message.reply_text("⚠️ **Please remove the tag `𝘿𝙍𝘼𝙂𝙊𝙉𝙎⃟🐉` and only use `⸻꯭፝֟͠DCS 𐀔` in your name to use this command.**")
         return
+
     user_data = await user_collection.find_one({'id': user_id}, projection={'last_tesure_reward': 1, 'balance': 1})
+    
     if not user_data:
         await send_start_button(message.chat.id)
         return
+
     last_claimed_time = user_data.get('last_tesure_reward')
     if last_claimed_time:
         last_claimed_time = last_claimed_time.replace(tzinfo=None)
+
+    # Check if the user can claim the tesure reward
     if last_claimed_time and (current_time - last_claimed_time) < timedelta(minutes=30):
         remaining_time = timedelta(minutes=30) - (current_time - last_claimed_time)
         minutes, seconds = divmod(remaining_time.seconds, 60)
-        await message.reply_text(f"Try again in `{minutes}:{seconds}` seconds.")
+        await message.reply_text(f"⏰ **Try again in `{minutes}:{seconds:02}` seconds.**")
         return
+
     # Generate a random reward between 5,000,000 and 10,000,000
     reward = random.randint(5000000, 10000000)
+
     # Update the user's balance and set the last claimed time to now
     await user_collection.update_one(
         {'id': user_id},
         {'$inc': {'balance': reward}, '$set': {'last_tesure_reward': current_time}}
     )
-    await message.reply_text(f"❰ 𝗧 𝗥 𝗘 𝗔 𝗦 𝗨 𝗥 𝗘 🧧 ❱\n\n◍ Tesure claimed successfully!\nYou gained ₩`{reward:,}`[.](https://telegra.ph/file/1725558c206507d3e36ee.jpg)")
 
+    # Send a success message
+    await message.reply_text(
+        "🎉 **❰ 𝗧 𝗥 𝗘 𝗔 𝗦 𝗨 𝗥 𝗘 🧧 ❱** 🎉\n\n"
+        "🌟 **Tesure claimed successfully!**\n"
+        f"💰 You gained <code>₩{reward:,}</code>! 🎊\n"
+        "📸 ![Your reward](https://telegra.ph/file/1725558c206507d3e36ee.jpg)"
+    )
 application.add_handler(CommandHandler("tops", mtop, block=False))
 application.add_handler(CommandHandler("pay", pay, block=False))
 
