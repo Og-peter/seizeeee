@@ -37,40 +37,34 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
     chat_id = str(update.effective_chat.id)
     user_id = update.effective_user.id
 
-    # Lock for thread-safe access to chat-specific data
     if chat_id not in locks:
         locks[chat_id] = asyncio.Lock()
     lock = locks[chat_id]
 
     async with lock:
-        # Retrieve message frequency or set a default
         chat_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
-        message_frequency = chat_frequency.get('message_frequency', 100) if chat_frequency else 100
+        if chat_frequency:
+            message_frequency = chat_frequency.get('message_frequency', 100)
+        else:
+            message_frequency = 100
 
-        # Check if the same user is sending multiple messages in a row
         if chat_id in last_user and last_user[chat_id]['user_id'] == user_id:
             last_user[chat_id]['count'] += 1
-
-            # Trigger a warning if a user is detected spamming
             if last_user[chat_id]['count'] >= 10:
                 if user_id in warned_users and time.time() - warned_users[user_id] < 600:
                     return
                 else:
-                    await update.message.reply_text(
-                        f"🚨 **𝐅𝐥𝐨𝐨𝐝 𝐃𝐞𝐭𝐞𝐜𝐭𝐞𝐝!**\n\n"
-                        f"👤 **{update.effective_user.first_name}**, please refrain from excessive messages.\n"
-                        f"⚠️ **𝗜𝗴𝗻𝗼𝗿𝗶𝗻𝗴 𝗳𝗼𝗿 𝟭𝟬 𝗺𝗶𝗻𝘂𝘁𝗲𝘀.**\n\n"
-                        f"⏳ You may resume chatting after the timeout."
-                    )
+                    await update.message.reply_text(f"⛔️ Flooding | Spamming\nNow I'm ⚠️ Ignoring {update.effective_user.first_name} Existence For Upcoming 10 Minutes")
                     warned_users[user_id] = time.time()
                     return
         else:
             last_user[chat_id] = {'user_id': user_id, 'count': 1}
 
-        # Track total messages in the chat for periodic image sending
-        message_counts[chat_id] = message_counts.get(chat_id, 0) + 1
+        if chat_id in message_counts:
+            message_counts[chat_id] += 1
+        else:
+            message_counts[chat_id] = 1
 
-        # Send an image or reminder at specific message intervals
         if message_counts[chat_id] % message_frequency == 0:
             await send_image(update, context)
             message_counts[chat_id] = 0
@@ -126,7 +120,6 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
 
-    # Reset list if all characters have been sent
     if len(sent_characters[chat_id]) == len(all_characters):
         sent_characters[chat_id] = []
 
@@ -141,7 +134,6 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
     available_characters = context.user_data['available_characters']
 
-    # Calculate cumulative weights based on character rarity
     cumulative_weights = []
     cumulative_weight = 0
     for character in available_characters:
@@ -156,6 +148,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
             break
 
     if not selected_character:
+        # If no character is selected, choose randomly from all characters
         selected_character = random.choice(all_characters)
 
     sent_characters[chat_id].append(selected_character['id'])
@@ -164,41 +157,29 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     if chat_id in first_correct_guesses:
         del first_correct_guesses[chat_id]
 
-    # Define rarity emoji and name mapping
     rarity_to_emoji = {
-        "⚪️ Common": ("⚪️", "𝘾𝙊𝙈𝙈𝙊𝙉"),
-        "🔵 Medium": ("🔵", "𝙈𝙀𝘿𝙄𝙐𝙈"),
-        "👶 Chibi": ("👶", "𝘾𝙃𝙄𝘽𝙄"),
-        "🟠 Rare": ("🟠", "𝙍𝘼𝙍𝙀"),
-        "🟡 Legendary": ("🟡", "𝙇𝙀𝙂𝙀𝙉𝘿𝘼𝙍𝙔"),
-        "💮 Exclusive": ("💮", "𝙀𝙓𝘾𝙇𝙐𝙎𝙄𝙑𝙀"),
-        "🫧 Premium": ("🫧", "𝙋𝙍𝙀𝙈𝙄𝙐𝙈"),
-        "🔮 Limited Edition": ("🔮", "𝙇𝙄𝙈𝙄𝙏𝙀𝘿 𝙀𝘿𝙄𝙏𝙄𝙊𝙉"),
-        "🌸 Exotic": ("🌸", "𝙀𝙓𝙊𝙏𝙄𝘾"),
-        "🎐 Astral": ("🎐", "𝘼𝙎𝙏𝙍𝘼𝙇"),
-        "💞 Valentine": ("💞", "𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀"),
+        "⚪️ 𝘾𝙊𝙈𝙈𝙊𝙉": ("⚪️", "𝘾𝙊𝙈𝙈𝙊𝙉"),
+        "🔵 𝙈𝙀𝘿𝙄𝙐𝙈": ("🔵", "𝙈𝙀𝘿𝙄𝙐𝙈"),
+        "👶 𝘾𝙃𝙄𝘽𝙄": ("👶", "𝘾𝙃𝙄𝘽𝙄"),
+        "🟠 𝙍𝘼𝙍𝙀": ("🟠", "𝙍𝘼𝙍𝙀"),
+        "🟡 𝙇𝙀𝙂𝙀𝙉𝘿𝘼𝙍𝙔": ("🟡", "𝙇𝙀𝙂𝙀𝙉𝘿𝘼𝙍𝙔"),
+        "💮 𝙀𝙓𝘾𝙇𝙐𝙎𝙄𝙑𝙀": ("💮", "𝙀𝙓𝘾𝙇𝙐𝙎𝙄𝙑𝙀"),
+        "🫧 𝙋𝙍𝙀𝙈𝙄𝙐𝙈": ("🫧", "𝙋𝙍𝙀𝙈𝙄𝙐𝙈"),
+        "🔮 𝙇𝙄𝙈𝙄𝙏𝙀𝘿 𝙀𝘿𝙄𝙏𝙄𝙊𝙉": ("🔮", "𝙇𝙄𝙈𝙄𝙏𝙀𝘿 𝙀𝘿𝙄𝙏𝙄𝙊𝙉"),
+        "🌸 𝙀𝙓𝙊𝙏𝙄𝘾": ("🌸", "𝙀𝙓𝙊𝙏𝙄𝘾"),
+        "🎐 𝘼𝙎𝙏𝙍𝘼𝙇": ("🎐", "𝘼𝙎𝙏𝙍𝘼𝙇"),
+        "💞 𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀": ("💞", "𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀"),
     }
 
     rarity_emoji, rarity_name = rarity_to_emoji.get(selected_character.get('rarity'), ("❓", "Unknown"))
-
-    # Customized message format with advanced fonts
-    character_caption = (
-        f"**✨ 𝙉𝙞𝙘𝙤 𝙉𝙞𝙘𝙤 𝙉𝙞𝙞 ✨**\n\n"
-        f"A character of rarity **{rarity_emoji} {rarity_name}** has appeared in the chat!\n"
-        f"🎋 Name: **{selected_character.get('name', 'Unknown')}**\n"
-        f"🌸 𝘼𝙙𝙙 𝙩𝙝𝙞𝙨 𝙘𝙝𝙖𝙧𝙖𝙘𝙩𝙚𝙧 𝙩𝙤 𝙮𝙤𝙪𝙧 𝙝𝙖𝙧𝙚𝙢 𝙬𝙞𝙩𝙝 /seize [Name]!\n\n"
-        f"💌 Enjoy collecting your favorite characters! 💞"
-    )
-
-    # Send the character image and formatted caption
+   
     message = await context.bot.send_photo(
         chat_id=chat_id,
         photo=selected_character['img_url'],
-        caption=character_caption,
+        caption=f" ɴɪᴄᴏ ɴɪᴄᴏ ɴɪɪ ✨ ᴀ ( {character['rarity']} ) ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀs ᴊᴜsᴛ ᴀᴘᴘᴇᴀʀᴇᴅ ɪɴ ᴛʜᴇ ᴄʜᴀᴛ 🍜\nᴀᴅᴅ ᴛʜɪs ᴄʜᴀʀᴀᴄᴛᴇʀ ᴛᴏ ʏᴏᴜʀ ʜᴀʀᴇᴍ ʙʏ /seize [Name]",
         parse_mode='Markdown'
     )
 
-    # Create message link
     if update.effective_chat.type == "private":
         message_link = f"https://t.me/c/{chat_id}/{message.message_id}"
     else:
@@ -216,24 +197,19 @@ async def guess(update: Update, context: CallbackContext) -> None:
     if chat_id in first_correct_guesses:
         correct_guess_user = first_correct_guesses[chat_id]  # Get the name of the user who guessed correctly
         user_link = f'<a href="tg://user?id={correct_guess_user.id}">{correct_guess_user.first_name}</a>'  # User link
-        await update.message.reply_text(
-            f'🌟 **This character is seized by** {user_link}!\n'
-            f'🥤 **Wait for a new character to spawn...**',
-            parse_mode='HTML'
-        )
+        await update.message.reply_text(f' ᴛʜɪs ᴄʜᴀʀᴀᴄᴛᴇʀ ɪs sᴇɪᴢᴇᴅ ʙʏ {user_link}\n🥤 ᴡᴀɪᴛ ғᴏʀ ɴᴇᴡ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴛᴏ sᴘᴀᴡɴ....', parse_mode='HTML')
         return
 
     guess = ' '.join(context.args).lower() if context.args else ''
     
     if "()" in guess or "&" in guess.lower():
-        await update.message.reply_text(
-            "𝖲𝗈𝗋𝗋𝗒! 𝖡𝗎𝗍 𝗐𝗋𝗂𝗍𝖾 𝗇𝖺𝗆𝖾 𝗐𝗂𝗍𝗁𝗈𝗎𝗍 '&' 𝖳𝗈 𝖼𝗈𝗅𝗅𝖾𝖼𝗍... 🍂"
-        )
+        await update.message.reply_text("𝖲𝗈𝗋𝗋𝗒 ! 𝖡𝗎𝗍 𝗐𝗋𝗂𝗍𝖾 𝗇𝖺𝗆𝖾 𝗐𝗂𝗍𝗁𝗈𝗎𝗍 '&' 𝖳𝗈 𝖼𝗈𝗅𝗅𝖾𝖼𝗍...🍂")
         return
 
     name_parts = last_characters[chat_id]['name'].lower().split()
 
     if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
+
         first_correct_guesses[chat_id] = update.effective_user  # Store the user who guessed correctly
         
         user = await user_collection.find_one({'id': user_id})
@@ -279,24 +255,13 @@ async def guess(update: Update, context: CallbackContext) -> None:
             
         keyboard = [[InlineKeyboardButton(f"🏮 ʜᴀʀᴇᴍ 🏮", switch_inline_query_current_chat=f"collection.{user_id}")]]
         
-        await update.message.reply_text(
-            f'🎉 **Congratulations, <b><a href="tg://user?id={user_id}">{escape(update.effective_user.first_name)}</a></b>!** 🎉\n'
-            f'**You got a new character, and it has been successfully added to your harem!** 🌋 \n\n'
-            f'**Character:** <b>{last_characters[chat_id]["name"]}</b> \n'
-            f'**Anime:** <b>{last_characters[chat_id]["anime"]}</b> \n'
-            f'**Rarity:** <b>{last_characters[chat_id]["rarity"]}</b>\n\n'
-            f'🫧 **Check your harem by typing /harem**',
-            parse_mode='HTML',
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
+        await update.message.reply_text(f'𝙲ᴏɴɢᴏ <b><a href="tg://user?id={user_id}">{escape(update.effective_user.first_name)}</a></b> ꜱᴀɴ ! ʏᴏᴜ ɢᴏᴛ ᴀ ɴᴇᴡ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴀɴᴅ ɪᴛ ʜᴀꜱ ʙᴇᴇɴ ꜱᴜᴄᴇꜱꜱꜰᴜʟʟʏ ᴀᴅᴅᴇᴅ ᴛᴏ ʏᴏᴜʀ ʜᴀʀᴇᴍ. 🌋 \n\nCharacter: <b>{last_characters[chat_id]["name"]}</b> \nAnime: <b>{last_characters[chat_id]["anime"]}</b> \nRarity: <b>{last_characters[chat_id]["rarity"]}</b>\n\n🫧 ᴄʜᴇᴄᴋ ʏᴏᴜʀ ʜᴀʀᴇᴍ ʙʏ /harem', parse_mode='HTML', reply_markup=InlineKeyboardMarkup(keyboard))
 
     else:
         message_link = character_message_links.get(chat_id, "#")
-        keyboard = [[InlineKeyboardButton("★ See Character ★", url=message_link)]]
-        await update.message.reply_text(
-            '❌ **Character name is not correct. Try guessing the name again!**',
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
+        keyboard = [[InlineKeyboardButton("★ sᴇᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ ★", url=message_link)]]
+        await update.message.reply_text('❌ ᴄʜᴀʀᴀᴄᴛᴇʀ ɴᴀᴍᴇ ɪs ɴᴏᴛ ᴄᴏʀʀᴇᴄᴛ. ᴛʀʏ ɢᴜᴇssɪɴɢ ᴛʜᴇ ɴᴀᴍᴇ ᴀɢᴀɪɴ!', reply_markup=InlineKeyboardMarkup(keyboard))
+
  # Command to turn a rarity on
 async def set_on(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
