@@ -205,7 +205,11 @@ async def claim_daily_cmd(update: Update, context: CallbackContext):
     user_data = await get_user_data(user_id)
     
     if not user_data.get('pass'):
-        await update.message.reply_html(f"<b>{user_name}, you don't have a membership pass. Buy one to unlock extra rewards.\nDo /pass to buy.</b>")
+        await update.message.reply_html(
+            f"<b>🚫 {user_name}, you don't have a membership pass. "
+            "Buy one to unlock extra rewards!\n\n"
+            "🛒 Use /pass to purchase a pass.</b>"
+        )
         return
     
     pass_details = user_data.get('pass_details', {})
@@ -214,7 +218,13 @@ async def claim_daily_cmd(update: Update, context: CallbackContext):
     if last_claim_date:
         time_since_last_claim = datetime.now() - last_claim_date
         if time_since_last_claim < timedelta(hours=24):
-            await update.message.reply_html(f"<b>{user_name}, you can only claim daily rewards once every 24 hours.</b>")
+            remaining_time = timedelta(hours=24) - time_since_last_claim
+            hours, remainder = divmod(remaining_time.total_seconds(), 3600)
+            minutes, seconds = divmod(remainder, 60)
+            await update.message.reply_html(
+                f"<b>⏳ {user_name}, you can only claim daily rewards once every 24 hours. "
+                f"Please wait {int(hours)}h {int(minutes)}m {int(seconds)}s before your next claim.</b>"
+            )
             return
 
     # Get the current day of the week
@@ -223,25 +233,27 @@ async def claim_daily_cmd(update: Update, context: CallbackContext):
     # Set rewards for each day
     daily_rewards = {
         0: 1000,  # Monday
-        1: 500, # Tuesday
+        1: 500,   # Tuesday
         2: 1500,  # Wednesday
         3: 5000,  # Thursday
-        4: 1500, # Friday
-        5: 3000, # Saturday
-        6: 5000  # Sunday
+        4: 1500,  # Friday
+        5: 3000,  # Saturday
+        6: 5000   # Sunday
     }
 
     daily_reward = daily_rewards.get(today, 500)  # Default to 500 if day not found
 
     characters = await get_random_character()
     if not characters:
-        await update.message.reply_html(f"<b>{user_name}, failed to fetch a random character for your daily reward.</b>")
+        await update.message.reply_html(
+            f"<b>❌ {user_name}, failed to fetch a random character for your daily reward.</b>"
+        )
         return
 
     character = characters[0]
     character_info_text = (
-        f"<b>{character['name']}</b> from <i>{character['anime']}</i> : \n"
-        f"{character['rarity']}\n"
+        f"<b>🌟 Character: {character['name']}</b> from <i>{character['anime']}</i>:\n"
+        f"🎨 Rarity: {character['rarity']}\n"
     )
     
     pass_details['last_claim_date'] = datetime.now()
@@ -260,7 +272,11 @@ async def claim_daily_cmd(update: Update, context: CallbackContext):
     await context.bot.send_photo(
         chat_id=update.effective_chat.id,
         photo=character['img_url'],
-        caption=f"❰ <b>𝗣 𝗔 𝗦 𝗦 𝗗 𝗔 𝗜 𝗟 𝗬 🎁</b> ❱\n\n{character_info_text}\nReward: <b>{daily_reward} Tokens</b>.",
+        caption=(
+            f"🎁 ❰ <b>𝗗 𝗔 𝗜 𝗟 𝗬 𝗥 𝗘 𝗪 𝗔 𝗥 𝗗 🎉</b> ❱\n\n"
+            f"{character_info_text}\n"
+            f"💰 Reward: <b>{daily_reward} Tokens</b> 🎊"
+        ),
         parse_mode='HTML',
         reply_to_message_id=update.message.message_id
     )
