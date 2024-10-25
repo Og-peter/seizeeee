@@ -33,18 +33,18 @@ async def explore_command(client, message):
 
     # Restrict to group chats only
     if message.chat.type == "private":
-        await message.reply_text("⚠️ 𝘛𝘩𝘪𝘴 𝘤𝘰𝘮𝘮𝘢𝘯𝘥 𝘤𝘢𝘯 𝘰𝘯𝘭𝘺 𝘣𝘦 𝘶𝘴𝘦𝘥 𝘪𝘯 𝘨𝘳𝘰𝘶𝘱 𝘤𝘩𝘢𝘵𝘴.", parse_mode="HTML")
+        await message.reply_text("⚠️ 𝘛𝘩𝘪𝘴 𝘤𝘰𝘮𝘮𝘢𝘯𝘥 𝘤𝘢𝘯 𝘰𝘯𝘭𝘺 𝘣𝘦 𝘶𝘴𝘦𝘥 𝘪𝘯 𝘨𝘳𝘰𝘶𝘱 𝘤𝘩𝘢𝘵𝘴.")
         return
 
     # Check if user is already exploring or in cooldown
     if user_id in ongoing_explorations:
-        await message.reply_text("🕰️ 𝗬𝗼𝘂'𝗿𝗲 𝗮𝗹𝗿𝗲𝗮𝗱𝘆 𝗼𝗻 𝗮𝗻 𝗮𝗱𝘃𝗲𝗻𝘁𝘂𝗿𝗲! 𝗦𝗲𝗲 𝗶𝘁 𝘁𝗵𝗿𝗼𝘂𝗴𝗵 𝗯𝗲𝗳𝗼𝗿𝗲 𝗲𝗺𝗯𝗮𝗿𝗸𝗶𝗻𝗴 𝗮𝗴𝗮𝗶𝗻!", parse_mode="HTML")
+        await message.reply_text("🕰️ 𝗬𝗼𝘂'𝗿𝗲 𝗮𝗹𝗿𝗲𝗮𝗱𝘆 𝗼𝗻 𝗮𝗻 𝗮𝗱𝘃𝗲𝗻𝘁𝘂𝗿𝗲! 𝗦𝗲𝗲 𝗶𝘁 𝘁𝗵𝗿𝗼𝘂𝗴𝗵 𝗯𝗲𝗳𝗼𝗿𝗲 𝗲𝗺𝗯𝗮𝗿𝗸𝗶𝗻𝗴 𝗮𝗴𝗮𝗶𝗻!")
         return
 
     # Cooldown check
     if user_id in user_cooldowns and (datetime.utcnow() - user_cooldowns[user_id]) < timedelta(seconds=COOLDOWN_DURATION):
         remaining_time = COOLDOWN_DURATION - (datetime.utcnow() - user_cooldowns[user_id]).total_seconds()
-        await message.reply_text(f"⏳ 𝗪𝗮𝗶𝘁 {int(remaining_time)} 𝘀𝗲𝗰𝗼𝗻𝗱𝘀 𝗯𝗲𝗳𝗼𝗿𝗲 𝗲𝘅𝗽𝗹𝗼𝗿𝗶𝗻𝗴 𝗮𝗴𝗮𝗶𝗻.", parse_mode="HTML")
+        await message.reply_text(f"⏳ 𝗪𝗮𝗶𝘁 {int(remaining_time)} 𝘀𝗲𝗰𝗼𝗻𝗱𝘀 𝗯𝗲𝗳𝗼𝗿𝗲 𝗲𝘅𝗽𝗹𝗼𝗿𝗶𝗻𝗴 𝗮𝗴𝗮𝗶𝗻.")
         return
 
     # Start exploration
@@ -54,7 +54,7 @@ async def explore_command(client, message):
         [InlineKeyboardButton(options[0], callback_data=f"explore_{user_id}_{options[0]}")],
         [InlineKeyboardButton(options[1], callback_data=f"explore_{user_id}_{options[1]}")]
     ])
-    await message.reply_text("🗺️ <b>Select your exploration path!</b>", reply_markup=keyboard, parse_mode="HTML")
+    await message.reply_text("🗺️ <b>Select your exploration path!</b>", reply_markup=keyboard)
 
 # Handle exploration choices
 @app.on_callback_query(filters.regex(r"^explore_"))
@@ -76,7 +76,7 @@ async def handle_explore_choice(client, callback_query: CallbackQuery):
 
     # Exploration animations
     for animation in exploration_animations:
-        await callback_query.message.edit_text(animation, parse_mode="HTML")
+        await callback_query.message.edit_text(animation)
         await asyncio.sleep(1)
 
     # Random reward between 1000 and 5000 tokens
@@ -117,4 +117,4 @@ async def handle_explore_choice(client, callback_query: CallbackQuery):
     }
 
     result_message = place_messages.get(exploration_place, f"✨ You explored the {exploration_place} and found hidden treasure.")
-    await callback_query.message.edit_text(f"{result_message}\n\n🎉 <b>You gained {random_reward} tokens! 💰</b>", parse_mode="HTML")
+    await callback_query.message.edit_text(f"{result_message}\n\n🎉 <b>You gained {random_reward} tokens! 💰</b>")
