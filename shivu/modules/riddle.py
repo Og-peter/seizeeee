@@ -16,10 +16,17 @@ character_message_links = {}
 ALLOWED_GROUP_ID = -1002104939708  # Replace with your allowed group's chat ID
 SUPPORT_GROUP_URL = "https://t.me/dynamic_gangs"  # Replace with your actual support group URL
 
+async def get_random_character():
+    # Dummy implementation: Replace with actual character fetching logic
+    return {
+        'name': "Naruto Uzumaki",
+        'img_url': "https://example.com/naruto.jpg"  # Example image URL
+    }
+
 async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     current_time = datetime.now()
     user_id = update.effective_user.id
-    chat_id = update.message.chat_id
+    chat_id = update.effective_chat.id
     user_mention = mention_html(user_id, update.effective_user.first_name)  # Mention the command user
 
     # Check if the command is used in the allowed group
@@ -90,14 +97,14 @@ async def guess_timeout(context: CallbackContext, chat_id: int):
             text=f"⏳ <b>Time's up!</b> The correct answer was <b><u>{correct_answer}</u></b>.",
             parse_mode=ParseMode.HTML
         )
-        
+
 # Function to handle user guesses and track attempts
 async def guess_text_handler(update: Update, context: CallbackContext):
     # Check if update.message is not None to avoid AttributeError
     if update.message is None:
         return  # Ignore if the update does not contain a message
 
-    chat_id = update.message.chat_id
+    chat_id = update.effective_chat.id
     user_id = update.message.from_user.id
     user_answer = update.message.text.strip().lower()
     user_mention = mention_html(user_id, update.message.from_user.first_name)  # Mention the guesser
@@ -145,7 +152,7 @@ async def guess_text_handler(update: Update, context: CallbackContext):
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode=ParseMode.HTML
         )
-        
+
 # Award badges based on streaks
 async def award_badges(user_id, streak):
     badge_message = ""
@@ -158,6 +165,7 @@ async def award_badges(user_id, streak):
         badge_message = "<b>🏆 Incredible!</b> You've achieved the <b>Gold Badge</b> for an outstanding streak of <u>20</u>! Legendary status unlocked!"
 
     return badge_message
+
 # Add command handler for starting the anime guess game
 application.add_handler(CommandHandler("guess", start_anime_guess_cmd, block=False))
 # Add message handler for processing text-based guesses
