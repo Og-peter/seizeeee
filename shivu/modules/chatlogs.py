@@ -51,7 +51,7 @@ async def on_new_chat_members(client: Client, message: Message):
     
     if total_members < 15:
         leave_note = "🌿 𝗦𝗼𝗿𝗿𝘆, 𝗹𝗲𝗮𝘃𝗶𝗻𝗴 𝗮𝘀 𝘁𝗵𝗲 𝗴𝗿𝗼𝘂𝗽 𝗵𝗮𝘀 𝗹𝗲𝘀𝘀 𝘁𝗵𝗮𝗻 𝟭𝟱 𝗺𝗲𝗺𝗯𝗲𝗿𝘀. 🌱"
-        leave_photo_url = "https://telegra.ph/file/4d1b9889c4dd3316c945d.jpg"
+        leave_photo_url = "https://i.ibb.co/0B6KsPm/photo-2024-10-25-11-14-35.jpg"
         await send_photo_message(message.chat.id, leave_note, leave_photo_url)
         await client.leave_chat(message.chat.id)
     else:
@@ -86,7 +86,7 @@ async def on_new_chat_members(client: Client, message: Message):
                     f"🔗 **Link**: {chat_username}\n"
                     f"👤 **Added by**: {added_by.mention}"
                 )
-                join_photo_url = "https://telegra.ph/file/4d1b9889c4dd3316c945d.jpg"
+                join_photo_url = "https://i.ibb.co/0B6KsPm/photo-2024-10-25-11-14-35.jpg"
                 await send_photo_message(JOINLOGS, join_text, join_photo_url)
 
                 # Thanks message for the user who added the bot
@@ -115,7 +115,7 @@ async def on_left_chat_member(_, message: Message):
             f"🔗 **Link**: {chat_username}\n"
             f"👤 **Removed by**: {removed_by}"
         )
-        leave_photo_url = "https://telegra.ph/file/4d1b9889c4dd3316c945d.jpg"
+        leave_photo_url = "https://i.ibb.co/0B6KsPm/photo-2024-10-25-11-14-35.jpg"
         await send_photo_message(LEAVELOGS, leave_text, leave_photo_url)
 
 # Spam words list
