@@ -12,10 +12,10 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     # Fetch user from the database
     user = await user_collection.find_one({'id': user_id})
-
+    
     # If no user found, send a message
     if not user:
-        message = '💔 You have not seized any characters yet..'
+        message = 'You have not seized any characters yet..'
         if update.message:
             await update.message.reply_text(message)
         else:
@@ -43,7 +43,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     if page < 0 or page >= total_pages:
         page = 0
 
-    harem_message = f"<b>{escape(update.effective_user.first_name)}'s Harem 🌟 - Page [{page + 1}/{total_pages}]</b>\n"
+    harem_message = f"<b>{escape(update.effective_user.first_name)}'s Harem - Page [{page+1}/{total_pages}]</b>\n"
 
     # Paginate and group by anime
     current_characters = unique_characters[page * 15:(page + 1) * 15]
@@ -63,7 +63,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     }
 
     for anime, chars in current_grouped_characters.items():
-        harem_message += f'\n<b>🔹 {anime} ﹝{len(chars)}/{await collection.count_documents({"anime": anime})}〕</b>\n'
+        harem_message += f'\n<b> ᯽{anime} ﹝{len(chars)}/{await collection.count_documents({"anime": anime})}〕</b>\n'
         harem_message += '••────────────────•\n'
         for character in chars:
             count = character_counts.get(character.get('id'), 0)
@@ -81,21 +81,21 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     if total_pages > 1:
         nav_buttons = []
         if page > 0:
-            nav_buttons.append(InlineKeyboardButton("1x⬅️", callback_data=f"harem:{page-1}:{user_id}"))
-        nav_buttons.append(InlineKeyboardButton(f"{page + 1}/{total_pages}", callback_data="noop"))  # Current Page
+            nav_buttons.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"harem:{page-1}:{user_id}"))
+        nav_buttons.append(InlineKeyboardButton(f"Page {page + 1}/{total_pages}", callback_data="noop"))  # Current Page
         if page < total_pages - 1:
-            nav_buttons.append(InlineKeyboardButton("1x➡️", callback_data=f"harem:{page + 1}:{user_id}"))
+            nav_buttons.append(InlineKeyboardButton("Next ➡️", callback_data=f"harem:{page + 1}:{user_id}"))
         keyboard.append(nav_buttons)
 
     # Share Button
-    keyboard.append([InlineKeyboardButton("🌐 Share My Collection", switch_inline_query_current_chat=f"collection.{user_id}")])
+    keyboard.append([InlineKeyboardButton("🔗 Share Your Collection", switch_inline_query_current_chat=f"collection.{user_id}")])
 
     # Fast Forward Button
     if page < total_pages - 2:
-        keyboard.append([InlineKeyboardButton("FAST ⏩", callback_data=f"harem:{page + 2}:{user_id}")])
+        keyboard.append([InlineKeyboardButton("⏩ Fast Forward", callback_data=f"harem:{page + 2}:{user_id}")])
 
     # Trash Button
-    keyboard.append([InlineKeyboardButton("🗑️ Trash It", callback_data=f"trash:{user_id}")])  # Example callback for trash
+    keyboard.append([InlineKeyboardButton("🗑️ Trash Your Harem", callback_data=f"trash:{user_id}")])  # Example callback for trash
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -137,9 +137,9 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
                     await update.callback_query.edit_message_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
         else:
             if update.message:
-                await update.message.reply_text("🚫 Your list is so empty :)")
+                await update.message.reply_text("⬤ Your list is so empty :)")
             else:
-                await update.callback_query.edit_message_text("🚫 Your list is so empty :)")
+                await update.callback_query.edit_message_text("⬤ Your list is so empty :)")
 
 # Callback function for handling harem pagination
 async def harem_callback(update: Update, context: CallbackContext) -> None:
@@ -154,7 +154,7 @@ async def harem_callback(update: Update, context: CallbackContext) -> None:
 
     # Ensure users cannot interact with other users' harems
     if query.from_user.id != user_id:
-        await query.answer("🚫 Don't stalk other user's harem", show_alert=True)
+        await query.answer("⬤ Don't stalk other user's harem", show_alert=True)
         return
 
     # Display the harem with the selected page
