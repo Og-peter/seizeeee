@@ -1,7 +1,7 @@
 import random
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import CallbackContext, CallbackQueryHandler, CommandHandler
+from telegram.ext import Application, CallbackContext, CommandHandler, ContextTypes
 
 from shivu import application, PHOTO_URL, SUPPORT_CHAT, UPDATE_CHAT, BOT_USERNAME, db, GROUP_ID
 from shivu import user_collection, refeer_collection
@@ -9,12 +9,12 @@ from shivu import user_collection, refeer_collection
 # Define your sudo users' IDs here
 sudo_user_ids = [6402009857]  # Replace with actual user IDs of the sudo users
 
-async def notify_sudo_users(context: CallbackContext):
+async def notify_sudo_users(application: Application):
     """Notify sudo users that the bot has restarted."""
     message = "The bot has restarted successfully!"
     for user_id in sudo_user_ids:
         try:
-            await context.bot.send_message(chat_id=user_id, text=message)
+            await application.bot.send_message(chat_id=user_id, text=message)
         except Exception as e:
             print(f"Failed to send restart notification to user {user_id}: {e}")
 
@@ -84,8 +84,9 @@ async def start(update: Update, context: CallbackContext) -> None:
         video_url = "https://telegra.ph/file/0b2e8e33d07a0d0e5914f.mp4"
         await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=f"""𝙃𝙚𝙮 𝙩𝙝𝙚𝙧𝙚! {first_name}\n\n✨𝙄 𝘼𝙈 𝘼𝙡𝙞𝙫𝙚 𝘽𝙖𝙗𝙮""", reply_markup=reply_markup)
 
+# Register the /start command handler
 start_handler = CommandHandler('start', start, block=False)
 application.add_handler(start_handler)
 
-# Send restart notification to sudo users
-application.job_queue.run_once(notify_sudo_users, when=0)
+# Add the notify_sudo_users function to run on bot startup
+application.on_startup.append(notify_sudo_users)
