@@ -584,6 +584,4 @@ async def notify_restart():
 async def main():
     await notify_restart()
     await app.start()
-
-    # Keep the bot running
-    await app.idle()
+    await app.idle()  # Keeps the bot running
