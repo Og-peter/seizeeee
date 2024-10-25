@@ -24,7 +24,8 @@ safari_users = {}
 allowed_group_id = -1002041586214
 current_hunts = {}
 current_engagements = {}
-  
+user_locks = {}
+
 async def get_random_waifu():
     target_rarities = ['🔮 Limited Edition', '🫧 Premium']  # Example rarities
     selected_rarity = random.choice(target_rarities)
