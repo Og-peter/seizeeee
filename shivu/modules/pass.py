@@ -98,38 +98,49 @@ async def button_callback(update: Update, context: CallbackContext):
     action = query_data[0]
     user_id = int(query_data[1])
     
+    # Verify user authorization
     if query.from_user.id != user_id:
-        await query.answer("You are not authorized to use this button.", show_alert=True)
+        await query.answer("🚫 You are not authorized to use this button.", show_alert=True)
         return
     
     if action == 'buy_pass':
         user_data = await get_user_data(user_id)
         if user_data.get('pass'):
-            await query.answer("You already have a membership pass.", show_alert=True)
+            await query.answer("✅ You already have a membership pass.", show_alert=True)
             return
         
         if user_data['tokens'] < 30000:
-            await query.answer("You don't have enough tokens to buy a pass.", show_alert=True)
+            await query.answer("💔 You don't have enough tokens to buy a pass.", show_alert=True)
             return
         
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("Confirm ✅", callback_data=f'confirm_buy_pass:{user_id}')],
-            [InlineKeyboardButton("Cancel ❌", callback_data=f'cancel_buy_pass:{user_id}')],
+            [InlineKeyboardButton("✔️ Confirm Purchase", callback_data=f'confirm_buy_pass:{user_id}')],
+            [InlineKeyboardButton("❌ Cancel Purchase", callback_data=f'cancel_buy_pass:{user_id}')],
         ])
-        await query.message.edit_text("Are you sure you want to buy a pass for 30000 tokens?", reply_markup=keyboard)
+        await query.message.edit_text(
+            "💳 **Are you sure you want to buy a pass for 30,000 tokens?**\n\n"
+            "🛡️ This pass unlocks special features and rewards!",
+            reply_markup=keyboard,
+            parse_mode='Markdown'
+        )
     
     elif action == 'claim_free_pass':
         user_data = await get_user_data(user_id)
         if user_data.get('pass'):
-            await query.answer("You already have a membership pass.", show_alert=True)
+            await query.answer("✅ You already have a membership pass.", show_alert=True)
             return
         
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("Confirm ✅", callback_data=f'confirm_claim_free_pass:{user_id}')],
-            [InlineKeyboardButton("Cancel ❌", callback_data=f'cancel_claim_free_pass:{user_id}')],
+            [InlineKeyboardButton("✔️ Confirm Claim", callback_data=f'confirm_claim_free_pass:{user_id}')],
+            [InlineKeyboardButton("❌ Cancel Claim", callback_data=f'cancel_claim_free_pass:{user_id}')],
         ])
-        await query.message.edit_text("Are you sure you want to claim a free pass?", reply_markup=keyboard)
-
+        await query.message.edit_text(
+            "🎁 **Are you sure you want to claim a free pass?**\n\n"
+            "✨ This pass grants you access to exclusive content!",
+            reply_markup=keyboard,
+            parse_mode='Markdown'
+        )
+        
 async def confirm_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     query_data = query.data.split(':')
