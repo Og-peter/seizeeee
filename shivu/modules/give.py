@@ -44,17 +44,28 @@ async def send_action_notification(message: str):
             print(f"Failed to send message to {user_id}: {e}")
 
 async def give_character_batch(receiver_id, character_ids):
+    # Fetch the characters based on the provided IDs
     characters = await collection.find({'id': {'$in': character_ids}}).to_list(length=len(character_ids))
+    
     if characters:
         try:
-            await user_collection.update_one({'id': receiver_id}, {'$push': {'characters': {'$each': characters}}})
+            # Update the user's character list with the new characters
+            await user_collection.update_one(
+                {'id': receiver_id},
+                {'$push': {'characters': {'$each': characters}}}
+            )
             await update_user_rank(receiver_id)
+
+            # Prepare a success message summarizing the characters added
+            character_names = ', '.join([char['name'] for char in characters])
+            await notify_user(receiver_id, f"🎉 You have received new characters: {character_names}!\n\nTotal characters: {len(characters)} added! 🚀")
             return characters
+
         except Exception as e:
             print(f"Error updating user: {e}")
             raise
     else:
-        raise ValueError("Some characters not found.")
+        raise ValueError("⚠️ <b>Some characters not found.</b> Please check the character IDs provided.")
 
 @app.on_message(filters.command(["daan"]) & filters.reply)
 async def give_character_command(client, message):
