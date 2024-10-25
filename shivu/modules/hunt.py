@@ -380,17 +380,25 @@ async def hunt_callback_query(update: Update, context: CallbackContext):
     waifu_id = data[1]
     user_id = int(data[2])
 
-    if action == "engage":
-        await engage(callback_query)
-    elif action == "throw":
-        await throw_ball(callback_query)
-    elif action == "run":
-        await run_away(callback_query)
+    # Check which action to perform based on user input
+    try:
+        if action == "engage":
+            await engage(callback_query)
+        elif action == "throw":
+            await throw_ball(callback_query)
+        elif action == "run":
+            await run_away(callback_query)
+        else:
+            await callback_query.answer("🚫 Invalid action! Please try again.", show_alert=True)
+
+    except Exception as e:
+        logger.error(f"Error in hunt_callback_query: {e}")
+        await callback_query.answer("⚠️ An unexpected error occurred. Please try again.", show_alert=True)
 
 async def dc_command(update: Update, context: CallbackContext):
     # Check if the command is a reply to a message
     if not update.message.reply_to_message:
-        await update.message.reply_text("You need to reply to a message to reset that user's cooldown.")
+        await update.message.reply_text("❌ You need to reply to a message to reset that user's cooldown.")
         return
     
     # Extract user_id of the replied user
@@ -400,7 +408,7 @@ async def dc_command(update: Update, context: CallbackContext):
     authorized_user_id = 6402009857
     
     if update.message.from_user.id != authorized_user_id:
-        await update.message.reply_text("You are not authorized to use this command.")
+        await update.message.reply_text("🚫 You are not authorized to use this command.")
         return
     
     try:
@@ -408,13 +416,13 @@ async def dc_command(update: Update, context: CallbackContext):
         result = await safari_cooldown_collection.delete_one({'user_id': replied_user_id})
         
         if result.deleted_count == 1:
-            await update.message.reply_text(f"The tour cooldown for user {replied_user_id} has been reset.")
+            await update.message.reply_text(f"✅ The tour cooldown for user <b>{replied_user_id}</b> has been reset.", parse_mode='HTML')
         else:
-            await update.message.reply_text(f"The user {replied_user_id} doesn't have an active tour cooldown.")
+            await update.message.reply_text(f"🔍 The user <b>{replied_user_id}</b> doesn't have an active tour cooldown.", parse_mode='HTML')
     
     except Exception as e:
-        print(f"Error resetting safari cooldown for user {replied_user_id}: {e}")
-        await update.message.reply_text("An error occurred while resetting the tour cooldown. Please try again later.")
+        logger.error(f"Error resetting safari cooldown for user {replied_user_id}: {e}")
+        await update.message.reply_text("⚠️ An error occurred while resetting the tour cooldown. Please try again later.")
         
 application.add_handler(CommandHandler("dc", dc_command))
 application.add_handler(CommandHandler("wtour", enter_safari))
