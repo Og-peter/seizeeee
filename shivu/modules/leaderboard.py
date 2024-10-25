@@ -28,22 +28,25 @@ async def global_leaderboard(update: Update, context: CallbackContext) -> None:
         leaderboard_data = await cursor.to_list(length=10)
 
         # Prepare the leaderboard message
-        leaderboard_message = "<b>Top 10 Groups:</b>\n───────────────────\n"
+        leaderboard_message = "<b>🌟 𝚃𝙾𝙿 10 𝙶𝚁𝙾𝚄𝙿𝚂 🌟</b>\n"
+        leaderboard_message += "─────────────────────\n"
+        
         for i, group in enumerate(leaderboard_data, start=1):
             group_name = escape(group.get('group_name', 'Unknown'))
             if len(group_name) > 15:
                 group_name = group_name[:15] + '...'
             count = group['count']
-            leaderboard_message += f'{i}. <b>{group_name}</b> - <b>{count}</b>\n'
+            leaderboard_message += f"{i}. <b>{group_name}</b> - <b>{count}</b> 🏆\n"
 
-        leaderboard_message += "────────────────────\nTop Groups via @Character_seize_bot"
+        leaderboard_message += "─────────────────────\n"
+        leaderboard_message += "✨ 𝚃𝚘𝚙 𝙶𝚛𝚘𝚞𝚙𝚜 𝚟𝚒𝚊 @Character_seize_bot ✨"
 
         # Select a random video from the list and send it with the leaderboard message
         video_url = random.choice(video)
         await update.message.reply_video(video=video_url, caption=leaderboard_message, parse_mode='HTML')
 
     except Exception as e:
-        await update.message.reply_text(f"An error occurred: {e}")
+        await update.message.reply_text(f"⚠️ 𝔸𝕟 𝕖𝕣𝕣𝕠𝕣 𝕠𝕔𝕔𝕦𝕣𝕖𝕕: {e}", parse_mode='HTML')
 
 # Function to display the top users in the current chat
 async def ctop(update: Update, context: CallbackContext) -> None:
@@ -57,22 +60,26 @@ async def ctop(update: Update, context: CallbackContext) -> None:
         ])
         leaderboard_data = await cursor.to_list(length=10)
 
-        leaderboard_message = "<b>Top 10 Users In Chat:</b>\n───────────────────\n"
+        leaderboard_message = "<b>✨ 𝚃𝙾𝙿 10 𝚄𝚂𝙴𝚁𝚂 𝙸𝙽 𝚃𝙷𝙸𝚂 𝙲𝙷𝙰𝚃 ✨</b>\n"
+        leaderboard_message += "─────────────────────\n"
+        
         for i, user in enumerate(leaderboard_data, start=1):
             username = user.get('username', 'Unknown')
             first_name = escape(user.get('first_name', 'Unknown'))
             if len(first_name) > 15:
                 first_name = first_name[:15] + '...'
             character_count = user['character_count']
-            leaderboard_message += f'{i}. <a href="https://t.me/{username}"><b>{first_name}</b></a> - {character_count}\n'
+            leaderboard_message += f'{i}. <a href="https://t.me/{username}"><b>{first_name}</b></a> - <b>{character_count}</b> 🌟\n'
 
-        leaderboard_message += "────────────────────\nTop Users In Chat via @Character_seize_bot"
+        leaderboard_message += "─────────────────────\n"
+        leaderboard_message += "✨ 𝚃𝚘𝚙 𝚄𝚜𝚎𝚛𝚜 𝚟𝚒𝚊 @Character_seize_bot ✨"
 
+        # Select a random video from the list and send it with the leaderboard message
         video_url = random.choice(video)
         await update.message.reply_video(video=video_url, caption=leaderboard_message, parse_mode='HTML')
 
     except Exception as e:
-        await update.message.reply_text(f"An error occurred: {e}")
+        await update.message.reply_text(f"⚠️ 𝔸𝕟 𝕖𝕣𝕣𝕠𝕣 𝕠𝕔𝕔𝕦𝕣𝕖𝕕: {e}", parse_mode='HTML')
 
 # Function to display the global user leaderboard
 async def leaderboard(update: Update, context: CallbackContext) -> None:
