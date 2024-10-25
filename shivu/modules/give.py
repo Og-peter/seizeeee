@@ -201,23 +201,25 @@ async def remove_character_command(client, message):
 
 @app.on_message(filters.command(["given"]))
 async def random_characters_command(client, message):
-    if str(message.from_user.id) not in SPECIALGRADE and str(message.from_user.id) not in GRADE1:
-        await message.reply_text("This command can only be used by Special Grade and Grade 1 sorcerers.")
+    user_id = str(message.from_user.id)
+
+    if user_id not in SPECIALGRADE and user_id not in GRADE1:
+        await message.reply_text("🚫 **This command can only be used by Special Grade and Grade 1 sorcerers.**")
         return
 
     try:
         if not message.reply_to_message:
-            await message.reply_text("You need to reply to a user's message to give characters!")
+            await message.reply_text("⚠️ **You need to reply to a user's message to give characters!**")
             return
 
         if len(message.command) < 2:
-            await message.reply_text("Please provide the amount of random characters to give.")
+            await message.reply_text("⚠️ **Please provide the amount of random characters to give.**")
             return
 
         try:
             amount = int(message.command[1])
         except ValueError:
-            await message.reply_text("Invalid amount. Please provide a valid number.")
+            await message.reply_text("❌ **Invalid amount. Please provide a valid number.**")
             return
 
         amount = min(amount, 2000)
@@ -228,7 +230,7 @@ async def random_characters_command(client, message):
         try:
             await client.get_chat(receiver_id)
         except Exception as e:
-            await message.reply_text(f"Error interacting with the receiver: {e}")
+            await message.reply_text(f"❌ **Error interacting with the receiver:** {e}")
             return
 
         # Backup user characters before giving
@@ -241,7 +243,7 @@ async def random_characters_command(client, message):
         all_characters = [character for character in all_characters if 'id' in character]
 
         if len(all_characters) < amount:
-            await message.reply_text("Not enough characters available to give.")
+            await message.reply_text("⚠️ **Not enough characters available to give.**")
             return
 
         random_characters = random.sample(all_characters, amount)
@@ -260,24 +262,26 @@ async def random_characters_command(client, message):
 
         # Send summary notification to the owner
         notification_message = (
-            f"Action: Give Random Characters\n"
-            f"Given by: {message.from_user.first_name}\n"
-            f"Amount: {amount}\n"
-            f"Receiver: {user_link}\n"
+            f"📦 **Action:** Give Random Characters\n"
+            f"👤 **Given by:** {message.from_user.first_name}\n"
+            f"🎉 **Amount:** {amount}\n"
+            f"🎁 **Receiver:** {user_link}\n"
         )
         await send_action_notification(notification_message)
+
         # Send log to logs channel
         log_message = (
             f"📝 <b>Character Given</b>\n\n"
             f"👤 <b>By:</b> {message.from_user.first_name}\n"
-            f"🎁 <b>Receiver:</b> [{receiver_first_name}](tg://user?id={receiver_id})\n"
-            f"🍿 <b>Character ID:</b> {character[0]['id']}\n"
-         )
+            f"🎁 <b>Receiver:</b> [{message.reply_to_message.from_user.first_name}](tg://user?id={receiver_id})\n"
+            f"🎉 <b>Amount:</b> {amount}\n"
+        )
         await send_log_message(log_message)
-        await message.reply_text(f"Success! {amount} character(s) added to {user_link}'s collection.")
+
+        await message.reply_text(f"✅ **Success!** {amount} character(s) added to {user_link}'s collection.")
     except Exception as e:
         print(f"Error in random_characters_command: {e}")
-        await message.reply_text("An error occurred while processing the command.")
+        await message.reply_text("❌ **An error occurred while processing the command.**")
 
 @app.on_callback_query(filters.regex(r'^reverse_\d+\.\d+$'))
 async def reverse_action(client, callback_query: CallbackQuery):
@@ -287,9 +291,8 @@ async def reverse_action(client, callback_query: CallbackQuery):
     if str(callback_query.from_user.id) in SPECIALGRADE:
         restored = await restore_characters(target_id, timestamp)
         if restored:
-            await callback_query.edit_message_text("The action has been reversed.")
+            await callback_query.edit_message_text("🔄 **The action has been reversed successfully.**")
         else:
-            await callback_query.answer("Failed to reverse the action or no backup found.", show_alert=True)
+            await callback_query.answer("⚠️ **Failed to reverse the action or no backup found.**", show_alert=True)
     else:
-        await callback_query.answer("You don't have permission to reverse actions.", show_alert=True)
-        
+        await callback_query.answer("🚫 **You don't have permission to reverse actions.**", show_alert=True)
