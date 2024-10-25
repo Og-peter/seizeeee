@@ -58,9 +58,9 @@ async def pass_cmd(update: Update, context: CallbackContext):
     if not user_data.get('pass'):
         # Button for purchasing a pass
         keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("Buy Pass (30000 tokens)", callback_data=f'buy_pass:{user_id}')]
-    ])
-        await update.message.reply_html("<b>You don't have a membership pass. buy one to unlock extra rewards.</b>", reply_markup=keyboard)
+            [InlineKeyboardButton("💳 Buy Pass (30,000 tokens)", callback_data=f'buy_pass:{user_id}')]
+        ])
+        await update.message.reply_html("<b>🚫 You don't have a membership pass. Buy one to unlock extra rewards.</b>", reply_markup=keyboard)
         return
     
     pass_details = user_data.get('pass_details', {})
@@ -80,16 +80,17 @@ async def pass_cmd(update: Update, context: CallbackContext):
     pass_info_text = (
         f"❰ 𝗦 𝗘 𝗜 𝗭 𝗘  𝗣 𝗔 𝗦 𝗦 🎟️ ❱\n"
         f"▰▱▰▱▰▱▰▱▰▱\n\n"
-        f"✤ Owner of pass : {update.effective_user.first_name}\n"
+        f"✤ **Owner of Pass:** {update.effective_user.first_name}\n"
         f"───────────────\n"
-        f"✤ Daily Claimed: {daily_claimed}\n"
-        f"✤ Weekly Claimed: {weekly_claimed}\n"
-        f"✤ Total Claims: {total_claims}\n"
+        f"✤ **Daily Claimed:** {daily_claimed}\n"
+        f"✤ **Weekly Claimed:** {weekly_claimed}\n"
+        f"✤ **Total Claims:** {total_claims}\n"
         f"───────────────\n"
-        f"✤ Pass Expiry: Sunday"
+        f"✤ **Pass Expiry:** {pass_expiry}\n"
+        f"✤ **Claim Reset:** Sunday at 00:00 UTC"
     )
     
-    await update.message.reply_text(pass_info_text)
+    await update.message.reply_text(pass_info_text, parse_mode="Markdown")
 
 async def button_callback(update: Update, context: CallbackContext):
     query = update.callback_query
