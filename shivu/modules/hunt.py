@@ -24,28 +24,10 @@ safari_users = {}
 allowed_group_id = -1002041586214
 current_hunts = {}
 current_engagements = {}
-user_locks = {}
-
-def get_user_lock(user_id):
-    if user_id not in user_locks:
-        user_locks[user_id] = asyncio.Lock()
-    return user_locks[user_id]
-
-# Example of an async function using user locks
-async def hunt(update: Update, context: CallbackContext):
-    user_id = update.effective_user.id
-    lock = get_user_lock(user_id)
-
-    async with lock:
-        # Your code logic here
-        await update.message.reply_text("Hunting started!")  # Example response
-
-# Your other command handlers and application setup...
-
+  
 async def get_random_waifu():
     target_rarities = ['🔮 Limited Edition', '🫧 Premium']  # Example rarities
     selected_rarity = random.choice(target_rarities)
-
     try:
         pipeline = [
             {'$match': {'rarity': selected_rarity}},
@@ -53,7 +35,6 @@ async def get_random_waifu():
         ]
         cursor = collection.aggregate(pipeline)
         characters = await cursor.to_list(length=None)
-        
         if characters:
             waifu = characters[0]
             waifu_id = waifu['id']
@@ -63,7 +44,7 @@ async def get_random_waifu():
         else:
             return None
     except Exception as e:
-        logger.error(f"Error fetching random waifu: {e}")
+        print(e)
         return None
 
 async def load_safari_users():
@@ -73,7 +54,6 @@ async def load_safari_users():
             'hunt_limit': user_data['hunt_limit'],
             'used_hunts': user_data['used_hunts']
         }
-        logger.info(f"Loaded safari user: {user_data['user_id']}")
 
 async def save_safari_user(user_id):
     user_data = safari_users[user_id]
@@ -82,54 +62,49 @@ async def save_safari_user(user_id):
         {'$set': user_data},
         upsert=True
     )
-    logger.info(f"Saved safari user data for user: {user_id}")
 
 async def safe_send_message(bot, chat_id, text):
     retry_after = 0
     while True:
         try:
-            message = await bot.send_message(chat_id=chat_id, text=text)
-            logger.info(f"Message sent to {chat_id}: {text}")
-            return message
+            return await bot.send_message(chat_id=chat_id, text=text)
         except RetryAfter as e:
             retry_after = e.retry_after
             logger.warning(f"Flood control exceeded. Retrying in {retry_after} seconds.")
             await asyncio.sleep(retry_after)
-        except Exception as e:
-            logger.error(f"Error sending message to {chat_id}: {e}")
-            break
 
 async def enter_safari(update: Update, context: CallbackContext):
     message = update.message
     user_id = message.from_user.id
 
     if user_id in safari_users:
-        await safe_send_message(context.bot, message.chat_id, "🚫 You are already in the **Seize Zone**! 🌌")
+        await safe_send_message(context.bot, message.chat_id, "You are already in the seize zone!")
         return
 
     current_time = time.time()
+
     cooldown_doc = await safari_cooldown_collection.find_one({'user_id': user_id})
 
-    last_entry_time = cooldown_doc['last_entry_time'] if cooldown_doc else 0
+    if cooldown_doc:
+        last_entry_time = cooldown_doc['last_entry_time']
+    else:
+        last_entry_time = 0
+
     cooldown_duration = 5 * 60 * 60  # 5 hours in seconds
 
     if current_time - last_entry_time < cooldown_duration:
         remaining_time = int(cooldown_duration - (current_time - last_entry_time))
-        hours, minutes = divmod(remaining_time, 3600)
-        await safe_send_message(context.bot, message.chat_id,
-                                f"⏳ You can enter the **Seize Zone** again in {hours} hours and {minutes // 60} minutes.")
+        await safe_send_message(context.bot, message.chat_id, f"You can enter the seize zone again in {remaining_time // 3600} hours and {(remaining_time % 3600) // 60} minutes.")
         return
 
     user_data = await user_collection.find_one({'id': user_id})
     if user_data is None:
-        await safe_send_message(context.bot, message.chat_id,
-                                "📝 You need to register first by starting the bot in DM. Type /start!")
+        await safe_send_message(context.bot, message.chat_id, "You need to register first by starting the bot in dm.")
         return
 
     entry_fee = 10
-    if user_data.get('tokens', 0) < entry_fee:
-        await safe_send_message(context.bot, message.chat_id,
-                                f"💔 You don't have enough tokens to enter the **Seize Zone**.\nNeed {entry_fee} tokens.")
+    if user_data.get('tokens', 10) < entry_fee:
+        await safe_send_message(context.bot, message.chat_id, "You don't have enough tokens to enter the seize zone.\nNeed 10 tokens.")
         return
 
     new_tokens = user_data['tokens'] - entry_fee
@@ -149,26 +124,22 @@ async def enter_safari(update: Update, context: CallbackContext):
 
     await save_safari_user(user_id)
 
-    welcome_message = (
-        f"🎉 <b>Welcome to the Seize Zone!</b>\n"
-        f"💸 <i>Entry fee deducted:</i> <b>{entry_fee} Tokens</b>\n\n"
-        f"🌿 Begin your adventure with /explore for rare finds!"
-    )
-    
-    await safe_send_message(context.bot, message.chat_id, welcome_message)
-  
+    await safe_send_message(context.bot, message.chat_id, f"<b>Welcome to the seize Zone!\nEntry fee deducted: {entry_fee} Tokens\n\nBegin your /explore for rare seize.</b>")
+
 async def exit_safari(update: Update, context: CallbackContext):
     message = update.message
     user_id = message.from_user.id
 
     if user_id not in safari_users:
-        await message.reply_text("🚫 You are not in the **Seize Zone**! Please use /wtour first.")
+        await message.reply_text("You are not in the seize zone!")
         return
 
     del safari_users[user_id]
     await safari_users_collection.delete_one({'user_id': user_id})
 
-    await message.reply_text("👋 You have now exited the **Seize Zone**. Until next time! 🌌")
+    await message.reply_text("You have now exited the seize Zone")
+
+user_locks = defaultdict(asyncio.Lock)
 
 async def hunt(update: Update, context: CallbackContext):
     message = update.message
@@ -176,30 +147,30 @@ async def hunt(update: Update, context: CallbackContext):
 
     async with user_locks[user_id]:
         if user_id not in safari_users:
-            await message.reply_text("🚷 Not in the **Seize Zone**. Use /wtour first!")
+            await message.reply_text("Not in the seize zone. use /wtour first")
             return
 
         if user_id in current_hunts and current_hunts[user_id] is not None:
             if user_id not in current_engagements:
-                await message.reply_text("⚠️ You already have an ongoing hunt. Finish it first!")
+                await message.reply_text("You already have an ongoing hunt. Finish it first!")
                 return
 
         user_data = safari_users[user_id]
         if user_data['used_hunts'] >= user_data['hunt_limit']:
-            await message.reply_text("🚫 You have reached your hunt limit.")
+            await message.reply_text("You have reached your hunt limit.")
             del safari_users[user_id]
             await safari_users_collection.delete_one({'user_id': user_id})
             return
 
         if user_data['safari_balls'] <= 0:
-            await message.reply_text("❌ You have run out of **contract crystals**!")
+            await message.reply_text("You have run out of contract crystals.")
             del safari_users[user_id]
             await safari_users_collection.delete_one({'user_id': user_id})
             return
 
         waifu = await get_random_waifu()
         if not waifu:
-            await message.reply_text("⚠️ No character available at the moment.")
+            await message.reply_text("No character available.")
             return
 
         waifu_name = waifu['name']
@@ -217,15 +188,10 @@ async def hunt(update: Update, context: CallbackContext):
 
         await save_safari_user(user_id)
 
-        text = (
-            f"🌟 A wild <b>{waifu_name}</b> ( {waifu_rarity} ) has appeared!\n\n"
-            f"🧭 <b>/explore limit:</b> {user_data['used_hunts']}/{user_data['hunt_limit']}\n"
-            f"🧊 <b>Contract Ice:</b> {user_data['safari_balls']}"
-        )
-        
+        text = f"<b>A wild {waifu_name} ( {waifu_rarity} ) has appeared!</b>\n\n<b>/explore limit: {user_data['used_hunts']}/{user_data['hunt_limit']}\n🧊 contract Ice: {user_data['safari_balls']}</b>"
         keyboard = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("📜 Contract", callback_data=f"engage_{waifu_id}_{user_id}")]
+                [InlineKeyboardButton("contract", callback_data=f"engage_{waifu_id}_{user_id}")]
             ]
         )
         await message.reply_photo(photo=waifu_img_url, caption=text, reply_markup=keyboard, parse_mode='HTML')
@@ -235,76 +201,74 @@ async def hunt(update: Update, context: CallbackContext):
 
 async def typing_animation(callback_query, text):
     try:
-        # Randomly determine the duration of the typing animation
-        duration = 3 if random.random() < 0.05 else random.choice([1, 2])
+        if random.random() < 0.05:
+            duration = 3
+        else:
+            duration = random.choice([1, 2])
 
         for i in range(1, duration + 1):
-            dots = "❄️" * i  # Create a visual cue for typing
-            await callback_query.message.edit_caption(caption=text + dots, parse_mode='HTML')
-            await asyncio.sleep(1)  # Pause between updates
+            dots = "❄️" * i
+            await callback_query.message.edit_caption(caption=text + dots)
+            await asyncio.sleep(1)
 
-        return dots  # Return the final state of dots
+        return dots
     except Exception as e:
         logger.error(f"Error in typing_animation: {e}")
         logger.error(traceback.format_exc())
-        return "❄️❄️❄️"  # Fallback for continuity
+        return "❄️❄️❄️"  # Fallback to ensure flow continues
 
 async def throw_ball(callback_query):
     user_id = int(callback_query.from_user.id)
-
+    
     async with user_locks[user_id]:
         try:
             data = callback_query.data.split("_")
             waifu_id = data[1]
+            user_id = int(data[2])
 
-            # Check if the user is allowed to engage with the hunt
-            if user_id != int(data[2]):
-                await callback_query.answer("🚫 This hunt does not belong to you.", show_alert=True)
+            if user_id != callback_query.from_user.id:
+                await callback_query.answer("This hunt does not belong to you.", show_alert=True)
                 return
 
             if user_id not in safari_users:
-                await callback_query.answer("🛑 You are not in the **safari zone**!", show_alert=True)
+                await callback_query.answer("You are not in the safari zone!", show_alert=True)
                 return
 
             if waifu_id not in sessions:
-                await callback_query.answer("🚨 The wild character has fled!", show_alert=True)
+                await callback_query.answer("The wild character has fled!", show_alert=True)
                 return
 
-            # Decrement safari balls and update user data
             user_data = safari_users[user_id]
             user_data['safari_balls'] -= 1
             safari_users[user_id] = user_data
 
             await save_safari_user(user_id)
 
-            outcome = await typing_animation(callback_query, "<b>🌟 You Used One Contract Crystal.</b>\n\n")
+            outcome = await typing_animation(callback_query, "𝙔𝙤𝙪 𝙐𝙨𝙚𝙙 𝙊𝙣𝙚 𝘾𝙤𝙣𝙩𝙧𝙖𝙘𝙩 𝘾𝙧𝙮𝙨𝙩𝙖𝙡.\n\n")
 
             if outcome == "❄️❄️❄️":
-                # Success: character caught
-                await callback_query.message.edit_caption(caption="<b>✨ Congratulations! ✨\nYou caught the wild character!</b>", parse_mode="HTML")
+                await callback_query.message.edit_caption(caption=f"<b>✨ congratulation ✨\nyou caught the wild character!</b>", parse_mode="HTML")
 
                 character = sessions[waifu_id]
                 await user_collection.update_one({'id': user_id}, {'$push': {'characters': character}})
 
-                del sessions[waifu_id]  # Remove from sessions after catching
-
-            else:
-                # Failure: character fled
-                await callback_query.message.edit_caption(caption="<b>❌ Your contract crystal failed.\nThe wild character fled.</b>", parse_mode="HTML")
                 del sessions[waifu_id]
 
-            # Check if the user has run out of safari balls
+            else:
+                await callback_query.message.edit_caption(caption=f"<b>Your contract crystal failed.</b>\n<b>The wild character fled.</b>", parse_mode="HTML")
+                del sessions[waifu_id]
+
             if user_data['safari_balls'] <= 0:
-                await callback_query.message.edit_caption(caption="⚠️ You have run out of **contract crystals**! Please visit the safari again.")
+                await callback_query.message.edit_caption(caption="You have run out of contract crystals.")
                 del safari_users[user_id]
                 await safari_users_collection.delete_one({'user_id': user_id})
 
-            del current_hunts[user_id]  # Clear the current hunt
+            del current_hunts[user_id]
 
         except Exception as e:
             logger.error(f"An error occurred in throw_ball: {e}")
             logger.error(traceback.format_exc())
-            await callback_query.answer("⚠️ An error occurred. Please try again later.", show_alert=True)
+            await callback_query.answer("An error occurred. Please try again later.", show_alert=True)
 
 async def run_away(callback_query):
     user_id = int(callback_query.from_user.id)
@@ -313,28 +277,24 @@ async def run_away(callback_query):
         try:
             data = callback_query.data.split("_")
             waifu_id = data[1]
-            expected_user_id = int(data[2])  # Renamed for clarity
+            user_id = int(data[2])
 
-            # Check if the user is allowed to run away
-            if expected_user_id != user_id:
-                await callback_query.answer("🚫 This hunt does not belong to you.", show_alert=True)
+            if user_id != callback_query.from_user.id:
+                await callback_query.answer("This hunt does not belong to you.", show_alert=True)
                 return
 
             if user_id not in safari_users:
-                await callback_query.answer("🛑 You are not in the **safari zone**!", show_alert=True)
+                await callback_query.answer("You are not in the safari zone!", show_alert=True)
                 return
 
-            # Remove the character and the current hunt
             del sessions[waifu_id]
             del current_hunts[user_id]
 
-            # Update the message to indicate the user escaped
-            await callback_query.message.edit_caption(caption="🏃‍♂️ You successfully escaped from the wild character! Stay vigilant next time!", parse_mode="HTML")
-            await callback_query.answer()  # Acknowledge the action
+            await callback_query.message.edit_caption(caption="You escaped from the wild character.")
+            await callback_query.answer()
 
         except Exception as e:
-            logger.error(f"Error handling run_away: {e}")
-            await callback_query.answer("⚠️ An error occurred while trying to escape. Please try again later.", show_alert=True)
+            print(f"Error handling run_away: {e}")
 
 async def engage(callback_query):
     user_id = int(callback_query.from_user.id)
@@ -343,52 +303,47 @@ async def engage(callback_query):
         try:
             data = callback_query.data.split("_")
             waifu_id = data[1]
-            expected_user_id = int(data[2])  # Renamed for clarity
+            user_id = int(data[2])
 
-            # Check if the user is allowed to engage
-            if expected_user_id != user_id:
-                await callback_query.answer("🚫 This hunt does not belong to you.", show_alert=True)
+            if user_id != callback_query.from_user.id:
+                await callback_query.answer("This hunt does not belong to you.", show_alert=True)
                 return
 
             if user_id not in safari_users:
-                await callback_query.answer("🛑 You are not in the **safari zone**!", show_alert=True)
+                await callback_query.answer("You are not in the safari zone!", show_alert=True)
                 return
 
             if waifu_id not in sessions:
-                await callback_query.answer("💨 The wild character has fled!", show_alert=True)
+                await callback_query.answer("The wild character has fled!", show_alert=True)
                 return
 
-            # Clear any previous engagement for the user
             if user_id in current_engagements:
                 del current_engagements[user_id]
 
-            # Proceed if the user is in a valid hunt
             if user_id in current_hunts and current_hunts[user_id] == waifu_id:
                 waifu = sessions[waifu_id]
                 waifu_name = waifu['name']
                 waifu_img_url = waifu['img_url']
 
-                # Construct message and buttons for the user to engage
-                text = f"⚔️ **Engage with {waifu_name}**!\nChoose your action:"
+                text = f"Choose your action:"
                 keyboard = InlineKeyboardMarkup(
                     [
                         [
-                            InlineKeyboardButton("❄️ Throw Ice", callback_data=f"throw_{waifu_id}_{user_id}"),
-                            InlineKeyboardButton("🏃‍♂️ Run", callback_data=f"run_{waifu_id}_{user_id}")
+                            InlineKeyboardButton("Throw Ice", callback_data=f"throw_{waifu_id}_{user_id}"),
+                            InlineKeyboardButton("Run", callback_data=f"run_{waifu_id}_{user_id}")
                         ]
                     ]
                 )
-                await callback_query.message.edit_caption(caption=text, reply_markup=keyboard, parse_mode="Markdown")
-                await callback_query.answer()  # Acknowledge the action
+                await callback_query.message.edit_caption(caption=text, reply_markup=keyboard)
+                await callback_query.answer()
 
-                current_engagements[user_id] = waifu_id  # Set engagement for the user
+                current_engagements[user_id] = waifu_id
 
             else:
-                await callback_query.answer("💨 The wild character has fled!", show_alert=True)
+                await callback_query.answer("The wild character has fled!", show_alert=True)
 
         except Exception as e:
-            logger.error(f"Error handling engage: {e}")
-            await callback_query.answer("⚠️ An error occurred while trying to engage. Please try again later.", show_alert=True)
+            print(f"Error handling engage: {e}")
 
 async def hunt_callback_query(update: Update, context: CallbackContext):
     callback_query = update.callback_query
@@ -397,25 +352,17 @@ async def hunt_callback_query(update: Update, context: CallbackContext):
     waifu_id = data[1]
     user_id = int(data[2])
 
-    # Check which action to perform based on user input
-    try:
-        if action == "engage":
-            await engage(callback_query)
-        elif action == "throw":
-            await throw_ball(callback_query)
-        elif action == "run":
-            await run_away(callback_query)
-        else:
-            await callback_query.answer("🚫 Invalid action! Please try again.", show_alert=True)
-
-    except Exception as e:
-        logger.error(f"Error in hunt_callback_query: {e}")
-        await callback_query.answer("⚠️ An unexpected error occurred. Please try again.", show_alert=True)
+    if action == "engage":
+        await engage(callback_query)
+    elif action == "throw":
+        await throw_ball(callback_query)
+    elif action == "run":
+        await run_away(callback_query)
 
 async def dc_command(update: Update, context: CallbackContext):
     # Check if the command is a reply to a message
     if not update.message.reply_to_message:
-        await update.message.reply_text("❌ You need to reply to a message to reset that user's cooldown.")
+        await update.message.reply_text("You need to reply to a message to reset that user's cooldown.")
         return
     
     # Extract user_id of the replied user
@@ -425,7 +372,7 @@ async def dc_command(update: Update, context: CallbackContext):
     authorized_user_id = 6402009857
     
     if update.message.from_user.id != authorized_user_id:
-        await update.message.reply_text("🚫 You are not authorized to use this command.")
+        await update.message.reply_text("You are not authorized to use this command.")
         return
     
     try:
@@ -433,13 +380,13 @@ async def dc_command(update: Update, context: CallbackContext):
         result = await safari_cooldown_collection.delete_one({'user_id': replied_user_id})
         
         if result.deleted_count == 1:
-            await update.message.reply_text(f"✅ The tour cooldown for user <b>{replied_user_id}</b> has been reset.", parse_mode='HTML')
+            await update.message.reply_text(f"The tour cooldown for user {replied_user_id} has been reset.")
         else:
-            await update.message.reply_text(f"🔍 The user <b>{replied_user_id}</b> doesn't have an active tour cooldown.", parse_mode='HTML')
+            await update.message.reply_text(f"The user {replied_user_id} doesn't have an active tour cooldown.")
     
     except Exception as e:
-        logger.error(f"Error resetting safari cooldown for user {replied_user_id}: {e}")
-        await update.message.reply_text("⚠️ An error occurred while resetting the tour cooldown. Please try again later.")
+        print(f"Error resetting safari cooldown for user {replied_user_id}: {e}")
+        await update.message.reply_text("An error occurred while resetting the tour cooldown. Please try again later.")
         
 application.add_handler(CommandHandler("dc", dc_command))
 application.add_handler(CommandHandler("wtour", enter_safari))
