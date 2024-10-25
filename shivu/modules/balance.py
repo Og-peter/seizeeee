@@ -274,74 +274,82 @@ async def add_tokens(update: Update, context: CallbackContext) -> None:
 
     # Check if the user is a sudo user
     if not await is_user_sudo(user_id):
-        await update.message.reply_text("You don't have permission to add tokens.")
+        await update.message.reply_text("🚫 **You don't have permission to add tokens.**")
         return
 
     # Check if the command includes the required arguments
     if len(context.args) != 2:
-        await update.message.reply_text("Invalid usage. Usage: /addt <user_id> <amount>")
+        await update.message.reply_text("❌ **Invalid usage.** Usage: `/addt <user_id> <amount>`")
         return
 
-    target_user_id = int(context.args[0])
-    amount = int(context.args[1])
+    try:
+        target_user_id = int(context.args[0])
+        amount = int(context.args[1])
+    except ValueError:
+        await update.message.reply_text("🚫 **Invalid input. Please provide valid numbers.**")
+        return
 
     # Find the target user
     target_user = await user_collection.find_one({'id': target_user_id})
     if not target_user:
-        await update.message.reply_text("User not found.")
+        await update.message.reply_text("🚫 **User not found.**")
         return
 
     # Update the balance by adding tokens
     new_balance = target_user.get('balance', 0) + amount
     await user_collection.update_one({'id': target_user_id}, {'$set': {'balance': new_balance}})
-    await update.message.reply_text(f"Added {amount} tokens to user {target_user_id}. New balance: {new_balance}")
+    await update.message.reply_text(f"✅ **Added** `{amount}` **tokens to user** `{target_user_id}`. \n💰 **New balance:** `{new_balance}` tokens.")
 
 async def delete_tokens(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
 
     # Check if the user is a sudo user
     if not await is_user_sudo(user_id):
-        await update.message.reply_text("You don't have permission to delete tokens.")
+        await update.message.reply_text("🚫 **You don't have permission to delete tokens.**")
         return
 
     # Check if the command includes the required arguments
     if len(context.args) != 2:
-        await update.message.reply_text("Invalid usage. Usage: /delt <user_id> <amount>")
+        await update.message.reply_text("❌ **Invalid usage.** Usage: `/delt <user_id> <amount>`")
         return
 
-    target_user_id = int(context.args[0])
-    amount = int(context.args[1])
+    try:
+        target_user_id = int(context.args[0])
+        amount = int(context.args[1])
+    except ValueError:
+        await update.message.reply_text("🚫 **Invalid input. Please provide valid numbers.**")
+        return
 
     # Find the target user
     target_user = await user_collection.find_one({'id': target_user_id})
     if not target_user:
-        await update.message.reply_text("User not found.")
+        await update.message.reply_text("🚫 **User not found.**")
         return
 
     # Check if there are enough tokens to delete
     current_balance = target_user.get('balance', 0)
     if current_balance < amount:
-        await update.message.reply_text("Insufficient tokens to delete.")
+        await update.message.reply_text("❌ **Insufficient tokens to delete.**")
         return
 
     # Update the balance by deleting tokens
     new_balance = current_balance - amount
     await user_collection.update_one({'id': target_user_id}, {'$set': {'balance': new_balance}})
-    await update.message.reply_text(f"Deleted {amount} tokens from user {target_user_id}. New balance: {new_balance}")
+    await update.message.reply_text(f"✅ **Deleted** `{amount}` **tokens from user** `{target_user_id}`. \n💰 **New balance:** `{new_balance}` tokens.")
 
-application.add_handler(CommandHandler("addt", add_tokens, block=False))
-application.add_handler(CommandHandler("delt", delete_tokens, block=False))
-
-async def reset_tokens(update, context):
+async def reset_tokens(update: Update, context: CallbackContext) -> None:
     owner_id = 6402009857  # Replace with the actual owner's user ID
     # Check if the user invoking the command is the owner
     if update.effective_user.id != owner_id:
-        await update.message.reply_text("You don't have permission to perform this action.")
+        await update.message.reply_text("🚫 **You don't have permission to perform this action.**")
         return
+
     # Reset tokens for all users
     await user_collection.update_many({}, {'$set': {'balance': 10000}})
     
-    await update.message.reply_text("All user tokens have been reset to 10,000.")
-# Add a handler for the /reset_tokens command
+    await update.message.reply_text("🔄 **All user tokens have been reset to** `10,000` **tokens.**")
+
+# Add handlers for the commands
+application.add_handler(CommandHandler("addt", add_tokens, block=False))
+application.add_handler(CommandHandler("delt", delete_tokens, block=False))
 application.add_handler(CommandHandler("reset", reset_tokens, block=False))
-  
