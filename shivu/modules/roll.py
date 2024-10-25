@@ -91,14 +91,14 @@ async def dice(_, message: t.Message):
 
             img_urls = [character['img_url'] for character in unique_characters]
             captions = [
-                f"🎉🌟 *JACKPOT!* 🌟🎉\n"
-                f"🎲 You rolled a *{value}*, {mention}!\n\n"
-                f"🎯 **Legendary Character Unlocked!** 🎯\n"
-                f"🧩 **Name:** {character['name']}\n"
-                f"✨ **Rarity:** {character['rarity']}\n"
-                f"📺 **Anime:** {character['anime']}\n\n"
-                f"🚀 **Good luck on your next roll!** 🚀\n"
-                f"━━━━━━━━━━━━━━━\n"
+                       f"🎉🌟 𝗝𝗔𝗖𝗞𝗣𝗢𝗧! 🌟🎉\n"
+                       f"🎲 𝗬𝗼𝘂 𝗿𝗼𝗹𝗹𝗲𝗱 𝗮 *{value}*, {mention}!\n\n"
+                       f"🎯 **𝗟𝗲𝗴𝗲𝗻𝗱𝗮𝗿𝘆 𝗖𝗵𝗮𝗿𝗮𝗰𝘁𝗲𝗿 𝗨𝗻𝗹𝗼𝗰𝗸𝗲𝗱!** 🎯\n"
+                       f"🧩 **𝗡𝗮𝗺𝗲:** {character['name']}\n"
+                       f"✨ **𝗥𝗮𝗿𝗶𝘁𝘆:** {character['rarity']}\n"
+                       f"📺 **𝗔𝗻𝗶𝗺𝗲:** {character['anime']}\n\n"
+                       f"🚀 **𝗚𝗼𝗼𝗱 𝗹𝘂𝗰𝗸 𝗼𝗻 𝘆𝗼𝘂𝗿 𝗻𝗲𝘅𝘁 𝗿𝗼𝗹𝗹!** 🚀\n"
+                       f"━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                 for character in unique_characters
             ]
             for img_url, caption in zip(img_urls, captions):
