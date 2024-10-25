@@ -23,30 +23,39 @@ ban_user_ids = {5553813115}
 logs_group_id = -1001992198513
 logs = {logs_group_id}
 async def send_start_button(chat_id):
-    await app.send_message(chat_id, "You need to register first by starting the bot in dm.")
-    
+    await app.send_message(chat_id, "🚀 You need to register first by starting the bot in DM. Type `/start` to begin your journey!")
+
 @app.on_message(filters.command(["sinv", "balance", "bal", "wealth"]))
 async def check_balance(_, message: Message):
     user_id = message.from_user.id
     replied_user_id = None
-    
+
     if message.reply_to_message:
         replied_user_id = message.reply_to_message.from_user.id
-    
+
     # Check if the command was used as a reply
     if replied_user_id:
         user_id = replied_user_id
-    
+
     # Check if the user is registered
     user_data = await user_collection.find_one({'id': user_id})
     if not user_data:
         await send_start_button(message.chat.id)
         return
+
     balance = user_data.get('balance', 0)
     formatted_balance = "{:,.0f}".format(balance)
     first_name = user_data.get('first_name', 'User')
+
+    # Prepare an advanced message with formatting
+    balance_message = (
+        f"💰 **{first_name}'s Wealth:**\n"
+        f"✨ Total Balance: ₩`{formatted_balance}`\n\n"
+        f"📈 Keep growing your wealth! Use `/help` for more commands."
+    )
+    
     # Reply to the user with their balance
-    await message.reply_text(f"{first_name}'s Wealth: ₩`{formatted_balance}`[.](https://telegra.ph/file/af20fd1f2bed03d2bc438.jpg)")
+    await message.reply_text(balance_message, parse_mode='Markdown')
     
 async def pay(update, context):
     sender_id = update.effective_user.id
