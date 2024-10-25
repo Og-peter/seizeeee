@@ -147,29 +147,35 @@ async def confirm_callback(update: Update, context: CallbackContext):
     action = query_data[0]
     user_id = int(query_data[1])
     
+    # Verify user authorization
     if query.from_user.id != user_id:
-        await query.answer("You are not authorized to use this button.", show_alert=True)
+        await query.answer("🚫 You are not authorized to use this button.", show_alert=True)
         return
     
     if action == 'confirm_buy_pass':
         user_data = await get_user_data(user_id)
         if user_data.get('pass'):
-            await query.answer("You already have a membership pass.", show_alert=True)
+            await query.answer("✅ You already have a membership pass.", show_alert=True)
             return
         
         user_data['tokens'] -= 30000
         user_data['pass'] = True
         await user_collection.update_one({'id': user_id}, {'$set': {'tokens': user_data['tokens'], 'pass': True}})
         
-        await query.message.edit_text("Pass successfully purchased. Enjoy your new benefits!")
+        await query.message.edit_text(
+            "🎉 **Pass successfully purchased!**\n"
+            "✨ Enjoy your new benefits and exclusive features! 🌟",
+            parse_mode='Markdown'
+        )
     
     elif action == 'cancel_buy_pass':
-        await query.message.edit_text("Purchase canceled.")
-    
+        await query.message.edit_text("❌ **Purchase canceled.**\n\n"
+                                       "If you change your mind, feel free to try again!")
+
     elif action == 'confirm_claim_free_pass':
         user_data = await get_user_data(user_id)
         if user_data.get('pass'):
-            await query.answer("You already have a membership pass.", show_alert=True)
+            await query.answer("✅ You already have a membership pass.", show_alert=True)
             return
         
         user_data['pass'] = True
@@ -183,10 +189,15 @@ async def confirm_callback(update: Update, context: CallbackContext):
         
         await user_collection.update_one({'id': user_id}, {'$set': user_data})
         
-        await query.message.edit_text("Free pass successfully claimed. Enjoy your new benefits!")
+        await query.message.edit_text(
+            "🎁 **Free pass successfully claimed!**\n"
+            "🌈 Welcome to a world of exclusive benefits! Enjoy! 🎊",
+            parse_mode='Markdown'
+        )
     
     elif action == 'cancel_claim_free_pass':
-        await query.message.edit_text("Claim canceled.")
+        await query.message.edit_text("❌ **Claim canceled.**\n"
+                                       "If you wish to claim your free pass later, just let me know!")
 
 async def claim_daily_cmd(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
