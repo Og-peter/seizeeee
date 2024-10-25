@@ -1,3 +1,4 @@
+import asyncio
 import random
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -18,10 +19,7 @@ async def notify_sudo_users(application: Application):
         except Exception as e:
             print(f"Failed to send restart notification to user {user_id}: {e}")
 
-# Define the setup function to notify sudo users when bot starts
-async def setup(application: Application):
-    await notify_sudo_users(application)
-
+# Define the start function
 async def start(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
     first_name = update.effective_user.first_name
@@ -92,5 +90,13 @@ async def start(update: Update, context: CallbackContext) -> None:
 start_handler = CommandHandler('start', start, block=False)
 application.add_handler(start_handler)
 
-# Run the application with setup to notify sudo users on startup
-application.run_polling(allowed_updates=Update.ALL_TYPES, setup=setup)
+# Run the application and notify sudo users asynchronously
+async def main():
+    await application.initialize()
+    await application.start()
+    asyncio.create_task(notify_sudo_users(application))
+    await application.updater.start_polling()
+    await application.idle()
+
+if __name__ == '__main__':
+    asyncio.run(main())
