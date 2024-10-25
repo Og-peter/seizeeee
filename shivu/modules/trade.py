@@ -11,11 +11,13 @@ async def trade(client, message):
     sender_id = message.from_user.id
 
     if await has_ongoing_transaction(sender_id):
-        await message.reply_text("You already have ongoing trade or gift transactions. Please complete them or use `/reset` to cancel.")
+        await message.reply_text(
+            "🚧 **Active Trade Detected!**\n\n"
+            "You’re already engaged in a trade or gift exchange. Please complete it first or use **`/reset`** to clear all pending actions and start fresh."
+        )
         return
 
     await start_trade(sender_id, message)
-
 # Command to initiate a gift
 @app.on_message(filters.command("gift"))
 async def gift(client, message):
