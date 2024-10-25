@@ -242,25 +242,30 @@ async def on_cancel_trade_callback_query(client, callback_query):
 @app.on_callback_query(filters.create(lambda _, __, query: query.data.lower() in ["confirm_gift", "cancel_gift"]))
 async def on_callback_query(client, callback_query):
     sender_id = callback_query.from_user.id
+    trade_found = False
 
     for (_sender_id, receiver_id), gift in pending_gifts.items():
         if _sender_id == sender_id:
+            trade_found = True
             break
-    else:
-        await callback_query.answer("This is not for you!", show_alert=True)
+
+    if not trade_found:
+        await callback_query.answer("🚫 This gift does not belong to you!", show_alert=True)
         return
 
     if callback_query.data.lower() == "confirm_gift":
         sender = await user_collection.find_one({'id': sender_id})
-        receiver_id = receiver_id
+        receiver_id = receiver_id  # Ensure receiver_id is correctly referenced
         receiver_username = gift['receiver_username']
         receiver_first_name = gift['receiver_first_name']
-
         sender_character = gift['character']
+
+        # Update sender's characters
         sender_characters = sender['characters']
         sender_characters.remove(sender_character)
         await user_collection.update_one({'id': sender_id}, {'$set': {'characters': sender_characters}})
 
+        # Add character to receiver's collection or create a new record
         receiver = await user_collection.find_one({'id': receiver_id})
         if receiver:
             await user_collection.update_one({'id': receiver_id}, {'$push': {'characters': sender_character}})
@@ -282,24 +287,26 @@ async def on_callback_query(client, callback_query):
         anime_name = sender_character.get('anime', 'Unknown')
         img_url = sender_character.get('img_url', '')
 
+        # Gift confirmation message
         message_text = (
-            f"🍁 **OwO ᴛʜᴇ ɢɪꜰᴛ ɪꜱ ᴄᴏᴍᴘʟᴇᴛᴇᴅ! [{sender_first_name}](tg://user?id={sender_id})**\n\n"
-            f"ℹ **You got:**\n"
+            f"🎉 **✨ Gift Completed! ✨** 🎉\n\n"
+            f"🍃 **Congratulations, [{sender_first_name}](tg://user?id={sender_id})!**\n\n"
+            f"📜 **You received:**\n"
             f" **Name:** `{character_name}`\n"
-            f" **Rarity:** `{rarity}`\n"
+            f" **Rarity:** {rarity_emoji} `{rarity}`\n"
             f" **Anime:** `{anime_name}`"
         )
 
         # Send message to receiver's PM
         await app.send_photo(receiver_id, photo=img_url, caption=message_text)
 
-        await callback_query.message.edit_text("🎁 **Gift is completed!** 🎁\n\n" + message_text)
+        await callback_query.message.edit_text("🎁 **Gift Successfully Delivered!** 🎁\n\n" + message_text)
 
     elif callback_query.data.lower() == "cancel_gift":
         del pending_gifts[(sender_id, receiver_id)]
-        await callback_query.message.edit_text("❌❌ **Successfully Canceled Gift** ❌❌")
+        await callback_query.message.edit_text("❌ **Gift Canceled Successfully!** ❌\n\n*You can always gift again!*")
 
-    await callback_query.answer()
+    await callback_query.answer("✅ Action Completed!")
 
 # Function to check if a user has an ongoing transaction (trade or gift)
 async def has_ongoing_transaction(user_id):
