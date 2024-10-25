@@ -326,47 +326,52 @@ async def engage(callback_query):
         try:
             data = callback_query.data.split("_")
             waifu_id = data[1]
-            user_id = int(data[2])
+            expected_user_id = int(data[2])  # Renamed for clarity
 
-            if user_id != callback_query.from_user.id:
-                await callback_query.answer("This hunt does not belong to you.", show_alert=True)
+            # Check if the user is allowed to engage
+            if expected_user_id != user_id:
+                await callback_query.answer("🚫 This hunt does not belong to you.", show_alert=True)
                 return
 
             if user_id not in safari_users:
-                await callback_query.answer("You are not in the safari zone!", show_alert=True)
+                await callback_query.answer("🛑 You are not in the **safari zone**!", show_alert=True)
                 return
 
             if waifu_id not in sessions:
-                await callback_query.answer("The wild character has fled!", show_alert=True)
+                await callback_query.answer("💨 The wild character has fled!", show_alert=True)
                 return
 
+            # Clear any previous engagement for the user
             if user_id in current_engagements:
                 del current_engagements[user_id]
 
+            # Proceed if the user is in a valid hunt
             if user_id in current_hunts and current_hunts[user_id] == waifu_id:
                 waifu = sessions[waifu_id]
                 waifu_name = waifu['name']
                 waifu_img_url = waifu['img_url']
 
-                text = f"Choose your action:"
+                # Construct message and buttons for the user to engage
+                text = f"⚔️ **Engage with {waifu_name}**!\nChoose your action:"
                 keyboard = InlineKeyboardMarkup(
                     [
                         [
-                            InlineKeyboardButton("Throw Ice", callback_data=f"throw_{waifu_id}_{user_id}"),
-                            InlineKeyboardButton("Run", callback_data=f"run_{waifu_id}_{user_id}")
+                            InlineKeyboardButton("❄️ Throw Ice", callback_data=f"throw_{waifu_id}_{user_id}"),
+                            InlineKeyboardButton("🏃‍♂️ Run", callback_data=f"run_{waifu_id}_{user_id}")
                         ]
                     ]
                 )
-                await callback_query.message.edit_caption(caption=text, reply_markup=keyboard)
-                await callback_query.answer()
+                await callback_query.message.edit_caption(caption=text, reply_markup=keyboard, parse_mode="Markdown")
+                await callback_query.answer()  # Acknowledge the action
 
-                current_engagements[user_id] = waifu_id
+                current_engagements[user_id] = waifu_id  # Set engagement for the user
 
             else:
-                await callback_query.answer("The wild character has fled!", show_alert=True)
+                await callback_query.answer("💨 The wild character has fled!", show_alert=True)
 
         except Exception as e:
-            print(f"Error handling engage: {e}")
+            logger.error(f"Error handling engage: {e}")
+            await callback_query.answer("⚠️ An error occurred while trying to engage. Please try again later.", show_alert=True)
 
 async def hunt_callback_query(update: Update, context: CallbackContext):
     callback_query = update.callback_query
