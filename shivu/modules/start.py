@@ -9,7 +9,7 @@ from shivu import user_collection, refeer_collection
 # Define the /start command handler
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
-    first_name = escape(update.effective_user.first_name)  # escaped in HTML context
+    first_name = escape(update.effective_user.first_name)
     username = update.effective_user.username or "Unknown"
     args = context.args
     referring_user_id = None
@@ -33,9 +33,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 except Exception as e:
                     print(f"Failed to send referral message: {e}")
 
-        await context.bot.send_message(chat_id=GROUP_ID, 
-                                       text=f"We Got New User \n#NEWUSER\n User: <a href='tg://user?id={user_id}'>{first_name}</a>", 
-                                       parse_mode='HTML')
+        await context.bot.send_message(
+            chat_id=GROUP_ID, 
+            text=f"We Got New User \n#NEWUSER\n User: <a href='tg://user?id={user_id}'>{first_name}</a>", 
+            parse_mode='HTML'
+        )
     else:
         # Update the user's name or username if changed
         if user_data['first_name'] != first_name or user_data['username'] != username:
@@ -77,7 +79,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 # Define the function to notify bot restart
 async def notify_restart(context: ContextTypes.DEFAULT_TYPE):
     # Notify SUDO users only
-    for sudo_user in sudo_users:  # Use the correct 'sudo_users' variable
+    for sudo_user in sudo_users:
         try:
             await context.bot.send_message(chat_id=sudo_user, text="🚀 Bot has restarted successfully!")
         except Exception as e:
@@ -89,5 +91,5 @@ start_handler = CommandHandler('start', start)
 # Register the handler before adding to the application
 application.add_handler(start_handler)
 
-# Set up the JobQueue for scheduled tasks
-application.job_queue.run_once(notify_restart, 0)  # Notify immediately after restart
+# Set up the JobQueue for scheduled tasks to notify restart immediately
+application.job_queue.run_once(notify_restart, 0)
