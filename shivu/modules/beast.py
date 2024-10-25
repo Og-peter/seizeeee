@@ -290,7 +290,22 @@ async def confirm_setbeast_callback(_, callback_query: t.CallbackQuery):
     user_id = callback_query.from_user.id
 
     await user_collection.update_one({'id': user_id}, {'$set': {'main_beast': beast_id}})
-    await callback_query.message.edit_text(f"Your main beast has been set successfully!")
+    
+    # Fetch the beast data for a more personalized message
+    beast_data = next((beast for beast in await get_user_data(user_id)['beasts'] if beast['id'] == beast_id), None)
+
+    if beast_data:
+        await callback_query.message.edit_text(
+            f"🌟 **Congratulations!** 🌟\n\n"
+            f"You have successfully set **{beast_data['name']}** (ID: `{beast_id}`) as your main beast! 🎉\n\n"
+            f"🛡️ Use this powerful beast in your adventures ahead! 🐉\n\n"
+            f"🔮 **Beast Details:**\n"
+            f"   - **Race:** {beast_data['rarity']}\n"
+            f"   - **Power:** `{beast_data['power']}`\n\n"
+            f"Continue to explore and enhance your beast collection!"
+        )
+    else:
+        await callback_query.message.edit_text("⚠️ Something went wrong while fetching your beast's details.")
 
 @bot.on_message(filters.command(["btop"]))
 async def top_beasts(_, message: Message):
