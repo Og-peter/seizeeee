@@ -132,7 +132,7 @@ async def increase_reputation(user_id, points=1):
 @app.on_message(filters.command(["info"]))
 async def info_command(client, message):
     if str(message.from_user.id) not in SPECIALGRADE:
-        await message.reply_text("🚫 <b>This command is only available to Special Grade sorcerers!</b>")
+        await message.reply_text("🚫 <b>This command is exclusive to Special Grade Sorcerers!</b>")
         return
 
     user_id = None
@@ -142,7 +142,7 @@ async def info_command(client, message):
         user_id = int(message.command[1])
 
     if user_id:
-        await message.reply_text("🔍 <i>Fetching user information...</i>")
+        await message.reply_text("🔍 <i>Retrieving user information...</i>")
         await asyncio.sleep(1)  # Adding delay for cool effect
         user_info, user = await get_user_info(user_id)
 
@@ -151,16 +151,26 @@ async def info_command(client, message):
                 [InlineKeyboardButton("🧪 Delete Harem", callback_data=f"delete_harem_{user_id}")]
             ])
             photo_file_id = None
+            
             async for photo in client.get_chat_photos(user_id, limit=1):
                 photo_file_id = photo.file_id
+                
+            caption = (
+                f"📊 <b>User Info:</b>\n\n"
+                f"🪪 <b>User ID:</b> <code>{user_id}</code>\n"
+                f"👤 <b>Name:</b> {user.get('first_name', 'Unknown')} {user.get('last_name', '')}\n"
+                f"📈 <b>Waifu Count:</b> {len(user.get('characters', []))} / {HAREM_SIZE_LIMIT}\n"
+                f"💼 <b>Status:</b> {'👑 Harem Master' if len(user.get('characters', [])) >= HAREM_SIZE_LIMIT else '✨ Keep Collecting!' }\n"
+            )
+            
             if photo_file_id:
-                await message.reply_photo(photo_file_id, caption=f"📊 <b>User Info</b>\n\n{user_info}", reply_markup=keyboard)
+                await message.reply_photo(photo_file_id, caption=caption, reply_markup=keyboard)
             else:
-                await message.reply_text(f"📊 <b>User Info</b>\n\n{user_info}", reply_markup=keyboard)
+                await message.reply_text(caption, reply_markup=keyboard)
         else:
             await message.reply_text(user_info)
     else:
-        await message.reply_text("⚠️ <b>Please specify a user ID or reply to a user's message to get their info.</b>")
+        await message.reply_text("⚠️ <b>Please specify a user ID or reply to a user's message to fetch their info.</b>")
 
 
 @app.on_callback_query(filters.regex(r'^delete_harem_'))
