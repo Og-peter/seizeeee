@@ -100,77 +100,75 @@ gem_sets = {
         "image_url": "https://files.catbox.moe/cwpmbf.jpg",
         "caption": "𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐟𝐨𝐮𝐧𝐝 𝐚𝐧 [ `𝐅` ] 𝐑𝐚𝐧𝐤 𝐆𝐨𝐛𝐥𝐢𝐧 𝐃𝐮𝐧𝐠𝐞𝐨𝐧.",
         "win_chance": 80,
-        "loss_message": "You lost💀.\nAnd Goblin Fucked your Beast💀."
+        "loss_message": "<b>❌ You lost!</b> 💀\nAnd the Goblin... *fouled your Beast* 💀."
     },
     "2": {
         "image_url": "https://te.legra.ph/file/400b73f9a6e48a227c7e5.jpg",
-        "caption": "𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐟𝐨𝐮𝐧𝐝 𝐚𝐧 [ `𝐄` ] 𝐑𝐚𝐧𝐤 𝐆𝐨𝐛𝐥𝐢𝐧 𝐃𝐮𝐧𝐠𝐞𝐨𝐧",
+        "caption": "𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐟𝐨𝐮𝐧𝐝 𝐚𝐧 [ `𝐄` ] 𝐑𝐚𝐧𝐤 𝐆𝐨𝐛𝐥𝐢𝐧 𝐃𝐮𝐧𝐠𝐞𝐨𝐧.",
         "win_chance": 75,
-        "loss_message": "You lost💀.\nAnd Goblin Fucked your Beast💀."
+        "loss_message": "<b>❌ You lost!</b> 💀\nAnd the Goblin... *fouled your Beast* 💀."
     },
     "3": {
         "image_url": "https://te.legra.ph/file/cc4b24dc0f54bc79ea998.jpg",
         "caption": "𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐟𝐨𝐮𝐧𝐝 𝐚𝐧 [ `𝐃` ] 𝐑𝐚𝐧𝐤 𝐖𝐨𝐥𝐟 𝐃𝐮𝐧𝐠𝐞𝐨𝐧.",
         "win_chance": 65,
-        "loss_message": "You lost💀.\nAnd Wolf Fucked your Beast💀."
+        "loss_message": "<b>❌ You lost!</b> 💀\nAnd the Wolf... *fouled your Beast* 💀."
     },
     "4": {
         "image_url": "https://te.legra.ph/file/59bdd9842b4c98b75e5d2.jpg",
         "caption": "𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐟𝐨𝐮𝐧𝐝 𝐚𝐧 [ `𝐂` ] 𝐑𝐚𝐧𝐤 𝐒𝐧𝐨𝐰 𝐖𝐨𝐥𝐟 𝐃𝐮𝐧𝐠𝐞𝐨𝐧.",
         "win_chance": 45,
-        "loss_message": "You lost💀.\nAnd Snow Wolf Fucked your Beast💀."
+        "loss_message": "<b>❌ You lost!</b> 💀\nAnd the Snow Wolf... *fouled your Beast* 💀."
     },
     "5": {
         "image_url": "https://te.legra.ph/file/31ca2402a9309c3810a6b.jpg",
         "caption": "𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐟𝐨𝐮𝐧𝐝 𝐚𝐧 [ `𝐀` ] 𝐑𝐚𝐧𝐤 𝐑𝐞𝐝 𝐎𝐫𝐜 𝐃𝐮𝐧𝐠𝐞𝐨𝐧.",
         "win_chance": 5,
-        "loss_message": "You lost💀.\nAnd Orc Fucked your Beast💀."
+        "loss_message": "<b>❌ You lost!</b> 💀\nAnd the Orc... *fouled your Beast* 💀."
     },
     "6": {
         "image_url": "https://te.legra.ph/file/44df7f9ae15f9d543fec4.jpg",
-        "caption": "𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐟𝐨𝐮𝐧𝐝 𝐚𝐧 [ `𝐀` ] 𝐑𝐚𝐧𝐤 𝐋𝐢𝐜𝐡 𝐤𝐢𝐧𝐠 𝐃𝐮𝐧𝐠𝐞𝐨𝐧",
+        "caption": "𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐟𝐨𝐮𝐧𝐝 𝐚𝐧 [ `𝐀` ] 𝐑𝐚𝐧𝐤 𝐋𝐢𝐜𝐡 𝐤𝐢𝐧𝐠 𝐃𝐮𝐧𝐠𝐞𝐨𝐧.",
         "win_chance": 5,
-        "loss_message": "You lost💀.\nAnd Undead Fucked your Beast💀."
+        "loss_message": "<b>❌ You lost!</b> 💀\nAnd the Undead... *fouled your Beast* 💀."
     },
-   # ... other existing gem sets ...
     "7": {
         "image_url": "https://files.catbox.moe/5k4qge.jpg",
         "caption": "𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐟𝐨𝐮𝐧𝐝 𝐚𝐧 [ `𝐒` ] 𝐑𝐚𝐧𝐤 𝐄𝐦𝐞𝐫𝐚𝐥𝐝 𝐃𝐮𝐧𝐠𝐞𝐨𝐧.",
         "win_chance": 40,
-        "loss_message": "You lost💀.\nAnd Emerald Monster Fucked your Beast💀."
+        "loss_message": "<b>❌ You lost!</b> 💀\nAnd the Emerald Monster... *fouled your Beast* 💀."
     },
     "8": {
         "image_url": "https://files.catbox.moe/4wnk20.jpg",
         "caption": "𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐟𝐨𝐮𝐧𝐝 𝐚𝐧 [ `𝐒+` ] 𝐑𝐚𝐧𝐤 𝐏𝐥𝐚𝐭𝐢𝐧𝐮𝐦 𝐃𝐮𝐧𝐠𝐞𝐨𝐧.",
         "win_chance": 25,
-        "loss_message": "You lost💀.\nAnd Platinum Monster Fucked your Beast💀."
+        "loss_message": "<b>❌ You lost!</b> 💀\nAnd the Platinum Monster... *fouled your Beast* 💀."
     },
     "9": {
         "image_url": "https://files.catbox.moe/ghc26e.jpg",
         "caption": "𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐟𝐨𝐮𝐧𝐝 𝐚𝐧 [ `𝐊` ] 𝐑𝐚𝐧𝐤 𝐑𝐮𝐛𝐲 𝐃𝐮𝐧𝐠𝐞𝐨𝐧.",
         "win_chance": 35,
-        "loss_message": "You lost💀.\nAnd Ruby Monster Fucked your Beast💀."
+        "loss_message": "<b>❌ You lost!</b> 💀\nAnd the Ruby Monster... *fouled your Beast* 💀."
     },
     "10": {
         "image_url": "https://files.catbox.moe/490776.jpg",
         "caption": "𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐟𝐨𝐮𝐧𝐝 𝐚𝐧 [ `𝐊+` ] 𝐑𝐚𝐧𝐤 𝐒𝐚𝐩𝐩𝐡𝐢𝐫𝐞 𝐃𝐮𝐧𝐠𝐞𝐨𝐧.",
         "win_chance": 20,
-        "loss_message": "You lost💀.\nAnd Sapphire Monster Fucked your Beast💀."
+        "loss_message": "<b>❌ You lost!</b> 💀\nAnd the Sapphire Monster... *fouled your Beast* 💀."
     },
     "11": {
         "image_url": "https://files.catbox.moe/2sazgc.jpg",
         "caption": "𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐟𝐨𝐮𝐧𝐝 𝐚𝐧 [ `𝐊++` ] 𝐑𝐚𝐧𝐤 𝐀𝐦𝐞𝐭𝐡𝐲𝐬𝐭 𝐃𝐮𝐧𝐠𝐞𝐨𝐧.",
         "win_chance": 15,
-        "loss_message": "You lost💀.\nAnd Amethyst Monster Fucked your Beast💀."
+        "loss_message": "<b>❌ You lost!</b> 💀\nAnd the Amethyst Monster... *fouled your Beast* 💀."
     },
     "12": {
         "image_url": "https://files.catbox.moe/1akk7p.jpg",
         "caption": "𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐟𝐨𝐮𝐧𝐝 𝐚𝐧 [ `𝐊+++` ] 𝐑𝐚𝐧𝐤 𝐎𝐛𝐬𝐢𝐝𝐢𝐚𝐧 𝐃𝐮𝐧𝐠𝐞𝐨𝐧.",
         "win_chance": 10,
-        "loss_message": "You lost💀.\nAnd Obsidian Monster Fucked your Beast💀."
+        "loss_message": "<b>❌ You lost!</b> 💀\nAnd the Obsidian Monster... *fouled your Beast* 💀."
     }
 }
-
 async def send_log(log_message):
     await app.send_message(LOG_GROUP_CHAT_ID, log_message)
 
@@ -274,7 +272,7 @@ async def get_gem_command(client, message):
 
         # Reply to the user with an error message
         await message.reply_text("An error occurred while processing your request. Please try again later.")
-
+        
 # Set the cooldown duration for the shunt command (in seconds)
 cooldown_duration_shunt = 60  # 1 minute
         
@@ -311,9 +309,14 @@ async def award_gems(user_id, message, gem_won):
     await user_collection.update_one({'id': user_id}, {'$set': {'gems': gem_inventory}})
     
     # Send a message listing the awarded gems
-    message_text = "𝐘𝐨𝐮 𝐰𝐨𝐧 𝐭𝐡𝐞 𝐟𝐢𝐠𝐡𝐭! 𝐘𝐨𝐮 𝐠𝐨𝐭 𝐭𝐡𝐞𝐬𝐞 𝐢𝐭𝐞𝐦:\n\n"
+    message_text = "🎉 𝐂𝐨𝐧𝐠𝐫𝐚𝐭𝐮𝐥𝐚𝐭𝐢𝐨𝐧𝐬! 𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐜𝐨𝐧𝐪𝐮𝐞𝐫𝐞𝐝 𝐭𝐡𝐞 𝐟𝐢𝐠𝐡𝐭! 🏆\n\n"
+    message_text += "🌟 𝐘𝐨𝐮 𝐠𝐨𝐭 𝐭𝐡𝐞𝐬𝐞 𝐠𝐞𝐦𝐬:\n\n"
+    
     for gem, quantity in gems_to_award.items():
-        message_text += f"<b>{gem}</b>: {quantity}\n"
+        message_text += f"<b>✨ {gem}</b>: <b>{quantity}</b>\n"
+    
+    message_text += "\n💎 𝐄𝐧𝐣𝐨𝐲 𝐲𝐨𝐮𝐫 𝐛𝐨𝐨𝐬𝐭 𝐨𝐟 𝐠𝐞𝐦𝐬! 💎"
+    
     await message.reply_text(message_text)
    
 owner_id = 6402009857
