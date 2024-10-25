@@ -12,8 +12,11 @@ LOGS_CHANNEL_ID = -1002446048543  # Replace with your logs channel's chat ID
 async def get_unique_characters(receiver_id, target_rarities=['🟡 Legendary', '💮 Exclusive']):
     try:
         pipeline = [
-            {'$match': {'rarity': {'$in': target_rarities}, 'id': {'$nin': [char['id'] for char in (await user_collection.find_one({'id': receiver_id}, {'characters': 1}))['characters']]}}},
-            {'$sample': {'size': 1}}  # Adjust Num
+            {'$match': {
+                'rarity': {'$in': target_rarities}, 
+                'id': {'$nin': [char['id'] for char in (await user_collection.find_one({'id': receiver_id}, {'characters': 1}))['characters']]}
+            }},
+            {'$sample': {'size': 1}}  # Adjust the number of characters sampled
         ]
         cursor = collection.aggregate(pipeline)
         characters = await cursor.to_list(length=None)
@@ -26,13 +29,13 @@ async def get_unique_characters(receiver_id, target_rarities=['🟡 Legendary', 
 cooldowns = {}
 
 @bot.on_message(filters.command(["dice", "roll"]))
-async def dice(_: bot, message: t.Message):
+async def dice(_, message: t.Message):
     chat_id = message.chat.id
     mention = message.from_user.mention
     user_id = message.from_user.id
 
     # Send logs notification
-    log_message = f"🎲 Dice/Roll Command Used\n\n👤 User: {mention} (ID: {user_id})\n💬 Chat ID: {chat_id}"
+    log_message = f"🎲 *Dice/Roll Command Used*\n\n👤 User: {mention} (ID: {user_id})\n💬 Chat ID: {chat_id}"
     await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message)
 
     # Check if the user is in cooldown
@@ -59,10 +62,10 @@ async def dice(_: bot, message: t.Message):
             await user_collection.update_one({'id': receiver_id}, {'$push': {'characters': {'$each': unique_characters}}})
             img_urls = [character['img_url'] for character in unique_characters]
             captions = [
-                f"🏮 🎉 Yo {mention}, you hit the JACKPOT! 🎉 🏮\n\n"
-                f"🧩 Name: {character['name']}\n"
-                f"💠 Rarity: {character['rarity']}\n"
-                f"🏖️ Anime: {character['anime']}\n\n"
+                f"🏮 🎉 Yo {mention}, you hit the *JACKPOT*! 🎉 🏮\n\n"
+                f"🧩 **Name:** {character['name']}\n"
+                f"💠 **Rarity:** {character['rarity']}\n"
+                f"🏖️ **Anime:** {character['anime']}\n\n"
                 f"━─━────༺༻────━─━\n"
                 for character in unique_characters
             ]
@@ -88,12 +91,12 @@ async def dice(_: bot, message: t.Message):
 
             img_urls = [character['img_url'] for character in unique_characters]
             captions = [
-                f"🎊✨ JACKPOT! ✨🎊\n"
-                f"🎲 You rolled a {value}, {mention}!\n\n"
+                f"🎊✨ *JACKPOT!* ✨🎊\n"
+                f"🎲 You rolled a *{value}*, {mention}!\n\n"
                 f"🎯 **Legendary Character Unlocked!** 🎯\n"
-                f"🧩 Name: {character['name']}\n"
-                f"💠 Rarity: {character['rarity']}\n"
-                f"🏖️ Anime: {character['anime']}\n\n"
+                f"🧩 **Name:** {character['name']}\n"
+                f"💠 **Rarity:** {character['rarity']}\n"
+                f"🏖️ **Anime:** {character['anime']}\n\n"
                 f"🚀 **Good luck on your next roll!** 🚀\n"
                 f"━─━────༺༻────━─━\n"
                 for character in unique_characters
@@ -107,7 +110,7 @@ async def dice(_: bot, message: t.Message):
                 animation="https://files.catbox.moe/p62bql.mp4",  # Medium roll gif
                 caption=(
                     f"🎯 **Nice roll, {mention}!** 🎯\n\n"
-                    f"You rolled a {value}, not bad at all! 🍀 Keep trying for the jackpot!\n\n"
+                    f"You rolled a *{value}*, not bad at all! 🍀 Keep trying for the jackpot!\n\n"
                     f"🌟 **Better luck next time!** 🌟"
                 ),
                 quote=True
@@ -119,8 +122,8 @@ async def dice(_: bot, message: t.Message):
                 animation="https://files.catbox.moe/hn08wr.mp4",  # Low roll gif
                 caption=(
                     f"💔 **Oops, {mention}.**\n\n"
-                    f"You rolled a {value}... 😢\n\n"
+                    f"You rolled a *{value}*... 😢\n\n"
                     f"Don't give up! Try again and aim for the stars! 🌠"
                 ),
                 quote=True
-            )
+                                       )
