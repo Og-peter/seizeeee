@@ -69,7 +69,7 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     character_message_links[chat_id] = correct_character['img_url']
 
     # Send the question with the character's image
-    question = f"<b>🏮 Guess the Anime Character! 🏮</b>\n"
+    question = f"<b>🏮 **Guess the Anime Character!** 🏮</b>\n"
     sent_message = await context.bot.send_photo(
         chat_id=chat_id,
         photo=correct_character['img_url'],
@@ -160,7 +160,7 @@ async def guess_text_handler(update: Update, context: CallbackContext):
             text=f"🎉 {user_mention} <b>guessed correctly!</b>\n\n"
                  f"🔑 The answer was: <b><u>{correct_answer}</u></b>\n"
                  f"🏅 You've earned <b>{tokens_earned} tokens!</b>\n"
-                 f"🔥 Your streak is now <b>{streak}</b>. {badges}\n",
+                 f"🔥 Your streak is now <b>{streak}</b>{badges}\n",
             parse_mode=ParseMode.HTML
         )
 
