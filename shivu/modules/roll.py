@@ -99,7 +99,7 @@ async def dice(_, message: t.Message):
                 f"📺 **𝗔𝗻𝗶𝗺𝗲:** {character['anime']}\n\n"
                 f"🚀 **𝗚𝗼𝗼𝗱 𝗹𝘂𝗰𝗸 𝗼𝗻 𝘆𝗼𝘂𝗿 𝗻𝗲𝘅𝘁 𝗿𝗼𝗹𝗹!** 🚀\n"
                 f"━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            for character in unique_characters
+                for character in unique_characters
             ]
             for img_url, caption in zip(img_urls, captions):
                 await message.reply_photo(photo=img_url, caption=caption)
