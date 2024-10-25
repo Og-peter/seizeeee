@@ -22,14 +22,12 @@ async def display_anime_list(update: Update, context: CallbackContext, page: int
         await update.message.reply_text(f"Database Error: {e}")
         return
     
-    # Sort anime alphabetically
     all_anime = sorted(all_anime)
-
     if not all_anime:
         await update.message.reply_text("No anime found.")
         return
 
-    # Group by the first letter of the anime
+    # Group anime by the first letter
     grouped_anime = {}
     for anime in all_anime:
         first_letter = anime[0].upper()
@@ -39,57 +37,48 @@ async def display_anime_list(update: Update, context: CallbackContext, page: int
 
     alphabet_list = list(grouped_anime.keys())
     total_pages = len(alphabet_list) // 10 + (len(alphabet_list) % 10 > 0)
+    page = max(0, min(page, total_pages - 1))  # Ensure valid page range
 
-    # Ensure valid page range
-    if page < 0 or page >= total_pages:
-        page = 0
-
-    # Create the keyboard with anime list by alphabet and navigation buttons
+    # Keyboard for letters with pagination
     keyboard = [
         [InlineKeyboardButton(f"{letter}", callback_data=f"animelist:{page}:{i+1}")]
         for i, letter in enumerate(alphabet_list[page * 10:(page + 1) * 10])
     ]
-
     keyboard.append([InlineKeyboardButton("🔍 Search", switch_inline_query_current_chat="")])
-
-    # Add navigation buttons
-    navigation_buttons = []
+    
+    # Navigation buttons
+    nav_buttons = []
     if page > 0:
-        navigation_buttons.append(InlineKeyboardButton("⬅️", callback_data=f"animelist:{page - 1}:0"))
+        nav_buttons.append(InlineKeyboardButton("⬅️", callback_data=f"animelist:{page - 1}:0"))
     if page < total_pages - 1:
-        navigation_buttons.append(InlineKeyboardButton("➡️", callback_data=f"animelist:{page + 1}:0"))
-
-    if navigation_buttons:
-        keyboard.append(navigation_buttons)
+        nav_buttons.append(InlineKeyboardButton("➡️", callback_data=f"animelist:{page + 1}:0"))
+    if nav_buttons:
+        keyboard.append(nav_buttons)
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    # Handle initial message or callback
     if update.message:
         await update.message.reply_text("Select a letter to view anime starting with that letter:", reply_markup=reply_markup)
     elif update.callback_query:
         await update.callback_query.edit_message_text("Select a letter to view anime starting with that letter:", reply_markup=reply_markup)
 
-# Callback to handle anime selection by alphabet and show characters of that anime
+# Callback for alphabet selection
 async def anime_list_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     data = query.data.split(":")
     page = int(data[1])
     index = int(data[2])
 
-    # If index is 0, go back to anime list
     if index == 0:
         await display_anime_list(update, context, page)
         return
 
     try:
-        # Fetch all anime
         all_anime = await collection.find({}).distinct('anime')
     except PyMongoError as e:
         await query.message.reply_text(f"Database Error: {e}")
         return
 
-    # Group by the first letter
     grouped_anime = {}
     all_anime = sorted(all_anime)
     for anime in all_anime:
@@ -99,7 +88,6 @@ async def anime_list_callback(update: Update, context: CallbackContext):
         grouped_anime[first_letter].append(anime)
 
     alphabet_list = list(grouped_anime.keys())
-
     if page * 10 + index - 1 >= len(alphabet_list):
         await query.answer("Invalid selection!")
         return
@@ -107,7 +95,6 @@ async def anime_list_callback(update: Update, context: CallbackContext):
     selected_letter = alphabet_list[page * 10 + index - 1]
     anime_in_letter = sorted(grouped_anime[selected_letter])
 
-    # Display anime starting with the selected letter
     message = f"<b>Anime starting with '{selected_letter}':</b>\n\n"
     for i, anime in enumerate(anime_in_letter):
         message += f"{i + 1}. {anime}\n"
@@ -119,15 +106,12 @@ async def anime_list_callback(update: Update, context: CallbackContext):
         [InlineKeyboardButton(f"{anime}", callback_data=f"anime_characters:{anime}")]
         for anime in anime_in_letter
     ]
-
-    # Provide a back button to return to the alphabet list
     keyboard.append([InlineKeyboardButton("🔙 Back", callback_data=f"animelist:{page}:0")])
-    
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await query.edit_message_text(message, parse_mode="HTML", reply_markup=reply_markup)
 
-# Callback to display characters of the selected anime
+# Callback to display characters
 async def anime_characters_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     anime = query.data.split(":")[1]
@@ -135,23 +119,18 @@ async def anime_characters_callback(update: Update, context: CallbackContext):
     try:
         # Fetch characters for the selected anime
         anime_data = await collection.find_one({'anime': anime}, {'characters': 1})
-        if not anime_data or 'characters' not in anime_data:
-            await query.answer(f"No characters found for this anime '{anime}'!")
+        characters_list = anime_data.get('characters', []) if anime_data else []
+
+        if not characters_list:
+            await query.answer(f"No characters found for the anime '{anime}'!")
             return
-        characters_list = sorted(anime_data['characters'])
+        characters_list = sorted(characters_list)
     except PyMongoError as e:
         await query.message.reply_text(f"Database Error: {e}")
         return
 
-    # Display characters from the selected anime
-    message = f"<b>Characters in '{anime}':</b>\n\n"
-    for character in characters_list:
-        message += f"{character}\n"
-
-    # Provide a back button to return to the anime list
-    keyboard = [
-        [InlineKeyboardButton("🔙 Back", callback_data=f"animelist:0:0")]
-    ]
+    message = f"<b>Characters in '{anime}':</b>\n\n" + "\n".join(characters_list)
+    keyboard = [[InlineKeyboardButton("🔙 Back", callback_data=f"animelist:0:0")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await query.edit_message_text(message, parse_mode="HTML", reply_markup=reply_markup)
@@ -163,26 +142,21 @@ async def inline_search(update: Update, context: CallbackContext):
         return
 
     try:
-        # Fetch matching characters based on query
         all_characters = await collection.find({'characters': {'$regex': query, '$options': 'i'}}).distinct('characters')
+        matching_characters = sorted(all_characters)
     except PyMongoError as e:
         await update.inline_query.answer([])
         return
-
-    matching_characters = sorted(all_characters)
 
     if not matching_characters:
         await update.inline_query.answer([])
         return
 
-    # Create inline search results
     results = [
         InlineQueryResultArticle(
             id=str(i),
-            title=f"{character}",
-            input_message_content=InputTextMessageContent(
-                f"{character}"
-            )
+            title=character,
+            input_message_content=InputTextMessageContent(character)
         )
         for i, character in enumerate(matching_characters[:50])
     ]
