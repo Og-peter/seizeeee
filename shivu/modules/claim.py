@@ -78,21 +78,21 @@ async def claim_waifu(_, message: t.Message):
             [InlineKeyboardButton("Join Group To Claim", url="https://t.me/dynamic_gangs")]
         ])
         return await message.reply_text(
-            "This command can only be used in Group 2. Please join the group using the button below.",
+            "⚠️ This command can only be used in Group 2. Please join the group using the button below.",
             reply_markup=keyboard,
             quote=True,
             disable_web_page_preview=True
         )
 
     if user_id == 7162166061:
-        return await message.reply_text(f"Sorry, you are banned from using this command.")
+        return await message.reply_text(f"🚫 Sorry, you are banned from using this command.")
 
     now = datetime.now()
     if user_id in last_claim_time:
         last_claim_date = last_claim_time[user_id]
         if last_claim_date.date() == now.date():
             next_claim_time = (last_claim_date + timedelta(days=1)).strftime("%H:%M:%S")
-            return await message.reply_text(f"Please wait until {next_claim_time} to claim your next waifu.", quote=True)
+            return await message.reply_text(f"⏳ Please wait until {next_claim_time} to claim your next waifu.", quote=True)
 
     last_claim_time[user_id] = now
 
@@ -112,12 +112,12 @@ async def claim_waifu(_, message: t.Message):
 
     # Send a log message about the claim
     log_message = (
-    f"📢 <b>Waifu Claimed!</b>\n\n"
-    f"🧑‍🚀 <b>User:</b> {user_first_name} (ID: <code>{user_id}</code>)\n"
-    f"🗣 <b>Chat ID:</b> <code>{chat_id}</code>\n"
-    f"📅 <b>Date & Time:</b> {now.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-    f"🎉 <i>Another waifu has been claimed!</i> 🌸"
-)
+        f"📢 <b>Waifu Claimed!</b>\n\n"
+        f"🧑‍🚀 <b>User:</b> {user_first_name} (ID: <code>{user_id}</code>)\n"
+        f"🗣 <b>Chat ID:</b> <code>{chat_id}</code>\n"
+        f"📅 <b>Date & Time:</b> {now.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+        f"🎉 <i>Another waifu has been claimed!</i> 🌸"
+    )
 
     # Send the log message
     await send_log_message(log_message)
