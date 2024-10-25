@@ -42,7 +42,7 @@ async def dice(_, message: t.Message):
     if user_id in cooldowns and time.time() - cooldowns[user_id] < 60:  # Adjust the cooldown time (in seconds)
         cooldown_time = int(60 - (time.time() - cooldowns[user_id]))
         await message.reply_text(
-            f"🕑 Hold on {mention}, you can roll again in {cooldown_time} seconds ⏳.", 
+            f"⏳ Hold on {mention}, you can roll again in *{cooldown_time}* seconds.", 
             quote=True
         )
         return
@@ -62,11 +62,11 @@ async def dice(_, message: t.Message):
             await user_collection.update_one({'id': receiver_id}, {'$push': {'characters': {'$each': unique_characters}}})
             img_urls = [character['img_url'] for character in unique_characters]
             captions = [
-                f"🏮 🎉 Yo {mention}, you hit the *JACKPOT*! 🎉 🏮\n\n"
+                f"🏆🎊 Yo {mention}, you hit the *JACKPOT*! 🎊🏆\n\n"
                 f"🧩 **Name:** {character['name']}\n"
-                f"💠 **Rarity:** {character['rarity']}\n"
-                f"🏖️ **Anime:** {character['anime']}\n\n"
-                f"━─━────༺༻────━─━\n"
+                f"✨ **Rarity:** {character['rarity']}\n"
+                f"📺 **Anime:** {character['anime']}\n\n"
+                f"━━━━━━━━━━━━━━━\n"
                 for character in unique_characters
             ]
             for img_url, caption in zip(img_urls, captions):
@@ -91,14 +91,14 @@ async def dice(_, message: t.Message):
 
             img_urls = [character['img_url'] for character in unique_characters]
             captions = [
-                f"🎊✨ *JACKPOT!* ✨🎊\n"
+                f"🎉🌟 *JACKPOT!* 🌟🎉\n"
                 f"🎲 You rolled a *{value}*, {mention}!\n\n"
                 f"🎯 **Legendary Character Unlocked!** 🎯\n"
                 f"🧩 **Name:** {character['name']}\n"
-                f"💠 **Rarity:** {character['rarity']}\n"
-                f"🏖️ **Anime:** {character['anime']}\n\n"
+                f"✨ **Rarity:** {character['rarity']}\n"
+                f"📺 **Anime:** {character['anime']}\n\n"
                 f"🚀 **Good luck on your next roll!** 🚀\n"
-                f"━─━────༺༻────━─━\n"
+                f"━━━━━━━━━━━━━━━\n"
                 for character in unique_characters
             ]
             for img_url, caption in zip(img_urls, captions):
@@ -109,7 +109,7 @@ async def dice(_, message: t.Message):
             await message.reply_animation(
                 animation="https://files.catbox.moe/p62bql.mp4",  # Medium roll gif
                 caption=(
-                    f"🎯 **Nice roll, {mention}!** 🎯\n\n"
+                    f"✨ **Nice roll, {mention}!** ✨\n\n"
                     f"You rolled a *{value}*, not bad at all! 🍀 Keep trying for the jackpot!\n\n"
                     f"🌟 **Better luck next time!** 🌟"
                 ),
@@ -123,7 +123,7 @@ async def dice(_, message: t.Message):
                 caption=(
                     f"💔 **Oops, {mention}.**\n\n"
                     f"You rolled a *{value}*... 😢\n\n"
-                    f"Don't give up! Try again and aim for the stars! 🌠"
+                    f"Don't give up! Try again and aim for the stars! 🌌"
                 ),
                 quote=True
-                                       )
+            )
