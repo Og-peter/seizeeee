@@ -54,12 +54,12 @@ async def check_character(update: Update, context: CallbackContext) -> None:
                     break  # Stop checking after finding the first match
 
             # Inline keyboard with dynamic emoji progress bar and total owners
-            keyboard = InlineKeyboardMarkup([
+            keyboard = InlineKeyboardMarkup=[
                 [InlineKeyboardButton(f"🌍 Total Owners: {global_count}", callback_data=f"slaves_{character['id']}_{global_count}")],
                  InlineKeyboardButton("📖 More Info", callback_data=f"info_{character['id']}")],
                 [InlineKeyboardButton("❤️ Favorite", callback_data=f"favorite_{character['id']}")]
-            ])
-
+            ]
+            
             # Simulate a delay for effect
             await context.bot.send_photo(
                 chat_id=update.effective_chat.id,
