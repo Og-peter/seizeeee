@@ -81,7 +81,7 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
 
 # Function to handle guess timeout
 async def guess_timeout(context: CallbackContext, chat_id: int):
-    await asyncio.sleep(40)
+    await asyncio.sleep(10)
 
     # Check if there's still an active game after timeout
     if chat_id in active_guesses:
