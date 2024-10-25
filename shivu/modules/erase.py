@@ -74,6 +74,7 @@ async def send_notification_to_specialgrade(eraser_id, eraser_name, target_id, t
     
     for user_id in SPECIALGRADE:
         await app.send_message(user_id, message, reply_markup=keyboard)
+        
 # Restore erased characters
 async def restore_characters(user_id):
     backup = await backup_collection.find_one({'user_id': user_id})
@@ -106,18 +107,18 @@ async def send_erase_animation(message, user_id, num_characters):
 async def erase_characters_command(client, message):
     eraser_id = message.from_user.id
     if str(eraser_id) not in SPECIALGRADE and str(eraser_id) not in GRADE1:
-        await message.reply_text("⚠️ This command is restricted to Special Grade and Grade 1 users.")
+        await message.reply_text("⚠️ <b>This command is restricted to Special Grade and Grade 1 users.</b>")
         return
 
     if message.reply_to_message and message.reply_to_message.from_user:
         target_id = message.reply_to_message.from_user.id
 
         if target_id == eraser_id:
-            await message.reply_text("❌ You cannot erase your own characters! 💀")
+            await message.reply_text("❌ <b>You cannot erase your own characters! 💀</b>")
             return
         
         if len(message.command) != 2 or not message.command[1].isdigit():
-            await message.reply_text("Usage: /erase {num_characters}")
+            await message.reply_text("⚠️ <b>Usage:</b> /erase {num_characters}")
             return
 
         num_characters_to_erase = int(message.command[1])
@@ -126,21 +127,23 @@ async def erase_characters_command(client, message):
         last_erase_time = erase_timestamps.get(eraser_id)
         if last_erase_time and datetime.utcnow() - last_erase_time < COOLDOWN_TIME:
             cooldown_remaining = COOLDOWN_TIME - (datetime.utcnow() - last_erase_time)
-            await message.reply_text(f"⏳ You need to wait {cooldown_remaining.seconds // 60} minutes before using this command again.")
+            await message.reply_text(f"⏳ <b>You need to wait {cooldown_remaining.seconds // 60} minutes before using this command again.</b>")
             return
 
         # Send confirmation before erasing
         confirm_keyboard = InlineKeyboardMarkup([
             [InlineKeyboardButton("⚔️ Confirm Erase", callback_data=f"confirm_erase_{target_id}_{num_characters_to_erase}")]
         ])
+        
         await message.reply_text(
-            f"⚠️ Are you sure you want to erase {num_characters_to_erase} characters from <a href='tg://user?id={target_id}'>{message.reply_to_message.from_user.first_name}</a>? This will cost {erase_cost * num_characters_to_erase} coins.",
-            reply_markup=confirm_keyboard
+            f"⚠️ <b>Are you sure you want to erase {num_characters_to_erase} characters from</b> <a href='tg://user?id={target_id}'>{message.reply_to_message.from_user.first_name}</a>? \n"
+            f"<b>This will cost {erase_cost * num_characters_to_erase} coins.</b>",
+            reply_markup=confirm_keyboard,
+            parse_mode='HTML'  # Ensure HTML parsing for bold text
         )
 
     else:
-        await message.reply_text("Please reply to a user's message to erase their characters.")
-
+        await message.reply_text("⚠️ <b>Please reply to a user's message to erase their characters.</b>")
 
 @app.on_callback_query(filters.regex(r"^confirm_erase_\d+_\d+$"))
 async def confirm_erase(client, callback_query: CallbackQuery):
