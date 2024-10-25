@@ -147,7 +147,7 @@ async def confirm_buybeast_callback(_, callback_query: t.CallbackQuery):
     )
     
 @bot.on_message(filters.command(["beast"]))
-async def showbeast_cmd(_: bot, update: t.Update):
+async def showbeast_cmd(_, update: t.Update):
     user_id = update.from_user.id
     user_data = await get_user_data(user_id)
 
@@ -157,20 +157,26 @@ async def showbeast_cmd(_: bot, update: t.Update):
         main_beast_id = user_data.get('main_beast')
 
         # Generate text for other beasts
-        other_beasts_text = "\n".join([f"𝐈𝐃 : {beast.get('id', 'N/A')} ⌠ {beast.get('rarity', 'N/A')} ⌡ {beast.get('name', 'N/A')} (𝐏𝐨𝐰𝐞𝐫: `{beast.get('power', 'N/A')}`)" for beast in user_data['beasts']])
+        other_beasts_text = "\n".join([
+            f"🦄 **ID:** {beast.get('id', 'N/A')} ⌠ **Rarity:** {beast.get('rarity', 'N/A')} ⌡ **Name:** {beast.get('name', 'N/A')} (💪 **Power:** `{beast.get('power', 'N/A')}`)" 
+            for beast in user_data['beasts']
+        ])
 
         if main_beast_id:
             main_beast = next((beast for beast in user_data['beasts'] if beast['id'] == main_beast_id), None)
             if main_beast:
                 await update.reply_photo(
                     photo=main_beast['img_url'],
-                    caption="⛩️ You Have The Following Beast Waifu ⛩️\n\n" + other_beasts_text + "\n\nUse /binfo <𝐢𝐝> To See Your Beast",
+                    caption="⛩️ **Your Main Beast Waifu** ⛩️\n\n" + other_beasts_text + "\n\n🔍 Use /binfo <ID> to see details about your beasts."
                 )
                 return
 
-        return await update.reply_text(other_beasts_text + "\n")
+        # If there's no main beast, just show other beasts
+        return await update.reply_text(
+            "🐾 **Your Beasts**:\n\n" + other_beasts_text + "\n\n✨ Explore more by using /binfo <ID> to learn about each beast!"
+        )
     
-    return await update.reply_text("You don't have any beasts. Buy a beast using `/beastshop`.")
+    return await update.reply_text("🚫 You don't have any beasts. Buy a beast using `/beastshop`.")
     
 # Add a new command to show beast details along with an image
 from pyrogram import filters
