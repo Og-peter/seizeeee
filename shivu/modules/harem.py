@@ -117,7 +117,6 @@ if page < total_pages - 2:
                 await update.message.reply_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
             else:
                 await update.callback_query.edit_message_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
-
     # If there is no favorite, choose a random character or display message
     else:
         if user['characters']:
