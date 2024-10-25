@@ -59,52 +59,72 @@ async def check_balance(_, message: Message):
     
 async def pay(update, context):
     sender_id = update.effective_user.id
-    keyboard = [[InlineKeyboardButton("APPEAL", url=f'https://t.me/dynamic_gangs')]]
+    keyboard = [[InlineKeyboardButton("📩 Appeal Support", url='https://t.me/dynamic_gangs')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
+
     # Check if the user is still in cooldown
     if sender_id in cooldowns and (time.time() - cooldowns[sender_id]) < 1200:
         remaining_time = int(1200 - (time.time() - cooldowns[sender_id]))
-        await update.message.reply_text(f"Please wait {remaining_time // 60} minutes and {remaining_time % 60} seconds before using /pay again.")
+        await update.message.reply_text(f"⏳ Please wait {remaining_time // 60} minutes and {remaining_time % 60} seconds before using /pay again.")
         return
+
     if not update.message.reply_to_message:
-        await update.message.reply_text("Please reply to a user to /pay.")
+        await update.message.reply_text("❌ Please reply to a user to /pay.")
         return
+
     recipient_id = update.message.reply_to_message.from_user.id
-    
+
     try:
         amount = int(context.args[0])
         # Check if the amount is negative
         if amount < 0:
             raise ValueError("Negative amounts are not allowed.")
     except (IndexError, ValueError):
-        await update.message.reply_text("Invalid amount. Usage: /pay <amount>")
+        await update.message.reply_text("🚫 Invalid amount. Usage: /pay <amount>")
         return
+
     # Check if the amount is greater than 1,000,000,000
     if amount > 1000000000:
-        await update.message.reply_text("Can't pay more than 1,000,000,000.")
+        await update.message.reply_text("💸 You can't pay more than ₩1,000,000,000.")
         return
+
     sender_balance = await user_collection.find_one({'id': sender_id}, projection={'balance': 1})
     if not sender_balance or sender_balance.get('balance', 0) < amount:
-        await update.message.reply_text("Insufficient balance to make the payment.")
+        await update.message.reply_text("❌ Insufficient balance to make the payment.")
         return
+
     disallowed_words = ['negative', 'badword']  # Add your disallowed words here
     payment_message = update.message.text.lower()
     if any(word in payment_message for word in disallowed_words):
-        await update.message.reply_text("Sorry, your payment message contains disallowed words.")
+        await update.message.reply_text("🚫 Sorry, your payment message contains disallowed words.")
         return
+
+    # Process the payment
     await user_collection.update_one({'id': sender_id}, {'$inc': {'balance': -amount}})
     await user_collection.update_one({'id': recipient_id}, {'$inc': {'balance': amount}})
-    await update.message.reply_text(
-        f"₩ Payment Successful! You paid ₩{amount} cash to {update.message.reply_to_message.from_user.first_name}."
+
+    # Send a success message with enhanced formatting
+    success_message = (
+        f"✅ <b>₩ Payment Successful!</b> 🎉\n"
+        f"You paid <b>₩{amount}</b> to <b>{update.message.reply_to_message.from_user.first_name}</b>.\n"
+        f"💰 Your new balance: <code>₩{sender_balance['balance'] - amount}</code>"
     )
+    await update.message.reply_text(success_message, parse_mode='HTML')
+
     # Set the cooldown time for the user
     cooldowns[sender_id] = time.time()
+
     # Log payment information
-    logs_message = f"🔄 Payment Log\nSender: {update.effective_user.username} (ID: {sender_id})\nAmount: {amount} TOK\nRecipient: {update.message.reply_to_message.from_user.username} (ID: {recipient_id})"
-    
+    logs_message = (
+        f"🔄 <b>Payment Log</b>\n"
+        f"👤 Sender: @{update.effective_user.username} (ID: {sender_id})\n"
+        f"💵 Amount: <b>₩{amount}</b>\n"
+        f"📬 Recipient: @{update.message.reply_to_message.from_user.username} (ID: {recipient_id})"
+    )
+
     for log_group_id in logs:
         try:
-            await context.bot.send_message(log_group_id, logs_message)
+            await context.bot.send_message(log_group_id, logs_message, parse_mode='HTML')
         except Exception as e:
             print(f"Error sending payment log to group {log_group_id}: {str(e)}")
             
