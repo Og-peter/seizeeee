@@ -8,13 +8,13 @@ from shivu import shivuu as bot
 from pyrogram import Client, filters, types as t
 import random
 
+# Command to check character by ID with animated emojis and fun messages
 async def check_character(update: Update, context: CallbackContext) -> None:
     try:
         args = context.args
         if len(args) != 1:
             await update.message.reply_text('Usage: /check <character_id> 🎯')
             return
-            
         character_id = args[0]
         character = await collection.find_one({'id': character_id})
         
@@ -22,44 +22,46 @@ async def check_character(update: Update, context: CallbackContext) -> None:
             global_count = await user_collection.count_documents({'characters.id': character['id']})
             
             # Create animated loading message
-            loading_message = await update.message.reply_text("🔍 Searching for the character... Please wait! ⏳")
+            loading_message = await update.message.reply_text("🔍 Searching for the character...")
             
             # Update message with the character info and emojis
             response_message = (
-                f"<b>🌟✨ Meet Your Special Character ✨🌟</b>\n\n"
-                f"<b>ID:</b> {character['id']} 🔢\n"
-                f"<b>Name:</b> {character['name']} 💖\n"
-                f"<b>Anime:</b> {character['anime']} 🎬\n"
-                f"<b>Rarity:</b> {character['rarity']} 🏅\n"
-                f"<b>✨ Description:</b> {character.get('description', 'No description available.')} 📜"
+                f"<b>✨ Meet this Special Character ✨</b>\n\n"
+                f"<b>ID:</b> {character['id']}\n"
+                f"<b>Name:</b> {character['name']} 💫\n"
+                f"<b>Anime:</b> {character['anime']} 🎥\n"
+                f"<b>Rarity:</b> {character['rarity']} 🌟"
             )
             
             # Add animated emoji labels for special cases
-            special_cases = {
-                '🐇': "Bunny 🐇",
-                '👩‍🏫': "Teacher 📚",
-                '🎒': "Student 🎒",
-                '👘': "Kimono 👘",
-                '🏖': "Summer Event 🏖",
-                '🎄': "Christmas Event 🎄",
-                '🧹': "Maid Role 🧹",
-                '🥻': "Saree Outfit 🥻",
-                '🩺': "Nurse Role 🩺",
-                '❄️': "Winter Event ❄️"
-            }
-            
-            for emoji, label in special_cases.items():
-                if emoji in character['name']:
-                    response_message += f"\n\n✨ <b>Special:</b> {label} ✨"
-                    break  # Stop checking after finding the first match
+            if '🐇' in character['name']:
+                response_message += "\n\n🐇 Special: Bunny 🐇"
+            elif '👩‍🏫' in character['name']:
+                response_message += "\n\n📚 Role: Teacher 📚"
+            elif '🎒' in character['name']:
+                response_message += "\n\n🎒 Role: Student 🎒"
+            elif '👘' in character['name']:
+                response_message += "\n\n👘 Outfit: Kimono 👘"
+            elif '🏖' in character['name']:
+                response_message += "\n\n🏖 Event: Summer 🏖"
+            elif '🎄' in character['name']:
+                response_message += "\n\n🎄 Event: Christmas 🎄"
+            elif '🧹' in character['name']:
+                response_message += "\n\n🧹 Role: Maid 🧹"
+            elif '🥻' in character['name']:
+                response_message += "\n\n🥻 Outfit: Saree 🥻"
+            elif '🩺' in character['name']:
+                response_message += "\n\n🩺 Role: Nurse 🩺"
+            elif '❄️' in character['name']:
+                response_message += "\n\n❄️ Event: Winter ❄️"
 
             # Inline keyboard with dynamic emoji progress bar and total owners
-            keyboard = InlineKeyboardMarkup=[
-                [InlineKeyboardButton(f"🌍 Total Owners: {global_count}", callback_data=f"slaves_{character['id']}_{global_count}")],
-                 InlineKeyboardButton("📖 More Info", callback_data=f"info_{character['id']}")],
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton(f"🌍 Total Owners", callback_data=f"slaves_{character['id']}_{global_count}")],
+                [InlineKeyboardButton("📖 More Info", callback_data=f"info_{character['id']}")],
                 [InlineKeyboardButton("❤️ Favorite", callback_data=f"favorite_{character['id']}")]
-            ]
-            
+            ])
+
             # Simulate a delay for effect
             await context.bot.send_photo(
                 chat_id=update.effective_chat.id,
@@ -70,10 +72,10 @@ async def check_character(update: Update, context: CallbackContext) -> None:
             )
             await loading_message.delete()
         else:
-            await update.message.reply_text('❌ Invalid character ID. Please check and try again!')
-
+            await update.message.reply_text('❌ Invalid character ID.')
+            
     except Exception as e:
-        await update.message.reply_text(f'⚠️ Error: {str(e)}. Please try again later.')
+        await update.message.reply_text(f'Error: {str(e)}')
 
 # Random character feature to surprise users with a random character
 async def random_character(update: Update, context: CallbackContext) -> None:
