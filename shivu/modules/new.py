@@ -136,7 +136,7 @@ async def inline_search(update: Update, context: CallbackContext):
     await update.inline_query.answer(results)
 
 # Handlers
-application.add_handler(CommandHandler("animelist", animelist, block=False))
+application.add_handler(CommandHandler("search", search, block=False))
 application.add_handler(CallbackQueryHandler(anime_list_callback, pattern="^animelist", block=False))
 application.add_handler(CallbackQueryHandler(anime_characters_callback, pattern="^anime_characters", block=False))
 application.add_handler(InlineQueryHandler(inline_search, block=False))
