@@ -48,14 +48,18 @@ async def gems_command(_, message: Message):
         
 # Command to sell gems
 @bot.on_message(filters.command(["sellitem"]))
-async def sell_command(_: bot, message: t.Message):
+async def sell_command(_, message: Message):
     user_id = message.from_user.id
     command_parts = message.text.split()
+
     if len(command_parts) != 3:
-        return await message.reply_text("Invalid command. Usage: /sellitem <item name> <Quantity>")
+        return await message.reply_html("<b>❌ Invalid command. Usage: /sellitem <item name> <quantity></b>")
 
     item_name = command_parts[1]
-    quantity = int(command_parts[2])
+    try:
+        quantity = int(command_parts[2])
+    except ValueError:
+        return await message.reply_html("<b>⚠️ Please enter a valid quantity.</b>")
 
     # Check if the item exists and the user has it in their inventory
     found_item = None
@@ -63,24 +67,31 @@ async def sell_command(_: bot, message: t.Message):
         if item_name.lower() in [gem.lower()] + item_info.get("aliases", []):
             found_item = gem
             break
+
     if not found_item:
-        return await message.reply_text("Invalid item name.")
+        return await message.reply_html("<b>🚫 Invalid item name. Please check your input.</b>")
 
     user_data = await user_collection.find_one({'id': user_id}, projection={'gems': 1})
+
     if user_data and user_data.get('gems') and found_item in user_data['gems']:
         # Check if the user has enough quantity of the item to sell
         if user_data['gems'][found_item] < quantity:
-            return await message.reply_text("You don't have enough items quantity to sell.")
+            return await message.reply_html("<b>⚠️ You don't have enough quantity of this item to sell.</b>")
 
         # Calculate the total price for the items
         total_price = gem_prices[found_item]["price"] * quantity
+        
         # Remove the sold items from the user's inventory
         await user_collection.update_one({'id': user_id}, {'$inc': {f'gems.{found_item}': -quantity}})
+        
         # Add the sold tokens to the user's balance
         await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': total_price}})
-        await message.reply_text(f"You have sold {quantity} {gem_prices[found_item]['emoji']} {found_item} for a total of {total_price} tokens.")
+        
+        await message.reply_html(
+            f"<b>✅ You have successfully sold {quantity} {gem_prices[found_item]['emoji']} {found_item} for a total of <u>{total_price} tokens</u>.</b>"
+        )
     else:
-        await message.reply_text("You don't have this items to sell.")
+        await message.reply_html("<b>🚫 You don't have this item to sell. Please check your inventory.</b>")
 
         
 # Dictionary of gem sets with their images, captions, win chances, and text messages
