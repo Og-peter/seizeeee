@@ -55,7 +55,7 @@ async def start(update: Update, context: CallbackContext) -> None:
                     print(f"Failed to send referral message: {e}")
 
         await context.bot.send_message(chat_id=GROUP_ID, 
-                                       text=f"🎉 **New User Alert!** 🎉\n\n"
+                                       text=f"🎉 #**New User Alert!** 🎉\n\n"
                                             f"👤 User: <a href='tg://user?id={user_id}'>{escape(first_name)}</a>", 
                                        parse_mode='HTML')
     else:
