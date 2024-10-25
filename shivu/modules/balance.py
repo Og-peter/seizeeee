@@ -176,22 +176,34 @@ async def daily_reward(_, message):
         )
     
 @bot.on_message(filters.command("weekly"))
-async def weekly_reward(_, message):
+async def weekly_reward(_, message: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = message.from_user.id
-    user_data = await user_collection.find_one({'id': user_id}, projection={'last_weekly_reward': 7, 'balance': 1})
+    user_data = await user_collection.find_one({'id': user_id}, projection={'last_weekly_reward': 1, 'balance': 1})
+    
     if not user_data:
         await send_start_button(message.chat.id)
         return
+
     last_weekly_date = user_data.get('last_weekly_reward')
+
+    # Check if the user has already claimed their weekly reward this week
     if last_weekly_date and last_weekly_date.date() == datetime.utcnow().date():
-        await message.reply_text("You've already claimed your weekly reward of this week.")
+        await message.reply_text("🚫 **You've already claimed your weekly reward for this week. Come back next week!**")
         return
+
     # Update the user's balance and set the last claimed date to today
     await user_collection.update_one(
         {'id': user_id},
         {'$inc': {'balance': 250000}, '$set': {'last_weekly_reward': datetime.utcnow()}}
     )
-    await message.reply_text("❰ 𝗥 𝗘 𝗪 𝗔 𝗥 𝗗 𝗦 🧧 ❱\n\n◍ Weekly reward claimed successfully!\nYou gained ₩`250,000`")
+
+    # Send success message
+    await message.reply_text(
+        "🎉 **❰ 𝗥 𝗘 𝗪 𝗔 𝗥 𝗗 𝗦 🧧 ❱** 🎉\n\n"
+        "🌟 **Weekly reward claimed successfully!**\n"
+        "💰 You gained <code>₩250,000</code>! 🎊\n"
+        "🚀 Enjoy your wealth and keep thriving!"
+    )
     
 user_last_command_times = {}
 @bot.on_message(filters.command("tesure"))
