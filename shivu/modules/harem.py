@@ -72,30 +72,28 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
             character_id = character.get("id", "Unknown")
             harem_message += f'❖  ⌠ {rarity_emoji} ⌡ : {character_id}  {character.get("name", "Unknown")} ×{count}\n'
 
-    total_count = len(user['characters'])
+    # Set up keyboard buttons
+    keyboard = []
 
-    # Updated button logic with same layout as in the screenshot
-keyboard = []
+    # Pagination Buttons
+    if total_pages > 1:
+        nav_buttons = []
+        if page > 0:
+            nav_buttons.append(InlineKeyboardButton("⬅️", callback_data=f"harem:{page-1}:{user_id}"))
+        nav_buttons.append(InlineKeyboardButton(f"{page+1}/{total_pages}", callback_data="noop"))
+        if page < total_pages - 1:
+            nav_buttons.append(InlineKeyboardButton("➡️", callback_data=f"harem:{page+1}:{user_id}"))
+        keyboard.append(nav_buttons)
 
-# Pagination Buttons with placeholder URLs
-if total_pages > 1:
-    nav_buttons = []
-    if page > 0:
-        nav_buttons.append(InlineKeyboardButton("1x ⬅️", callback_data=f"harem:{page-1}:{user_id}", url="https://example.com/prev"))  # Replace with actual URL
-    nav_buttons.append(InlineKeyboardButton(f"1/{total_pages}", callback_data="noop"))  # Current Page
-    if page < total_pages - 1:
-        nav_buttons.append(InlineKeyboardButton("1x ➡️", callback_data=f"harem:{page+1}:{user_id}", url="https://example.com/next"))  # Replace with actual URL
-    keyboard.append(nav_buttons)
+    # Share Button with globe icon
+    keyboard.append([InlineKeyboardButton("🌐", switch_inline_query_current_chat=f"collection.{user_id}")])
 
-# Share Button with globe icon and URL (replace with actual share URL)
-keyboard.append([InlineKeyboardButton("🌐", switch_inline_query_current_chat=f"collection.{user_id}", url="https://example.com/share")])  # Replace with actual URL
+    # Fast Forward Button
+    if page < total_pages - 2:
+        keyboard.append([InlineKeyboardButton("FAST ⏩", callback_data=f"harem:{page + 2}:{user_id}")])
 
-# Fast Forward Button with URL
-if page < total_pages - 2:
-    keyboard.append([InlineKeyboardButton("FAST ⏩", callback_data=f"harem:{page + 2}:{user_id}", url="https://example.com/fastforward")])  # Replace with actual URL
-
-    # Trash Button with URL (replace with actual trash URL or callback)
-    keyboard.append([InlineKeyboardButton("🗑️", callback_data=f"trash:{user_id}", url="https://example.com/trash")])  # Replace with actual URL or keep as callback
+    # Trash Button
+    keyboard.append([InlineKeyboardButton("🗑️ Trash", callback_data=f"trash:{user_id}")])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
