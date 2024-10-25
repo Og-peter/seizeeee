@@ -106,14 +106,45 @@ async def confirm_buybeast_callback(_, callback_query: t.CallbackQuery):
 
     beast_price = beast_list[beast_id]['price']
     if user_data.get('balance', 0) < beast_price:
-        return await callback_query.message.edit_text(f"You don't have enough tokens to buy this beast. You need {beast_price} tokens.")
+        return await callback_query.message.edit_text(
+            "❌ **Insufficient Tokens**\n"
+            f"You don't have enough tokens to buy this beast.\n"
+            f"You need **Ŧ{beast_price}** tokens."
+        )
 
+    # Deduct the price from the user's balance
     await user_collection.update_one({'id': user_id}, {'$inc': {'balance': -beast_price}})
-    new_beast = {'id': beast_id, 'name': beast_list[beast_id]['name'], 'rarity': beast_list[beast_id]['rarity'], 'img_url': beast_list[beast_id]['img_url'], 'power': beast_list[beast_id]['power']}
-    await user_collection.update_one({'id': user_id}, {'$push': {'beasts': new_beast}})
     
-    await callback_query.message.edit_text(f"You have successfully purchased a {beast_list[beast_id]['name']}!")
-    await callback_query.message.reply_photo(photo=beast_list[beast_id]['img_url'], caption="Your new beast is ready!")
+    # Create new beast object
+    new_beast = {
+        'id': beast_id,
+        'name': beast_list[beast_id]['name'],
+        'rarity': beast_list[beast_id]['rarity'],
+        'img_url': beast_list[beast_id]['img_url'],
+        'power': beast_list[beast_id]['power']
+    }
+    
+    # Add the new beast to the user's collection
+    await user_collection.update_one({'id': user_id}, {'$push': {'beasts': new_beast}})
+
+    # Edit the message to confirm the purchase
+    await callback_query.message.edit_text(
+        f"🎉 **Purchase Successful!**\n"
+        f"You have successfully purchased a **{beast_list[beast_id]['name']}**!\n\n"
+        f"🦄 **Type:** {beast_list[beast_id]['rarity']}\n"
+        f"💰 **Price:** Ŧ{beast_price}\n\n"
+        f"Your new beast is ready!"
+    )
+
+    # Send the new beast's image with a congratulatory message
+    await callback_query.message.reply_photo(
+        photo=beast_list[beast_id]['img_url'],
+        caption="✨ **Meet Your New Beast!** ✨\n"
+                f"**Name:** {beast_list[beast_id]['name']}\n"
+                f"**Rarity:** {beast_list[beast_id]['rarity']}\n"
+                f"**Power:** {beast_list[beast_id]['power']}\n"
+                "Unleash its power in your adventures!"
+    )
     
 @bot.on_message(filters.command(["beast"]))
 async def showbeast_cmd(_: bot, update: t.Update):
