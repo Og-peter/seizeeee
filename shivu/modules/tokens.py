@@ -1,4 +1,4 @@
-from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
+from telegram.ext import CommandHandler, CallbackContext
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from shivu import collection, user_collection, application
 from shivu import shivuu as app
@@ -19,16 +19,16 @@ async def tokens(update: Update, context: CallbackContext):
         balance_amount = user_balance.get('tokens', 0)
         formatted_balance = "{:,.0f}".format(balance_amount)
         balance_message = (
-            "<b>💰 Your Current Token Balance:</b>\n"
-            f"<b>Ŧ {formatted_balance}</b>"
+            "💰 Your Current Token Balance:\n"
+            f"Ŧ {formatted_balance}"
         )
     else:
         balance_message = (
-            "<b>⚠️ Attention:</b>\n"
-            "You need to <i>register first</i> by starting the bot in DMs."
+            "⚠️ Attention:\n"
+            "You need to register first by starting the bot in DMs."
         )
 
-    await update.message.reply_text(balance_message, parse_mode=ParseMode.HTML)
+    await update.message.reply_text(balance_message)
 
 application.add_handler(CommandHandler("tokens", tokens, block=False))
 
@@ -57,7 +57,7 @@ async def convert_tokens(client, message: Message):
             return
 
         if amount > MAX_DAILY_TOKENS:
-            await message.reply_text(f"❌ Cannot buy more than <b>{MAX_DAILY_TOKENS}</b> tokens in one transaction.")
+            await message.reply_text(f"❌ Cannot buy more than {MAX_DAILY_TOKENS} tokens in one transaction.")
             return
 
         user = await user_collection.find_one({'id': user_id})
@@ -92,7 +92,7 @@ async def convert_tokens(client, message: Message):
 
             if last_purchase_date == current_date:
                 if tokens_bought_today + amount > MAX_DAILY_TOKENS:
-                    await message.reply_text(f"❌ Cannot buy more than <b>{MAX_DAILY_TOKENS}</b> tokens per day. You have already bought <b>{tokens_bought_today}</b> tokens today.")
+                    await message.reply_text(f"❌ Cannot buy more than {MAX_DAILY_TOKENS} tokens per day. You have already bought {tokens_bought_today} tokens today.")
                     return
             else:
                 # Reset the daily count if the date has changed
@@ -116,8 +116,8 @@ async def convert_tokens(client, message: Message):
         )
 
         await message.reply_text(
-            f"✅ Purchase successful! You bought <b>{amount}</b> tokens for <b>Ŧ{total_cost}</b> cash. \n"
-            f"💳 New Token balance: <b>Ŧ{new_token_count}</b>"
+            f"✅ Purchase successful! You bought {amount} tokens for Ŧ{total_cost} cash. \n"
+            f"💳 New Token balance: Ŧ{new_token_count}"
         )
 
         # Log the command use
@@ -128,14 +128,13 @@ async def convert_tokens(client, message: Message):
         await send_log_message(client, log_message)
 
     except Exception as e:
-        await message.reply_text(f"⚠️ An error occurred: <b>{str(e)}</b>")
+        await message.reply_text(f"⚠️ An error occurred: {str(e)}")
 
 async def send_log_message(client, log_message):
     try:
         await client.send_message(chat_id=LOG_GROUP_ID, text=log_message)
     except Exception as e:
         print(f"⚠️ Error sending log message: {str(e)}")
-
 
 async def addtokens(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
@@ -161,7 +160,7 @@ async def addtokens(update: Update, context: CallbackContext) -> None:
 
     # Update the balance by adding tokens
     await user_collection.update_one({'id': target_user_id}, {'$inc': {'tokens': amount}})
-    await update.message.reply_text(f"✅ Added <b>{amount}</b> tokens to user <b>{target_user_id}</b>.")
+    await update.message.reply_text(f"✅ Added {amount} tokens to user {target_user_id}.")
 
 async def deletetokens(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
@@ -190,7 +189,7 @@ async def deletetokens(update: Update, context: CallbackContext) -> None:
         return
 
     await user_collection.update_one({'id': target_user_id}, {'$inc': {'tokens': -amount}})
-    await update.message.reply_text(f"✅ Deleted <b>{amount}</b> tokens from user <b>{target_user_id}</b>.")
+    await update.message.reply_text(f"✅ Deleted {amount} tokens from user {target_user_id}.")
 
 application.add_handler(CommandHandler("at", addtokens, block=False))
 application.add_handler(CommandHandler("dt", deletetokens, block=False))
