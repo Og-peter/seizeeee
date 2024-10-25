@@ -331,9 +331,10 @@ def get_rarity_emoji(rarity_name):
         'Exclusive': '💮',
         'Premium': '🫧',
         'Limited Edition': '🔮',
-        'astrarl': '💠',
-        'Valentine': '🧿'
-    }
+        'Exotic": '🌸',
+        'Astral': '🎐',
+        'Valentine': '💞'
+       }
     return RARITY_EMOJIS.get(rarity_name, f'⚠️ Rarity: {rarity_name}')
 
 # Function to generate trade info message with rarity emojis
