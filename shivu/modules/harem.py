@@ -94,10 +94,10 @@ keyboard.append([InlineKeyboardButton("🌐", switch_inline_query_current_chat=f
 if page < total_pages - 2:
     keyboard.append([InlineKeyboardButton("FAST ⏩", callback_data=f"harem:{page + 2}:{user_id}", url="https://example.com/fastforward")])  # Replace with actual URL
 
-# Trash Button with URL (replace with actual trash URL or callback)
-keyboard.append([InlineKeyboardButton("🗑️", callback_data=f"trash:{user_id}", url="https://example.com/trash")])  # Replace with actual URL or keep as callback
+    # Trash Button with URL (replace with actual trash URL or callback)
+    keyboard.append([InlineKeyboardButton("🗑️", callback_data=f"trash:{user_id}", url="https://example.com/trash")])  # Replace with actual URL or keep as callback
 
-reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
     # If the user has a favorite character
     if 'favorites' in user and user['favorites']:
