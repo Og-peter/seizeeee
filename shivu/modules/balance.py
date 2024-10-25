@@ -128,38 +128,52 @@ async def pay(update, context):
         except Exception as e:
             print(f"Error sending payment log to group {log_group_id}: {str(e)}")
             
-async def mtop(update, context):
+async def mtop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     top_users = await user_collection.find({}, projection={'id': 1, 'first_name': 1, 'last_name': 1, 'balance': 1}).sort('balance', -1).limit(10).to_list(10)
-    top_users_message = "Top 10 Wealthy Users:\n───────────────────\n"
+    
+    top_users_message = "✨ **Top 10 Wealthy Users** ✨\n"
+    top_users_message += "───────────────────\n"
+
     for i, user in enumerate(top_users, start=1):
         first_name = user.get('first_name', 'Unknown')
         last_name = user.get('last_name', '')
-        username = user.get('username', 'Unknown')
         user_id = user.get('id', 'Unknown')
         full_name = f"{first_name} {last_name}" if last_name else first_name
         user_link = f"<a href='tg://user?id={user_id}'>{html.escape(first_name)}</a>"
-        top_users_message += f"{i}. {user_link} - ₩{user.get('balance', 0):,.0f}\n"
-    top_users_message += "────────────────────\nTop 10 Wealthy Users via @Character_seize_bot"
+        balance = user.get('balance', 0)
+        top_users_message += f"🪙 **{i}. {user_link}** - ₩{balance:,.0f}\n"
+
+    top_users_message += "────────────────────\n"
+    top_users_message += "🏆 **Top 10 Wealthy Users via @Character_seize_bot**"
+
     photo_path = 'https://telegra.ph/file/5ccbb080aa1761a5c2a49.jpg'
     await update.message.reply_photo(photo=photo_path, caption=top_users_message, parse_mode='HTML')
-            
+
 @bot.on_message(filters.command("daily"))
 async def daily_reward(_, message):
     user_id = message.from_user.id
     user_data = await user_collection.find_one({'id': user_id}, projection={'last_daily_reward': 1, 'balance': 1})
+    
     if not user_data:
         await send_start_button(message.chat.id)
         return
+
     last_claimed_date = user_data.get('last_daily_reward')
     if last_claimed_date and last_claimed_date.date() == datetime.utcnow().date():
-        await message.reply_text("You've already claimed your daily reward today. Come back tomorrow!")
+        await message.reply_text("🚫 **You've already claimed your daily reward today. Come back tomorrow!**")
         return
+
     # Update the user's balance and set the last claimed date to today
     await user_collection.update_one(
         {'id': user_id},
         {'$inc': {'balance': 50000}, '$set': {'last_daily_reward': datetime.utcnow()}}
     )
-    await message.reply_text("❰ 𝗥 𝗘 𝗪 𝗔 𝗥 𝗗 𝗦 🧧 ❱\n\n◍ Daily reward claimed successfully!\nYou gained ₩`50,000`")
+
+    await message.reply_text(
+        "🎉 **❰ 𝗥 𝗘 𝗪 𝗔 𝗥 𝗗 𝗦 🧧 ❱** 🎉\n\n"
+        "🌟 **Daily reward claimed successfully!**\n"
+        "💰 You gained <code>₩50,000</code>! 🎊"
+        )
     
 @bot.on_message(filters.command("weekly"))
 async def weekly_reward(_, message):
