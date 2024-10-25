@@ -17,7 +17,7 @@ async def animelist(update: Update, context: CallbackContext):
 async def display_anime_list(update: Update, context: CallbackContext, page: int):
     try:
         # Fetch all anime from the database
-        all_anime = await collection.find({}).distinct('anime')  # Fetch unique anime names
+        all_anime = await collection.find({}).distinct('anime')
     except PyMongoError as e:
         await update.message.reply_text(f"Database Error: {e}")
         return
@@ -46,7 +46,7 @@ async def display_anime_list(update: Update, context: CallbackContext, page: int
 
     # Create the keyboard with anime list by alphabet and navigation buttons
     keyboard = [
-        [InlineKeyboardButton(f"{letter}", callback_data=f"animelist:{page}:{i}")]
+        [InlineKeyboardButton(f"{letter}", callback_data=f"animelist:{page}:{i+1}")]
         for i, letter in enumerate(alphabet_list[page * 10:(page + 1) * 10])
     ]
 
@@ -100,11 +100,11 @@ async def anime_list_callback(update: Update, context: CallbackContext):
 
     alphabet_list = list(grouped_anime.keys())
 
-    if page * 10 + index >= len(alphabet_list):
+    if page * 10 + index - 1 >= len(alphabet_list):
         await query.answer("Invalid selection!")
         return
 
-    selected_letter = alphabet_list[page * 10 + index]
+    selected_letter = alphabet_list[page * 10 + index - 1]
     anime_in_letter = sorted(grouped_anime[selected_letter])
 
     # Display anime starting with the selected letter
