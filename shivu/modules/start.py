@@ -62,7 +62,7 @@ async def start(update: Update, context: CallbackContext) -> None:
             await user_collection.update_one({"id": user_id}, {"$set": {"first_name": first_name, "username": username}})
 
     if update.effective_chat.type == "private":
-        caption = f"""❖ Kᴏɴ'ɴɪᴄʜɪᴡᴀ {first_name} sᴀɴ 💌 !!
+        caption = escape_markdown(f"""❖ Kᴏɴ'ɴɪᴄʜɪᴡᴀ {first_name} sᴀɴ 💌!!
 
 ๏ I'ᴍ [ᴄʜᴀʀᴀᴄᴛᴇʀ sᴇɪᴢᴇʀ ʙᴏᴛ](https://t.me/Character_seize_bot) ʏᴏᴜʀ ғʀɪᴇɴᴅʟʏ ᴡᴀɪғᴜ sᴇɪᴢᴇʀ ʙᴏᴛ ☄.
 
@@ -72,7 +72,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 ━━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━━
 ❖ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ:
  sɪᴍᴘʟʏ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ.
-━━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━━"""
+━━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━━""")
 
         keyboard = [
             [InlineKeyboardButton("❖ Λᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ❖", url=f'https://t.me/Character_seize_bot?startgroup=new')],
@@ -87,7 +87,6 @@ async def start(update: Update, context: CallbackContext) -> None:
         await context.bot.send_sticker(chat_id=update.effective_chat.id, sticker=sticker_url)
         await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=caption, reply_markup=reply_markup, parse_mode='MarkdownV2')
     else:
-        photo_url = random.choice(PHOTO_URL)
         keyboard = [
             [InlineKeyboardButton("PM", url=f'https://t.me/Character_seize_bot?start=true')],
         ]
