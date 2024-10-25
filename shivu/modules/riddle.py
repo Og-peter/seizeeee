@@ -60,7 +60,7 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     active_guesses[chat_id] = {
         'correct_answer': correct_character['name'],
         'start_time': current_time,
-        'hint_stage': 0,
+        'attempts': 0,
         'active': True
     }
 
@@ -69,66 +69,35 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
 
     # Send the question with the character's image
     question = f"<b>🏮 **Guess the Anime Character!** 🏮</b>\n"
-    sent_message = await context.bot.send_photo(
+    await context.bot.send_photo(
         chat_id=chat_id,
         photo=correct_character['img_url'],
         caption=question,
         parse_mode=ParseMode.HTML
     )
 
-    # Schedule hint and timeout tasks
-    asyncio.create_task(guess_timeout(context, chat_id, sent_message.message_id))
-    asyncio.create_task(provide_hint(context, chat_id, 10))  # First hint after 10 seconds
-    asyncio.create_task(provide_hint(context, chat_id, 20))  # Second hint after 20 seconds
-    asyncio.create_task(provide_hint(context, chat_id, 30))  # Third hint after 30 seconds
+    # Schedule timeout for the game
+    asyncio.create_task(guess_timeout(context, chat_id))
 
 # Function to handle guess timeout
-async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int):
+async def guess_timeout(context: CallbackContext, chat_id: int):
     await asyncio.sleep(40)
 
-    # Check if there's still an active game after 40 seconds
+    # Check if there's still an active game after timeout
     if chat_id in active_guesses:
         correct_answer = active_guesses[chat_id]['correct_answer']
 
         # Remove the active game after the timeout
         del active_guesses[chat_id]
 
-        # Send a new message to indicate time is up
-        try:
-            await context.bot.send_message(
-                chat_id=chat_id,
-                text=f"⏰ <b>Time's up!</b> The correct answer was <b><u>{correct_answer}</u></b>.",
-                parse_mode=ParseMode.HTML
-            )
-        except Exception as e:
-            print(f"Failed to send message: {e}")
+        # Send a message to indicate time is up
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"⏰ <b>Time's up!</b> The correct answer was <b><u>{correct_answer}</u></b>.",
+            parse_mode=ParseMode.HTML
+        )
 
-# Function to provide hints at different stages
-async def provide_hint(context: CallbackContext, chat_id: int, delay: int):
-    await asyncio.sleep(delay)
-    if chat_id in active_guesses:
-        correct_answer = active_guesses[chat_id]['correct_answer']
-        hint_stage = active_guesses[chat_id]['hint_stage']
-
-        # Provide progressively more detailed hints
-        hint_text = ""
-        if hint_stage == 0:
-            hint = "_" * (len(correct_answer) - 1) + correct_answer[-1]
-            hint_text = "<i>First Hint:</i> "
-        elif hint_stage == 1:
-            hint = correct_answer[0] + "_" * (len(correct_answer) - 2) + correct_answer[-1]
-            hint_text = "<i>Second Hint:</i> "
-        elif hint_stage == 2:
-            reveal_length = max(1, len(correct_answer) // 2)
-            hint = correct_answer[:reveal_length] + "_" * (len(correct_answer) - reveal_length)
-            hint_text = "<i>Final Hint:</i> "
-        else:
-            return  # No more hints after the final stage
-
-        active_guesses[chat_id]['hint_stage'] += 1
-        await context.bot.send_message(chat_id, text=f"{hint_text}🔍 <b>{hint}</b>", parse_mode=ParseMode.HTML)
-
-# Function to handle streaks and provide user profile data
+# Function to handle user guesses and track attempts
 async def guess_text_handler(update: Update, context: CallbackContext):
     # Check if update.message is not None to avoid AttributeError
     if update.message is None:
@@ -145,6 +114,10 @@ async def guess_text_handler(update: Update, context: CallbackContext):
 
     correct_answer = active_guesses[chat_id]['correct_answer'].lower()
 
+    # Track the number of attempts
+    active_guesses[chat_id]['attempts'] += 1
+    attempts = active_guesses[chat_id]['attempts']
+
     # Check if the user's answer matches any word in the correct answer
     if user_answer in correct_answer.split():  # Check if the user's answer is part of the correct answer
         streak = user_streaks.get(user_id, 0) + 1
@@ -158,7 +131,7 @@ async def guess_text_handler(update: Update, context: CallbackContext):
 
         # Reply tagging the guesser directly
         await update.message.reply_text(
-            f"🎉 {user_mention} <b>guessed correctly!</b>\n\n"
+            f"🎉 {user_mention} <b>guessed correctly in {attempts} attempts!</b>\n\n"
             f"🔑 The answer was: <b><u>{correct_answer}</u></b>\n"
             f"🏅 You've earned <b>{tokens_earned} tokens!</b>\n"
             f"🔥 Your streak is now <b>{streak}</b>{badges}\n",
@@ -171,9 +144,10 @@ async def guess_text_handler(update: Update, context: CallbackContext):
     else:
         # Incorrect guess, show a "See Character" button
         message_link = character_message_links.get(chat_id, "#")
+        feedback = "💪 Keep trying!" if attempts < 3 else "🙌 Almost there, don't give up!"
         keyboard = [[InlineKeyboardButton("🔍 ᴡʜᴇʀᴇ ɪs ᴄʜᴀʀᴀᴄᴛᴇʀ?", url=message_link)]]
         await update.message.reply_text(
-            f'💎 {user_mention}, <b>Find the character and try again!</b>',
+            f'{feedback} {user_mention}, <b>Find the character and try again!</b>',
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode=ParseMode.HTML
         )
@@ -191,3 +165,4 @@ async def award_badges(user_id, streak):
 # Add command handler for starting the anime guess game
 application.add_handler(CommandHandler("guess", start_anime_guess_cmd, block=False))
 # Add message handler for processing text-based guesses
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, guess_text_handler, block=False))
