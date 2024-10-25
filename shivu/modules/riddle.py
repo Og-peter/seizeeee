@@ -16,18 +16,6 @@ character_message_links = {}
 ALLOWED_GROUP_ID = -1002104939708  # Replace with your allowed group's chat ID
 SUPPORT_GROUP_URL = "https://t.me/dynamic_gangs"  # Replace with your actual support group URL
 
-# Function to fetch a random anime character from the database
-async def get_random_character():
-    try:
-        pipeline = [{'$sample': {'size': 1}}]
-        cursor = collection.aggregate(pipeline)
-        characters = await cursor.to_list(length=1)
-        return characters[0] if characters else None
-    except Exception as e:
-        print(f"Error fetching characters: {e}")
-        return None
-
-# Command handler to start the anime guess game
 async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     current_time = datetime.now()
     user_id = update.effective_user.id
@@ -39,7 +27,7 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
         keyboard = [[InlineKeyboardButton("Join Support Group", url=SUPPORT_GROUP_URL)]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text(
-            f"<b>⚠️ {user_mention}, this feature is only available in our support group. Join here:</b>",
+            f"<b>⚠️ {user_mention}, this feature is exclusive to our support group. Join here:</b>",
             reply_markup=reply_markup,
             parse_mode=ParseMode.HTML
         )
@@ -47,13 +35,16 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
 
     # Check if there is an active game in the chat
     if chat_id in active_guesses and active_guesses[chat_id].get('active', False):
-        await update.message.reply_text(f"<b>⚠️ {user_mention}, you need to finish the current game before starting a new one!</b>", parse_mode=ParseMode.HTML)
+        await update.message.reply_text(
+            f"<b>⚠️ {user_mention}, you must complete the current game before starting a new one!</b>",
+            parse_mode=ParseMode.HTML
+        )
         return
 
     # Get the correct anime character
     correct_character = await get_random_character()
     if not correct_character:
-        await update.message.reply_text("⚠️ Could not fetch characters at this time. Please try again later.")
+        await update.message.reply_text("⚠️ Unable to fetch characters at this moment. Please try again later.")
         return
 
     # Store the active guess for this chat
@@ -68,7 +59,10 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     character_message_links[chat_id] = correct_character['img_url']
 
     # Send the question with the character's image
-    question = f"<b>🏮 **Guess the Anime Character!** 🏮</b>\n"
+    question = (
+        "<b>✨🎭 𝗚𝗨𝗘𝗦𝗦 𝗧𝗛𝗘 𝗔𝗡𝗜𝗠𝗘 𝗖𝗛𝗔𝗥𝗔𝗖𝗧𝗘𝗥! 🎭✨</b>\n\n"
+        "<i>Think you know who this character is? Give it your best shot!</i>"
+    )
     await context.bot.send_photo(
         chat_id=chat_id,
         photo=correct_character['img_url'],
