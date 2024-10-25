@@ -160,14 +160,21 @@ async def reset_preferences(client, callback_query: CallbackQuery):
 
     # Authorization check
     if not hmode_user_id or user_id != hmode_user_id["id"]:
-        await callback_query.answer("You are not authorized to use this button.", show_alert=True)
+        await callback_query.answer("🚫 You are not authorized to use this button.", show_alert=True)
         return
 
     # Reset user preference in the database
     await user_collection.update_one({'id': user_id}, {'$unset': {'rarity_preference': ''}})
-    await callback_query.message.edit_text("🌋 Your Rarity Preferences Have Been Reset Successfully!")
     
-    # Return to harem mode after reset
+    # Enhanced success message
+    await callback_query.message.edit_text(
+        "🌋 **Rarity Preferences Reset!** 🌋\n"
+        "Your preferences have been cleared. You can now set new ones anytime!\n\n"
+        "🔄 Returning to Harem Mode..."
+    )
+
+    # Optional delay for smooth transition
+    await asyncio.sleep(2)
     await harem(client, callback_query.message)
 
 @app.on_message(filters.command("hmode"))
