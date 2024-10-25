@@ -89,22 +89,30 @@ async def gift(client, message):
 # Start a trade transaction
 async def start_trade(sender_id, message):
     if not message.reply_to_message:
-        await message.reply_text("❌ Incorrect usage\n\n ℹ️ To start trade, reply the user you want to start trading with:\n\n /trade")
+        await message.reply_text(
+            "❌ **Incorrect Usage!**\n\n"
+            "ℹ️ To initiate a trade, please reply to the user you wish to trade with using:\n\n"
+            "`/trade character_id_1 character_id_2`"
+        )
         return
 
     receiver_id = message.reply_to_message.from_user.id
 
     if sender_id == receiver_id:
-        await message.reply_text("You can't trade a character with yourself!")
+        await message.reply_text("🚫 You cannot trade with yourself!")
         return
 
     if await has_ongoing_transaction(receiver_id):
         receiver = await user_collection.find_one({'id': receiver_id})
-        await message.reply_text(f"{receiver.get('first_name')} has ongoing deals. Please use /reset command to cancel ongoing deals.")
+        await message.reply_text(
+            f"⚠️ **Alert!**\n\n"
+            f"{receiver.get('first_name')} is currently involved in ongoing deals. "
+            "Please ask them to use **`/reset`** to cancel their ongoing transactions."
+        )
         return
 
     if len(message.command) != 3:
-        await message.reply_text("You need to provide two character IDs!")
+        await message.reply_text("⚠️ **Character ID Missing!**\n\nYou need to provide two character IDs!")
         return
 
     sender_character_id, receiver_character_id = message.command[1], message.command[2]
@@ -114,13 +122,13 @@ async def start_trade(sender_id, message):
 
     sender_character = next((character for character in sender['characters'] if character.get('id') == sender_character_id), None)
     receiver_character = next((character for character in receiver['characters'] if character.get('id') == receiver_character_id), None)
-    
+
     if not sender_character:
-        await message.reply_text("You don't have the character you're trying to trade!")
+        await message.reply_text("❌ **Character Not Found!**\n\nYou don't have the character you're trying to trade.")
         return
 
     if not receiver_character:
-        await message.reply_text("The other user doesn't have the character they're trying to trade!")
+        await message.reply_text("❌ **Character Not Found!**\n\nThe other user doesn't possess the character they're attempting to trade.")
         return
 
     pending_trades[(sender_id, receiver_id)] = (sender_character, receiver_character)
@@ -129,12 +137,18 @@ async def start_trade(sender_id, message):
     sender_rarity_emoji = get_rarity_emoji(sender_character['rarity'])
     receiver_rarity_emoji = get_rarity_emoji(receiver_character['rarity'])
 
-    trade_info_message = get_trade_info_message(sender_character, receiver_character, sender_rarity_emoji, receiver_rarity_emoji)
+    trade_info_message = (
+        f"🔄 **Trade Proposal**\n\n"
+        f"**You:** {sender_character['name']} {sender_rarity_emoji}\n"
+        f"**Trading with:** [{receiver.get('first_name')}](tg://user?id={receiver_id})\n"
+        f"**They are offering:** {receiver_character['name']} {receiver_rarity_emoji}\n\n"
+        "Please review the trade details and confirm your decision!"
+    )
 
     keyboard = InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("ᴄᴏɴғɪʀᴍ ᴛʀᴀᴅᴇ ✅", callback_data=f"confirm_trade:{sender_id}:{receiver_id}")],
-            [InlineKeyboardButton("ᴄᴀɴᴄᴇʟ ᴛʀᴀᴅᴇ ❌", callback_data="cancel_trade")]
+            [InlineKeyboardButton("✅ Confirm Trade", callback_data=f"confirm_trade:{sender_id}:{receiver_id}")],
+            [InlineKeyboardButton("❌ Cancel Trade", callback_data="cancel_trade")]
         ]
     )
 
