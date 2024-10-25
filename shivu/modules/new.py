@@ -39,21 +39,7 @@ async def display_anime_list(update: Update, context: CallbackContext, page: int
     total_pages = len(alphabet_list) // 10 + (len(alphabet_list) % 10 > 0)
     page = max(0, min(page, total_pages - 1))  # Ensure valid page range
 
-    # Keyboard for letters with pagination
-    keyboard = [
-        [InlineKeyboardButton(f"{letter}", callback_data=f"animelist:{page}:{i+1}")]
-        for i, letter in enumerate(alphabet_list[page * 10:(page + 1) * 10])
-    ]
     keyboard.append([InlineKeyboardButton("🔍 Search", switch_inline_query_current_chat="")])
-    
-    # Navigation buttons
-    nav_buttons = []
-    if page > 0:
-        nav_buttons.append(InlineKeyboardButton("⬅️", callback_data=f"animelist:{page - 1}:0"))
-    if page < total_pages - 1:
-        nav_buttons.append(InlineKeyboardButton("➡️", callback_data=f"animelist:{page + 1}:0"))
-    if nav_buttons:
-        keyboard.append(nav_buttons)
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -101,16 +87,6 @@ async def anime_list_callback(update: Update, context: CallbackContext):
         
     message += "\nSelect an anime to view its characters."
 
-    # Create buttons to select an anime
-    keyboard = [
-        [InlineKeyboardButton(f"{anime}", callback_data=f"anime_characters:{anime}")]
-        for anime in anime_in_letter
-    ]
-    keyboard.append([InlineKeyboardButton("🔙 Back", callback_data=f"animelist:{page}:0")])
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    await query.edit_message_text(message, parse_mode="HTML", reply_markup=reply_markup)
-
 # Callback to display characters
 async def anime_characters_callback(update: Update, context: CallbackContext):
     query = update.callback_query
@@ -128,10 +104,6 @@ async def anime_characters_callback(update: Update, context: CallbackContext):
     except PyMongoError as e:
         await query.message.reply_text(f"Database Error: {e}")
         return
-
-    message = f"<b>Characters in '{anime}':</b>\n\n" + "\n".join(characters_list)
-    keyboard = [[InlineKeyboardButton("🔙 Back", callback_data=f"animelist:0:0")]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
 
     await query.edit_message_text(message, parse_mode="HTML", reply_markup=reply_markup)
 
