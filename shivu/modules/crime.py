@@ -7,44 +7,23 @@ from shivu import shivuu as app, user_collection
 
 COOLDOWN_DURATION = 300  # 5 minutes in seconds
 
-# Create dictionaries to store cooldown information
+# Dictionaries for tracking cooldowns and ongoing explorations
 user_cooldowns = {}
 ongoing_explorations = {}
 
+# Define exploration locations and animations
 exploration_options = [
-    "Dungeon 🏰",
-    "Demon Village 😈",
-    "Sonagachi 💃",
-    "Russian Harem 💋",
-    "Ambani House 🏦",
-    "Sex City 🏙️",
-    "Fusha Village 🏞️",
-    "Mystic Forest 🌲",
-    "Dragon's Lair 🐉",
-    "Pirate Cove 🏴‍☠️",
-    "Haunted Mansion 👻",
-    "Enchanted Garden 🌸",
-    "Lost City 🏙️",
-    "Viking Stronghold ⚔️",
-    "Samurai Dojo 🥋",
-    "Wizard Tower 🧙‍♂️",
-    "Crystal Cave 💎",
-    "Mermaid Lagoon 🧜‍♀️",
-    "Gnome Village 🧝",
-    "Fairy Forest 🧚",
-    "Goblin Camp 👺",
-    "Minotaur Labyrinth 🐂",
-    "Phoenix Nest 🔥",
-    "Treasure Island 🏝️",
-    "Jungle Temple 🏯"
+    "Dungeon 🏰", "Demon Village 😈", "Sonagachi 💃", "Russian Harem 💋", "Ambani House 🏦",
+    "Sex City 🏙️", "Fusha Village 🏞️", "Mystic Forest 🌲", "Dragon's Lair 🐉",
+    "Pirate Cove 🏴‍☠️", "Haunted Mansion 👻", "Enchanted Garden 🌸", "Lost City 🏙️",
+    "Viking Stronghold ⚔️", "Samurai Dojo 🥋", "Wizard Tower 🧙‍♂️", "Crystal Cave 💎",
+    "Mermaid Lagoon 🧜‍♀️", "Gnome Village 🧝", "Fairy Forest 🧚", "Goblin Camp 👺",
+    "Minotaur Labyrinth 🐂", "Phoenix Nest 🔥", "Treasure Island 🏝️", "Jungle Temple 🏯"
 ]
 
 exploration_animations = [
-    "🔍 Scanning the area...",
-    "👣 Walking cautiously...",
-    "✨ Magic fills the air...",
-    "🕵️ Searching every corner...",
-    "🧭 Your compass spins wildly...",
+    "🔍 Scanning the area...", "👣 Moving stealthily...", "✨ Magical energy surrounds you...",
+    "🕵️ Searching carefully...", "🧭 The compass spins wildly..."
 ]
 
 # Command to start exploration
@@ -52,29 +31,32 @@ exploration_animations = [
 async def explore_command(client, message):
     user_id = message.from_user.id
 
+    # Restrict to group chats only
     if message.chat.type == "private":
-        await message.reply_text("This command can only be used in group chats.")
+        await message.reply_text("⚠️ 𝘛𝘩𝘪𝘴 𝘤𝘰𝘮𝘮𝘢𝘯𝘥 𝘤𝘢𝘯 𝘰𝘯𝘭𝘺 𝘣𝘦 𝘶𝘴𝘦𝘥 𝘪𝘯 𝘨𝘳𝘰𝘶𝘱 𝘤𝘩𝘢𝘵𝘴.", parse_mode="HTML")
         return
 
+    # Check if user is already exploring or in cooldown
     if user_id in ongoing_explorations:
-        await message.reply_text("You are already exploring. Wait until your current adventure ends!")
+        await message.reply_text("🕰️ 𝗬𝗼𝘂'𝗿𝗲 𝗮𝗹𝗿𝗲𝗮𝗱𝘆 𝗼𝗻 𝗮𝗻 𝗮𝗱𝘃𝗲𝗻𝘁𝘂𝗿𝗲! 𝗦𝗲𝗲 𝗶𝘁 𝘁𝗵𝗿𝗼𝘂𝗴𝗵 𝗯𝗲𝗳𝗼𝗿𝗲 𝗲𝗺𝗯𝗮𝗿𝗸𝗶𝗻𝗴 𝗮𝗴𝗮𝗶𝗻!", parse_mode="HTML")
         return
 
+    # Cooldown check
     if user_id in user_cooldowns and (datetime.utcnow() - user_cooldowns[user_id]) < timedelta(seconds=COOLDOWN_DURATION):
         remaining_time = COOLDOWN_DURATION - (datetime.utcnow() - user_cooldowns[user_id]).total_seconds()
-        await message.reply_text(f"Please wait {int(remaining_time)} seconds before exploring again.")
+        await message.reply_text(f"⏳ 𝗪𝗮𝗶𝘁 {int(remaining_time)} 𝘀𝗲𝗰𝗼𝗻𝗱𝘀 𝗯𝗲𝗳𝗼𝗿𝗲 𝗲𝘅𝗽𝗹𝗼𝗿𝗶𝗻𝗴 𝗮𝗴𝗮𝗶𝗻.", parse_mode="HTML")
         return
 
+    # Start exploration
     ongoing_explorations[user_id] = True
-
     options = random.sample(exploration_options, 2)
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(options[0], callback_data=f"explore_{user_id}_{options[0]}")],
         [InlineKeyboardButton(options[1], callback_data=f"explore_{user_id}_{options[1]}")]
     ])
-    await message.reply_text("Choose where you'd like to explore!", reply_markup=keyboard)
+    await message.reply_text("🗺️ <b>Select your exploration path!</b>", reply_markup=keyboard, parse_mode="HTML")
 
-# Callback query handler for exploration choices
+# Handle exploration choices
 @app.on_callback_query(filters.regex(r"^explore_"))
 async def handle_explore_choice(client, callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
@@ -83,61 +65,56 @@ async def handle_explore_choice(client, callback_query: CallbackQuery):
     exploration_place = "_".join(data_parts[2:])
 
     if user_id != command_user_id:
-        await callback_query.answer("It's not your button to press!", show_alert=True)
+        await callback_query.answer("⚠️ Not your button to press!", show_alert=True)
         return
 
+    # Check cooldown
     if user_id in user_cooldowns and (datetime.utcnow() - user_cooldowns[user_id]) < timedelta(seconds=COOLDOWN_DURATION):
         remaining_time = COOLDOWN_DURATION - (datetime.utcnow() - user_cooldowns[user_id]).total_seconds()
-        await callback_query.answer(f"Please wait {int(remaining_time)} seconds before exploring again.", show_alert=True)
+        await callback_query.answer(f"⏳ Please wait {int(remaining_time)} seconds before exploring again.", show_alert=True)
         return
 
-    # Simulate exploration animation with emojis
+    # Exploration animations
     for animation in exploration_animations:
-        await callback_query.message.edit_text(animation)
+        await callback_query.message.edit_text(animation, parse_mode="HTML")
         await asyncio.sleep(1)
 
-    # Generate a random reward between 1000 and 5000 tokens
+    # Random reward between 1000 and 5000 tokens
     random_reward = random.randint(1000, 5000)
-
-    # Update user balance in the database
     await user_collection.update_one({'id': user_id}, {'$inc': {'balance': random_reward}})
 
     # End exploration
-    if user_id in ongoing_explorations:
-        del ongoing_explorations[user_id]
-
-    # Set the user cooldown
+    ongoing_explorations.pop(user_id, None)
     user_cooldowns[user_id] = datetime.utcnow()
 
-    # Exploration result messages based on the place
+    # Enhanced result messages for different locations
     place_messages = {
-        "Dungeon 🏰": "You ventured deep into the Dungeon and uncovered an ancient chest filled with gold!",
-        "Demon Village 😈": "The demons were fierce, but you outsmarted them and stole their treasure!",
-        "Sonagachi 💃": "It was a wild night, but you earned a small fortune in the end!",
-        "Russian Harem 💋": "Well, that was quite an experience... You left with a heavy purse.",
-        "Ambani House 🏦": "You managed to sneak into Ambani's vault! Jackpot!",
-        "Sex City 🏙️": "You explored the streets of Sex City and found a hidden stash of coins!",
-        "Fusha Village 🏞️": "You visited Fusha Village and found some rare herbs worth a lot of money.",
-        "Mystic Forest 🌲": "In the Mystic Forest, you found a magical artifact worth a fortune!",
-        "Dragon's Lair 🐉": "You bravely entered the Dragon's Lair and escaped with a treasure hoard!",
-        "Pirate Cove 🏴‍☠️": "The pirates were no match for you, and you sailed away with their treasure!",
-        "Haunted Mansion 👻": "Spooky! But you managed to find hidden treasure in the Haunted Mansion!",
-        "Enchanted Garden 🌸": "The Enchanted Garden rewarded you with magical gold coins!",
-        "Lost City 🏙️": "The Lost City held many secrets, and you uncovered valuable treasures.",
-        "Viking Stronghold ⚔️": "The Vikings' stronghold was no match for you. You looted their treasure!",
-        "Samurai Dojo 🥋": "You found hidden treasures in the Samurai Dojo after a fierce battle!",
-        "Wizard Tower 🧙‍♂️": "The Wizard's Tower held many magical items, and you left with a rare gem.",
-        "Crystal Cave 💎": "In the depths of the Crystal Cave, you uncovered precious jewels!",
-        "Mermaid Lagoon 🧜‍♀️": "The mermaids guided you to a hidden underwater treasure!",
-        "Gnome Village 🧝": "The gnomes were generous and shared some of their gold with you.",
-        "Fairy Forest 🧚": "The fairies of the forest rewarded you with enchanted gold coins!",
-        "Goblin Camp 👺": "You raided the Goblin Camp and escaped with their treasure!",
-        "Minotaur Labyrinth 🐂": "You navigated the Minotaur's Labyrinth and found a stash of gold!",
-        "Phoenix Nest 🔥": "The Phoenix left behind a pile of gold in its nest!",
-        "Treasure Island 🏝️": "X marks the spot! You found the buried treasure on Treasure Island!",
-        "Jungle Temple 🏯": "In the heart of the Jungle Temple, you found a forgotten treasure!"
+        "Dungeon 🏰": "💀 You descended into the <b>Dungeon</b> and unearthed ancient coins!",
+        "Demon Village 😈": "😈 The demons tried to stop you, but you escaped with their treasure!",
+        "Sonagachi 💃": "💃 After a memorable time, you earned quite a sum!",
+        "Russian Harem 💋": "💋 An adventure worth the coins you collected!",
+        "Ambani House 🏦": "🏦 You breached Ambani's vault and struck gold!",
+        "Sex City 🏙️": "🛤️ The streets held secrets and riches for the taking.",
+        "Fusha Village 🏞️": "🍃 Fusha’s rare herbs earned you a fortune!",
+        "Mystic Forest 🌲": "🌲 A mystical artifact was your reward from the forest!",
+        "Dragon's Lair 🐉": "🔥 A daring escape from the dragon’s lair left you rich!",
+        "Pirate Cove 🏴‍☠️": "🏴‍☠️ The pirates’ stash is now yours!",
+        "Haunted Mansion 👻": "👻 Spooky! But the mansion yielded hidden treasure.",
+        "Enchanted Garden 🌸": "🌸 The fairies gifted you magical gold coins!",
+        "Lost City 🏙️": "🏙️ Treasures of the lost city are now in your hands.",
+        "Viking Stronghold ⚔️": "⚔️ Vikings’ treasure chest is yours now!",
+        "Samurai Dojo 🥋": "🥋 The dojo’s hidden treasures are now yours!",
+        "Wizard Tower 🧙‍♂️": "🔮 Magical artifacts were your reward from the Wizard’s Tower!",
+        "Crystal Cave 💎": "💎 Precious gems from the Crystal Cave are yours!",
+        "Mermaid Lagoon 🧜‍♀️": "🧜‍♀️ A treasure chest lies beneath the waves!",
+        "Gnome Village 🧝": "🧝 The gnomes shared their gold with you.",
+        "Fairy Forest 🧚": "🧚 A treasure hidden by fairies was found!",
+        "Goblin Camp 👺": "👺 You stole the goblins' stash and escaped!",
+        "Minotaur Labyrinth 🐂": "🐂 After braving the maze, you found a hoard!",
+        "Phoenix Nest 🔥": "🔥 Left with a treasure from the Phoenix Nest!",
+        "Treasure Island 🏝️": "🏝️ X marks the spot! You found the treasure.",
+        "Jungle Temple 🏯": "🏯 You uncovered riches hidden in the jungle temple!"
     }
 
-    result_message = place_messages.get(exploration_place, f"You explored the {exploration_place} and found a hidden treasure.")
-
-    await callback_query.message.edit_text(f"{result_message}\nYou gained {random_reward} tokens! 💰")
+    result_message = place_messages.get(exploration_place, f"✨ You explored the {exploration_place} and found hidden treasure.")
+    await callback_query.message.edit_text(f"{result_message}\n\n🎉 <b>You gained {random_reward} tokens! 💰</b>", parse_mode="HTML")
