@@ -69,15 +69,18 @@ async def give_character_batch(receiver_id, character_ids):
 
 @app.on_message(filters.command(["daan"]) & filters.reply)
 async def give_character_command(client, message):
-    if str(message.from_user.id) not in SPECIALGRADE and str(message.from_user.id) not in GRADE1:
-        await message.reply_text("This command can only be used by Special Grade and Grade 1 sorcerers.")
+    user_id = str(message.from_user.id)
+
+    if user_id not in SPECIALGRADE and user_id not in GRADE1:
+        await message.reply_text("🚫 **This command can only be used by Special Grade and Grade 1 sorcerers.**")
         return
 
     if not message.reply_to_message:
-        await message.reply_text("You need to reply to a user's message to give a character!")
+        await message.reply_text("⚠️ **You need to reply to a user's message to give a character!**")
         return
 
     try:
+        # Extract the character ID from the message
         character_id = str(message.text.split()[1])
         receiver_id = message.reply_to_message.from_user.id
         receiver_first_name = message.reply_to_message.from_user.first_name
@@ -86,51 +89,53 @@ async def give_character_command(client, message):
         try:
             await client.get_chat(receiver_id)
         except Exception as e:
-            await message.reply_text(f"Error interacting with the receiver: {e}")
+            await message.reply_text(f"❌ **Error interacting with the receiver:** {e}")
             return
 
         # Backup user characters before giving
         await backup_characters(receiver_id)
 
+        # Give the character
         character = await give_character_batch(receiver_id, [character_id])
 
         if character:
             img_url = character[0]['img_url']
             user_link = f"[{receiver_first_name}](tg://user?id={receiver_id})"
             caption = (
-                f"Successfully Given To The Bhikari {user_link}\n"
-                f"Information As Follows\n"
-                f" ✅ Rarity: {character[0]['rarity']}\n"
-                f"🫂 Anime: {character[0]['anime']}\n"
-                f"💕 Name: {character[0]['name']}\n"
-                f"🍿 ID: {character[0]['id']}"
+                f"🎉 **Successfully Given to:** {user_link}\n\n"
+                f"📜 **Character Details:**\n"
+                f"✅ **Rarity:** {character[0]['rarity']}\n"
+                f"🌀 **Anime:** {character[0]['anime']}\n"
+                f"💖 **Name:** {character[0]['name']}\n"
+                f"🆔 **ID:** {character[0]['id']}"
             )
             await message.reply_photo(photo=img_url, caption=caption)
 
             # Send notification to SPECIALGRADE users
             notification_message = (
-                f"Action: Give Character\n"
-                f"Given by: {message.from_user.first_name}\n"
-                f"Receiver: {user_link}\n"
-                f"Character ID: {character[0]['id']}"
+                f"📣 **Action:** Give Character\n"
+                f"👤 **Given by:** {message.from_user.first_name}\n"
+                f"🎯 **Receiver:** {user_link}\n"
+                f"🆔 **Character ID:** {character[0]['id']}"
             )
             await send_action_notification(notification_message)
+
             # Send log to logs channel
             log_message = (
                 f"📝 <b>Character Given</b>\n\n"
                 f"👤 <b>By:</b> {message.from_user.first_name}\n"
                 f"🎁 <b>Receiver:</b> [{receiver_first_name}](tg://user?id={receiver_id})\n"
                 f"🍿 <b>Character ID:</b> {character[0]['id']}\n"
-                                )
+            )
             await send_log_message(log_message)
 
     except IndexError:
-        await message.reply_text("Please provide a character ID.")
+        await message.reply_text("⚠️ **Please provide a character ID.**")
     except ValueError as e:
-        await message.reply_text(str(e))
+        await message.reply_text(f"❌ **Error:** {str(e)}")
     except Exception as e:
         print(f"Error in give_character_command: {e}")
-        await message.reply_text("An error occurred while processing the command.")
+        await message.reply_text("❌ **An error occurred while processing the command.**")
 
 @app.on_message(filters.command(["kill"]) & filters.reply)
 async def remove_character_command(client, message):
