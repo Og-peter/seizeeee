@@ -25,11 +25,17 @@ async def gift(client, message):
 
     # Check if the sender has ongoing transactions
     if await has_ongoing_transaction(sender_id):
-        await message.reply_text("You already have ongoing trade or gift transactions. Please complete them or use `/reset` to cancel.")
+        await message.reply_text(
+            "⚠️ **Active Transaction Alert!**\n\n"
+            "You're currently involved in a trade or gift exchange. Complete it first, or use **`/reset`** to cancel all active transactions."
+        )
         return
 
     if not message.reply_to_message:
-        await message.reply_text("You need to reply to a user's message to gift a character!")
+        await message.reply_text(
+            "💌 **Whoops!**\n\n"
+            "To gift a character, please reply to the intended user's message."
+        )
         return
 
     receiver_id = message.reply_to_message.from_user.id
@@ -37,11 +43,11 @@ async def gift(client, message):
     receiver_first_name = message.reply_to_message.from_user.first_name
 
     if sender_id == receiver_id:
-        await message.reply_text("You can't gift a character to yourself!")
+        await message.reply_text("🚫 You can't gift a character to yourself!")
         return
 
     if len(message.command) != 2:
-        await message.reply_text("You need to provide a character ID!")
+        await message.reply_text("❗ **Character ID Missing!**\n\nPlease provide the character ID to proceed with the gift.")
         return
 
     character_id = message.command[1]
@@ -51,7 +57,7 @@ async def gift(client, message):
     character = next((character for character in sender['characters'] if character.get('id') == character_id), None)
 
     if not character:
-        await message.reply_text("You don't have this character in your collection!")
+        await message.reply_text("❌ **Character Not Found!**\n\nIt seems you don't own this character.")
         return
 
     pending_gifts[(sender_id, receiver_id)] = {
@@ -62,19 +68,20 @@ async def gift(client, message):
 
     keyboard = InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("ᴄᴏɴғɪʀᴍ ɢɪғᴛ ✅", callback_data="confirm_gift")],
-            [InlineKeyboardButton("ᴄᴀɴᴄᴇʟ ɢɪғᴛ ❌", callback_data="cancel_gift")]
+            [InlineKeyboardButton("🎁 Confirm Gift ✅", callback_data="confirm_gift")],
+            [InlineKeyboardButton("❌ Cancel Gift ❌", callback_data="cancel_gift")]
         ]
     )
 
-    # Construct message with receiver's first name as a blue link
+    # Construct message with receiver's first name as a clickable link
     message_text = (
-        f"Do you really want to gift this character\n"
-        f"🎁 Click 'Accept' button to send:\n\n"
-        f" **Name:** `{character['name']}`\n"
-        f" **Rarity:** `{character['rarity']}`\n"
-        f" **Anime:** `{character['anime']}`\n\n"
-        f"To: [{receiver_first_name}](tg://user?id={receiver_id})"
+        f"🎉 **Confirm Your Gift!**\n\n"
+        f"Do you want to send this character to **[{receiver_first_name}](tg://user?id={receiver_id})**?\n\n"
+        f"✨ **Character Details**:\n"
+        f"   • **Name:** `{character['name']}`\n"
+        f"   • **Rarity:** `{character['rarity']}`\n"
+        f"   • **Anime:** `{character['anime']}`\n\n"
+        f"Click 'Confirm Gift' to proceed or 'Cancel Gift' to stop."
     )
 
     await message.reply_text(message_text, reply_markup=keyboard)
