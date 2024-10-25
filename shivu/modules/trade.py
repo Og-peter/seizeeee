@@ -154,7 +154,6 @@ async def start_trade(sender_id, message):
 
     await message.reply_text(trade_info_message, reply_markup=keyboard)
 
-# Callback query handler for trade transactions
 @app.on_callback_query(filters.create(lambda _, __, query: query.data.startswith("confirm_trade:")))
 async def on_trade_callback_query(client, callback_query):
     data = callback_query.data.split(':')
@@ -162,18 +161,17 @@ async def on_trade_callback_query(client, callback_query):
     receiver_id = int(data[2])
 
     if callback_query.from_user.id != receiver_id:
-        await callback_query.answer("This is not for you!", show_alert=True)
+        await callback_query.answer("🚫 This trade confirmation is not for you!", show_alert=True)
         return
 
     if (sender_id, receiver_id) not in pending_trades:
-        await callback_query.answer("This trade is no longer available.", show_alert=True)
+        await callback_query.answer("❌ This trade is no longer available.", show_alert=True)
         return
 
     sender = await user_collection.find_one({'id': sender_id})
     receiver = await user_collection.find_one({'id': receiver_id})
 
     sender_character, receiver_character = pending_trades[(sender_id, receiver_id)]
-
     del pending_trades[(sender_id, receiver_id)]
 
     # Exchange characters
@@ -187,26 +185,30 @@ async def on_trade_callback_query(client, callback_query):
     receiver_characters.append(sender_character)
     await user_collection.update_one({'id': receiver_id}, {'$set': {'characters': receiver_characters}})
 
+    # Trade completion message
     message_text = (
-        f"ℹ️ **Trade Info:**\n\n"
-        f"🔃 [{sender.get('first_name', 'Unknown')}](tg://user?id={sender_id}) gave {sender_character['name']} to [{receiver.get('first_name', 'Unknown')}](tg://user?id={receiver_id})\n"
-        f"🔃 [{receiver.get('first_name', 'Unknown')}](tg://user?id={receiver_id}) gave {receiver_character['name']} to [{sender.get('first_name', 'Unknown')}](tg://user?id={sender_id})"
+        "🔄 **Trade Completed!**\n\n"
+        f"**🌟 {sender.get('first_name', 'Unknown')}** has traded:\n"
+        f"➡️ `{sender_character['name']}` to **[{receiver.get('first_name', 'Unknown')}](tg://user?id={receiver_id})**\n\n"
+        f"**🌟 {receiver.get('first_name', 'Unknown')}** has traded:\n"
+        f"➡️ `{receiver_character['name']}` to **[{sender.get('first_name', 'Unknown')}](tg://user?id={sender_id})**"
     )
 
     await callback_query.message.edit_text(message_text)
 
     # Send private message to sender
     sender_trade_confirmation_message = (
-        f"✅ [{receiver.get('first_name', 'Unknown')}](tg://user?id={receiver_id}) accepted your offer!\n\n"
-        "ℹ **You got:**\n"
-        f" **Name:** {sender_character['name']}\n"
-        f" **Rarity:** {sender_character['rarity']}\n"
-        f" **Anime:** {sender_character['anime']}\n"
+        "✅ **Trade Successful!**\n\n"
+        f"**🎉 {receiver.get('first_name', 'Unknown')}** accepted your trade offer!\n\n"
+        "ℹ️ **You received:**\n"
+        f"**🌟 Name:** `{sender_character['name']}`\n"
+        f"**🌟 Rarity:** `{sender_character['rarity']}`\n"
+        f"**🌟 Anime:** `{sender_character['anime']}`\n"
     )
 
     await app.send_photo(sender_id, photo=sender_character['img_url'], caption=sender_trade_confirmation_message)
 
-    await callback_query.answer()
+    await callback_query.answer("✅ Trade confirmed!")
 
 # Callback query handler for rejecting trade transactions
 @app.on_callback_query(filters.create(lambda _, __, query: query.data == "cancel_trade"))
