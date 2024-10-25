@@ -179,15 +179,22 @@ async def callback_delete_harem(client, callback_query):
     callback_user_id = callback_query.from_user.id
 
     if str(callback_user_id) not in SPECIALGRADE:
-        await callback_query.answer("🚫 You don't have the power to execute this! 🤷‍♂️", show_alert=True)
+        await callback_query.answer("🚫 You lack the authority to execute this! 🤷‍♂️", show_alert=True)
         return
 
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("💥 Yes, DELETE", callback_data=f"confirm_delete_{user_id}")],
         [InlineKeyboardButton("🙅‍♂️ No, CANCEL", callback_data=f"cancel_delete_{user_id}")]
     ])
-    await callback_query.message.edit_text("⚠️ <b>Are you sure you want to delete this user's harem?</b>", reply_markup=keyboard)
 
+    confirmation_message = (
+        "⚠️ <b>Are you absolutely sure you want to delete this user's harem?</b>\n\n"
+        "🔍 This action is irreversible! 💔\n\n"
+        "Please confirm your choice!"
+    )
+
+    await callback_query.message.reply_text(confirmation_message, reply_markup=keyboard)
+    await callback_query.answer()  # Clear the callback query after responding
 
 @app.on_callback_query(filters.regex(r'^confirm_delete_'))
 async def callback_confirm_delete(client, callback_query):
