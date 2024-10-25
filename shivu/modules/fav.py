@@ -34,7 +34,11 @@ async def fav(client: Client, message):
 
     # Check if the command has enough arguments
     if len(message.command) < 2:
-        await message.reply_text(f'{random.choice(CANCEL_EMOJIS)} Invalid usage. Use /fav (waifu_id) to set your favourite waifu.\nExample: /fav 32.')
+        await message.reply_text(
+            f'{random.choice(CANCEL_EMOJIS)} **Invalid usage!**\n'
+            f'Use `/fav (waifu_id)` to set your favorite waifu.\n'
+            f'**Example:** `/fav 32`.'
+        )
         return
 
     character_id = message.command[1]
@@ -42,13 +46,13 @@ async def fav(client: Client, message):
     # Fetch user from database
     user = await user_collection.find_one({'id': user_id})
     if not user or 'characters' not in user:
-        await message.reply_text('You have not seized any characters yet... 😔')
+        await message.reply_text('😔 **You haven\'t seized any characters yet!**')
         return
 
     # Find the character in the user's collection
     character = next((c for c in user['characters'] if str(c.get('id')) == character_id), None)
     if not character:
-        await message.reply_text('This character is not in your harem 🙄')
+        await message.reply_text('🙄 **This character is not in your harem!**')
         return
 
     # Extract character details
@@ -60,11 +64,18 @@ async def fav(client: Client, message):
     # Send character photo with confirmation message and inline buttons
     confirmation_message = await message.reply_photo(
         photo=character['img_url'],
-        caption=f"Are you sure you want to set:\n\n"
-                f"🧃 **Name**: {name}\n⚜️ **Anime**: {anime}\n🥂 **Rarity**: {rarity_emoji} {rarity_display}\n\nAs your favorite?",
+        caption=(
+            f"🌟 **Are you sure you want to set this character as your favorite?** 🌟\n\n"
+            f"🧃 **Name:** `{name}`\n"
+            f"⚜️ **Anime:** `{anime}`\n"
+            f"🥂 **Rarity:** {rarity_emoji} `{rarity_display}`\n\n"
+            "🔍 **Choose an option:**"
+        ),
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🟢 Confirm", callback_data=f"fav_yes_{character_id}"),
-             InlineKeyboardButton("🔴 Cancel", callback_data=f"fav_no_{character_id}")]
+            [
+                InlineKeyboardButton("🟢 Confirm", callback_data=f"fav_yes_{character_id}"),
+                InlineKeyboardButton("🔴 Cancel", callback_data=f"fav_no_{character_id}")
+            ]
         ])
     )
 
