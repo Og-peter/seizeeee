@@ -74,13 +74,28 @@ async def send_rarity_preferences(callback_query: CallbackQuery):
     await callback_query.message.reply_text(message_text)
 
 async def get_sorted_characters_by_rarity(user_id):
-    # Function to fetch and sort characters by rarity
+    """Fetch and sort characters by rarity for a given user."""
     characters = await user_collection.find_one({'id': user_id})
     if characters and 'characters' in characters:
-        return sorted(characters['characters'], key=lambda x: x['rarity'], reverse=True)
+        # Sort by rarity with a custom order
+        rarity_order = {
+            "Common": 0,
+            "Limited Edition": 1,
+            "Premium": 2,
+            "Exotic": 3,
+            "Exclusive": 4,
+            "Chibi": 5,
+            "Legendary": 6,
+            "Rare": 7,
+            "Medium": 8,
+            "Astral": 9,
+            "Valentine": 10
+        }
+        return sorted(characters['characters'], key=lambda x: rarity_order.get(x['rarity'], 99))  # Default to a high value if rarity not found
     return []
 
 async def send_rarity_preferences(callback_query: CallbackQuery):
+    """Send user a message to choose their preferred rarity of characters."""
     rarity_order = [
         "⚪️ Common",
         "🔮 Limited Edition",
@@ -95,11 +110,20 @@ async def send_rarity_preferences(callback_query: CallbackQuery):
         "💞 Valentine"
     ]
     
-    keyboard = [[InlineKeyboardButton(rarity, callback_data=f"rarity_{rarity}")] for rarity in rarity_order]
-    keyboard.append([InlineKeyboardButton("🔙 Back", callback_data="harem_menu")])  # Back to main menu
+    # Create a dynamic keyboard with rarity options
+    keyboard = [
+        [InlineKeyboardButton(f"✨ {rarity} ✨", callback_data=f"rarity_{rarity.split(' ')[-1]}")] for rarity in rarity_order
+    ]
+    keyboard.append([InlineKeyboardButton("🔙 Back to Menu", callback_data="harem_menu")])  # Back to main menu
+    
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    await callback_query.message.edit_text("🎴 Choose Your Preferred Rarity.", reply_markup=reply_markup)
+    # Edit the previous message to prompt user for rarity preference
+    await callback_query.message.edit_text(
+        "🎴 **Choose Your Preferred Rarity:**\n\n"
+        "Select from the options below to filter your character collection!",
+        reply_markup=reply_markup
+    )
 
 @app.on_callback_query(filters.regex(r'^rarity_'))
 async def rarity_callback(client, callback_query: CallbackQuery):
