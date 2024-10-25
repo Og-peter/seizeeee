@@ -133,16 +133,24 @@ async def rarity_callback(client, callback_query: CallbackQuery):
 
     # Authorization check
     if not hmode_user_id or user_id != hmode_user_id["id"]:
-        await callback_query.answer("You are not authorized to use this button.", show_alert=True)
+        await callback_query.answer("🚫 You are not authorized to use this button.", show_alert=True)
         return
 
     if data.startswith("rarity_"):
         rarity = data.split("_")[1]
+        
         # Update user preference in the database
         await user_collection.update_one({'id': user_id}, {'$set': {'rarity_preference': rarity}})
+
+        # Success message with additional feedback
+        await callback_query.message.edit_text(
+            f"✨ **Harem Interface Updated!** ✨\n"
+            f"Your rarity preference has been set to: **{rarity}**\n\n"
+            "🔄 Navigating you back to the Harem Mode..."
+        )
         
-        # Success message and navigating to harem mode again
-        await callback_query.message.edit_text("Harem Interface Changed Successfully!")
+        # Optionally, add a delay before returning to harem mode for a smoother transition
+        await asyncio.sleep(2)  # Adding a brief pause for effect
         await harem(client, callback_query.message)
 
 @app.on_callback_query(filters.regex(r'reset_preferences'))
