@@ -41,12 +41,15 @@ async def log_action(action, user_id, initiator_id):
         
 async def get_user_info(user_id):
     user = await user_collection.find_one({'id': user_id})
+    
     if user:
         user_info = (
+            f"🎭 <b>User Profile:</b>\n\n"
             f"🪪 <b>Name:</b> {user.get('first_name', 'Unknown')} {user.get('last_name', '')}\n"
             f"🧪 <b>Username:</b> @{user.get('username', 'None')}\n"
-            f"🔩 <b>User ID:</b> {user_id}\n"
-            f"👒 <b>Waifu Count:</b> {len(user.get('characters', []))}/{HAREM_SIZE_LIMIT}"
+            f"🔩 <b>User ID:</b> <code>{user_id}</code>\n"
+            f"👒 <b>Waifu Count:</b> {len(user.get('characters', []))} / {HAREM_SIZE_LIMIT}  <b>(Max)</b>\n"
+            f"🌟 <b>Status:</b> {'👑 Harem Master' if len(user.get('characters', [])) >= HAREM_SIZE_LIMIT else '✨ Keep Collecting!' }\n"
         )
         return user_info, user
     else:
