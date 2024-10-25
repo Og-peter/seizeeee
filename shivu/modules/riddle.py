@@ -93,16 +93,15 @@ async def guess_timeout(context: CallbackContext, chat_id: int, message_id: int)
         # Remove the active game after the timeout
         del active_guesses[chat_id]
 
-        # Edit the message to indicate time is up
+        # Send a new message to indicate time is up
         try:
-            await context.bot.edit_message_caption(
+            await context.bot.send_message(
                 chat_id=chat_id,
-                message_id=message_id,
-                caption=f"⏰ <b>Time's up!</b> The correct answer was <b><u>`{correct_answer}`</u></b>.",
+                text=f"⏰ <b>Time's up!</b> The correct answer was <b><u>{correct_answer}</u></b>.",
                 parse_mode=ParseMode.HTML
             )
         except Exception as e:
-            print(f"Failed to edit message: {e}")
+            print(f"Failed to send message: {e}")
 
 # Function to provide hints at different stages
 async def provide_hint(context: CallbackContext, chat_id: int, delay: int):
