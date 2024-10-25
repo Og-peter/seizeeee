@@ -16,17 +16,22 @@ character_message_links = {}
 ALLOWED_GROUP_ID = -1002104939708  # Replace with your allowed group's chat ID
 SUPPORT_GROUP_URL = "https://t.me/dynamic_gangs"  # Replace with your actual support group URL
 
+# Function to fetch a random anime character from the database
 async def get_random_character():
-    # Dummy implementation: Replace with actual character fetching logic
-    return {
-        'name': "Naruto Uzumaki",
-        'img_url': "https://example.com/naruto.jpg"  # Example image URL
-    }
+    try:
+        pipeline = [{'$sample': {'size': 1}}]
+        cursor = collection.aggregate(pipeline)
+        characters = await cursor.to_list(length=1)
+        return characters[0] if characters else None
+    except Exception as e:
+        print(f"Error fetching characters: {e}")
+        return None
 
+# Command handler to start the anime guess game
 async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     current_time = datetime.now()
     user_id = update.effective_user.id
-    chat_id = update.effective_chat.id
+    chat_id = update.message.chat_id
     user_mention = mention_html(user_id, update.effective_user.first_name)  # Mention the command user
 
     # Check if the command is used in the allowed group
@@ -34,7 +39,7 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
         keyboard = [[InlineKeyboardButton("Join Support Group", url=SUPPORT_GROUP_URL)]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text(
-            f"<b>⚠️ {user_mention}, this feature is exclusive to our support group. Join here:</b>",
+            f"<b>⚠️ {user_mention}, this feature is only available in our support group. Join here:</b>",
             reply_markup=reply_markup,
             parse_mode=ParseMode.HTML
         )
@@ -42,16 +47,13 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
 
     # Check if there is an active game in the chat
     if chat_id in active_guesses and active_guesses[chat_id].get('active', False):
-        await update.message.reply_text(
-            f"<b>⚠️ {user_mention}, you must complete the current game before starting a new one!</b>",
-            parse_mode=ParseMode.HTML
-        )
+        await update.message.reply_text(f"<b>⚠️ {user_mention}, you need to finish the current game before starting a new one!</b>", parse_mode=ParseMode.HTML)
         return
 
     # Get the correct anime character
     correct_character = await get_random_character()
     if not correct_character:
-        await update.message.reply_text("⚠️ Unable to fetch characters at this moment. Please try again later.")
+        await update.message.reply_text("⚠️ Could not fetch characters at this time. Please try again later.")
         return
 
     # Store the active guess for this chat
@@ -66,10 +68,7 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     character_message_links[chat_id] = correct_character['img_url']
 
     # Send the question with the character's image
-    question = (
-        "<b>✨🎭 𝗚𝗨𝗘𝗦𝗦 𝗧𝗛𝗘 𝗔𝗡𝗜𝗠𝗘 𝗖𝗛𝗔𝗥𝗔𝗖𝗧𝗘𝗥! 🎭✨</b>\n\n"
-        "<i>Think you know who this character is? Give it your best shot!</i>"
-    )
+    question = f"<b>🏮 **Guess the Anime Character!** 🏮</b>\n"
     await context.bot.send_photo(
         chat_id=chat_id,
         photo=correct_character['img_url'],
@@ -94,7 +93,7 @@ async def guess_timeout(context: CallbackContext, chat_id: int):
         # Send a message to indicate time is up
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"⏳ <b>Time's up!</b> The correct answer was <b><u>{correct_answer}</u></b>.",
+            text=f"⏰ <b>Time's up!</b> The correct answer was <b><u>{correct_answer}</u></b>.",
             parse_mode=ParseMode.HTML
         )
 
@@ -104,7 +103,7 @@ async def guess_text_handler(update: Update, context: CallbackContext):
     if update.message is None:
         return  # Ignore if the update does not contain a message
 
-    chat_id = update.effective_chat.id
+    chat_id = update.message.chat_id
     user_id = update.message.from_user.id
     user_answer = update.message.text.strip().lower()
     user_mention = mention_html(user_id, update.message.from_user.first_name)  # Mention the guesser
@@ -132,9 +131,9 @@ async def guess_text_handler(update: Update, context: CallbackContext):
 
         # Reply tagging the guesser directly
         await update.message.reply_text(
-            f"🌟 {user_mention} <b>correctly guessed in {attempts} attempts!</b>\n\n"
-            f"🎭 The answer was: <b><u>{correct_answer}</u></b>\n"
-            f"💰 You've earned <b>{tokens_earned} tokens!</b>\n"
+            f"🎉 {user_mention} <b>guessed correctly in {attempts} attempts!</b>\n\n"
+            f"🔑 The answer was: <b><u>{correct_answer}</u></b>\n"
+            f"🏅 You've earned <b>{tokens_earned} tokens!</b>\n"
             f"🔥 Your streak is now <b>{streak}</b>{badges}\n",
             parse_mode=ParseMode.HTML
         )
@@ -145,26 +144,23 @@ async def guess_text_handler(update: Update, context: CallbackContext):
     else:
         # Incorrect guess, show a "See Character" button
         message_link = character_message_links.get(chat_id, "#")
-        feedback = "✨ Keep trying!" if attempts < 3 else "💪 Almost there, don't give up!"
-        keyboard = [[InlineKeyboardButton("🔍 𝗪𝗛𝗘𝗥𝗘 𝗜𝗦 𝗧𝗛𝗘 𝗖𝗛𝗔𝗥𝗔𝗖𝗧𝗘𝗥?", url=message_link)]]
+        feedback = "💪 Keep trying!" if attempts < 3 else "🙌 Almost there, don't give up!"
+        keyboard = [[InlineKeyboardButton("🔍 ᴡʜᴇʀᴇ ɪs ᴄʜᴀʀᴀᴄᴛᴇʀ?", url=message_link)]]
         await update.message.reply_text(
-            f'{feedback} {user_mention}, <b>find the character and try again!</b>',
+            f'{feedback} {user_mention}, <b>Find the character and try again!</b>',
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode=ParseMode.HTML
         )
 
 # Award badges based on streaks
 async def award_badges(user_id, streak):
-    badge_message = ""
-
     if streak == 5:
-        badge_message = "<b>🥉 Congratulations!</b> You've unlocked the <b>Bronze Badge</b> for reaching a streak of <u>5</u>! Keep it up!"
+        return "<b>🏅 You've earned the Bronze Badge!</b>"
     elif streak == 10:
-        badge_message = "<b>🥈 Amazing!</b> You've earned the <b>Silver Badge</b> for hitting a streak of <u>10</u>! You're on fire!"
+        return "<b>🏅 You've earned the Silver Badge!</b>"
     elif streak == 20:
-        badge_message = "<b>🏆 Incredible!</b> You've achieved the <b>Gold Badge</b> for an outstanding streak of <u>20</u>! Legendary status unlocked!"
-
-    return badge_message
+        return "<b>🏅 You've earned the Gold Badge!</b>"
+    return ""
 
 # Add command handler for starting the anime guess game
 application.add_handler(CommandHandler("guess", start_anime_guess_cmd, block=False))
