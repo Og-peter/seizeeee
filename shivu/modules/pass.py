@@ -286,18 +286,26 @@ async def claim_weekly_cmd(update: Update, context: CallbackContext):
     user_data = await get_user_data(user_id)
     
     if not user_data.get('pass'):
-        await update.message.reply_html("<b>You don't have a membership pass. Buy one to unlock extra rewards.\nDo /pass to buy.</b>")
+        await update.message.reply_html(
+            "<b>🚫 You don't have a membership pass. "
+            "Buy one to unlock extra rewards!\n\n"
+            "🛒 Use /pass to purchase a pass.</b>"
+        )
         return
     
     pass_details = user_data.get('pass_details', {})
     if pass_details.get('total_claims', 0) < 6:
-        await update.message.reply_html("<b>You must claim daily rewards 6 times to claim the weekly reward.</b>")
+        await update.message.reply_html(
+            "<b>⚠️ You must claim daily rewards at least 6 times to claim your weekly reward.</b>"
+        )
         return
 
     today = datetime.utcnow()
     last_weekly_claim_date = pass_details.get('last_weekly_claim_date')
     if last_weekly_claim_date and (today - last_weekly_claim_date).days <= 7:
-        await update.message.reply_html("<b>You have already claimed your weekly reward.</b>")
+        await update.message.reply_html(
+            "<b>❌ You have already claimed your weekly reward this week.</b>"
+        )
         return
 
     weekly_reward = 5000
@@ -313,21 +321,29 @@ async def claim_weekly_cmd(update: Update, context: CallbackContext):
         }
     )
     
-    await update.message.reply_html("<b>❰ 𝗣 𝗔 𝗦 𝗦 𝗪 𝗘 𝗘 𝗞 𝗟 𝗬 🎁 ❱\n\n10000 tokens claimed.</b>")
+    await update.message.reply_html(
+        "<b>🎉 ❰ 𝗪 𝗘 𝗘 𝗸 𝗟 𝗬 𝗥 𝗘 𝗪 𝗔 𝗥 𝗗 🎁 ❱\n\n"
+        f"🏆 <b>{weekly_reward} Tokens</b> successfully claimed!</b>"
+    )
 
 async def claim_pass_bonus_cmd(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     user_data = await get_user_data(user_id)
-    # Check if the user has a pass
+    
     if not user_data.get('pass'):
-        await update.message.reply_html("<b>You don't have a membership pass. Buy one to unlock extra rewards.\nDo /pass to buy.</b>")
+        await update.message.reply_html(
+            "<b>🚫 You don't have a membership pass. "
+            "Buy one to unlock extra rewards!\n\n"
+            "🛒 Use /pass to purchase a pass.</b>"
+        )
         return
-    # Get the user's current streak
+    
     current_streak = user_data.get('streak', 0)
-
-
     if current_streak < 10:
-        await update.message.reply_html(f"<b>You need to maintain a streak of 10 in /guess to claim the pass bonus.\nYour current streak : {current_streak}⚡️.</b>")
+        await update.message.reply_html(
+            f"<b>⚡️ You need to maintain a streak of 10 in /guess to claim the pass bonus.\n"
+            f"Your current streak: {current_streak}⚡️.</b>"
+        )
         return
 
     PASS_BONUS_TOKENS = 500  
@@ -336,13 +352,19 @@ async def claim_pass_bonus_cmd(update: Update, context: CallbackContext):
         '$set': {'streak': 0}
     })
 
-    await update.message.reply_html("<b>❰ 𝗣 𝗔 𝗦 𝗦  𝗕 𝗢 𝗡 𝗨 𝗦 🎁 ❱\n500 tokens! Your streak has been reset.</b>")
+    await update.message.reply_html(
+        "<b>🎊 ❰ 𝗣 𝗔 𝗦 𝗦 𝗕 𝗢 𝗡 𝗨 𝗦 🎁 ❱\n"
+        f"💰 <b>{PASS_BONUS_TOKENS} Tokens</b> awarded! Your streak has been reset.</b>"
+    )
 
 async def reset_passes_cmd(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
+    
     # Check if the user issuing the command is the authorized user
     if user_id != AUTHORIZED_USER_ID:
-        await update.message.reply_html("<b>You are not authorized to reset passes.</b>")
+        await update.message.reply_html(
+            "<b>🔒 You are not authorized to reset passes.</b>"
+        )
         return
 
     # Reset the pass status for all users
@@ -362,7 +384,9 @@ async def reset_passes_cmd(update: Update, context: CallbackContext):
         }
     )
     
-    await update.message.reply_html("<b>All passes have been reset. Users will need to buy again.</b>")
+    await update.message.reply_html(
+        "<b>🔄 All passes have been reset. Users will need to purchase again.</b>"
+        )
 
 # Register the command handler
 application.add_handler(CommandHandler("wbonus", claim_pass_bonus_cmd))
