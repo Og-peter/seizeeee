@@ -268,17 +268,21 @@ async def setbeast_cmd(_: bot, update: t.Update):
         if beast_id is not None:
             if any(beast['id'] == beast_id for beast in user_data['beasts']):
                 # Inline buttons for confirmation
-                confirm_button = InlineKeyboardButton("Confirm", callback_data=f"confirm_setbeast_{beast_id}")
-                reject_button = InlineKeyboardButton("Reject", callback_data="reject")
+                confirm_button = InlineKeyboardButton("✅ Confirm", callback_data=f"confirm_setbeast_{beast_id}")
+                reject_button = InlineKeyboardButton("❌ Reject", callback_data="reject")
                 keyboard = InlineKeyboardMarkup([[confirm_button, reject_button]])
 
-                return await update.reply_text(f"Are you sure you want to set beast {beast_id} as your main beast?", reply_markup=keyboard)
+                return await update.reply_text(
+                    f"🌟 Are you ready to set **Beast ID:** `{beast_id}` as your main beast? 🌟\n\n"
+                    "This will be your primary beast in battles and events. Choose wisely!",
+                    reply_markup=keyboard
+                )
             else:
-                return await update.reply_text("You don't own a beast with that ID.")
+                return await update.reply_text("🚫 You don't own a beast with that ID. Please check your beast list.")
         else:
-            return await update.reply_text("Invalid command format. Use `/setbeast <beast_id>`.")
+            return await update.reply_text("⚠️ Invalid command format. Use `/setbeast <beast_id>` to set your main beast.")
     else:
-        return await update.reply_text("You don't have any beasts. Buy a beast using `/beastshop`.")
+        return await update.reply_text("🐾 You don't have any beasts yet. Visit `/beastshop` to buy one!")
 
 @bot.on_callback_query(filters.regex(r"confirm_setbeast_(\d+)"))
 async def confirm_setbeast_callback(_, callback_query: t.CallbackQuery):
