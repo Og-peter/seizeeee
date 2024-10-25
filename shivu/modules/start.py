@@ -98,14 +98,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
 
 # Define the function to notify bot restart
-async def notify_restart(context: ContextTypes.DEFAULT_TYPE):
+async def notify_restart(application):
     for sudo_user in sudo_users:
         try:
-            await context.bot.send_message(chat_id=sudo_user, text="🚀 Bot has restarted successfully!")
+            await application.bot.send_message(chat_id=sudo_user, text="🚀 Bot has restarted successfully!")
         except Exception as e:
             print(f"Failed to notify sudo user {sudo_user}: {e}")
 
-# Register the /start command handler and notify restart job
-start_handler = CommandHandler('start', start)
-application.add_handler(start_handler)
-application.job_queue.run_once(notify_restart, 0)  # Runs immediately to notify on restart
+# Create an asynchronous function to start the bot and run the notification
+async def main():
+    await notify_restart(application)  # Notify sudo users on restart
+    application.add_handler(CommandHandler('start', start))  # Register the /start handler
+    await application.start()
+    await application.idle()  # Keeps the bot running
+
+# Run the bot using asyncio to manage the event loop
+if __name__ == '__main__':
+    import asyncio
+    asyncio.run(main())
