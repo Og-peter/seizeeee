@@ -28,6 +28,7 @@ current_engagements = {}
 async def get_random_waifu():
     target_rarities = ['🔮 Limited Edition', '🫧 Premium']  # Example rarities
     selected_rarity = random.choice(target_rarities)
+
     try:
         pipeline = [
             {'$match': {'rarity': selected_rarity}},
@@ -35,6 +36,7 @@ async def get_random_waifu():
         ]
         cursor = collection.aggregate(pipeline)
         characters = await cursor.to_list(length=None)
+        
         if characters:
             waifu = characters[0]
             waifu_id = waifu['id']
@@ -44,7 +46,7 @@ async def get_random_waifu():
         else:
             return None
     except Exception as e:
-        print(e)
+        logger.error(f"Error fetching random waifu: {e}")
         return None
 
 async def load_safari_users():
@@ -54,6 +56,7 @@ async def load_safari_users():
             'hunt_limit': user_data['hunt_limit'],
             'used_hunts': user_data['used_hunts']
         }
+        logger.info(f"Loaded safari user: {user_data['user_id']}")
 
 async def save_safari_user(user_id):
     user_data = safari_users[user_id]
@@ -62,16 +65,22 @@ async def save_safari_user(user_id):
         {'$set': user_data},
         upsert=True
     )
+    logger.info(f"Saved safari user data for user: {user_id}")
 
 async def safe_send_message(bot, chat_id, text):
     retry_after = 0
     while True:
         try:
-            return await bot.send_message(chat_id=chat_id, text=text)
+            message = await bot.send_message(chat_id=chat_id, text=text)
+            logger.info(f"Message sent to {chat_id}: {text}")
+            return message
         except RetryAfter as e:
             retry_after = e.retry_after
             logger.warning(f"Flood control exceeded. Retrying in {retry_after} seconds.")
             await asyncio.sleep(retry_after)
+        except Exception as e:
+            logger.error(f"Error sending message to {chat_id}: {e}")
+            break
 
 async def enter_safari(update: Update, context: CallbackContext):
     message = update.message
