@@ -12,12 +12,20 @@ sudo_user_ids = [6402009857]  # Replace with actual user IDs of the sudo users
 
 async def notify_sudo_users(application: Application):
     """Notify sudo users that the bot has restarted."""
-    message = "The bot has restarted successfully! 🚀"
+    message = "The bot has restarted successfully!"
     for user_id in sudo_user_ids:
         try:
             await application.bot.send_message(chat_id=user_id, text=message)
         except Exception as e:
             print(f"Failed to send restart notification to user {user_id}: {e}")
+
+# Function to escape MarkdownV2 characters
+def escape_markdown(text: str) -> str:
+    """Escape characters in MarkdownV2."""
+    escape_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+    for char in escape_chars:
+        text = text.replace(char, f'\\{char}')
+    return text
 
 # Define the start function
 async def start(update: Update, context: CallbackContext) -> None:
@@ -40,22 +48,21 @@ async def start(update: Update, context: CallbackContext) -> None:
             referring_user_data = await user_collection.find_one({"id": referring_user_id})
             if referring_user_data:
                 await user_collection.update_one({"id": referring_user_id}, {"$inc": {"tokens": 1000}})
-                referrer_message = f"✨ {first_name} referred you and you received 1000 tokens! ✨"
+                referrer_message = f"{first_name} referred you and you got 1000 tokens!"
                 try:
                     await context.bot.send_message(chat_id=referring_user_id, text=referrer_message)
                 except Exception as e:
                     print(f"Failed to send referral message: {e}")
 
         await context.bot.send_message(chat_id=GROUP_ID, 
-                                       text=f"🎉 **New User Alert!** 🎉\n\n"
-                                            f"👤 User: <a href='tg://user?id={user_id}'>{escape(first_name)}</a>", 
+                                       text=f"We Got New User \n#NEWUSER\n User: <a href='tg://user?id={user_id}'>{escape(first_name)}</a>", 
                                        parse_mode='HTML')
     else:
         if user_data['first_name'] != first_name or user_data['username'] != username:
             await user_collection.update_one({"id": user_id}, {"$set": {"first_name": first_name, "username": username}})
 
     if update.effective_chat.type == "private":
-        caption = f"""🌟 𝐊𝐨𝐧'𝐧𝐢𝐜𝐡𝐢𝐰𝐚, **{first_name}**-san! 💌 
+        caption = escape_markdown(f"""🌟 𝐊𝐨𝐧'𝐧𝐢𝐜𝐡𝐢𝐰𝐚, **{first_name}**-san! 💌 
 
 I am [**Character Seizer Bot**](https://t.me/Character_seize_bot) ─ ʏᴏᴜʀ ғʀɪᴇɴᴅʟʏ ᴡᴀɪғᴜ sᴇɪᴢᴇʀ ʙᴏᴛ 💖
 
@@ -64,7 +71,7 @@ I am [**Character Seizer Bot**](https://t.me/Character_seize_bot) ─ ʏᴏᴜʀ
 ⚙️ **Customization Available:** Adjust spawn rates & more settings to fit your preferences!
 ━━━ ✦ ✧ ✦ ━━━
 **How to Use:** Just add me to your group! 🚀
-━━━ ✦ ✧ ✦ ━━━"""
+━━━ ✦ ✧ ✦ ━━━""")
 
         keyboard = [
             [InlineKeyboardButton("❖ Λᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ❖", url=f'https://t.me/Character_seize_bot?startgroup=new')],
@@ -85,11 +92,7 @@ I am [**Character Seizer Bot**](https://t.me/Character_seize_bot) ─ ʏᴏᴜʀ
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         video_url = "https://telegra.ph/file/0b2e8e33d07a0d0e5914f.mp4"
-        await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=f"""✨ 𝐇𝐞𝐲 𝐭𝐡𝐞𝐫𝐞, **{first_name}**! ✨
-
-**I’m Alive!** 🐾
-
-Let’s seize some waifus together~""", reply_markup=reply_markup)
+        await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=f"""𝙃𝙚𝙮 𝙩𝙝𝙚𝙧𝙚! {first_name}\n\n✨𝙄 𝘼𝙈 𝘼𝙡𝙞𝙫𝙚 𝘽𝙖𝙗𝙮""", reply_markup=reply_markup)
 
 # Register the /start command handler
 start_handler = CommandHandler('start', start, block=False)
