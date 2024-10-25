@@ -92,23 +92,28 @@ async def leaderboard(update: Update, context: CallbackContext) -> None:
         ])
         leaderboard_data = await cursor.to_list(length=10)
 
-        leaderboard_message = "<b>Top 10 Users with most Characters:</b>\n───────────────────\n"
+        # Enhanced leaderboard message with unique styling
+        leaderboard_message = "<b>🏆 𝗧𝗼𝗽 𝟭𝟬 𝗨𝘀𝗲𝗿𝘀 𝘄𝗶𝘁𝗵 𝗺𝗼𝘀𝘁 𝗖𝗵𝗮𝗿𝗮𝗰𝘁𝗲𝗿𝘀 🏆</b>\n"
+        leaderboard_message += "━━━━━━━━━━━━━━━━━━━━━━\n"
+        
         for i, user in enumerate(leaderboard_data, start=1):
             username = user.get('username', 'Unknown')
             first_name = escape(user.get('first_name', 'Unknown'))
             if len(first_name) > 15:
                 first_name = first_name[:15] + '...'
             character_count = user['character_count']
-            leaderboard_message += f'{i}. <a href="https://t.me/{username}"><b>{first_name}</b></a> - <b>{character_count}</b>\n'
+            leaderboard_message += f'<b>{i}. <a href="https://t.me/{username}">{first_name}</a></b> — <code>{character_count}</code> ✨\n'
 
-        leaderboard_message += "────────────────────\nTop 10 Users via @Character_seize_bot"
+        leaderboard_message += "━━━━━━━━━━━━━━━━━━━━━━\n"
+        leaderboard_message += "🌟 𝑻𝒐𝒑 𝑼𝒔𝒆𝒓𝒔 𝒗𝒊𝒂 @Character_seize_bot 🌟"
 
+        # Select a random video from the list and send it with the leaderboard message
         video_url = random.choice(video)
         await update.message.reply_video(video=video_url, caption=leaderboard_message, parse_mode='HTML')
 
     except Exception as e:
-        await update.message.reply_text(f"An error occurred: {e}")
-
+        await update.message.reply_text(f"⚠️ 𝗔𝗻 𝗲𝗿𝗿𝗼𝗿 𝗼𝗰𝗰𝘂𝗿𝗿𝗲𝗱: {e}", parse_mode='HTML')
+      
 # Function to send a document listing all users
 async def send_users_document(update: Update, context: CallbackContext) -> None:
     try:
