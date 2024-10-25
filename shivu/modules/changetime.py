@@ -1,10 +1,17 @@
 import logging
 import time
 from pymongo import ReturnDocument
-from telegram import Update, ParseMode
 from telegram.ext import CommandHandler, CallbackContext
 from shivu import application, OWNER_ID, user_totals_collection
 from datetime import datetime
+# For python-telegram-bot version 20.x or later
+from telegram import Update
+from telegram.constants import ParseMode
+
+# For python-telegram-bot version before 20.x
+# from telegram import Update, ParseMode
+
+# Rest of your code...
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
