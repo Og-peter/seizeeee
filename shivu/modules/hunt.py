@@ -145,15 +145,13 @@ async def exit_safari(update: Update, context: CallbackContext):
     user_id = message.from_user.id
 
     if user_id not in safari_users:
-        await message.reply_text("You are not in the seize zone!")
+        await message.reply_text("🚫 You are not in the **Seize Zone**! Please use /wtour first.")
         return
 
     del safari_users[user_id]
     await safari_users_collection.delete_one({'user_id': user_id})
 
-    await message.reply_text("You have now exited the seize Zone")
-
-user_locks = defaultdict(asyncio.Lock)
+    await message.reply_text("👋 You have now exited the **Seize Zone**. Until next time! 🌌")
 
 async def hunt(update: Update, context: CallbackContext):
     message = update.message
@@ -161,30 +159,30 @@ async def hunt(update: Update, context: CallbackContext):
 
     async with user_locks[user_id]:
         if user_id not in safari_users:
-            await message.reply_text("Not in the seize zone. use /wtour first")
+            await message.reply_text("🚷 Not in the **Seize Zone**. Use /wtour first!")
             return
 
         if user_id in current_hunts and current_hunts[user_id] is not None:
             if user_id not in current_engagements:
-                await message.reply_text("You already have an ongoing hunt. Finish it first!")
+                await message.reply_text("⚠️ You already have an ongoing hunt. Finish it first!")
                 return
 
         user_data = safari_users[user_id]
         if user_data['used_hunts'] >= user_data['hunt_limit']:
-            await message.reply_text("You have reached your hunt limit.")
+            await message.reply_text("🚫 You have reached your hunt limit.")
             del safari_users[user_id]
             await safari_users_collection.delete_one({'user_id': user_id})
             return
 
         if user_data['safari_balls'] <= 0:
-            await message.reply_text("You have run out of contract crystals.")
+            await message.reply_text("❌ You have run out of **contract crystals**!")
             del safari_users[user_id]
             await safari_users_collection.delete_one({'user_id': user_id})
             return
 
         waifu = await get_random_waifu()
         if not waifu:
-            await message.reply_text("No character available.")
+            await message.reply_text("⚠️ No character available at the moment.")
             return
 
         waifu_name = waifu['name']
@@ -202,10 +200,15 @@ async def hunt(update: Update, context: CallbackContext):
 
         await save_safari_user(user_id)
 
-        text = f"<b>A wild {waifu_name} ( {waifu_rarity} ) has appeared!</b>\n\n<b>/explore limit: {user_data['used_hunts']}/{user_data['hunt_limit']}\n🧊 contract Ice: {user_data['safari_balls']}</b>"
+        text = (
+            f"🌟 A wild <b>{waifu_name}</b> ( {waifu_rarity} ) has appeared!\n\n"
+            f"🧭 <b>/explore limit:</b> {user_data['used_hunts']}/{user_data['hunt_limit']}\n"
+            f"🧊 <b>Contract Ice:</b> {user_data['safari_balls']}"
+        )
+        
         keyboard = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("contract", callback_data=f"engage_{waifu_id}_{user_id}")]
+                [InlineKeyboardButton("📜 Contract", callback_data=f"engage_{waifu_id}_{user_id}")]
             ]
         )
         await message.reply_photo(photo=waifu_img_url, caption=text, reply_markup=keyboard, parse_mode='HTML')
