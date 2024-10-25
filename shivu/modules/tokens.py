@@ -18,11 +18,17 @@ async def tokens(update: Update, context: CallbackContext):
     if user_balance:
         balance_amount = user_balance.get('tokens', 0)
         formatted_balance = "{:,.0f}".format(balance_amount)
-        balance_message = f"Current Token: Ŧ{formatted_balance}"
+        balance_message = (
+            "<b>💰 Your Current Token Balance:</b>\n"
+            f"<b>Ŧ {formatted_balance}</b>"
+        )
     else:
-        balance_message = "You need to register first by starting the bot in dm."
+        balance_message = (
+            "<b>⚠️ Attention:</b>\n"
+            "You need to <i>register first</i> by starting the bot in DMs."
+        )
 
-    await update.message.reply_text(balance_message)
+    await update.message.reply_text(balance_message, parse_mode=ParseMode.HTML)
 
 application.add_handler(CommandHandler("tokens", tokens, block=False))
 
@@ -39,7 +45,7 @@ async def convert_tokens(client, message: Message):
     try:
         args = message.text.split()
         if len(args) != 2:
-            await message.reply_text("Please specify the amount: /convert <amount>")
+            await message.reply_text("🔄 Please specify the amount: /convert <amount>")
             return
 
         user_id = message.from_user.id
@@ -47,24 +53,24 @@ async def convert_tokens(client, message: Message):
         amount = int(args[1])
 
         if amount <= 0:
-            await message.reply_text("Invalid amount. Please enter a positive number.")
+            await message.reply_text("❌ Invalid amount. Please enter a positive number.")
             return
 
         if amount > MAX_DAILY_TOKENS:
-            await message.reply_text(f"Cannot buy more than {MAX_DAILY_TOKENS} tokens in one transaction.")
+            await message.reply_text(f"❌ Cannot buy more than <b>{MAX_DAILY_TOKENS}</b> tokens in one transaction.")
             return
 
         user = await user_collection.find_one({'id': user_id})
 
         if not user:
-            await message.reply_text("User not found.")
+            await message.reply_text("⚠️ User not found.")
             return
 
         user_balance = user.get('balance', 0)
         total_cost = amount * COST_PER_TOKEN
 
         if user_balance < total_cost:
-            await message.reply_text("Insufficient balance. You need more coins to make this purchase.")
+            await message.reply_text("❌ Insufficient balance. You need more coins to make this purchase.")
             return
 
         current_time = datetime.utcnow()
@@ -73,7 +79,7 @@ async def convert_tokens(client, message: Message):
         if user_id in user_last_command_times:
             last_command_time = user_last_command_times[user_id]
             if (current_time - last_command_time).total_seconds() < COOLDOWN_SECONDS:
-                await message.reply_text("You are sending commands too quickly. Please wait for a moment.")
+                await message.reply_text("⏳ You are sending commands too quickly. Please wait a moment.")
                 return
 
         # Check the last purchase time and the total tokens bought today
@@ -86,7 +92,7 @@ async def convert_tokens(client, message: Message):
 
             if last_purchase_date == current_date:
                 if tokens_bought_today + amount > MAX_DAILY_TOKENS:
-                    await message.reply_text(f"Cannot buy more than {MAX_DAILY_TOKENS} tokens per day. You have already bought {tokens_bought_today} tokens today.")
+                    await message.reply_text(f"❌ Cannot buy more than <b>{MAX_DAILY_TOKENS}</b> tokens per day. You have already bought <b>{tokens_bought_today}</b> tokens today.")
                     return
             else:
                 # Reset the daily count if the date has changed
@@ -109,17 +115,20 @@ async def convert_tokens(client, message: Message):
             }
         )
 
-        await message.reply_text(f"Purchase successful! You bought `{amount}` tokens for `{total_cost}` cash. New Token balance: Ŧ`{new_token_count}`")
+        await message.reply_text(
+            f"✅ Purchase successful! You bought <b>{amount}</b> tokens for <b>Ŧ{total_cost}</b> cash. \n"
+            f"💳 New Token balance: <b>Ŧ{new_token_count}</b>"
+        )
 
         # Log the command use
         user_last_command_times[user_id] = current_time
 
         # Send log message to the specified group
-        log_message = f'User {user_name} [{user_id}] converted {amount} tokens for {total_cost} cash. New Token balance: Ŧ{new_token_count}.'
+        log_message = f'🔄 User {user_name} [{user_id}] converted {amount} tokens for {total_cost} cash. New Token balance: Ŧ{new_token_count}.'
         await send_log_message(client, log_message)
 
     except Exception as e:
-        await message.reply_text(f"An error occurred: {str(e)}")
+        await message.reply_text(f"⚠️ An error occurred: <b>{str(e)}</b>")
 
 async def send_log_message(client, log_message):
     try:
