@@ -50,19 +50,22 @@ async def process_claim(user_id, chat_id, user_first_name):
     unique_characters = await get_unique_characters(user_id)
     try:
         await user_collection.update_one({'id': user_id}, {'$push': {'characters': {'$each': unique_characters}}})
+        
         img_urls = [character['img_url'] for character in unique_characters]
         captions = [
-            f"𝖮𝗐𝖮 !! {user_first_name} Won This Character Today 🏮!\n\n"
-            f"🧩 Name: {character['name']}\n"
-            f"👾 Rarity: {character['rarity']}\n"
-            f"🏖️ Anime: {character['anime']}\n\n"
-            f"𝖢𝗈𝗆𝖾 𝖻𝖺𝖼𝗄 𝗍𝗈𝗆𝗈𝗋𝗋𝗈𝗎 𝗍𝗈 𝖱𝖾𝖼𝗅𝖺𝗂𝗆! ⏳\n"
+            f"🌟 𝖮𝗐𝖮 !! {user_first_name} just snagged a fabulous character today! 🏮✨\n\n"
+            f"🔍 <b>Name:</b> {character['name']} 🎉\n"
+            f"👾 <b>Rarity:</b> {character['rarity']} ⭐\n"
+            f"🏖️ <b>Anime:</b> {character['anime']} 🎬\n\n"
+            f"⏳ Come back tomorrow to reclaim more treasures! 🎁\n"
             for character in unique_characters
         ]
+        
         for img_url, caption in zip(img_urls, captions):
-            await bot.send_photo(chat_id=chat_id, photo=img_url, caption=caption)
+            await bot.send_photo(chat_id=chat_id, photo=img_url, caption=caption, parse_mode='HTML')
+
     except Exception as e:
-        await send_error_to_devs(f"Error in process_claim: {traceback.format_exc()}")
+        await send_error_to_devs(f"⚠️ Error in process_claim: {traceback.format_exc()}")
 
 @bot.on_message(filters.command(["wclaim"]))
 async def claim_waifu(_, message: t.Message):
