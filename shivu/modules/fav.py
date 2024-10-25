@@ -163,7 +163,9 @@ async def unfav(client: Client, message):
     # Reset user's favorite in the database
     await user_collection.update_one({'id': user_id}, {'$unset': {'favorites': ''}})
     
-    await message.reply_text(f'✅ Your favorite character has been reset! {random.choice(ANIMATED_EMOJIS)}')
+    # Generate an exciting message to notify the user
+    exciting_message = generate_exciting_message("🎉 Your favorite character has been reset!")
+    await message.reply_text(exciting_message)
 
 # Function to add some excitement to the fav command's messages
 def generate_exciting_message(base_message: str) -> str:
