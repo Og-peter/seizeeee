@@ -4,36 +4,36 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from shivu import user_collection, shivuu as app, LEAVELOGS, JOINLOGS
 
-# Predefined welcome messages
+# Welcome messages with styled text and emojis
 WELCOME_MESSAGES = [
-    "Welcome to the group, {user}! 🎉",
-    "Hello {user}, glad to have you here! 😊",
-    "Hey {user}, welcome aboard! 🚀",
-    "Hi {user}, let's make this group even better! 🌟"
+    "🎉✨ 𝗪𝗲𝗹𝗰𝗼𝗺𝗲, {user}! ✨ Thrilled to have you here!",
+    "😊 𝗛𝗲𝗹𝗹𝗼, {user}! Happy to see you! 🎈",
+    "🚀 𝗪𝗲𝗹𝗰𝗼𝗺𝗲 𝗮𝗯𝗼𝗮𝗿𝗱, {user}! Let’s make magic! 🌟",
+    "🌼 𝗪𝗲𝗹𝗰𝗼𝗺𝗲, {user}! We’re glad you joined! 🌈"
 ]
 
-# Predefined farewell messages
+# Farewell messages
 FAREWELL_MESSAGES = [
-    "Goodbye {user}, we'll miss you! 😢",
-    "Take care, {user}. Hope to see you soon! 👋",
-    "Farewell {user}, wish you all the best! 🌟"
+    "😢 𝗚𝗼𝗼𝗱𝗯𝘆𝗲 {user}, you will be missed!",
+    "👋 𝗧𝗮𝗸𝗲 𝗰𝗮𝗿𝗲, {user}. Come back soon!",
+    "🌟 𝗙𝗮𝗿𝗲𝘄𝗲𝗹𝗹 {user}, stay awesome!"
 ]
 
-# Predefined fun facts or quotes
+# Fun facts or quotes for messages
 FACTS_QUOTES = [
-    "Did you know? The Eiffel Tower can be 15 cm taller during the summer.",
-    "“The only limit to our realization of tomorrow is our doubts of today.” – Franklin D. Roosevelt",
-    "Fun fact: Honey never spoils. Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3,000 years old and still edible!"
+    "🔍 𝗗𝗶𝗱 𝘆𝗼𝘂 𝗸𝗻𝗼𝘄? The Eiffel Tower grows 15 cm in summer!",
+    "✨ “𝗧𝗵𝗲 𝗳𝘂𝘁𝘂𝗿𝗲 𝗶𝘀 𝗯𝗮𝘀𝗲𝗱 𝗼𝗻 𝘁𝗼𝗱𝗮𝘆.” – 𝗢𝗿𝗲𝘀𝘁𝗲𝘀",
+    "🍯 𝗙𝘂𝗻 𝗳𝗮𝗰𝘁: Honey never spoils, even after 3000 years!"
 ]
 
-# Reminder message for rules or announcements
+# Group rules message
 RULES = (
-    "🚨 **Group Rules** 🚨\n\n"
-    "1. Be respectful to everyone.\n"
-    "2. No spamming or self-promotion.\n"
-    "3. Stick to the group's topic.\n"
-    "4. Follow Telegram's terms of service.\n\n"
-    "Failure to comply will result in removal."
+    "🚨 **𝗚𝗿𝗼𝘂𝗽 𝗥𝘂𝗹𝗲𝘀** 🚨\n\n"
+    "1️⃣ Be respectful at all times.\n"
+    "2️⃣ No spamming or self-promotion.\n"
+    "3️⃣ Stay on topic.\n"
+    "4️⃣ Follow Telegram's terms.\n\n"
+    "🚫 Violation may result in removal."
 )
 
 # Helper function to send a text message
@@ -50,7 +50,7 @@ async def on_new_chat_members(client: Client, message: Message):
     total_members = await client.get_chat_members_count(message.chat.id)
     
     if total_members < 15:
-        leave_note = "Sorry, this group has fewer than 15 members. I'm leaving... 🍂"
+        leave_note = "🌿 𝗦𝗼𝗿𝗿𝘆, 𝗹𝗲𝗮𝘃𝗶𝗻𝗴 𝗮𝘀 𝘁𝗵𝗲 𝗴𝗿𝗼𝘂𝗽 𝗵𝗮𝘀 𝗹𝗲𝘀𝘀 𝘁𝗵𝗮𝗻 𝟭𝟱 𝗺𝗲𝗺𝗯𝗲𝗿𝘀. 🌱"
         leave_photo_url = "https://telegra.ph/file/4d1b9889c4dd3316c945d.jpg"
         await send_photo_message(message.chat.id, leave_note, leave_photo_url)
         await client.leave_chat(message.chat.id)
@@ -63,7 +63,7 @@ async def on_new_chat_members(client: Client, message: Message):
             # Inline keyboard buttons
             buttons = InlineKeyboardMarkup(
                 [
-                    [InlineKeyboardButton("👤 Join Support", url="https://t.me/dynamic_gangs")]
+                    [InlineKeyboardButton("🎯 𝗝𝗼𝗶𝗻 𝗦𝘂𝗽𝗽𝗼𝗿𝘁", url="https://t.me/dynamic_gangs")]
                 ]
             )
             await app.send_message(message.chat.id, text=combined_message, reply_markup=buttons)
@@ -79,21 +79,21 @@ async def on_new_chat_members(client: Client, message: Message):
                 chat_id = message.chat.id
                 chat_username = f"@{message.chat.username}" if message.chat.username else "@none"
                 join_text = (
-                    f"❖ Waifu Bot Added In A #ɴᴇᴡ_ɢʀᴏᴜᴘ ❖\n\n"
-                    f"● Chat Name ➥: {chat_title}\n"
-                    f"● Chat Id ➥ : {chat_id}\n"
-                    f"● Chat Members ➥: {total_members}\n"
-                    f"● Chat Link ➥: {chat_username}\n"
-                    f"❖ Added By ➥: {added_by.mention}"
+                    f"✨ 𝗕𝗼𝘁 𝗔𝗱𝗱𝗲𝗱 𝗶𝗻 𝗮 𝗡𝗲𝘄 𝗚𝗿𝗼𝘂𝗽 ✨\n\n"
+                    f"🏠 **Group**: {chat_title}\n"
+                    f"🆔 **Chat ID**: {chat_id}\n"
+                    f"👥 **Members**: {total_members}\n"
+                    f"🔗 **Link**: {chat_username}\n"
+                    f"👤 **Added by**: {added_by.mention}"
                 )
                 join_photo_url = "https://telegra.ph/file/4d1b9889c4dd3316c945d.jpg"
                 await send_photo_message(JOINLOGS, join_text, join_photo_url)
 
                 # Thanks message for the user who added the bot
                 thanks_message = (
-                    f"ᴀʀɪɢᴀᴛᴏ sᴇɴᴘᴀɪ [{added_by.mention}](tg://user?id={added_by.id}) ᴛʜᴀɴᴋ𝐬 ғᴏʀ ᴀᴅᴅɪɴɢ ᴍᴇ ɪɴ "
-                    f"{chat_title}....🫧💫\n\n"
-                    f"🍂..ᴛʜᴀɴᴋ ʏᴏᴜ....🍃"
+                    f"🌸 𝗧𝗵𝗮𝗻𝗸 𝘆𝗼𝘂 [{added_by.mention}](tg://user?id={added_by.id}) 𝗳𝗼𝗿 𝗮𝗱𝗱𝗶𝗻𝗴 𝗺𝗲 𝘁𝗼 "
+                    f"{chat_title}! 🌸\n\n"
+                    f"🍃..𝗦𝘁𝗮𝘆 𝗔𝘄𝗲𝘀𝗼𝗺𝗲....🍂"
                 )
                 await send_message(added_by.id, thanks_message)
 
@@ -108,30 +108,32 @@ async def on_left_chat_member(_, message: Message):
         total_members = await app.get_chat_members_count(chat_id)
         
         leave_text = (
-            f"⦾ 𝐋𝐄𝐅𝐓 𝐆𝐑𝐎𝐔𝐏🍂\n\n"
-            f"⋟ Cʜᴀᴛ Tɪᴛʟᴇ: {chat_title}\n"
-            f"⋟ Cʜᴀᴛ ID: {chat_id}\n"
-            f"⋟ Mᴇᴍʙᴇʀs: {total_members}\n"
-            f"⋟ Cʜᴀᴛᴜɴᴀᴍᴇ: {chat_username}\n"
-            f"⋟ Rᴇᴍᴏᴠᴇᴅ ʙʏ: {removed_by}"
+            f"🚫 𝗟𝗲𝗳𝘁 𝗚𝗿𝗼𝘂𝗽 🚫\n\n"
+            f"🏠 **Group**: {chat_title}\n"
+            f"🆔 **Chat ID**: {chat_id}\n"
+            f"👥 **Members**: {total_members}\n"
+            f"🔗 **Link**: {chat_username}\n"
+            f"👤 **Removed by**: {removed_by}"
         )
         leave_photo_url = "https://telegra.ph/file/4d1b9889c4dd3316c945d.jpg"
         await send_photo_message(LEAVELOGS, leave_text, leave_photo_url)
 
+# Spam words list
 SPAM_WORDS = ["spamword1", "spamword2", "example.com"]
 
 @app.on_message(filters.text)
 async def spam_filter(client: Client, message: Message):
     if any(word in message.text.lower() for word in SPAM_WORDS):
         await message.delete()
-        await message.reply(f"Spam detected and removed! Watch your behavior, {message.from_user.mention}.")
+        await message.reply(f"🚫 𝗦𝗽𝗮𝗺 𝗱𝗲𝘁𝗲𝗰𝘁𝗲𝗱 𝗮𝗻𝗱 𝗿𝗲𝗺𝗼𝘃𝗲𝗱! Be cautious, {message.from_user.mention}.")
         
-# Periodic reminders for group rules
+# Periodic reminders for group rules with a random fun fact
 async def schedule_reminders():
     while True:
         await asyncio.sleep(3600)  # Remind every hour
         chat_id = -1002104939708  # Replace with your group chat ID
-        await app.send_message(chat_id=chat_id, text=RULES)
+        rules_message = f"{RULES}\n\n💡 **Did You Know?** {random.choice(FACTS_QUOTES)}"
+        await app.send_message(chat_id=chat_id, text=rules_message)
 
 # Start the bot and schedule tasks
 async def start_bot():
