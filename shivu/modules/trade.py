@@ -214,19 +214,29 @@ async def on_trade_callback_query(client, callback_query):
 @app.on_callback_query(filters.create(lambda _, __, query: query.data == "cancel_trade"))
 async def on_cancel_trade_callback_query(client, callback_query):
     sender_id = callback_query.from_user.id
+    trade_found = False
 
-    for (sender_id, receiver_id) in pending_trades.keys():
-        if sender_id == sender_id:
+    for (trade_sender_id, receiver_id) in pending_trades.keys():
+        if trade_sender_id == sender_id:
+            trade_found = True
             break
-    else:
-        await callback_query.answer("This is not for you!", show_alert=True)
+
+    if not trade_found:
+        await callback_query.answer("🚫 This trade does not belong to you!", show_alert=True)
         return
 
-    del pending_trades[(sender_id, receiver_id)]
-    await callback_query.message.edit_text("❌ **Trade Canceled** ❌")
+    del pending_trades[(trade_sender_id, receiver_id)]
+    
+    # Canceled trade message with advanced formatting
+    cancellation_message = (
+        "❌ **Trade Canceled!** ❌\n\n"
+        f"**🔔 Notification:** The trade you initiated with **[{receiver_id}](tg://user?id={receiver_id})** has been successfully canceled.\n"
+        "If you wish to trade again, please initiate a new trade using the `/trade` command!"
+    )
 
-    await callback_query.answer()
+    await callback_query.message.edit_text(cancellation_message)
 
+    await callback_query.answer("✅ Trade has been canceled!")
 
 # Callback query handler for gift confirmation
 @app.on_callback_query(filters.create(lambda _, __, query: query.data.lower() in ["confirm_gift", "cancel_gift"]))
