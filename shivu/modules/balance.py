@@ -13,7 +13,7 @@ from pyrogram.types import Message
 from pyrogram import filters, types as t
 from html import escape
 from shivu import application, user_collection
-from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
+from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler, ContextTypes
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
 from shivu import sudo_users_collection, user_collection
 from shivu.modules.database.sudo import is_user_sudo
