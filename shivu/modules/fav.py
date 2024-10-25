@@ -99,13 +99,13 @@ async def handle_fav_confirmation(client: Client, callback_query):
     user_id = callback_query.from_user.id
     user = await user_collection.find_one({'id': user_id})
     if not user or 'characters' not in user:
-        await callback_query.answer("You haven't seized any characters yet.")
+        await callback_query.answer("😔 **You haven't seized any characters yet.**")
         return
 
     character = next((c for c in user['characters'] if str(c.get('id')) == character_id), None)
     if not character:
         logging.error(f"Character ID {character_id} not found in user's collection.")
-        await callback_query.answer("This character is not in your collection.")
+        await callback_query.answer("🙄 **This character is not in your collection.**")
         return
 
     # Handle "yes" or "no" action
@@ -116,7 +116,10 @@ async def handle_fav_confirmation(client: Client, callback_query):
             {'$set': {'favorites': [character_id]}}
         )
         await callback_query.message.edit_caption(
-            caption=f"🔒 Locked! You've chosen {character['name']} as your latest Favourite character! {random.choice(SUCCESS_EMOJIS)}",
+            caption=(
+                f"🔒 **Locked!** You've chosen `{character['name']}` as your latest favorite character! "
+                f"{random.choice(SUCCESS_EMOJIS)}"
+            ),
             reply_markup=None  # Disable buttons after confirmation
         )
 
@@ -132,11 +135,14 @@ async def handle_fav_confirmation(client: Client, callback_query):
             await client.send_photo(
                 chat_id=user_id,
                 photo=character['img_url'],
-                caption=f"🎊 Congratulations! You've successfully set **{name}** as your favourite character! {random.choice(SUCCESS_EMOJIS)}\n\n"
-                        f"🧃 **Name**: {name}\n"
-                        f"⚜️ **Anime**: {anime}\n"
-                        f"🥂 **Rarity**: {rarity_emoji} {rarity_display}\n\n"
-                        f"Enjoy your time with {name} 🥰",
+                caption=(
+                    f"🎊 **Congratulations!** You've successfully set **{name}** as your favorite character! "
+                    f"{random.choice(SUCCESS_EMOJIS)}\n\n"
+                    f"🧃 **Name:** `{name}`\n"
+                    f"⚜️ **Anime:** `{anime}`\n"
+                    f"🥂 **Rarity:** {rarity_emoji} `{rarity_display}`\n\n"
+                    f"Enjoy your time with **{name}** 🥰"
+                ),
                 disable_web_page_preview=True
             )
         except Exception as e:
@@ -144,12 +150,12 @@ async def handle_fav_confirmation(client: Client, callback_query):
 
     elif action == "no":
         await callback_query.message.edit_caption(
-            caption=f"{random.choice(CANCEL_EMOJIS)} Operation cancelled.",
+            caption=f"{random.choice(CANCEL_EMOJIS)} **Operation cancelled.**",
             reply_markup=None  # Disable buttons after cancellation
         )
 
     logging.info(f"User {user_id} handled favorite confirmation successfully.")
-
+    
 @app.on_message(filters.command("unfav"))
 async def unfav(client: Client, message):
     user_id = message.from_user.id
