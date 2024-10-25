@@ -331,27 +331,27 @@ def get_rarity_emoji(rarity_name):
         'Exclusive': '💮',
         'Premium': '🫧',
         'Limited Edition': '🔮',
-        'Cosmic': '💠',
-        'Supreme': '🧿'
+        'astrarl': '💠',
+        'Valentine': '🧿'
     }
-    return RARITY_EMOJIS.get(rarity_name, f'Rarity: {rarity_name}')
+    return RARITY_EMOJIS.get(rarity_name, f'⚠️ Rarity: {rarity_name}')
 
 # Function to generate trade info message with rarity emojis
 def get_trade_info_message(sender_character, receiver_character, sender_rarity_emoji, receiver_rarity_emoji):
     return (
-        f"ℹ️ **Trade Request !**\n\n"
-        f"⚜️ **You get:**\n"
-        f" **Name:** {receiver_character['name']}\n"
-        f" **Rarity:** {receiver_character['rarity']}\n"
-        f" **Anime:** {receiver_character['anime']}\n\n"
-        f"🧋 **You give:**\n"
-        f" **Name:** {sender_character['name']}\n"
-        f" **Rarity:** {sender_character['rarity']}\n"
-        f" **Anime:** {sender_character['anime']}\n\n"
-        "ℹ Click 'Accept' button to accept this offer\n"
-        "Otherwise, click 'Reject' button"
+        f"📩 **🌟 Trade Request 🌟**\n\n"
+        f"🔄 **You Receive:**\n"
+        f" **Name:** `{receiver_character['name']}`\n"
+        f" **Rarity:** {receiver_rarity_emoji} `{receiver_character['rarity']}`\n"
+        f" **Anime:** `{receiver_character['anime']}`\n\n"
+        f"➡️ **You Give:**\n"
+        f" **Name:** `{sender_character['name']}`\n"
+        f" **Rarity:** {sender_rarity_emoji} `{sender_character['rarity']}`\n"
+        f" **Anime:** `{sender_character['anime']}`\n\n"
+        "⚠️ Click 'Accept' to accept this offer.\n"
+        "❌ Click 'Reject' to decline."
     )
-    
+
 # Command to reset ongoing transactions
 @app.on_message(filters.command("reset"))
 async def reset(client, message):
@@ -360,7 +360,6 @@ async def reset(client, message):
     if await has_ongoing_transaction(sender_id):
         pending_trades.clear()
         pending_gifts.clear()
-        await message.reply_text("Your ongoing trade and gift transactions have been reset successfully!")
+        await message.reply_text("🗑️ **Transaction Reset!**\n\nYour ongoing trade and gift transactions have been reset successfully! 🎉")
     else:
-        await message.reply_text("You don't have any ongoing trade or gift transactions to reset.")
-  
+        await message.reply_text("🔍 **No Active Transactions!**\n\nYou don't have any ongoing trade or gift transactions to reset.")
