@@ -174,17 +174,21 @@ async def stats(update: Update, context: CallbackContext) -> None:
     adjusted_user_count = user_count + 40000
     adjusted_group_count = len(group_count) + 5900
 
-    # Define rarity types and fetch counts
-    rarity_types = ["common", "medium", "rare", "chibi", "legendary", "limited Edition"]
+    # Define extended rarity types and fetch counts
+    rarity_levels = [
+        "⚪️ Common", "🔵 Medium", "👶 Chibi", "🟠 Rare", "🟡 Legendary", 
+        "💮 Exclusive", "🫧 Premium", "🔮 Limited Edition", 
+        "🌸 Exotic", "🎐 Astral", "💞 Valentine"
+    ]
     rarity_counts = {}
-    
-    # Logging and checking each rarity count
-    for rarity in rarity_types:
+
+    # Fetch and log counts for each rarity level
+    for rarity in rarity_levels:
         count = await user_collection.count_documents({"rarity": rarity})
         rarity_counts[rarity] = count
         logging.info(f"Rarity '{rarity}' count: {count}")  # Log each count
 
-    # Create stats message
+    # Construct the stats message with rarity percentages
     stats_message = (
         f"<b>📊 𝘽𝙤𝙩 𝙎𝙩𝙖𝙩𝙞𝙨𝙩𝙞𝙘𝙨 📊</b>\n"
         f"━━━━━━━━━━━━━━━━━━━\n"
@@ -192,12 +196,13 @@ async def stats(update: Update, context: CallbackContext) -> None:
         f"<b>👥 Total Groups:</b> <code>{adjusted_group_count}</code>\n"
         f"━━━━━━━━━━━━━━━━━━━\n"
         f"<b>🌟 Rarity Statistics:</b>\n"
-        f"<b>⚪️ Common:</b> <code>{rarity_counts['common']}</code>\n"
-        f"<b>🔵 Medium:</b> <code>{rarity_counts['medium']}</code>\n"
-        f"<b>🟠 Rare:</b> <code>{rarity_counts['rare']}</code>\n"
-        f"<b>👶 Chibi:</b> <code>{rarity_counts['chibi']}</code>\n"
-        f"<b>🟡 Legendary:</b> <code>{rarity_counts['legendary']}</code>\n"
-        f"<b>🔮 Limited Edition:</b> <code>{rarity_counts['limited Edition']}</code>\n"
+    )
+
+    for rarity, count in rarity_counts.items():
+        percentage = (count / adjusted_user_count) * 100 if adjusted_user_count > 0 else 0
+        stats_message += f"<b>{rarity}:</b> <code>{count}</code> ({percentage:.2f}%)\n"
+
+    stats_message += (
         f"━━━━━━━━━━━━━━━━━━━\n"
         f"<i>📈 Stay tuned for more updates!</i>"
     )
