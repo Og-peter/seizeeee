@@ -208,9 +208,8 @@ async def callback_confirm_delete(client, callback_query):
     success = await delete_harem(client, user_id)
     if success:
         # Notify the user that their harem was deleted with a styled message
-        await callback_query.message.reply_text("🔫 <b>Your harem has been successfully eliminated!</b>\n\n"
-                                                "<i>Such is the fate of those who cross the Special Grade!</i>",
-                                                parse_mode="html")
+        await callback_query.message.reply_text("🔫 Your harem has been successfully eliminated!\n\n"
+                                                "Such is the fate of those who cross the Special Grade!")
         
         # Log the action in the database
         await log_action('delete', user_id, callback_user_id)
@@ -223,29 +222,27 @@ async def callback_confirm_delete(client, callback_query):
         await send_notification_to_specialgrade(callback_user_id, eraser_name, user_id, target_name)
         
         # Notify the user whose harem was deleted
-        await notify_user(user_id, f"⚔️ <b>Your harem has been deleted by Special Grade sorcerer <a href='tg://user?id={callback_user_id}'>{eraser_name}</a>.</b>",
-                          parse_mode="html")
+        await notify_user(user_id, f"⚔️ Your harem has been deleted by Special Grade sorcerer {eraser_name}.")
         
         # Add reputation for the eraser
         await increase_reputation(callback_user_id, 1)
 
         # Send log to the log channel
         log_message = (
-            f"🚨 <b>Action:</b> Delete Harem\n"
-            f"👤 <b>Eraser:</b> <a href='tg://user?id={callback_user_id}'>{eraser_name}</a>\n"
-            f"🎯 <b>Target:</b> <a href='tg://user?id={user_id}'>{target_name}</a>\n"
-            "⚔️ The user's harem has been <b>eliminated</b>."
+            f"🚨 Action: Delete Harem\n"
+            f"👤 Eraser: {eraser_name}\n"
+            f"🎯 Target: {target_name}\n"
+            "⚔️ The user's harem has been eliminated."
         )
-        await app.send_message(LOG_CHANNEL_ID, log_message, parse_mode="html")
+        await app.send_message(LOG_CHANNEL_ID, log_message)
 
     else:
-        await callback_query.message.reply_text("❌ <b>Failed to delete harem. User not found or already eliminated.</b>", parse_mode="html")
+        await callback_query.message.reply_text("❌ Failed to delete harem. User not found or already eliminated.")
         
 @app.on_callback_query(filters.regex(r'^cancel_delete_'))
 async def callback_cancel_delete(client, callback_query):
-    await callback_query.message.reply_text("💨 <b>The harem deletion has been <i>successfully cancelled</i>.</b>\n"
-                                             "<i>All characters are safe for now! 🌸</i>",
-                                             parse_mode="html")
+    await callback_query.message.reply_text("💨 The harem deletion has been successfully cancelled.\n"
+                                             "All characters are safe for now!")
 
 @app.on_callback_query(filters.regex(r'^reverse_\d+$'))
 async def reverse_erase(client, callback_query):
@@ -254,12 +251,12 @@ async def reverse_erase(client, callback_query):
     if str(callback_query.from_user.id) in SPECIALGRADE:
         restored, message = await restore_characters(target_id)
         if restored:
-            await callback_query.answer("✅ <b>Restoration Successful!</b>")
-            await callback_query.edit_message_text("🔄 <b>The erase operation has been <i>successfully reversed!</i></b>\n"
-                                                    "✨ <i>Your characters have returned!</i> 🎉")
+            await callback_query.answer("✅ Restoration Successful!")
+            await callback_query.edit_message_text("🔄 The erase operation has been successfully reversed!\n"
+                                                    "✨ Your characters have returned! 🎉")
             await log_action('restore', target_id, callback_query.from_user.id)
             await increase_reputation(callback_query.from_user.id, -1)  # Remove reputation for reversal
         else:
-            await callback_query.answer(f"❌ <b>Error:</b> {message}", show_alert=True)
+            await callback_query.answer(f"❌ Error: {message}", show_alert=True)
     else:
-        await callback_query.answer("❌ <b>Access Denied!</b>\n<i>You do not have permission to reverse this operation.</i>", show_alert=True)
+        await callback_query.answer("❌ Access Denied!\nYou do not have permission to reverse this operation.", show_alert=True)
