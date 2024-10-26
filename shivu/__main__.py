@@ -199,24 +199,34 @@ async def guess(update: Update, context: CallbackContext) -> None:
     if chat_id not in last_characters:
         return
 
+    # Check if someone has already guessed correctly
     if chat_id in first_correct_guesses:
-        correct_guess_user = first_correct_guesses[chat_id]  # Get the name of the user who guessed correctly
-        user_link = f'<a href="tg://user?id={correct_guess_user.id}">{correct_guess_user.first_name}</a>'  # User link
-        await update.message.reply_text(f' ᴛʜɪs ᴄʜᴀʀᴀᴄᴛᴇʀ ɪs sᴇɪᴢᴇᴅ ʙʏ {user_link}\n🥤 ᴡᴀɪᴛ ғᴏʀ ɴᴇᴡ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴛᴏ sᴘᴀᴡɴ....', parse_mode='HTML')
+        correct_guess_user = first_correct_guesses[chat_id]  
+        user_link = f'<a href="tg://user?id={correct_guess_user.id}">{correct_guess_user.first_name}</a>'  
+        await update.message.reply_text(
+            f'🌟 ᴛʜɪs ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀs ʙᴇᴇɴ sᴇɪᴢᴇᴅ ʙʏ {user_link}!\n'
+            f'🍵 ᴡᴀɪᴛ ғᴏʀ ᴛʜᴇ ɴᴇxᴛ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴛᴏ sᴘᴀᴡɴ... 🌌', 
+            parse_mode='HTML'
+        )
         return
 
     guess = ' '.join(context.args).lower() if context.args else ''
     
     if "()" in guess or "&" in guess.lower():
-        await update.message.reply_text("𝖲𝗈𝗋𝗋𝗒 ! 𝖡𝗎𝗍 𝗐𝗋𝗂𝗍𝖾 𝗇𝖺𝗆𝖾 𝗐𝗂𝗍𝗁𝗈𝗎𝗍 '&' 𝖳𝗈 𝖼𝗈𝗅𝗅𝖾𝖼𝗍...🍂")
+        await update.message.reply_text(
+            "🔒 𝖲𝗈𝗋𝗋𝗒, 𝗯𝗲𝗻𝖺𝖺! 𝖡𝗎𝗍 𝗽𝗹𝗲𝗮𝖼𝗲 𝗮𝖽𝖽 𝗮 𝗻𝖺𝗆𝖾 𝗐𝗂𝗍𝗁𝗈𝗎𝗍 '&' 𝖳𝗈 𝖼𝗈𝗅𝗅𝖾𝖼𝗍...🍂", 
+            parse_mode='Markdown'
+        )
         return
 
     name_parts = last_characters[chat_id]['name'].lower().split()
 
+    # Check if the guess is correct
     if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
 
-        first_correct_guesses[chat_id] = update.effective_user  # Store the user who guessed correctly
+        first_correct_guesses[chat_id] = update.effective_user
         
+        # Update user information in the database
         user = await user_collection.find_one({'id': user_id})
         if user:
             update_fields = {}
@@ -260,14 +270,25 @@ async def guess(update: Update, context: CallbackContext) -> None:
             
         keyboard = [[InlineKeyboardButton(f"🏮 ʜᴀʀᴇᴍ 🏮", switch_inline_query_current_chat=f"collection.{user_id}")]]
         
-        await update.message.reply_text(f'𝙲ᴏɴɢᴏ <b><a href="tg://user?id={user_id}">{escape(update.effective_user.first_name)}</a></b> ꜱᴀɴ ! ʏᴏᴜ ɢᴏᴛ ᴀ ɴᴇᴡ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴀɴᴅ ɪᴛ ʜᴀꜱ ʙᴇᴇɴ ꜱᴜᴄᴇꜱꜱꜰᴜʟʟʏ ᴀᴅᴅᴇᴅ ᴛᴏ ʏᴏᴜʀ ʜᴀʀᴇᴍ. 🌋 \n\nCharacter: <b>{last_characters[chat_id]["name"]}</b> \nAnime: <b>{last_characters[chat_id]["anime"]}</b> \nRarity: <b>{last_characters[chat_id]["rarity"]}</b>\n\n🫧 ᴄʜᴇᴄᴋ ʏᴏᴜʀ ʜᴀʀᴇᴍ ʙʏ /harem', parse_mode='HTML', reply_markup=InlineKeyboardMarkup(keyboard))
+        await update.message.reply_text(
+            f'🎉 𝙲ᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴs, <b><a href="tg://user?id={user_id}">{escape(update.effective_user.first_name)}</a></b>! 🎊\n'
+            f'🌈 ʏᴏᴜ ʜᴀᴠᴇ ᴀᴅᴅᴇᴅ ᴀ ɴᴇᴡ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴛᴏ ʏᴏᴜʀ ʜᴀʀᴇᴍ! 🌌\n\n'
+            f'🔍 *Character:* <b>{last_characters[chat_id]["name"]}</b>\n'
+            f'📺 *Anime:* <b>{last_characters[chat_id]["anime"]}</b>\n'
+            f'⭐ *Rarity:* <b>{last_characters[chat_id]["rarity"]}</b>\n\n'
+            f'🫧 ᴄʜᴇᴄᴋ ʏᴏᴜʀ ʜᴀʀᴇᴍ ʙʏ /harem', 
+            parse_mode='HTML', reply_markup=InlineKeyboardMarkup(keyboard)
+        )
 
     else:
         message_link = character_message_links.get(chat_id, "#")
         keyboard = [[InlineKeyboardButton("★ sᴇᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ ★", url=message_link)]]
-        await update.message.reply_text('❌ ᴄʜᴀʀᴀᴄᴛᴇʀ ɴᴀᴍᴇ ɪs ɴᴏᴛ ᴄᴏʀʀᴇᴄᴛ. ᴛʀʏ ɢᴜᴇssɪɴɢ ᴛʜᴇ ɴᴀᴍᴇ ᴀɢᴀɪɴ!', reply_markup=InlineKeyboardMarkup(keyboard))
+        await update.message.reply_text(
+            '❌ ᴄʜᴀʀᴀᴄᴛᴇʀ ɴᴀᴍᴇ ɪs ɴᴏᴛ ᴄᴏʀʀᴇᴄᴛ. 🔍 ᴘʟᴇᴀsᴇ ᴛʏ ᴀɢᴀɪɴ!',
+            reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
- # Command to turn a rarity on
+# Command to turn a rarity on
 async def set_on(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
     if user_id != 6402009857:
