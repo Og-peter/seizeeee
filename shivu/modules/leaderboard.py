@@ -176,11 +176,11 @@ async def stats(update: Update, context: CallbackContext) -> None:
 
     # Fetching rarity counts from your database (modify according to your structure)
     rarity_counts = {
-        "common": await user_collection.count_documents({"rarity": "common"}),
-        "uncommon": await user_collection.count_documents({"rarity": "uncommon"}),
-        "rare": await user_collection.count_documents({"rarity": "rare"}),
-        "epic": await user_collection.count_documents({"rarity": "epic"}),
-        "legendary": await user_collection.count_documents({"rarity": "legendary"}),
+        "Common": await user_collection.count_documents({"rarity": "Common"}),
+        "Medium": await user_collection.count_documents({"rarity": "Medium"}),
+        "Rare": await user_collection.count_documents({"rarity": "Rare"}),
+        "Chibi": await user_collection.count_documents({"rarity": "Chibi"}),
+        "Legendary": await user_collection.count_documents({"rarity": "Legendary"}),
     }
 
     # Enhanced stats message with stylish formatting
@@ -192,9 +192,9 @@ async def stats(update: Update, context: CallbackContext) -> None:
         f"━━━━━━━━━━━━━━━━━━━\n"
         f"<b>🌟 Rarity Statistics:</b>\n"
         f"<b>🌿 Common:</b> <code>{rarity_counts['common']}</code>\n"
-        f"<b>🍀 Uncommon:</b> <code>{rarity_counts['uncommon']}</code>\n"
+        f"<b>🍀 Medium:</b> <code>{rarity_counts['medium']}</code>\n"
         f"<b>⚡ Rare:</b> <code>{rarity_counts['rare']}</code>\n"
-        f"<b>💎 Epic:</b> <code>{rarity_counts['epic']}</code>\n"
+        f"<b>💎 chibi:</b> <code>{rarity_counts['chibi']}</code>\n"
         f"<b>🌈 Legendary:</b> <code>{rarity_counts['legendary']}</code>\n"
         f"━━━━━━━━━━━━━━━━━━━\n"
         f"<i>📈 Stay tuned for more updates!</i>"
