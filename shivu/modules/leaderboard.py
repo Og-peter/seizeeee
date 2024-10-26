@@ -181,6 +181,7 @@ async def stats(update: Update, context: CallbackContext) -> None:
         "Rare": await user_collection.count_documents({"rarity": "Rare"}),
         "Chibi": await user_collection.count_documents({"rarity": "Chibi"}),
         "Legendary": await user_collection.count_documents({"rarity": "Legendary"}),
+        "Limited Edition": await user_collection.count_documents({"rarity": "Limited Edition"}),
     }
 
     # Enhanced stats message with stylish formatting
@@ -191,11 +192,12 @@ async def stats(update: Update, context: CallbackContext) -> None:
         f"<b>👥 Total Groups:</b> <code>{adjusted_group_count}</code>\n"
         f"━━━━━━━━━━━━━━━━━━━\n"
         f"<b>🌟 Rarity Statistics:</b>\n"
-        f"<b>🌿 Common:</b> <code>{rarity_counts['common']}</code>\n"
-        f"<b>🍀 Medium:</b> <code>{rarity_counts['medium']}</code>\n"
-        f"<b>⚡ Rare:</b> <code>{rarity_counts['rare']}</code>\n"
-        f"<b>💎 chibi:</b> <code>{rarity_counts['chibi']}</code>\n"
-        f"<b>🌈 Legendary:</b> <code>{rarity_counts['legendary']}</code>\n"
+        f"<b>⚪️ Common:</b> <code>{rarity_counts['common']}</code>\n"
+        f"<b>🔵 Medium:</b> <code>{rarity_counts['medium']}</code>\n"
+        f"<b>🟠 Rare:</b> <code>{rarity_counts['rare']}</code>\n"
+        f"<b>👶 Chibi:</b> <code>{rarity_counts['chibi']}</code>\n"
+        f"<b>🟡 Legendary:</b> <code>{rarity_counts['legendary']}</code>\n"
+        f"<b>🔮 Limited Edition:</b> <code>{rarity_counts['Limited Edition']}</code>/n"
         f"━━━━━━━━━━━━━━━━━━━\n"
         f"<i>📈 Stay tuned for more updates!</i>"
     )
