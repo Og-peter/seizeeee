@@ -25,23 +25,26 @@ gem_prices = {
     "Obsidian": {"price": 50, "emoji": "⚫", "aliases": ["obsidian", "o"]}  # New
 }
 
-# Command to display user's gem inventory
 @bot.on_message(filters.command(["sbag"]))
 async def gems_command(_, message: Message):
     user_id = message.from_user.id
-    
+
     # Get user's gem inventory from the database
     user_data = await user_collection.find_one({'id': user_id}, projection={'gems': 1})
-    
-    if user_data and user_data.get('gems'):
+
+    if user_data and 'gems' in user_data and user_data['gems']:
         gem_inventory = user_data['gems']
         inventory_text = "<b>💎 𝗬𝗢𝗨𝗥 𝗜𝗧𝗘𝗠 𝗟𝗜𝗦𝗧 💎</b>\n\n"
+        
+        # Iterate through the gem inventory
         for gem, quantity in gem_inventory.items():
-            inventory_text += f"{gem_prices[gem]['emoji']} <b>{gem}</b>: <b>{quantity}</b>\n"
+            # Check if gem price is available to avoid KeyError
+            gem_emoji = gem_prices.get(gem, {}).get('emoji', '❓')  # Default to a question mark if not found
+            inventory_text += f"{gem_emoji} <b>{gem}</b>: <b>{quantity}</b>\n"
         
         # Add a footer for clarity and encouragement
         inventory_text += "\n<b>✨ Keep collecting more gems and unlock amazing rewards!</b>"
-        
+
         await message.reply_html(inventory_text)
     else:
         await message.reply_html("<b>🚫 You haven't collected any items yet! Start gathering some gems to fill your inventory.</b>")
