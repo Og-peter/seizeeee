@@ -38,25 +38,22 @@ async def get_user_info(user, already=False):
         tokens_formatted = f"{tokens:,}"
         balance_formatted = f"{balance:,}"
 
-        # Profile display
+        # Profile display without borders and with an additional unique line
         info_text = f"""
-╭─🌟 *User's Profile* 🌟─╮
-┃
-┣ 👤 *Name:* `{first_name}`
-┣ 🆔 *ID:* `{user_id}`
-┃
-┣━━━━━━━━━━━━━━━━━━━━━━━
-┣ 🌸 *Total Waifus:* {total_count} / {global_count}
-┣ 📊 *Waifu Percentage:* `{round((total_count / global_count) * 100, 2)}%`
-┣ 📈 *Level:* `{level}`
-┣ 🎮 *XP:* `{xp}`
-┣ 💰 *Tokens:* `{tokens_formatted}`
-┃
-┣ 🏆 *Global Position:* `{global_rank}`
-┣ 🌐 *Chat Position:* `{global_coin_rank}`
-┣ 🔥 *Login Streak:* {streak} days
-┃
-╰───────────────────────╯
+👤 *Name:* `{first_name}`
+🆔 *ID:* `{user_id}`
+
+🌸 *Total Waifus:* {total_count} / {global_count}
+📊 *Waifu Percentage:* `{round((total_count / global_count) * 100, 2)}%`
+📈 *Level:* `{level}`
+🎮 *XP:* `{xp}`
+💰 *Tokens:* `{tokens_formatted}`
+
+🏆 *Global Position:* `{global_rank}`
+🌐 *Chat Position:* `{global_coin_rank}`
+🔥 *Login Streak:* {streak} days
+
+Thank you for being an active member of our community!
 """
         return info_text, photo_id
     except Exception as e:
