@@ -176,12 +176,12 @@ async def stats(update: Update, context: CallbackContext) -> None:
 
     # Fetching rarity counts from your database (modify according to your structure)
     rarity_counts = {
-        "Common": await user_collection.count_documents({"rarity": "Common"}),
-        "Medium": await user_collection.count_documents({"rarity": "Medium"}),
-        "Rare": await user_collection.count_documents({"rarity": "Rare"}),
-        "Chibi": await user_collection.count_documents({"rarity": "Chibi"}),
-        "Legendary": await user_collection.count_documents({"rarity": "Legendary"}),
-        "Limited Edition": await user_collection.count_documents({"rarity": "Limited Edition"}),
+        "common": await user_collection.count_documents({"rarity": "common"}),
+        "medium": await user_collection.count_documents({"rarity": "medium"}),
+        "rare": await user_collection.count_documents({"rarity": "rare"}),
+        "chibi": await user_collection.count_documents({"rarity": "chibi"}),
+        "legendary": await user_collection.count_documents({"rarity": "legendary"}),
+        "limited Edition": await user_collection.count_documents({"rarity": "limited Edition"}),
     }
 
     # Enhanced stats message with stylish formatting
