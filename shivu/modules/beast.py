@@ -35,7 +35,7 @@ cooldowns = {}
 async def beastshop_cmd(_: bot, update: Update):
     # Display a list of available beasts and their prices
     beast_list_text = "\n".join([
-        f"🦁 **{beast_id}. {beast['name']}**\n"
+        f" **{beast_id}. {beast['name']}**\n"
         f"   𝐑𝐚𝐜𝐞 : {beast['rarity']}\n"
         f"   💰 **Price** : Ŧ`{beast['price']}`"
         for beast_id, beast in beast_list.items()
