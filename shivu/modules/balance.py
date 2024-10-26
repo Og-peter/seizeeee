@@ -49,16 +49,16 @@ async def check_balance(_, message: Message):
 
     # Stylish balance message
     balance_message = (
-        f"╭━━━⊰ 〔 *💼 Wealth Summary 💼* 〕 ⊱━━━╮\n"
+        f"╭━━━⊰ 〔 💼 Wealth Summary 💼 〕 ⊱━━━╮\n"
         f" ┃ \n"
-        f" ┃ 💎 *{first_name}'s Balance*: ₩ **{formatted_balance}**\n"
+        f" ┃ 💎 {first_name}'s Balance: ₩ {formatted_balance}\n"
         f" ┃ \n"
         f"╰━━━━━━━⊰ [📈 Wealth Details](https://telegra.ph/file/af20fd1f2bed03d2bc438.jpg) ⊱━━━━━━━╯\n\n"
-        f"✨ *Keep building your fortune!* ✨"
+        f"✨ Keep building your fortune! ✨"
     )
 
     # Reply to the user with a unique balance message
-    await message.reply_text(balance_message, disable_web_page_preview=True, parse_mode="Markdown")
+    await message.reply_text(balance_message, disable_web_page_preview=True)
     
 async def pay(update, context):
     sender_id = update.effective_user.id
