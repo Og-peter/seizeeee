@@ -164,29 +164,38 @@ async def send_groups_document(update: Update, context: CallbackContext) -> None
 async def stats(update: Update, context: CallbackContext) -> None:
     OWNER_ID = 6402009857  # Define your OWNER_ID here
 
+    # Ensure only the OWNER_ID can access this command
     if update.effective_user.id != OWNER_ID:
         await update.message.reply_text("🚫 You are not authorized to use this command.", parse_mode="HTML")
         return
 
-    # Counting total users and groups with added constants
+    # Counting total users and groups, adding constants
     user_count = await user_collection.count_documents({})
     group_count = await group_user_totals_collection.distinct('group_id')
     adjusted_user_count = user_count + 40000
     adjusted_group_count = len(group_count) + 5900
 
-    # Define extended rarity types and fetch counts
+    # Define rarity types as they appear in your database
     rarity_levels = [
-        "⚪️ Common", "🔵 Medium", "👶 Chibi", "🟠 Rare", "🟡 Legendary", 
-        "💮 Exclusive", "🫧 Premium", "🔮 Limited Edition", 
-        "🌸 Exotic", "🎐 Astral", "💞 Valentine"
+        {"name": "⚪️ Common", "db_name": "common"},
+        {"name": "🔵 Medium", "db_name": "medium"},
+        {"name": "👶 Chibi", "db_name": "chibi"},
+        {"name": "🟠 Rare", "db_name": "rare"},
+        {"name": "🟡 Legendary", "db_name": "legendary"},
+        {"name": "💮 Exclusive", "db_name": "exclusive"},
+        {"name": "🫧 Premium", "db_name": "premium"},
+        {"name": "🔮 Limited Edition", "db_name": "limited Edition"},
+        {"name": "🌸 Exotic", "db_name": "exotic"},
+        {"name": "🎐 Astral", "db_name": "astral"},
+        {"name": "💞 Valentine", "db_name": "valentine"}
     ]
     rarity_counts = {}
 
     # Fetch and log counts for each rarity level
     for rarity in rarity_levels:
-        count = await user_collection.count_documents({"rarity": rarity})
-        rarity_counts[rarity] = count
-        logging.info(f"Rarity '{rarity}' count: {count}")  # Log each count
+        count = await user_collection.count_documents({"rarity": rarity["db_name"]})
+        rarity_counts[rarity["name"]] = count
+        logging.info(f"Rarity '{rarity['name']}' count: {count}")  # Log each count
 
     # Construct the stats message with rarity percentages
     stats_message = (
@@ -198,6 +207,7 @@ async def stats(update: Update, context: CallbackContext) -> None:
         f"<b>🌟 Rarity Statistics:</b>\n"
     )
 
+    # Append rarity counts and percentages to the message
     for rarity, count in rarity_counts.items():
         percentage = (count / adjusted_user_count) * 100 if adjusted_user_count > 0 else 0
         stats_message += f"<b>{rarity}:</b> <code>{count}</code> ({percentage:.2f}%)\n"
