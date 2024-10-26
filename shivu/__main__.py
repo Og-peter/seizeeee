@@ -37,34 +37,39 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
     chat_id = str(update.effective_chat.id)
     user_id = update.effective_user.id
 
+    # Lock setup for the chat
     if chat_id not in locks:
         locks[chat_id] = asyncio.Lock()
     lock = locks[chat_id]
 
     async with lock:
+        # Fetch or set default message frequency
         chat_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
-        if chat_frequency:
-            message_frequency = chat_frequency.get('message_frequency', 100)
-        else:
-            message_frequency = 100
+        message_frequency = chat_frequency.get('message_frequency', 100) if chat_frequency else 100
 
+        # Track the user's message count
         if chat_id in last_user and last_user[chat_id]['user_id'] == user_id:
             last_user[chat_id]['count'] += 1
             if last_user[chat_id]['count'] >= 10:
+                # Warn user if within cooldown time
                 if user_id in warned_users and time.time() - warned_users[user_id] < 600:
                     return
                 else:
-                    await update.message.reply_text(f"⛔️ Flooding | Spamming\nNow I'm ⚠️ Ignoring {update.effective_user.first_name} Existence For Upcoming 10 Minutes")
+                    # Stylized warning message
+                    warning_message = stylize_text(
+                        f"🚫 Excessive Messages Detected!\n⛔️ {update.effective_user.first_name}, please take a break! You are being ignored for 10 minutes."
+                    )
+                    await update.message.reply_text(warning_message)
                     warned_users[user_id] = time.time()
                     return
         else:
+            # Reset message count if the user has changed
             last_user[chat_id] = {'user_id': user_id, 'count': 1}
 
-        if chat_id in message_counts:
-            message_counts[chat_id] += 1
-        else:
-            message_counts[chat_id] = 1
+        # Increment message count for the chat
+        message_counts[chat_id] = message_counts.get(chat_id, 0) + 1
 
+        # Send an image at the specified frequency
         if message_counts[chat_id] % message_frequency == 0:
             await send_image(update, context)
             message_counts[chat_id] = 0
