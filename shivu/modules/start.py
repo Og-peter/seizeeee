@@ -6,7 +6,7 @@ from shivu import application, GROUP_ID, user_collection
 
 # Define your sudo users' IDs here
 sudo_user_ids = [6402009857]  # Replace with actual user IDs of the sudo users
-SUPPORT_GROUP_ID = "@your_support_group"  # Replace with the actual group username or ID
+SUPPORT_GROUP_ID = "@dynamic_gangs"  # Replace with the actual group username or ID
 
 async def notify_sudo_users(application: Application):
     """Notify sudo users that the bot has restarted."""
