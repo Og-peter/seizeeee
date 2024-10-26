@@ -5,10 +5,10 @@ class Development:
     # Define all the required configurations here
     api_id = 29098103
     api_hash = "06baef4020832888ccf3ebf4e746d52b"
-    TOKEN = "7335799800:AAHgRmfPm4BPHRnQby1G7tsGkhFLyAGlwEQ"  # Replace with your actual bot token
+    TOKEN = "your_bot_token"  # Replace with your actual bot token
     GROUP_ID = -1002104939708
     CHARA_CHANNEL_ID = -1002049694247
-    mongo_url = "mongodb+srv://seizewaifubot:seizewaifubot@itachi.9qya0.mongodb.net/?retryWrites=true&w=majority&appName=itachi"  # Replace with your actual MongoDB URL
+    mongo_url = "your_mongo_url"  # Replace with your actual MongoDB URL
     PHOTO_URL = [
         "https://telegra.ph/file/c74151f4c2b56a107a24b.jpg",
         "https://telegra.ph/file/6a81a91aa4a660a73194b.jpg"
@@ -17,7 +17,11 @@ class Development:
     UPDATE_CHAT = "Seizer_update"
     BOT_USERNAME = "Character_seize_bot"
     OWNER_ID = "6402009857"
-    sudo_users = ["6402009857", "7004889403"]
+    sudo_users = [
+        "6402009857", "7004889403", "1135445089", "5158013355", "5630057244", 
+        "1374057577", "6305653111", "5421067814", "7497950160", "7334126640", 
+        "6835013483", "1993290981", "1742711103", "6180567980"
+    ]
     JOINLOGS = -1002104939708
     LEAVELOGS = -1002104939708
 
@@ -27,6 +31,14 @@ class Development:
     GRADE2 = ["6305653111", "5421067814"]
     GRADE1 = ["7004889403", "1374057577", "5158013355", "5630057244", "7334126640", "5421067814"]
     SPECIALGRADE = ["6402009857", "1993290981"]
+
+    # Additional user roles
+    Genin = []
+    Chunin = []
+    Jonin = ["7334126640"]
+    Hokage = ["5421067814"]
+    Akatsuki = ["6402009857", "5158013355", "5630057244"]
+    Princess = ["1993290981"]
 
     @classmethod
     def add_sudo_user(cls, user_id: str):
