@@ -174,6 +174,15 @@ async def stats(update: Update, context: CallbackContext) -> None:
     adjusted_user_count = user_count + 40000
     adjusted_group_count = len(group_count) + 5900
 
+    # Fetching rarity counts from your database (modify according to your structure)
+    rarity_counts = {
+        "common": await user_collection.count_documents({"rarity": "common"}),
+        "uncommon": await user_collection.count_documents({"rarity": "uncommon"}),
+        "rare": await user_collection.count_documents({"rarity": "rare"}),
+        "epic": await user_collection.count_documents({"rarity": "epic"}),
+        "legendary": await user_collection.count_documents({"rarity": "legendary"}),
+    }
+
     # Enhanced stats message with stylish formatting
     stats_message = (
         f"<b>📊 𝘽𝙤𝙩 𝙎𝙩𝙖𝙩𝙞𝙨𝙩𝙞𝙘𝙨 📊</b>\n"
@@ -181,11 +190,17 @@ async def stats(update: Update, context: CallbackContext) -> None:
         f"<b>👤 Total Users:</b> <code>{adjusted_user_count}</code>\n"
         f"<b>👥 Total Groups:</b> <code>{adjusted_group_count}</code>\n"
         f"━━━━━━━━━━━━━━━━━━━\n"
+        f"<b>🌟 Rarity Statistics:</b>\n"
+        f"<b>🌿 Common:</b> <code>{rarity_counts['common']}</code>\n"
+        f"<b>🍀 Uncommon:</b> <code>{rarity_counts['uncommon']}</code>\n"
+        f"<b>⚡ Rare:</b> <code>{rarity_counts['rare']}</code>\n"
+        f"<b>💎 Epic:</b> <code>{rarity_counts['epic']}</code>\n"
+        f"<b>🌈 Legendary:</b> <code>{rarity_counts['legendary']}</code>\n"
+        f"━━━━━━━━━━━━━━━━━━━\n"
         f"<i>📈 Stay tuned for more updates!</i>"
     )
 
     await update.message.reply_text(stats_message, parse_mode="HTML")
-
 # Register the command handlers
 application.add_handler(CommandHandler('ctop', ctop, block=False))
 application.add_handler(CommandHandler('topGroups', global_leaderboard, block=False))
