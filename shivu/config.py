@@ -1,11 +1,5 @@
-from telegram import Update
-from telegram.constants import ParseMode
+from telegram import Update, ParseMode
 from telegram.ext import Updater, CommandHandler, CallbackContext
-import logging
-
-# Configure logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 class Config(object):
     LOGGER = True
@@ -17,8 +11,8 @@ class Config(object):
         "6835013483", "1993290981", "1742711103", "6180567980"
     ]
     GROUP_ID = -1002104939708
-    TOKEN = "7335799800:AAHgRmfPm4BPHRnQby1G7tsGkhFLyAGlwEQ"  # Replace with your bot token securely
-    mongo_url = "mongodb+srv://seizewaifubot:seizewaifubot@itachi.9qya0.mongodb.net/?retryWrites=true&w=majority&appName=itachi"  # Replace with your MongoDB URL securely
+    TOKEN = "7335799800:AAHgRmfPm4BPHRnQby1G7tsGkhFLyAGlwEQ"
+    mongo_url = "mongodb+srv://seizewaifubot:seizewaifubot@itachi.9qya0.mongodb.net/?retryWrites=true&w=majority&appName=itachi"
     PHOTO_URL = [
         "https://telegra.ph/file/c74151f4c2b56a107a24b.jpg",
         "https://telegra.ph/file/6a81a91aa4a660a73194b.jpg",
@@ -30,7 +24,7 @@ class Config(object):
     BOT_USERNAME = "Character_seize_bot"
     CHARA_CHANNEL_ID = -1002049694247
     api_id = 29098103
-    api_hash = "06baef4020832888ccf3ebf4e746d52b"  # Replace with your API hash securely
+    api_hash = "06baef4020832888ccf3ebf4e746d52b"
     JOINLOGS = -1002104939708
     LEAVELOGS = -1002104939708
 
@@ -38,7 +32,7 @@ class Config(object):
     GRADE4 = []
     GRADE3 = ["7334126640"]
     GRADE2 = ["6305653111", "5421067814"]
-    GRADE1 = ["7004889403", "1374057577", "5158013355", "5630057244"]
+    GRADE1 = ["7004889403", "1374057577", "5158013355", "5630057244", "7334126640", "5421067814"]
     SPECIALGRADE = ["6402009857", "1993290981"]
 
     Genin = []
@@ -55,28 +49,34 @@ class Config(object):
             return True
         return False
 
+class Production(Config):
+    LOGGER = True
+
+class Development(Config):
+    LOGGER = True
+
 # Bot command to add a new sudo user
 def add_sudo(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     user_id_str = str(user_id)
 
+    # Only the owner and sudo users can add others as sudo
     if user_id_str == Config.OWNER_ID or user_id_str in Config.sudo_users:
-        # Check if the command is used as a reply
+        # Ensure the command is a reply to a message
         if update.message.reply_to_message:
-            replied_user_id = str(update.message.reply_to_message.from_user.id)
-            if Config.add_sudo_user(replied_user_id):
+            new_sudo_id = str(update.message.reply_to_message.from_user.id)
+            if Config.add_sudo_user(new_sudo_id):
                 update.message.reply_text(
-                    f"User [{replied_user_id}](tg://user?id={replied_user_id}) has been added as a sudo user.",
+                    f"User [{new_sudo_id}](tg://user?id={new_sudo_id}) has been added as a sudo user.",
                     parse_mode=ParseMode.MARKDOWN
                 )
-                logger.info(f"User {replied_user_id} added as sudo user by {user_id_str}.")
             else:
                 update.message.reply_text(
-                    f"User [{replied_user_id}](tg://user?id={replied_user_id}) is already a sudo user.",
+                    f"User [{new_sudo_id}](tg://user?id={new_sudo_id}) is already a sudo user.",
                     parse_mode=ParseMode.MARKDOWN
                 )
         else:
-            update.message.reply_text("Please reply to a user's message to add them as a sudo user.")
+            update.message.reply_text("Please reply to the user you want to add as a sudo user.")
     else:
         update.message.reply_text("You don't have permission to use this command.")
 
