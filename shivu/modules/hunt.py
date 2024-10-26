@@ -78,7 +78,7 @@ async def enter_safari(update: Update, context: CallbackContext):
     user_id = message.from_user.id
 
     if user_id in safari_users:
-        await safe_send_message(context.bot, message.chat_id, "You are already in the seize zone!")
+        await safe_send_message(context.bot, message.chat_id, "<b>⚠️ Alert!</b>\nYou’re already within the Seize Zone!")
         return
 
     current_time = time.time()
@@ -94,17 +94,31 @@ async def enter_safari(update: Update, context: CallbackContext):
 
     if current_time - last_entry_time < cooldown_duration:
         remaining_time = int(cooldown_duration - (current_time - last_entry_time))
-        await safe_send_message(context.bot, message.chat_id, f"You can enter the seize zone again in {remaining_time // 3600} hours and {(remaining_time % 3600) // 60} minutes.")
+        hours = remaining_time // 3600
+        minutes = (remaining_time % 3600) // 60
+        await safe_send_message(
+            context.bot,
+            message.chat_id,
+            f"<b>⏳ Cooldown Active</b>\nYou’ll be able to re-enter in {hours}h {minutes}m.\nPrepare yourself!"
+        )
         return
 
     user_data = await user_collection.find_one({'id': user_id})
     if user_data is None:
-        await safe_send_message(context.bot, message.chat_id, "You need to register first by starting the bot in dm.")
+        await safe_send_message(
+            context.bot,
+            message.chat_id,
+            "<b>🚷 Access Denied</b>\nPlease register by starting the bot in direct message."
+        )
         return
 
     entry_fee = 10
     if user_data.get('tokens', 10) < entry_fee:
-        await safe_send_message(context.bot, message.chat_id, "You don't have enough tokens to enter the seize zone.\nNeed 10 tokens.")
+        await safe_send_message(
+            context.bot,
+            message.chat_id,
+            "<b>💰 Insufficient Tokens</b>\nYou need 10 tokens to enter the Seize Zone."
+        )
         return
 
     new_tokens = user_data['tokens'] - entry_fee
@@ -124,8 +138,12 @@ async def enter_safari(update: Update, context: CallbackContext):
 
     await save_safari_user(user_id)
 
-    await safe_send_message(context.bot, message.chat_id, f"<b>Welcome to the seize Zone!\nEntry fee deducted: {entry_fee} Tokens\n\nBegin your /explore for rare seize.</b>")
-
+    await safe_send_message(
+        context.bot,
+        message.chat_id,
+        "<b>🎉 Welcome to the Seize Zone!</b>\nEntry fee of 10 tokens deducted.\n\n<i>Start your journey with /explore and discover rare catches!</i>"
+    )
+  
 async def exit_safari(update: Update, context: CallbackContext):
     message = update.message
     user_id = message.from_user.id
