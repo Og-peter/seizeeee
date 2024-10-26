@@ -149,14 +149,14 @@ async def exit_safari(update: Update, context: CallbackContext):
     user_id = message.from_user.id
 
     if user_id not in safari_users:
-        await message.reply_text("You are not in the seize zone!")
+        await message.reply_text("<b>⚠️ Exit Denied</b>\nYou are currently not in the Seize Zone!")
         return
 
     del safari_users[user_id]
     await safari_users_collection.delete_one({'user_id': user_id})
 
-    await message.reply_text("You have now exited the seize Zone")
-
+    await message.reply_text("<b>✅ Success!</b>\nYou have gracefully exited the Seize Zone.\n\n<i>Until next time!</i>")
+  
 user_locks = defaultdict(asyncio.Lock)
 
 async def hunt(update: Update, context: CallbackContext):
