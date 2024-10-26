@@ -272,9 +272,9 @@ async def guess(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(
             f'💥 𝙲ᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴs, <b><a href="tg://user?id={user_id}">{escape(update.effective_user.first_name)}</a></b>! 🎊\n'
             f'❄️ ʏᴏᴜ ʜᴀᴠᴇ ᴀᴅᴅᴇᴅ ᴀ ɴᴇᴡ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴛᴏ ʏᴏᴜʀ ʜᴀʀᴇᴍ! \n\n'
-            f'⚜️ Character: <b>{last_characters[chat_id]["name"]}</b>\n'
-            f'⛩️ Anime: <b>{last_characters[chat_id]["anime"]}</b>\n'
-            f'🏖️ Rarity: <b>{last_characters[chat_id]["rarity"]}</b>\n\n'
+            f'⚜️ 𝗖𝗛𝗔𝗥𝗔𝗖𝗧𝗘𝗥: <b>{last_characters[chat_id]["name"]}</b>\n'
+            f'⛩️ 𝗔𝗡𝗜𝗠𝗘: <b>{last_characters[chat_id]["anime"]}</b>\n'
+            f'🏖️ 𝗥𝗔𝗥𝗜𝗧𝗬: <b>{last_characters[chat_id]["rarity"]}</b>\n\n'
             f'🫧 ᴄʜᴇᴄᴋ ʏᴏᴜʀ ʜᴀʀᴇᴍ ʙʏ /harem', 
             parse_mode='HTML', reply_markup=InlineKeyboardMarkup(keyboard)
         )
