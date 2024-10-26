@@ -4,8 +4,7 @@ from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackContext, CommandHandler
 
-from shivu import application, PHOTO_URL, SUPPORT_CHAT, UPDATE_CHAT, BOT_USERNAME, db, GROUP_ID
-from shivu import user_collection, refeer_collection
+from shivu import application, GROUP_ID, user_collection
 
 # Define your sudo users' IDs here
 sudo_user_ids = [6402009857]  # Replace with actual user IDs of the sudo users
@@ -41,9 +40,16 @@ async def start(update: Update, context: CallbackContext) -> None:
     user_data = await user_collection.find_one({"id": user_id})
 
     if user_data is None:
-        new_user = {"id": user_id, "first_name": first_name, "username": username, "tokens": 500, "characters": []}
+        new_user = {
+            "id": user_id,
+            "first_name": first_name,
+            "username": username,
+            "tokens": 500,
+            "characters": []
+        }
         await user_collection.insert_one(new_user)
 
+        # Handle referral
         if referring_user_id:
             referring_user_data = await user_collection.find_one({"id": referring_user_id})
             if referring_user_data:
@@ -54,16 +60,24 @@ async def start(update: Update, context: CallbackContext) -> None:
                 except Exception as e:
                     print(f"Failed to send referral message: {e}")
 
-        await context.bot.send_message(chat_id=GROUP_ID, 
-                                       text=f"🎉 #**New User Alert!** 🎉\n\n"
-                                            f"👤 User: <a href='tg://user?id={user_id}'>{escape(first_name)}</a>", 
-                                       parse_mode='HTML')
+        # Notify the group about the new user
+        await context.bot.send_message(
+            chat_id=GROUP_ID,
+            text=f"🎉 #**New User Alert!** 🎉\n\n"
+                 f"👤 User: <a href='tg://user?id={user_id}'>{escape(first_name)}</a>",
+            parse_mode='HTML'
+        )
     else:
+        # Update user data if necessary
         if user_data['first_name'] != first_name or user_data['username'] != username:
-            await user_collection.update_one({"id": user_id}, {"$set": {"first_name": first_name, "username": username}})
+            await user_collection.update_one(
+                {"id": user_id},
+                {"$set": {"first_name": first_name, "username": username}}
+            )
 
     if update.effective_chat.type == "private":
-        caption = escape_markdown(f"""❖ Kᴏɴ'ɴɪᴄʜɪᴡᴀ {first_name} sᴀɴ 💌!!
+        caption = escape_markdown(
+            f"""❖ Kᴏɴ'ɴɪᴄʜɪᴡᴀ {first_name} sᴀɴ 💌!!
 
 ๏ I'ᴍ [ᴄʜᴀʀᴀᴄᴛᴇʀ sᴇɪᴢᴇʀ ʙᴏᴛ](https://t.me/Character_seize_bot) ʏᴏᴜʀ ғʀɪᴇɴᴅʟʏ ᴡᴀɪғᴜ sᴇɪᴢᴇʀ ʙᴏᴛ ☄.
 
@@ -73,10 +87,11 @@ async def start(update: Update, context: CallbackContext) -> None:
 ━━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━━
 ❖ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ:
  sɪᴍᴘʟʏ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ.
-━━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━━""")
+━━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━━"""
+        )
 
         keyboard = [
-            [InlineKeyboardButton("❖ Λᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ❖", url=f'https://t.me/Character_seize_bot?startgroup=new')],
+            [InlineKeyboardButton("❖ Λᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ❖", url='https://t.me/Character_seize_bot?startgroup=new')],
             [InlineKeyboardButton("˹ 𝙎𝙪𝙥𝙥𝙤𝙧𝙩 ˼", url='https://t.me/dynamic_gangs'),
              InlineKeyboardButton("˹ 𝙐𝙥𝙙𝙖𝙩𝙚𝙨 ˼", url='https://t.me/Seizer_updates')],
             [InlineKeyboardButton("˹ 𝙁𝘼𝙌 ˼", url='https://telegra.ph/Seizer-Faq-Menu-09-05')],
@@ -89,11 +104,11 @@ async def start(update: Update, context: CallbackContext) -> None:
         await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=caption, reply_markup=reply_markup, parse_mode='MarkdownV2')
     else:
         keyboard = [
-            [InlineKeyboardButton("PM", url=f'https://t.me/Character_seize_bot?start=true')],
+            [InlineKeyboardButton("PM", url='https://t.me/Character_seize_bot?start=true')],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         video_url = "https://telegra.ph/file/0b2e8e33d07a0d0e5914f.mp4"
-        await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=f"""𝙃𝙚𝙮 𝙩𝙝𝙚𝙧𝙚! {first_name}\n\n✨𝙄 𝘼𝙈 𝘼𝙡𝙞𝙫𝙚 𝘽𝙖𝙗𝙮""", reply_markup=reply_markup)
+        await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=f"𝙃𝙚𝙮 𝙩𝙝𝙚𝙧𝙚! {first_name}\n\n✨𝙄 𝘼𝙈 𝘼𝙡𝙞𝙫𝙚 𝘽𝙖𝙗𝙮", reply_markup=reply_markup)
 
 # Register the /start command handler
 start_handler = CommandHandler('start', start, block=False)
