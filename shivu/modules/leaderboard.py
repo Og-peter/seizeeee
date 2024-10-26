@@ -1,4 +1,5 @@
 import os
+import logging 
 import random
 import html
 from html import escape
@@ -176,9 +177,12 @@ async def stats(update: Update, context: CallbackContext) -> None:
     # Define rarity types and fetch counts
     rarity_types = ["common", "medium", "rare", "chibi", "legendary", "limited Edition"]
     rarity_counts = {}
+    
+    # Logging and checking each rarity count
     for rarity in rarity_types:
         count = await user_collection.count_documents({"rarity": rarity})
         rarity_counts[rarity] = count
+        logging.info(f"Rarity '{rarity}' count: {count}")  # Log each count
 
     # Create stats message
     stats_message = (
