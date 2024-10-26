@@ -5,6 +5,21 @@ from shivu import SUPPORT_CHAT, user_collection, collection
 import os
 from datetime import datetime
 
+# Dummy function to simulate getting global rank (replace with actual implementation)
+async def get_global_rank(user_id):
+    # Implement your logic to get global rank
+    return 1  # Example placeholder
+
+# Dummy function to simulate getting user balance (replace with actual implementation)
+async def get_user_balance(user_id):
+    # Implement your logic to get user balance
+    return 1000  # Example placeholder
+
+# Dummy function to calculate user level (replace with actual implementation)
+def calculate_user_level(xp):
+    # Implement your logic to calculate level based on XP
+    return xp // 100  # Example placeholder
+
 async def get_user_info(user, already=False):
     try:
         # Fetch user info if not provided
@@ -44,6 +59,7 @@ async def get_user_info(user, already=False):
 
         # Profile display without borders and with an additional unique line
         info_text = f"""
+✨ **User Profile** ✨
 👤 *Name:* `{first_name}`
 🆔 *ID:* `{user_id}`
 
@@ -57,9 +73,9 @@ async def get_user_info(user, already=False):
 🌐 *Chat Position:* `{global_coin_rank}`
 🔥 *Login Streak:* {streak} days
 
-Thank you for being an active member of our community!
+🙏 Thank you for being an active member of our community!
 """
-        return info_text, photo_id
+        return info_text.strip(), photo_id
     except Exception as e:
         print(f"⚠️ Error in get_user_info: {e}")
         return ["⚠️ Error fetching user information.", None]
@@ -99,5 +115,5 @@ async def profile(client, message):
     finally:
         if photo and os.path.exists(photo):
             os.remove(photo)
-    
+
     await m.delete()
