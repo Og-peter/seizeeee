@@ -61,7 +61,7 @@ def get_rarity_formatted(rarity):
     formatted_rarity = f"{rarity_data['emoji']} <b>ʀᴀʀɪᴛʏ:</b> <i>{rarity_data['name']}</i>"
     
     # Add a decorative border for better presentation
-    return f"🌟✨ {formatted_rarity} ✨🌟"
+    return f"{formatted_rarity}"
 
 async def inlinequery(update: Update, context: CallbackContext) -> None:
     async with lock:
