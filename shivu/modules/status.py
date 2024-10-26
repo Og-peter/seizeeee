@@ -7,6 +7,7 @@ from datetime import datetime
 
 async def get_user_info(user, already=False):
     try:
+        # Fetch user info if not provided
         if not already:
             user = await shivuu.get_users(user)
         if not user.first_name:
@@ -30,10 +31,13 @@ async def get_user_info(user, already=False):
         last_login_date = existing_user.get('last_login')
         streak = existing_user.get('login_streak', 0) if last_login_date else 1
 
-        # Update login info and streak logic
-        await user_collection.update_one({'id': user_id}, {'$set': {'last_login': current_login.strftime('%Y-%m-%d'), 'login_streak': streak}})
+        # Update login info and streak
+        await user_collection.update_one(
+            {'id': user_id},
+            {'$set': {'last_login': current_login.strftime('%Y-%m-%d'), 'login_streak': streak}}
+        )
 
-        # Formatting data
+        # Format data
         tokens = existing_user.get('tokens', 0)
         tokens_formatted = f"{tokens:,}"
         balance_formatted = f"{balance:,}"
@@ -62,6 +66,7 @@ Thank you for being an active member of our community!
 
 @shivuu.on_message(filters.command("status"))
 async def profile(client, message):
+    user = None
     if message.reply_to_message:
         user = message.reply_to_message.from_user.id
     elif len(message.command) == 1:
@@ -92,7 +97,7 @@ async def profile(client, message):
         print(f"⚠️ Error downloading photo: {e}")
         await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
     finally:
-        if os.path.exists(photo):
+        if photo and os.path.exists(photo):
             os.remove(photo)
     
     await m.delete()
