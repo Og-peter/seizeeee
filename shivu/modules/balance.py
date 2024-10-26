@@ -218,12 +218,12 @@ async def tesure(_, message: Message):
     print(f"Debug: User's first name is '{first_name}', last name is '{last_name}'")  # Debug statement
 
     # Check for specific tags in both first name and last name
-    if "⸻꯭፝֟͠DCS 𐀔" not in first_name and "⸻꯭፝֟͠DCS 𐀔" not in last_name:
-        await message.reply_text("🚫 **Please set `⸻꯭፝֟͠DCS 𐀔` in your first or last name to use this command.**")
+    if "˹ 𝐃ʏɴᴧϻɪᴄ ˼" not in first_name and "˹ 𝐃ʏɴᴧϻɪᴄ ˼" not in last_name:
+        await message.reply_text("🚫 **Please set `˹ 𝐃ʏɴᴧϻɪᴄ ˼` in your first or last name to use this command.**")
         return
 
-    if "𝘿𝙍𝘼𝙂𝙊𝙉𝙎⃟🐉" in first_name or "𝘿𝙍𝘼𝙂𝙊𝙉𝙎⃟🐉" in last_name:
-        await message.reply_text("⚠️ **Please remove the tag `𝘿𝙍𝘼𝙂𝙊𝙉𝙎⃟🐉` and only use `⸻꯭፝֟͠DCS 𐀔` in your name to use this command.**")
+    if "⸻꯭፝֟͠DCS 𐀔" in first_name or "⸻꯭፝֟͠DCS 𐀔" in last_name:
+        await message.reply_text("⚠️ **Please remove the tag `⸻꯭፝֟͠DCS 𐀔` and only use `˹ 𝐃ʏɴᴧϻɪᴄ ˼` in your name to use this command.**")
         return
 
     user_data = await user_collection.find_one({'id': user_id}, projection={'last_tesure_reward': 1, 'balance': 1})
