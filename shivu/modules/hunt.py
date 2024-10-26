@@ -392,7 +392,7 @@ async def hunt_callback_query(update: Update, context: CallbackContext):
 async def dc_command(update: Update, context: CallbackContext):
     # Check if the command is a reply to a message
     if not update.message.reply_to_message:
-        await update.message.reply_text("You need to reply to a message to reset that user's cooldown.")
+        await update.message.reply_text("🔄 You need to reply to a message to reset that user's cooldown.")
         return
     
     # Extract user_id of the replied user
@@ -402,7 +402,7 @@ async def dc_command(update: Update, context: CallbackContext):
     authorized_user_id = 6402009857
     
     if update.message.from_user.id != authorized_user_id:
-        await update.message.reply_text("You are not authorized to use this command.")
+        await update.message.reply_text("🚫 You are not authorized to use this command.")
         return
     
     try:
@@ -410,14 +410,15 @@ async def dc_command(update: Update, context: CallbackContext):
         result = await safari_cooldown_collection.delete_one({'user_id': replied_user_id})
         
         if result.deleted_count == 1:
-            await update.message.reply_text(f"The tour cooldown for user {replied_user_id} has been reset.")
+            await update.message.reply_text(f"✅ The tour cooldown for user <code>{replied_user_id}</code> has been reset.")
         else:
-            await update.message.reply_text(f"The user {replied_user_id} doesn't have an active tour cooldown.")
+            await update.message.reply_text(f"⚠️ The user <code>{replied_user_id}</code> doesn't have an active tour cooldown.")
     
     except Exception as e:
-        print(f"Error resetting safari cooldown for user {replied_user_id}: {e}")
-        await update.message.reply_text("An error occurred while resetting the tour cooldown. Please try again later.")
-        
+        logger.error(f"Error resetting safari cooldown for user {replied_user_id}: {e}")
+        await update.message.reply_text("⚠️ An error occurred while resetting the tour cooldown. Please try again later.")
+
+# Adding the command handlers
 application.add_handler(CommandHandler("dc", dc_command))
 application.add_handler(CommandHandler("wtour", enter_safari))
 application.add_handler(CommandHandler("exit", exit_safari))
