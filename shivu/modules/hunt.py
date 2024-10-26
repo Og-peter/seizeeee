@@ -165,30 +165,30 @@ async def hunt(update: Update, context: CallbackContext):
 
     async with user_locks[user_id]:
         if user_id not in safari_users:
-            await message.reply_text("Not in the seize zone. use /wtour first")
+            await message.reply_text("<b>🚫 Not in the Seize Zone!</b>\nPlease use /wtour to enter first.")
             return
 
         if user_id in current_hunts and current_hunts[user_id] is not None:
             if user_id not in current_engagements:
-                await message.reply_text("You already have an ongoing hunt. Finish it first!")
+                await message.reply_text("<b>⚠️ Ongoing Hunt!</b>\nYou must finish your current hunt before starting a new one!")
                 return
 
         user_data = safari_users[user_id]
         if user_data['used_hunts'] >= user_data['hunt_limit']:
-            await message.reply_text("You have reached your hunt limit.")
+            await message.reply_text("<b>🚷 Hunt Limit Reached!</b>\nYou have exhausted your hunt quota.\nYou will be removed from the Seize Zone.")
             del safari_users[user_id]
             await safari_users_collection.delete_one({'user_id': user_id})
             return
 
         if user_data['safari_balls'] <= 0:
-            await message.reply_text("You have run out of contract crystals.")
+            await message.reply_text("<b>💔 Out of Contract Crystals!</b>\nYou cannot continue hunting without more crystals.\nYou will be removed from the Seize Zone.")
             del safari_users[user_id]
             await safari_users_collection.delete_one({'user_id': user_id})
             return
 
         waifu = await get_random_waifu()
         if not waifu:
-            await message.reply_text("No character available.")
+            await message.reply_text("<b>🚫 No Characters Available!</b>\nPlease try again later.")
             return
 
         waifu_name = waifu['name']
@@ -206,13 +206,19 @@ async def hunt(update: Update, context: CallbackContext):
 
         await save_safari_user(user_id)
 
-        text = f"<b>A wild {waifu_name} ( {waifu_rarity} ) has appeared!</b>\n\n<b>/explore limit: {user_data['used_hunts']}/{user_data['hunt_limit']}\n🧊 contract Ice: {user_data['safari_balls']}</b>"
+        text = (
+            f"<b>A wild {waifu_name} ( {waifu_rarity} ) has appeared!</b>\n\n"
+            f"<b>🔍 Explore Limit: {user_data['used_hunts']}/{user_data['hunt_limit']}\n"
+            f"<b>🧊 Contract Crystals: {user_data['safari_balls']}</b>"
+        )
+        
         keyboard = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("contract", callback_data=f"engage_{waifu_id}_{user_id}")]
+                [InlineKeyboardButton("Engage", callback_data=f"engage_{waifu_id}_{user_id}")]
             ]
         )
-        await message.reply_photo(photo=waifu_img_url, caption=text, reply_markup=keyboard, parse_mode='HTML')
+        
+        await message.reply_photo(photo=waifu_img_url, caption=text, reply_markup=keyboard)
 
         if user_id in current_engagements:
             del current_engagements[user_id]
