@@ -301,14 +301,19 @@ async def award_gems(user_id, message, gem_won):
             gem_inventory[gem] = quantity
     await user_collection.update_one({'id': user_id}, {'$set': {'gems': gem_inventory}})
     
-    # Send a message listing the awarded gems
-    message_text = "🎉 𝐂𝐨𝐧𝐠𝐫𝐚𝐭𝐮𝐥𝐚𝐭𝐢𝐨𝐧𝐬! 𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐜𝐨𝐧𝐪𝐮𝐞𝐫𝐞𝐝 𝐭𝐡𝐞 𝐟𝐢𝐠𝐡𝐭! 🏆\n\n"
-    message_text += "🌟 𝐘𝐨𝐮 𝐠𝐨𝐭 𝐭𝐡𝐞𝐬𝐞 𝐠𝐞𝐦𝐬:\n\n"
+    # Send a message listing the awarded gems with advanced formatting
+    message_text = (
+        "🎉 **𝐂𝐨𝐧𝐠𝐫𝐚𝐭𝐮𝐥𝐚𝐭𝐢𝐨𝐧𝐬!** 𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐜𝐨𝐧𝐪𝐮𝐞𝐫𝐞𝐝 𝐭𝐡𝐞 𝐟𝐢𝐠𝐡𝐭! 🏆\n\n"
+        "🌟 **𝐘𝐨𝐮 𝐠𝐨𝐭 𝐭𝐡𝐞𝐬𝐞 𝐠𝐞𝐦𝐬:**\n\n"
+    )
     
     for gem, quantity in gems_to_award.items():
-        message_text += f"<b>✨ {gem}</b>: <b>{quantity}</b>\n"
+        message_text += f"<b>✨ {gem}</b>: <b>{quantity}</b> 💎\n"
     
-    message_text += "\n💎 𝐄𝐧𝐣𝐨𝐲 𝐲𝐨𝐮𝐫 𝐛𝐨𝐨𝐬𝐭 𝐨𝐟 𝐠𝐞𝐦𝐬! 💎"
+    message_text += (
+        "\n💎 **𝐄𝐧𝐣𝐨𝐲 𝐲𝐨𝐮𝐫 𝐛𝐨𝐨𝐬𝐭 𝐨𝐟 𝐠𝐞𝐦𝐬!** 💎\n"
+        "🌈 𝐌𝐚𝐲 𝐭𝐡𝐞𝐬𝐞 𝐠𝐞𝐦𝐬 𝐛𝐫𝐢𝐧𝐠 𝐲𝐨𝐮 𝐞𝐱𝐭𝐫𝐚 𝐥𝐮𝐜𝐤! 🍀"
+    )
     
     await message.reply_text(message_text)
    
