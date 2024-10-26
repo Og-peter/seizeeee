@@ -17,8 +17,8 @@ class Config(object):
         "6835013483", "1993290981", "1742711103", "6180567980"
     ]
     GROUP_ID = -1002104939708
-    TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"  # Replace with your bot token securely
-    mongo_url = "YOUR_MONGODB_CONNECTION_STRING"  # Replace with your MongoDB URL securely
+    TOKEN = "7335799800:AAHgRmfPm4BPHRnQby1G7tsGkhFLyAGlwEQ"  # Replace with your bot token securely
+    mongo_url = "mongodb+srv://seizewaifubot:seizewaifubot@itachi.9qya0.mongodb.net/?retryWrites=true&w=majority&appName=itachi"  # Replace with your MongoDB URL securely
     PHOTO_URL = [
         "https://telegra.ph/file/c74151f4c2b56a107a24b.jpg",
         "https://telegra.ph/file/6a81a91aa4a660a73194b.jpg",
@@ -30,7 +30,7 @@ class Config(object):
     BOT_USERNAME = "Character_seize_bot"
     CHARA_CHANNEL_ID = -1002049694247
     api_id = 29098103
-    api_hash = "YOUR_API_HASH"  # Replace with your API hash securely
+    api_hash = "06baef4020832888ccf3ebf4e746d52b"  # Replace with your API hash securely
     JOINLOGS = -1002104939708
     LEAVELOGS = -1002104939708
 
