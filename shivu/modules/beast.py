@@ -95,8 +95,7 @@ async def buybeast_cmd(_: bot, update: Update):
             f"**Type:** {beast_list[beast_id]['rarity']}\n\n"
             f"Click below to confirm your purchase!"
         ),
-        reply_markup=keyboard,
-        parse_mode='Markdown'
+        reply_markup=keyboard
     )
 
 @bot.on_callback_query(filters.regex(r"confirm_buybeast_(\d+)"))
