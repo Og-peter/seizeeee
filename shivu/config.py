@@ -11,8 +11,8 @@ class Config(object):
         "6835013483", "1993290981", "1742711103", "6180567980"
     ]
     GROUP_ID = -1002104939708
-    TOKEN = "7335799800:AAHgRmfPm4BPHRnQby1G7tsGkhFLyAGlwEQ"
-    mongo_url = "mongodb+srv://seizewaifubot:seizewaifubot@itachi.9qya0.mongodb.net/?retryWrites=true&w=majority&appName=itachi"
+    TOKEN = "YOUR_TOKEN_HERE"  # Remember to replace this with your bot's token
+    mongo_url = "YOUR_MONGO_URL_HERE"
     PHOTO_URL = [
         "https://telegra.ph/file/c74151f4c2b56a107a24b.jpg",
         "https://telegra.ph/file/6a81a91aa4a660a73194b.jpg",
@@ -28,19 +28,12 @@ class Config(object):
     JOINLOGS = -1002104939708
     LEAVELOGS = -1002104939708
 
-    # New Administration System
+    # User Roles
     GRADE4 = []
     GRADE3 = ["7334126640"]
     GRADE2 = ["6305653111", "5421067814"]
     GRADE1 = ["7004889403", "1374057577", "5158013355", "5630057244", "7334126640", "5421067814"]
     SPECIALGRADE = ["6402009857", "1993290981"]
-
-    Genin = []
-    Chunin = []
-    Jonin = ["7334126640"]
-    Hokage = ["5421067814"]
-    Akatsuki = ["6402009857", "5158013355", "5630057244"]
-    Princess = ["1993290981"]
 
     @classmethod
     def add_sudo_user(cls, user_id: str):
@@ -49,13 +42,7 @@ class Config(object):
             return True
         return False
 
-class Production(Config):
-    LOGGER = True
-
-class Development(Config):
-    LOGGER = True
-
-# Bot command to add a new sudo user
+# Command to add a new sudo user
 def add_sudo(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     user_id_str = str(user_id)
@@ -66,13 +53,9 @@ def add_sudo(update: Update, context: CallbackContext):
         if update.message.reply_to_message:
             new_sudo_id = str(update.message.reply_to_message.from_user.id)
             if Config.add_sudo_user(new_sudo_id):
-                update.message.reply_text(
-                    f"User {new_sudo_id} has been added as a sudo user."
-                )
+                update.message.reply_text(f"User {new_sudo_id} has been added as a sudo user.")
             else:
-                update.message.reply_text(
-                    f"User {new_sudo_id} is already a sudo user."
-                )
+                update.message.reply_text(f"User {new_sudo_id} is already a sudo user.")
         else:
             update.message.reply_text("Please reply to the user you want to add as a sudo user.")
     else:
@@ -80,7 +63,7 @@ def add_sudo(update: Update, context: CallbackContext):
 
 # Initialize bot and command
 def main():
-    updater = Updater(Config.TOKEN)
+    updater = Updater(Config.TOKEN, use_context=True)
     dp = updater.dispatcher
 
     # Add command handler for /addsudo
