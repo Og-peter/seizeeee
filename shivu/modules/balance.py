@@ -47,8 +47,16 @@ async def check_balance(_, message: Message):
     formatted_balance = "{:,.0f}".format(balance)
     first_name = user_data.get('first_name', 'User')
 
-    # Reply to the user with their balance
-    await message.reply_text(f"{first_name}'s Wealth: ₩`{formatted_balance}`[.](https://telegra.ph/file/af20fd1f2bed03d2bc438.jpg)")
+    # Stylish Balance Message
+    balance_message = (
+        f"💰 **{first_name}'s Wealth Report** 💰\n\n"
+        f"💎 **Current Balance**:  ₩ `{formatted_balance}`  💎\n\n"
+        f"🌐 [Click here for Wealth Overview](https://telegra.ph/file/af20fd1f2bed03d2bc438.jpg) 🌐\n\n"
+        f"✨ Keep growing your wealth and stay ahead! ✨"
+    )
+
+    # Reply with the styled balance message
+    await message.reply_text(balance_message, disable_web_page_preview=True)
     
 async def pay(update, context):
     sender_id = update.effective_user.id
