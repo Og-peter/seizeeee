@@ -1,17 +1,10 @@
 import logging
 import time
 from pymongo import ReturnDocument
+from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext
 from shivu import application, OWNER_ID, user_totals_collection
 from datetime import datetime
-# For python-telegram-bot version 20.x or later
-from telegram import Update
-from telegram.constants import ParseMode
-
-# For python-telegram-bot version before 20.x
-# from telegram import Update, ParseMode
-
-# Rest of your code...
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -30,7 +23,7 @@ LOGS_GROUP_CHAT_ID = -1002446048543  # Replace with your actual logs group chat 
 # Utility function to send log messages to the log channel
 async def send_log_message(message: str):
     try:
-        await application.bot.send_message(LOGS_GROUP_CHAT_ID, message, parse_mode=ParseMode.HTML)
+        await application.bot.send_message(LOGS_GROUP_CHAT_ID, message)
     except Exception as e:
         logger.error(f"Failed to send log message: {e}")
 
@@ -59,51 +52,51 @@ async def change_time(update: Update, context: CallbackContext) -> None:
     try:
         member = await chat.get_member(user.id)
         if member.status not in ('administrator', 'creator'):
-            await update.message.reply_text('🚫 <b>Access Denied:</b> You do not have permission to use this command.', parse_mode=ParseMode.HTML)
+            await update.message.reply_text('🚫 You do not have permission to use this command.')
             return
 
         if is_cooldown_active(chat_id):
-            await update.message.reply_text('⏳ <b>Cooldown Active:</b> Please wait before changing the frequency again.', parse_mode=ParseMode.HTML)
+            await update.message.reply_text('⏳ Please wait before changing the frequency again.')
             return
 
         args = context.args
         if len(args) != 1:
-            await update.message.reply_text('❌ <b>Incorrect Format:</b> Please use: /changetime <code>[NUMBER]</code>', parse_mode=ParseMode.HTML)
+            await update.message.reply_text('❌ Incorrect format. Please use: /changetime <NUMBER>')
             return
 
         try:
             new_frequency = int(args[0])
         except ValueError:
-            await update.message.reply_text('❌ <b>Invalid Input:</b> Please provide a valid number.', parse_mode=ParseMode.HTML)
+            await update.message.reply_text('❌ Please provide a valid number.')
             return
 
         if new_frequency < MIN_FREQUENCY:
-            await update.message.reply_text(f'⚠️ <b>Too Low:</b> Frequency must be greater than or equal to <code>{MIN_FREQUENCY}</code>.', parse_mode=ParseMode.HTML)
+            await update.message.reply_text(f'⚠️ The message frequency must be greater than or equal to {MIN_FREQUENCY}.')
             return
         if new_frequency > MAX_FREQUENCY:
-            await update.message.reply_text(f'⚠️ <b>Too High:</b> Frequency cannot exceed <code>{MAX_FREQUENCY}</code>. How about we keep it reasonable? 🤔', parse_mode=ParseMode.HTML)
+            await update.message.reply_text(f'⚠️ The frequency cannot exceed {MAX_FREQUENCY}.')
             return
 
         chat_frequency = await update_frequency(chat_id, new_frequency)
         if chat_frequency:
             last_change_time[chat_id] = time.time()  # Update cooldown
-            await update.message.reply_text(f'✅ <b>Success!</b> Character spawn rate changed to every <code>{new_frequency}</code> messages! 🎉', parse_mode=ParseMode.HTML)
+            await update.message.reply_text(f'✅ Character spawn rate changed to every {new_frequency} messages 🎉')
 
             # Log the change
             await send_log_message(
                 f"📝 <b>Admin Action:</b>\n\n"
                 f"👤 <b>Admin:</b> {user.mention_html()}\n"
                 f"🏠 <b>Chat ID:</b> <code>{chat_id}</code>\n"
-                f"🔄 <b>Frequency Changed:</b> Every <code>{new_frequency}</code> messages\n"
+                f"🔄 <b>Frequency Changed:</b> {new_frequency} messages\n"
                 f"📅 <b>Date & Time:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-                f"🎉 <i>Character spawn rate updated successfully!</i>",
+                f"🎉 <i>Character spawn rate updated successfully!</i>"
             )
         else:
-            await update.message.reply_text('❌ <b>Failed:</b> Could not update the spawn rate. Please try again later.', parse_mode=ParseMode.HTML)
+            await update.message.reply_text('❌ Failed to update the spawn rate.')
 
     except Exception as e:
         logger.error(f"Error changing frequency for chat {chat_id}: {e}")
-        await update.message.reply_text('❌ <b>Error:</b> An unexpected error occurred. Please try again later.', parse_mode=ParseMode.HTML)
+        await update.message.reply_text('❌ Failed to change character appearance frequency.')
 
 # Command to change frequency for sudo users and log the change
 async def change_time_sudo(update: Update, context: CallbackContext) -> None:
@@ -113,47 +106,73 @@ async def change_time_sudo(update: Update, context: CallbackContext) -> None:
 
     try:
         if user.id not in sudo_user_ids:
-            await update.message.reply_text('🚫 <b>Access Denied:</b> You do not have permission to use this command.', parse_mode=ParseMode.HTML)
+            await update.message.reply_text('🚫 You do not have permission to use this command.')
             return
 
         args = context.args
         if len(args) != 1:
-            await update.message.reply_text('❌ <b>Incorrect Format:</b> Please use: /ctime <code>[NUMBER]</code>', parse_mode=ParseMode.HTML)
+            await update.message.reply_text('❌ Incorrect format. Please use: /ctime <NUMBER>')
             return
 
         try:
             new_frequency = int(args[0])
         except ValueError:
-            await update.message.reply_text('❌ <b>Invalid Input:</b> Please provide a valid number.', parse_mode=ParseMode.HTML)
+            await update.message.reply_text('❌ Please provide a valid number.')
             return
 
-        if new_frequency < MIN_FREQUENCY:
-            await update.message.reply_text(f'⚠️ <b>Too Low:</b> Frequency must be greater than or equal to <code>{MIN_FREQUENCY}</code>.', parse_mode=ParseMode.HTML)
+        if new_frequency < 1:
+            await update.message.reply_text('⚠️ The message frequency must be greater than or equal to 1.')
             return
         if new_frequency > MAX_FREQUENCY:
-            await update.message.reply_text(f'⚠️ <b>Too High:</b> Frequency cannot exceed <code>{MAX_FREQUENCY}</code>. Let’s not go overboard! 😅', parse_mode=ParseMode.HTML)
+            await update.message.reply_text(f'⚠️ The frequency cannot exceed {MAX_FREQUENCY}.')
             return
 
         chat_frequency = await update_frequency(chat_id, new_frequency)
         if chat_frequency:
-            await update.message.reply_text(f'✅ <b>Success!</b> Sudo: Character spawn rate changed to every <code>{new_frequency}</code> messages! 🔥', parse_mode=ParseMode.HTML)
+            await update.message.reply_text(f'✅ Sudo: Character spawn rate changed to every {new_frequency} messages 🔥')
 
             # Send a log message to the logs group
             await send_log_message(
                 f"🔥 <b>Sudo Action:</b>\n\n"
                 f"👑 <b>Sudo User:</b> {user.mention_html()}\n"
                 f"🏠 <b>Chat ID:</b> <code>{chat_id}</code>\n"
-                f"🔧 <b>Frequency Changed:</b> Every <code>{new_frequency}</code> messages\n"
+                f"🔧 <b>Frequency Changed:</b> {new_frequency} messages\n"
                 f"📅 <b>Date & Time:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
                 f"🚀 <i>Sudo user successfully updated the spawn rate!</i>"
             )
         else:
-            await update.message.reply_text('❌ <b>Failed:</b> Could not update the spawn rate. Please try again later.', parse_mode=ParseMode.HTML)
+            await update.message.reply_text('❌ Failed to update the spawn rate.')
 
     except Exception as e:
         logger.error(f"Error changing sudo frequency for chat {chat_id}: {e}")
-        await update.message.reply_text('❌ <b>Error:</b> An unexpected error occurred. Please try again later.', parse_mode=ParseMode.HTML)
+        await update.message.reply_text('❌ Failed to change character appearance frequency.')
+
+# Command to reset the frequency to default
+async def reset_frequency(update: Update, context: CallbackContext) -> None:
+    chat = update.effective_chat
+    chat_id = str(chat.id)
+
+    try:
+        chat_frequency = await update_frequency(chat_id, DEFAULT_FREQUENCY)
+        if chat_frequency:
+            await update.message.reply_text(f'🔄 Frequency reset to default: Every {DEFAULT_FREQUENCY} messages 🌀')
+
+            # Send log message
+            await send_log_message(
+                f"🔄 <b>Frequency Reset:</b>\n\n"
+                f"🏠 <b>Chat ID:</b> <code>{chat_id}</code>\n"
+                f"🔙 <b>Reset to Default:</b> {DEFAULT_FREQUENCY} messages\n"
+                f"📅 <b>Date & Time:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                f"🔧 <i>The frequency has been reset to the default successfully.</i>"
+            )
+        else:
+            await update.message.reply_text('❌ Failed to reset the spawn rate.')
+
+    except Exception as e:
+        logger.error(f"Error resetting frequency for chat {chat_id}: {e}")
+        await update.message.reply_text('❌ Failed to reset the spawn rate.')
 
 # Register command handlers
 application.add_handler(CommandHandler("ctime", change_time_sudo, block=False))
 application.add_handler(CommandHandler("changetime", change_time, block=False))
+application.add_handler(CommandHandler("resettime", reset_frequency, block=False))
