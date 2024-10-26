@@ -10,23 +10,27 @@ class Config(object):
         "1374057577", "6305653111", "5421067814", "7497950160", "7334126640", 
         "6835013483", "1993290981", "1742711103", "6180567980"
     ]
+    # In shivu/config.py
+class Development:
+    # Define all the required configurations here
+    api_id = 29098103
+    api_hash = "06baef4020832888ccf3ebf4e746d52b"
+    TOKEN = "your_bot_token"
     GROUP_ID = -1002104939708
-    TOKEN = "YOUR_TOKEN_HERE"  # Remember to replace this with your bot's token
-    mongo_url = "YOUR_MONGO_URL_HERE"
+    CHARA_CHANNEL_ID = -1002049694247
+    mongo_url = "your_mongo_url"
     PHOTO_URL = [
         "https://telegra.ph/file/c74151f4c2b56a107a24b.jpg",
-        "https://telegra.ph/file/6a81a91aa4a660a73194b.jpg",
-        "https://telegra.ph/file/ffb2e954748d841176463.jpg",
-        "https://telegra.ph/file/f20dbe987e174d03780f0.jpg"
+        "https://telegra.ph/file/6a81a91aa4a660a73194b.jpg"
     ]
     SUPPORT_CHAT = "dynamic_gangs"
     UPDATE_CHAT = "Seizer_update"
     BOT_USERNAME = "Character_seize_bot"
-    CHARA_CHANNEL_ID = -1002049694247
-    api_id = 29098103
-    api_hash = "06baef4020832888ccf3ebf4e746d52b"
+    OWNER_ID = "6402009857"
+    sudo_users = ["6402009857", "7004889403"]
     JOINLOGS = -1002104939708
     LEAVELOGS = -1002104939708
+    # Add other configurations here as needed
 
     # User Roles
     GRADE4 = []
