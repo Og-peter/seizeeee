@@ -1,4 +1,4 @@
-from telegram import Update
+from telegram import Update, ChatMember
 from telegram.ext import CallbackContext, CommandHandler
 from shivu import application, top_global_groups_collection, user_collection
 
@@ -25,15 +25,22 @@ async def broadcast(update: Update, context: CallbackContext) -> None:
     failed_sends = 0
     success_count = 0
 
-    # Send the broadcast message
+    # Send the broadcast message and pin it in groups
     for chat_id in recipients:
         try:
-            await context.bot.forward_message(
+            # Forward the message to the recipient
+            sent_message = await context.bot.forward_message(
                 chat_id=chat_id,
                 from_chat_id=message_to_broadcast.chat_id,
                 message_id=message_to_broadcast.message_id
             )
             success_count += 1  # Increment on successful send
+
+            # Pin the message if it's a group chat
+            chat_member = await context.bot.get_chat_member(chat_id, context.bot.id)
+            if chat_member.status in (ChatMember.ADMINISTRATOR, ChatMember.CREATOR):
+                await context.bot.pin_chat_message(chat_id=chat_id, message_id=sent_message.message_id)
+        
         except Exception as e:
             print(f"Failed to send message to {chat_id}: {e}")
             failed_sends += 1
