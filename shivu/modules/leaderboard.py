@@ -167,24 +167,20 @@ async def stats(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text("🚫 You are not authorized to use this command.", parse_mode="HTML")
         return
 
+    # Counting total users and groups with added constants
     user_count = await user_collection.count_documents({})
     group_count = await group_user_totals_collection.distinct('group_id')
-
-    # Adding 40,000 to the user count and 5,900 to the group count
     adjusted_user_count = user_count + 40000
     adjusted_group_count = len(group_count) + 5900
 
-    # Fetching rarity counts from your database (modify according to your structure)
-    rarity_counts = {
-        "common": await user_collection.count_documents({"rarity": "common"}),
-        "medium": await user_collection.count_documents({"rarity": "medium"}),
-        "rare": await user_collection.count_documents({"rarity": "rare"}),
-        "chibi": await user_collection.count_documents({"rarity": "chibi"}),
-        "legendary": await user_collection.count_documents({"rarity": "legendary"}),
-        "limited Edition": await user_collection.count_documents({"rarity": "limited Edition"}),
-    }
+    # Define rarity types and fetch counts
+    rarity_types = ["common", "medium", "rare", "chibi", "legendary", "limited Edition"]
+    rarity_counts = {}
+    for rarity in rarity_types:
+        count = await user_collection.count_documents({"rarity": rarity})
+        rarity_counts[rarity] = count
 
-    # Enhanced stats message with stylish formatting
+    # Create stats message
     stats_message = (
         f"<b>📊 𝘽𝙤𝙩 𝙎𝙩𝙖𝙩𝙞𝙨𝙩𝙞𝙘𝙨 📊</b>\n"
         f"━━━━━━━━━━━━━━━━━━━\n"
