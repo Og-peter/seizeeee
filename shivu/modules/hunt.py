@@ -300,29 +300,30 @@ async def throw_ball(callback_query):
 
 async def run_away(callback_query):
     user_id = int(callback_query.from_user.id)
-    
+
     async with user_locks[user_id]:
         try:
             data = callback_query.data.split("_")
             waifu_id = data[1]
-            user_id = int(data[2])
+            original_user_id = int(data[2])
 
-            if user_id != callback_query.from_user.id:
-                await callback_query.answer("This hunt does not belong to you.", show_alert=True)
+            if original_user_id != user_id:
+                await callback_query.answer("❌ This hunt does not belong to you.", show_alert=True)
                 return
 
             if user_id not in safari_users:
-                await callback_query.answer("You are not in the safari zone!", show_alert=True)
+                await callback_query.answer("🚫 You are not in the Seize Zone!", show_alert=True)
                 return
 
             del sessions[waifu_id]
             del current_hunts[user_id]
 
-            await callback_query.message.edit_caption(caption="You escaped from the wild character.")
-            await callback_query.answer()
+            await callback_query.message.edit_caption(caption="🏃‍♂️ You swiftly escaped from the wild character! 🌪️")
+            await callback_query.answer("You've made a clever escape!", show_alert=True)
 
         except Exception as e:
-            print(f"Error handling run_away: {e}")
+            logger.error(f"Error handling run_away: {e}")
+            await callback_query.answer("⚠️ An error occurred while trying to escape. Please try again later.", show_alert=True)
 
 async def engage(callback_query):
     user_id = int(callback_query.from_user.id)
