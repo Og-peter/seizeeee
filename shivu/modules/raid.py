@@ -188,13 +188,14 @@ async def get_gem_command(client, message):
     user_id = message.from_user.id
     current_time = time.time()
 
+    # Spam prevention
     if user_id in user_last_command_times and current_time - user_last_command_times[user_id] < 5:  # Adjust spam threshold
-        return await message.reply_text("You are sending commands too quickly. Please wait for a moment.")
-        
+        return await message.reply_text("⚠️ You are sending commands too quickly. Please wait a moment.")
+
     user_last_command_times[user_id] = current_time
-    
+
     # Log the usage of the command
-    await send_log(f"Command shunt used by user `{user_id}`")
+    await send_log(f"Command /hunt used by user `{user_id}`")
 
     try:
         # Check if the user is on cooldown
@@ -202,27 +203,19 @@ async def get_gem_command(client, message):
             time_elapsed = current_time - last_usage_time_shunt[user_id]
             remaining_time = max(0, cooldown_duration_shunt - time_elapsed)
             if remaining_time > 0:
-                return await message.reply_text(f"You're on cooldown. Please wait {int(remaining_time)} seconds before using this command again.")
+                return await message.reply_text(f"⏳ You're on cooldown. Please wait {int(remaining_time)} seconds before using this command again.")
 
         # Check if the user has joined the MUST_JOIN group/channel
         try:
             await app.get_chat_member(MUST_JOIN, user_id)
         except UserNotParticipant:
             # If not, prompt the user to join
-            if MUST_JOIN.isalpha():
-                link = "https://t.me/" + MUST_JOIN
-            else:
-                chat_info = await app.get_chat(MUST_JOIN)
-                link = chat_info.invite_link
+            link = f"https://t.me/{MUST_JOIN}" if MUST_JOIN.isalpha() else (await app.get_chat(MUST_JOIN)).invite_link
             try:
                 await message.reply_text(
-                    f"You must join the support group/channel to use this command. Please join [here]({link}).",
+                    f"🔒 You must join the support group/channel to use this command. Please join [here]({link}).",
                     reply_markup=InlineKeyboardMarkup(
-                        [
-                            [
-                                InlineKeyboardButton("Join", url=link),
-                            ]
-                        ]
+                        [[InlineKeyboardButton("🔗 Join", url=link)]]
                     ),
                     disable_web_page_preview=True
                 )
@@ -233,7 +226,7 @@ async def get_gem_command(client, message):
         # Retrieve user data
         user_data = await user_collection.find_one({'id': user_id}, projection={'beasts': 1})
         if not user_data.get('beasts'):
-            return await message.reply_text("You need a beast to hunt. Acquire a beast first using /beastshop.")
+            return await message.reply_text("🐾 You need a beast to hunt. Acquire a beast first using /beastshop.")
 
         # Proceed with gem shunt logic
         gem_set = random.choice(list(gem_sets.values()))
@@ -259,10 +252,10 @@ async def get_gem_command(client, message):
         if gem_won:
             # User wins, award gems
             await award_gems(user_id, message, gem_won)
+            await message.reply_text(f"🎉 Congratulations! You won a **{gem_won}** gem! 🏆\n\nYour new treasure has been added to your collection.")
         else:
             # User loses
-            # Send loss message
-            await message.reply_text(loss_message)
+            await message.reply_text(f"💔 Unfortunately, you lost this round. {loss_message}")
 
         # Update the last usage time for the user
         last_usage_time_shunt[user_id] = current_time
@@ -270,16 +263,12 @@ async def get_gem_command(client, message):
     except Exception as e:
         # Log any exceptions that occur
         await send_log(f"Error occurred in get_gem_command: {e}")
+        print(e)  # Print the exception for debugging purposes
+        await message.reply_text("❌ An error occurred while processing your request. Please try again later.")
 
-        # Print the exception for debugging purposes
-        print(e)
-
-        # Reply to the user with an error message
-        await message.reply_text("An error occurred while processing your request. Please try again later.")
-        
 # Set the cooldown duration for the shunt command (in seconds)
 cooldown_duration_shunt = 60  # 1 minute
-        
+
 gem_win_rates = {
     "Wood": 50,
     "Iron": 50,
@@ -292,7 +281,7 @@ gem_win_rates = {
     "Sapphire": 2,
     "Amethyst": 1,
     "Obsidian": 0.5
-}
+        }
 
 async def award_gems(user_id, message, gem_won):
     user_data = await user_collection.find_one({'id': user_id})
