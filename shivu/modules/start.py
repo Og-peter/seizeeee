@@ -1,13 +1,12 @@
 import asyncio
-import random
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackContext, CommandHandler
-
 from shivu import application, GROUP_ID, user_collection
 
 # Define your sudo users' IDs here
 sudo_user_ids = [6402009857]  # Replace with actual user IDs of the sudo users
+SUPPORT_GROUP_ID = "@your_support_group"  # Replace with the actual group username or ID
 
 async def notify_sudo_users(application: Application):
     """Notify sudo users that the bot has restarted."""
@@ -18,7 +17,6 @@ async def notify_sudo_users(application: Application):
         except Exception as e:
             print(f"Failed to send restart notification to user {user_id}: {e}")
 
-# Function to escape MarkdownV2 characters
 def escape_markdown(text: str) -> str:
     """Escape characters in MarkdownV2."""
     escape_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
@@ -26,13 +24,28 @@ def escape_markdown(text: str) -> str:
         text = text.replace(char, f'\\{char}')
     return text
 
-# Define the start function
 async def start(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
     first_name = update.effective_user.first_name
     username = update.effective_user.username
     args = context.args
     referring_user_id = None
+
+    try:
+        member_status = await context.bot.get_chat_member(SUPPORT_GROUP_ID, user_id)
+        if member_status.status == 'left':
+            join_button = InlineKeyboardMarkup([
+                [InlineKeyboardButton("Join Support Group", url=f"https://t.me/{SUPPORT_GROUP_ID.lstrip('@')}")]
+            ])
+            await update.message.reply_text(
+                "You must join our support group to use this bot!",
+                reply_markup=join_button
+            )
+            return
+    except Exception as e:
+        print(f"Error checking user membership in support group: {e}")
+        await update.message.reply_text("An error occurred. Please try again later.")
+        return
 
     if args and args[0].startswith('r_'):
         referring_user_id = int(args[0][2:])
@@ -49,7 +62,6 @@ async def start(update: Update, context: CallbackContext) -> None:
         }
         await user_collection.insert_one(new_user)
 
-        # Handle referral
         if referring_user_id:
             referring_user_data = await user_collection.find_one({"id": referring_user_id})
             if referring_user_data:
@@ -60,7 +72,6 @@ async def start(update: Update, context: CallbackContext) -> None:
                 except Exception as e:
                     print(f"Failed to send referral message: {e}")
 
-        # Notify the group about the new user
         await context.bot.send_message(
             chat_id=GROUP_ID,
             text=f"🎉 #**New User Alert!** 🎉\n\n"
@@ -68,7 +79,6 @@ async def start(update: Update, context: CallbackContext) -> None:
             parse_mode='HTML'
         )
     else:
-        # Update user data if necessary
         if user_data['first_name'] != first_name or user_data['username'] != username:
             await user_collection.update_one(
                 {"id": user_id},
@@ -92,7 +102,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 
         keyboard = [
             [InlineKeyboardButton("❖ Λᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ❖", url='https://t.me/Character_seize_bot?startgroup=new')],
-            [InlineKeyboardButton("˹ 𝙎𝙪𝙥𝙥𝙤𝙧𝙩 ˼", url='https://t.me/dynamic_gangs'),
+            [InlineKeyboardButton("˹ 𝙎𝙪𝙥𝙥𝙤𝙧𝙩 ˼", url=f'https://t.me/{SUPPORT_GROUP_ID.lstrip("@")}'),
              InlineKeyboardButton("˹ 𝙐𝙥𝙙𝙖𝙩𝙚𝙨 ˼", url='https://t.me/Seizer_updates')],
             [InlineKeyboardButton("˹ 𝙁𝘼𝙌 ˼", url='https://telegra.ph/Seizer-Faq-Menu-09-05')],
         ]
@@ -110,11 +120,9 @@ async def start(update: Update, context: CallbackContext) -> None:
         video_url = "https://telegra.ph/file/0b2e8e33d07a0d0e5914f.mp4"
         await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=f"𝙃𝙚𝙮 𝙩𝙝𝙚𝙧𝙚! {first_name}\n\n✨𝙄 𝘼𝙈 𝘼𝙡𝙞𝙫𝙚 𝘽𝙖𝙗𝙮", reply_markup=reply_markup)
 
-# Register the /start command handler
 start_handler = CommandHandler('start', start, block=False)
 application.add_handler(start_handler)
 
-# Run the application and notify sudo users asynchronously
 async def main():
     await application.initialize()
     await application.start()
