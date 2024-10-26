@@ -197,7 +197,7 @@ async def stats(update: Update, context: CallbackContext) -> None:
         f"<b>🟠 Rare:</b> <code>{rarity_counts['rare']}</code>\n"
         f"<b>👶 Chibi:</b> <code>{rarity_counts['chibi']}</code>\n"
         f"<b>🟡 Legendary:</b> <code>{rarity_counts['legendary']}</code>\n"
-        f"<b>🔮 Limited Edition:</b> <code>{rarity_counts['Limited Edition']}</code>/n"
+        f"<b>🔮 Limited Edition:</b> <code>{rarity_counts['limited Edition']}</code>/n"
         f"━━━━━━━━━━━━━━━━━━━\n"
         f"<i>📈 Stay tuned for more updates!</i>"
     )
