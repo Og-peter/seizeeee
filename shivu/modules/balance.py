@@ -200,15 +200,16 @@ async def weekly_reward(_, message: Update, context: ContextTypes.DEFAULT_TYPE) 
     
 user_last_command_times = {}
 
+# Handler for the "tesure" command
 @bot.on_message(filters.command("tesure"))
-async def tesure(_, message: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def tesure(_, message: Message):
     user_id = message.from_user.id
     first_name = message.from_user.first_name.strip()
     last_name = message.from_user.last_name.strip() if message.from_user.last_name else ""
     current_time = datetime.utcnow()
 
     # Check if the user is sending commands too quickly
-    if user_id in user_last_command_times and (current_time - user_last_command_times[user_id]).total_seconds() < 5:  # 5 seconds threshold
+    if user_id in user_last_command_times and (current_time - user_last_command_times[user_id]).total_seconds() < 5:
         await message.reply_text("⏳ **You are sending commands too quickly. Please wait a moment!**")
         return
 
@@ -235,11 +236,11 @@ async def tesure(_, message: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     if last_claimed_time:
         last_claimed_time = last_claimed_time.replace(tzinfo=None)
 
-    # Check if the user can claim the tesure reward
+    # Check if the user can claim the treasure reward
     if last_claimed_time and (current_time - last_claimed_time) < timedelta(minutes=30):
         remaining_time = timedelta(minutes=30) - (current_time - last_claimed_time)
         minutes, seconds = divmod(remaining_time.seconds, 60)
-        await message.reply_text(f"⏰ **Try again in `{minutes}:{seconds:02}` seconds.**")
+        await message.reply_text(f"⏰ **Try again in `{minutes}:{seconds:02}` minutes.**")
         return
 
     # Generate a random reward between 5,000,000 and 10,000,000
@@ -254,10 +255,11 @@ async def tesure(_, message: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     # Send a success message
     await message.reply_text(
         "🎉 **❰ 𝗧 𝗥 𝗘 𝗔 𝗦 𝗨 𝗥 𝗘 🧧 ❱** 🎉\n\n"
-        "🌟 **Tesure claimed successfully!**\n"
+        "🌟 **Treasure claimed successfully!**\n"
         f"💰 You gained <code>₩{reward:,}</code>! 🎊\n"
         "📸 ![Your reward](https://telegra.ph/file/1725558c206507d3e36ee.jpg)"
     )
+    
 application.add_handler(CommandHandler("tops", mtop, block=False))
 application.add_handler(CommandHandler("pay", pay, block=False))
 
