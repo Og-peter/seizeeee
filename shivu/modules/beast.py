@@ -50,7 +50,8 @@ async def beastshop_cmd(_: bot, update: Update):
         "🛒 Use `/buybeast <beast_id>` to purchase a beast."
     )
     
-    return await update.reply_text(message_text, parse_mode='Markdown')
+    return await update.reply_text(message_text)
+    
 @bot.on_message(filters.command(["buybeast"]))
 async def buybeast_cmd(_: bot, update: Update):
     user_id = update.from_user.id
