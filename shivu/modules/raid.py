@@ -45,10 +45,10 @@ async def gems_command(_, message: Message):
         # Add a footer for clarity and encouragement
         inventory_text += "\n<b>✨ Keep collecting more gems and unlock amazing rewards!</b>"
 
-        # Use reply method with parse_mode to send HTML
-        await message.reply(inventory_text, parse_mode="html")
+        # Use reply method without parse_mode
+        await message.reply(inventory_text)
     else:
-        await message.reply("<b>🚫 You haven't collected any items yet! Start gathering some gems to fill your inventory.</b>", parse_mode="html")
+        await message.reply("<b>🚫 You haven't collected any items yet! Start gathering some gems to fill your inventory.</b>")
         
 # Command to sell gems
 @bot.on_message(filters.command(["sellitem"]))
