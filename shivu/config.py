@@ -5,10 +5,10 @@ class Development:
     # Define all the required configurations here
     api_id = 29098103
     api_hash = "06baef4020832888ccf3ebf4e746d52b"
-    TOKEN = "your_bot_token"  # Replace with your actual bot token
+    TOKEN = "7335799800:AAHgRmfPm4BPHRnQby1G7tsGkhFLyAGlwEQ"  # Replace with your actual bot token
     GROUP_ID = -1002104939708
     CHARA_CHANNEL_ID = -1002049694247
-    mongo_url = "your_mongo_url"  # Replace with your actual MongoDB URL
+    mongo_url = "mongodb+srv://seizewaifubot:seizewaifubot@itachi.9qya0.mongodb.net/?retryWrites=true&w=majority&appName=itachi"  # Replace with your actual MongoDB URL
     PHOTO_URL = [
         "https://telegra.ph/file/c74151f4c2b56a107a24b.jpg",
         "https://telegra.ph/file/6a81a91aa4a660a73194b.jpg"
