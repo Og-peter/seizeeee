@@ -1,4 +1,4 @@
-from telegram import Update, ParseMode
+from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackContext
 
 class Config(object):
@@ -67,13 +67,11 @@ def add_sudo(update: Update, context: CallbackContext):
             new_sudo_id = str(update.message.reply_to_message.from_user.id)
             if Config.add_sudo_user(new_sudo_id):
                 update.message.reply_text(
-                    f"User [{new_sudo_id}](tg://user?id={new_sudo_id}) has been added as a sudo user.",
-                    parse_mode=ParseMode.MARKDOWN
+                    f"User {new_sudo_id} has been added as a sudo user."
                 )
             else:
                 update.message.reply_text(
-                    f"User [{new_sudo_id}](tg://user?id={new_sudo_id}) is already a sudo user.",
-                    parse_mode=ParseMode.MARKDOWN
+                    f"User {new_sudo_id} is already a sudo user."
                 )
         else:
             update.message.reply_text("Please reply to the user you want to add as a sudo user.")
