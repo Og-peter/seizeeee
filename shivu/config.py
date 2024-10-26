@@ -1,24 +1,14 @@
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackContext
 
-class Config(object):
-    LOGGER = True
-
-    OWNER_ID = "6402009857"
-    sudo_users = [
-        "6402009857", "7004889403", "1135445089", "5158013355", "5630057244", 
-        "1374057577", "6305653111", "5421067814", "7497950160", "7334126640", 
-        "6835013483", "1993290981", "1742711103", "6180567980"
-    ]
-    # In shivu/config.py
 class Development:
     # Define all the required configurations here
     api_id = 29098103
     api_hash = "06baef4020832888ccf3ebf4e746d52b"
-    TOKEN = "your_bot_token"
+    TOKEN = "your_bot_token"  # Replace with your actual bot token
     GROUP_ID = -1002104939708
     CHARA_CHANNEL_ID = -1002049694247
-    mongo_url = "your_mongo_url"
+    mongo_url = "your_mongo_url"  # Replace with your actual MongoDB URL
     PHOTO_URL = [
         "https://telegra.ph/file/c74151f4c2b56a107a24b.jpg",
         "https://telegra.ph/file/6a81a91aa4a660a73194b.jpg"
@@ -30,7 +20,6 @@ class Development:
     sudo_users = ["6402009857", "7004889403"]
     JOINLOGS = -1002104939708
     LEAVELOGS = -1002104939708
-    # Add other configurations here as needed
 
     # User Roles
     GRADE4 = []
@@ -52,11 +41,11 @@ def add_sudo(update: Update, context: CallbackContext):
     user_id_str = str(user_id)
 
     # Only the owner and sudo users can add others as sudo
-    if user_id_str == Config.OWNER_ID or user_id_str in Config.sudo_users:
+    if user_id_str == Development.OWNER_ID or user_id_str in Development.sudo_users:
         # Ensure the command is a reply to a message
         if update.message.reply_to_message:
             new_sudo_id = str(update.message.reply_to_message.from_user.id)
-            if Config.add_sudo_user(new_sudo_id):
+            if Development.add_sudo_user(new_sudo_id):
                 update.message.reply_text(f"User {new_sudo_id} has been added as a sudo user.")
             else:
                 update.message.reply_text(f"User {new_sudo_id} is already a sudo user.")
@@ -67,7 +56,7 @@ def add_sudo(update: Update, context: CallbackContext):
 
 # Initialize bot and command
 def main():
-    updater = Updater(Config.TOKEN, use_context=True)
+    updater = Updater(Development.TOKEN, use_context=True)
     dp = updater.dispatcher
 
     # Add command handler for /addsudo
