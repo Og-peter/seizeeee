@@ -225,14 +225,12 @@ async def hunt(update: Update, context: CallbackContext):
 
 async def typing_animation(callback_query, text):
     try:
-        if random.random() < 0.05:
-            duration = 3
-        else:
-            duration = random.choice([1, 2])
+        # Randomly set duration for typing effect
+        duration = 3 if random.random() < 0.05 else random.choice([1, 2])
 
         for i in range(1, duration + 1):
             dots = "❄️" * i
-            await callback_query.message.edit_caption(caption=text + dots)
+            await callback_query.message.edit_caption(caption=f"<i>{text} {dots}</i>")
             await asyncio.sleep(1)
 
         return dots
@@ -243,23 +241,23 @@ async def typing_animation(callback_query, text):
 
 async def throw_ball(callback_query):
     user_id = int(callback_query.from_user.id)
-    
+
     async with user_locks[user_id]:
         try:
             data = callback_query.data.split("_")
             waifu_id = data[1]
-            user_id = int(data[2])
+            original_user_id = int(data[2])
 
-            if user_id != callback_query.from_user.id:
-                await callback_query.answer("This hunt does not belong to you.", show_alert=True)
+            if original_user_id != user_id:
+                await callback_query.answer("❌ This hunt does not belong to you.", show_alert=True)
                 return
 
             if user_id not in safari_users:
-                await callback_query.answer("You are not in the safari zone!", show_alert=True)
+                await callback_query.answer("🚪 You are not in the Seize Zone!", show_alert=True)
                 return
 
             if waifu_id not in sessions:
-                await callback_query.answer("The wild character has fled!", show_alert=True)
+                await callback_query.answer("🦋 The wild character has escaped!", show_alert=True)
                 return
 
             user_data = safari_users[user_id]
@@ -271,7 +269,9 @@ async def throw_ball(callback_query):
             outcome = await typing_animation(callback_query, "𝙔𝙤𝙪 𝙐𝙨𝙚𝙙 𝙊𝙣𝙚 𝘾𝙤𝙣𝙩𝙧𝙖𝙘𝙩 𝘾𝙧𝙮𝙨𝙩𝙖𝙡.\n\n")
 
             if outcome == "❄️❄️❄️":
-                await callback_query.message.edit_caption(caption=f"<b>✨ congratulation ✨\nyou caught the wild character!</b>", parse_mode="HTML")
+                await callback_query.message.edit_caption(
+                    caption="🌟 Amazing! 🌟\nYou have captured the wild character!"
+                )
 
                 character = sessions[waifu_id]
                 await user_collection.update_one({'id': user_id}, {'$push': {'characters': character}})
@@ -279,11 +279,15 @@ async def throw_ball(callback_query):
                 del sessions[waifu_id]
 
             else:
-                await callback_query.message.edit_caption(caption=f"<b>Your contract crystal failed.</b>\n<b>The wild character fled.</b>", parse_mode="HTML")
+                await callback_query.message.edit_caption(
+                    caption="💨 Your contract crystal missed.\nThe wild character has escaped."
+                )
                 del sessions[waifu_id]
 
             if user_data['safari_balls'] <= 0:
-                await callback_query.message.edit_caption(caption="You have run out of contract crystals.")
+                await callback_query.message.edit_caption(
+                    caption="⚠️ You have no more contract crystals left!"
+                )
                 del safari_users[user_id]
                 await safari_users_collection.delete_one({'user_id': user_id})
 
@@ -292,7 +296,7 @@ async def throw_ball(callback_query):
         except Exception as e:
             logger.error(f"An error occurred in throw_ball: {e}")
             logger.error(traceback.format_exc())
-            await callback_query.answer("An error occurred. Please try again later.", show_alert=True)
+            await callback_query.answer("🔧 An error occurred. Please try again later.", show_alert=True)
 
 async def run_away(callback_query):
     user_id = int(callback_query.from_user.id)
