@@ -205,7 +205,7 @@ async def showbeastdetails_cmd(_, update: t.Update):
                     f"🆔 **Beast ID:** `{beast_id}`\n\n"
                     "🌌 **Set as Main Beast:** Use `/setbeast <id>` to make this your main beast!"
                 )
-                await update.reply_photo(photo=selected_beast['img_url'], caption=caption, parse_mode='HTML')
+                await update.reply_photo(photo=selected_beast['img_url'], caption=caption)
                 return
 
     await update.reply_text("🚫 You don't own that beast. Use `/binfo` to see your available beasts.")
