@@ -181,9 +181,8 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     message = await context.bot.send_photo(
         chat_id=chat_id,
         photo=selected_character['img_url'],
-        caption=f" ɴɪᴄᴏ ɴɪᴄᴏ ɴɪɪ ✨ ᴀ ( {character['rarity']} ) ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀs ᴊᴜsᴛ ᴀᴘᴘᴇᴀʀᴇᴅ ɪɴ ᴛʜᴇ ᴄʜᴀᴛ 🍜\nᴀᴅᴅ ᴛʜɪs ᴄʜᴀʀᴀᴄᴛᴇʀ ᴛᴏ ʏᴏᴜʀ ʜᴀʀᴇᴍ ʙʏ /seize [Name]",
-        parse_mode='Markdown'
-    )
+        caption=f"""<b>{character['rarity'][0]} ᴋᴀᴡᴀɪ ❄️! ᴀ {character['rarity'][2:]} ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀs ᴀᴘᴘᴇᴀʀᴇᴅ!</b>\n<b>ᴀᴅᴅ ʜᴇʀ ᴛᴏ ʏᴏᴜʀ ʜᴀʀᴇᴍ ʙʏ sᴇɴᴅɪɴɢ</b>\n<b>/seize ɴᴀᴍᴇ</b>""",
+        parse_mode='HTML')
 
     if update.effective_chat.type == "private":
         message_link = f"https://t.me/c/{chat_id}/{message.message_id}"
