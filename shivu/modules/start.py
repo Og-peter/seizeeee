@@ -118,34 +118,14 @@ async def start(update: Update, context: CallbackContext) -> None:
         
         await context.bot.send_sticker(chat_id=update.effective_chat.id, sticker=sticker_url)
         await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=caption, reply_markup=reply_markup, parse_mode='MarkdownV2')
-        
-async def your_function(update, context):
-    user_mention = f"[{update.effective_user.first_name}](tg://user?id={update.effective_user.id})"
-    
-    # Create the keyboard for the first message
-    keyboard = [
-        [InlineKeyboardButton("💌 PM", url='https://t.me/Character_seize_bot?start=true')],
-        [InlineKeyboardButton("💬 Support Group", url='https://t.me/your_support_group_link')],
-        [InlineKeyboardButton("📣 Support Channel", url='https://t.me/your_support_channel_link')]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    video_url = "https://telegra.ph/file/0b2e8e33d07a0d0e5914f.mp4"
-    
-    caption = (
-        f"✨ Hey there, {user_mention}! ✨\n\n"
-        f"⚡️ I am alive and ready to help! ⚡️\n\n"
-        f"💥 Feel free to reach out if you need any assistance 💥"
-    )
-    
-    # Send the first video message
-    await context.bot.send_video(
-        chat_id=update.effective_chat.id, 
-        video=video_url, 
-        caption=caption, 
-        reply_markup=reply_markup, 
-        parse_mode='Markdown'
-    )
-    
+    else:
+        keyboard = [
+            [InlineKeyboardButton("PM", url='https://t.me/Character_seize_bot?start=true')],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        video_url = "https://telegra.ph/file/0b2e8e33d07a0d0e5914f.mp4"
+        await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=f"𝙃𝙚𝙮 𝙩𝙝𝙚𝙧𝙚! {first_name}\n\n✨𝙄 𝘼𝙈 𝘼𝙡𝙞𝙫𝙚 𝘽𝙖𝙗𝙮", reply_markup=reply_markup)
+
 start_handler = CommandHandler('start', start, block=False)
 application.add_handler(start_handler)
 
