@@ -79,17 +79,12 @@ async def get_user_info(user_id):
 
         # Calculating rarity counts
         rarity_counts = {
-            'legendary': sum(1 for char in characters if char.get('rarity') == 'legendary'),
-            'rare': sum(1 for char in characters if char.get('rarity') == 'rare'),
-            'medium': sum(1 for char in characters if char.get('rarity') == 'medium'),
-            'common': sum(1 for char in characters if char.get('rarity') == 'common'),
-            'chibi': sum(1 for char in characters if char.get('rarity') == 'chibi'),
-            'limited edition': sum(1 for char in characters if char.get('rarity') == 'limited edition'),
-            'premium': sum(1 for char in characters if char.get('rarity') == 'premium'), 
-            'exclusive': sum(1 for char in characters if char.get('rarity') == 'exclusive'),
-            'exotic': sum(1 for char in characters if char.get('rarity') == 'exotic'),
-            'astral': sum(1 for char in characters if char.get('rarity') == 'astral'),
-            'valentine': sum(1 for char in characters if char.get('rarity') == 'valentine')
+            rarity: sum(1 for char in characters if char.get('rarity') == rarity)
+            for rarity in [
+                'legendary', 'rare', 'medium', 'common', 'chibi',
+                'limited edition', 'premium', 'exclusive', 'exotic',
+                'astral', 'valentine'
+            ]
         }
 
         # Build the rarity counts section by including only non-zero entries
@@ -108,6 +103,7 @@ async def get_user_info(user_id):
             'valentine': "💞 Valentine"
         }
 
+        # Only display rarities that have counts > 0
         for rarity, count in rarity_counts.items():
             if count > 0:
                 rarity_text += f"├─➩ {rarity_symbols[rarity]}: {count}\n"
