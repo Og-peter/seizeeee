@@ -32,7 +32,18 @@ rarity_emojis = {
         '🎐 Astral': '🎐',
         '💞 Valentine': '💞'
 }
-
+event_emojis = {
+    "Nurse": "🩺",
+    "Valentine": "💞",
+    "Halloween": "🎃",
+    "Christmas": "🎄",
+    "Birthday": "🎂",
+    "New Year": "🎆",
+    "Celestial": "🌌",
+    "Astral": "🎐",
+    "Spring": "🌸",
+    "Summer": "🏖️"
+}
 # Dictionary to store the selected anime for each user
 user_states = {}
 
@@ -134,6 +145,24 @@ async def select_rarity_callback(client, callback_query):
         )
     )
 
+@app.on_callback_query(filters.regex('^select_event$'))
+async def select_event_callback(client, callback_query):
+    # Display event options
+    event_buttons = [
+        [InlineKeyboardButton(event, callback_data=f"set_event_{event}")] for event in event_emojis.keys()
+    ]
+    await callback_query.message.edit_text(
+        "Choose an event emoji for the waifu:",
+        reply_markup=InlineKeyboardMarkup(event_buttons)
+    )
+
+@app.on_callback_query(filters.regex('^set_event_'))
+async def set_event_callback(client, callback_query):
+    event_name = callback_query.data.split('_', 2)[-1]
+    user_states[callback_query.from_user.id]["event_emoji"] = event_emojis[event_name]
+    user_states[callback_query.from_user.id]["event_name"] = event_name
+    await callback_query.message.edit_text(f"Event '{event_name}' selected.")
+    
 @app.on_message(filters.private & filters.photo)
 async def receive_photo(client, message):
     try:
@@ -156,22 +185,26 @@ async def receive_photo(client, message):
                 await app.send_photo(
                    chat_id=CHARA_CHANNEL_ID,
                    photo=photo_file_id,
-                   caption=f'➼ <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> ʜᴀꜱ ʙʀᴏᴜɢʜᴛ ᴜꜱ ᴀ ɴᴇᴡ ᴄʜᴀʀᴀᴄᴛᴇʀ\n'
-                            f'Take a look at this character!\n\n'
-                            f'<b>Anime:</b> {user_data["anime"]}\n'
-                            f'<b>ID:</b> {id}\n'
-                            f'<b>Name:</b> {user_data["name"]}\n'
-                            f'<b>Rarity:</b> {user_data["rarity"]}'
+                   caption=(
+                            f"OwO! Check out this waifu!\n\n"
+                            f"<b>{user_data['anime']}</b>\n"  
+                            f"{id}: {user_data['name']} [{user_data.get('event_emoji', '')}]\n"  
+                            f"({rarity_emojis[user_data['rarity']]} 𝙍𝘼𝙍𝙄𝙏𝙔: {user_data['rarity']})\n\n"  
+                            f"{user_data.get('event_name', '')}\n\n"  
+                            f"➼ ᴀᴅᴅᴇᴅ ʙʏ: <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a>"
+                ),
                 )
                 await app.send_photo(
                     chat_id=SUPPORT_CHAT,
                     photo=photo_file_id,
-                    caption=f'➼ <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> ʜᴀꜱ ʙʀᴏᴜɢʜᴛ ᴜꜱ ᴀ ɴᴇᴡ ᴄʜᴀʀᴀᴄᴛᴇʀ\n'
-                            f'Take a look at this character!\n\n'
-                            f'<b>Anime:</b> {user_data["anime"]}\n'
-                            f'<b>ID:</b> {id}\n'
-                            f'<b>Name:</b> {user_data["name"]}\n'
-                            f'<b>Rarity:</b> {user_data["rarity"]}'
+                    caption=(
+                            f"OwO! Check out this waifu!\n\n"
+                            f"<b>{user_data['anime']}</b>\n"  
+                            f"{id}: {user_data['name']} [{user_data.get('event_emoji', '')}]\n"  
+                            f"({rarity_emojis[user_data['rarity']]} 𝙍𝘼𝙍𝙄𝙏𝙔: {user_data['rarity']})\n\n"  
+                            f"{user_data.get('event_name', '')}\n\n"  
+                            f"➼ ᴀᴅᴅᴇᴅ ʙʏ: <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a>"
+                ),
                 )
                 await message.reply_text("✅ Waifu added successfully.")
                 user_states.pop(message.from_user.id, None)
