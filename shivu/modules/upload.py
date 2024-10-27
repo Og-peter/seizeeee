@@ -86,6 +86,7 @@ async def admin_panel(client, message):
     else:
         await message.reply_text("You are not authorized to use this command.")
 
+# Edit command to include "Edit Event"
 @app.on_message(filters.command("edit") & filters.private)
 async def edit_waifu_command(client, message):
     try:
@@ -105,6 +106,7 @@ async def edit_waifu_command(client, message):
                             [InlineKeyboardButton("🧩 Rename Waifu", callback_data=f"rename_waifu_{waifu_id}")],
                             [InlineKeyboardButton("⛱️ Change Image", callback_data=f"change_image_{waifu_id}")],
                             [InlineKeyboardButton("⛩️ Change Rarity", callback_data=f"change_rarity_{waifu_id}")],
+                            [InlineKeyboardButton("🎉 Edit Event", callback_data=f"change_event_{waifu_id}")],  # New button
                             [InlineKeyboardButton("📢 Reset Waifu", callback_data=f"reset_waifu_{waifu_id}")],
                             [InlineKeyboardButton("🗑️ Remove Waifu", callback_data=f"remove_waifu_{waifu_id}")]
                         ]
@@ -117,6 +119,47 @@ async def edit_waifu_command(client, message):
     except Exception as e:
         await message.reply_text(f"An error occurred: {str(e)}")
 
+@app.on_callback_query(filters.regex('^change_event_'))
+async def change_event_callback(client, callback_query):
+    waifu_id = callback_query.data.split('_', 2)[-1]
+    user_states[callback_query.from_user.id] = {"state": "changing_event", "waifu_id": waifu_id}
+    
+    # Display event options with "Skip" for no event
+    event_buttons = [
+        [InlineKeyboardButton(event, callback_data=f"set_new_event_{event}_{waifu_id}")] for event in event_emojis.keys()
+    ]
+    event_buttons.append([InlineKeyboardButton("Skip Event", callback_data=f"set_new_event_none_{waifu_id}")])
+
+    await callback_query.message.edit_text(
+        "Choose a new event for the waifu (or skip):",
+        reply_markup=InlineKeyboardMarkup(event_buttons)
+    )
+
+# Set new event for waifu
+@app.on_callback_query(filters.regex('^set_new_event_'))
+async def set_new_event_callback(client, callback_query):
+    _, event_name, waifu_id = callback_query.data.split('_', 2)
+
+    if event_name == "none":
+        # Clear the event
+        updated_waifu = await collection.find_one_and_update(
+            {"id": waifu_id},
+            {"$set": {"event_emoji": "", "event_name": ""}},
+            return_document=ReturnDocument.AFTER
+        )
+    else:
+        # Set the new event
+        updated_waifu = await collection.find_one_and_update(
+            {"id": waifu_id},
+            {"$set": {"event_emoji": event_emojis[event_name], "event_name": event_name}},
+            return_document=ReturnDocument.AFTER
+        )
+
+    if updated_waifu:
+        await callback_query.message.edit_text(f"The event has been updated to '{event_name}' for waifu ID '{waifu_id}'.")
+    else:
+        await callback_query.message.edit_text("Failed to update the waifu's event.")
+        
 @app.on_callback_query(filters.regex('^add_waifu$'))
 async def add_waifu_callback(client, callback_query):
     await callback_query.message.edit_text(
@@ -187,21 +230,29 @@ async def select_rarity_callback(client, callback_query):
     user_states[callback_query.from_user.id]["rarity"] = selected_rarity
     user_states[callback_query.from_user.id]["state"] = "selecting_event"
 
-    # Prompt for event selection
+    # Prompt for event selection with a "Skip" option
     event_buttons = [
         [InlineKeyboardButton(event, callback_data=f"set_event_{event}")] for event in event_emojis.keys()
     ]
+    event_buttons.append([InlineKeyboardButton("Skip Event", callback_data="set_event_none")])
+    
     await callback_query.message.edit_text(
-        "Choose an event emoji for the waifu:",
+        "Choose an event emoji for the waifu (or skip):",
         reply_markup=InlineKeyboardMarkup(event_buttons)
     )
 
-# Handle event selection and ask for waifu's image
+# Handle event selection or skip
 @app.on_callback_query(filters.regex('^set_event_'))
 async def set_event_callback(client, callback_query):
     event_name = callback_query.data.split('_', 2)[-1]
-    user_states[callback_query.from_user.id]["event_emoji"] = event_emojis[event_name]
-    user_states[callback_query.from_user.id]["event_name"] = event_name
+    if event_name == "none":
+        # Skip event by setting it to None
+        user_states[callback_query.from_user.id]["event_emoji"] = ""
+        user_states[callback_query.from_user.id]["event_name"] = ""
+    else:
+        user_states[callback_query.from_user.id]["event_emoji"] = event_emojis[event_name]
+        user_states[callback_query.from_user.id]["event_name"] = event_name
+
     user_states[callback_query.from_user.id]["state"] = "awaiting_waifu_image"
     await callback_query.message.edit_text(f"Event '{event_name}' selected. Now, send the waifu's image.")
 
