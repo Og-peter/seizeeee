@@ -41,20 +41,38 @@ async def log_action(action, user_id, initiator_id):
         
 async def get_user_info(user_id):
     user = await user_collection.find_one({'id': user_id})
-    
+
     if user:
+        characters = user.get('characters', [])
+        harem_size = len(characters)
+
+        # Calculating rarity counts
+        rarity_counts = {
+            'legendary': sum(1 for char in characters if char.get('rarity') == 'legendary'),
+            'rare': sum(1 for char in characters if char.get('rarity') == 'rare'),
+            'medium': sum(1 for char in characters if char.get('rarity') == 'medium'),
+            'common': sum(1 for char in characters if char.get('rarity') == 'common')
+        }
+
         user_info = (
             f"🎭 <b>User Profile:</b>\n\n"
             f"🪪 <b>Name:</b> {user.get('first_name', 'Unknown')} {user.get('last_name', '')}\n"
             f"🧪 <b>Username:</b> @{user.get('username', 'None')}\n"
             f"🔩 <b>User ID:</b> <code>{user_id}</code>\n"
-            f"👒 <b>Waifu Count:</b> {len(user.get('characters', []))} / {HAREM_SIZE_LIMIT}  <b>(Max)</b>\n"
-            f"🌟 <b>Status:</b> {'👑 Harem Master' if len(user.get('characters', [])) >= HAREM_SIZE_LIMIT else '✨ Keep Collecting!' }\n"
+            f"👒 <b>Waifu Count:</b> {harem_size} / {HAREM_SIZE_LIMIT} <b>(Max)</b>\n"
+            f"🌟 <b>Status:</b> {'👑 Harem Master' if harem_size >= HAREM_SIZE_LIMIT else '✨ Keep Collecting!'}\n\n"
+            f"✳️ <b>Rarity Counts:</b>\n"
+            f"╭───────────────────\n"
+            f"├─➩ 🟡 <b>Legendary:</b> {rarity_counts['legendary']}\n"
+            f"├─➩ 🟠 <b>Rare:</b> {rarity_counts['rare']}\n"
+            f"├─➩ 🔴 <b>Medium:</b> {rarity_counts['medium']}\n"
+            f"├─➩ 🔵 <b>Common:</b> {rarity_counts['common']}\n"
+            f"╰───────────────────"
         )
+
         return user_info, user
     else:
         return "❌ <b>User not found in the database.</b>", None
-
 
 async def backup_characters(user_id, characters):
     await backup_collection.insert_one({
@@ -62,7 +80,6 @@ async def backup_characters(user_id, characters):
         'characters': characters,
         'backup_time': time.time()
     })
-
 
 async def delete_harem(client, user_id):
     user = await user_collection.find_one({'id': user_id})
@@ -72,17 +89,6 @@ async def delete_harem(client, user_id):
         await user_collection.update_one({'id': user_id}, {'$set': {'characters': []}})
         return True
     return False
-
-
-async def log_action(action, user_id, initiator_id):
-    """ Log deletion or restoration actions """
-    await log_collection.insert_one({
-        'action': action,
-        'user_id': user_id,
-        'initiator_id': initiator_id,
-        'timestamp': time.time()
-    })
-
 
 async def send_notification_to_specialgrade(eraser_id, eraser_name, target_id, target_name):
     message = (
@@ -97,13 +103,11 @@ async def send_notification_to_specialgrade(eraser_id, eraser_name, target_id, t
     for user_id in SPECIALGRADE:
         await app.send_message(user_id, message, reply_markup=keyboard)
 
-
 async def notify_user(user_id, message):
     try:
         await app.send_message(user_id, message)
     except Exception as e:
         print(f"Failed to send message to user {user_id}: {e}")
-
 
 async def restore_characters(user_id):
     backup = await backup_collection.find_one({'user_id': user_id})
@@ -120,14 +124,12 @@ async def restore_characters(user_id):
         return True, "🔄 Harem restored successfully!"
     return False, "❌ No backup found for this user."
 
-
 async def increase_reputation(user_id, points=1):
     await reputation_collection.update_one(
         {'user_id': user_id},
         {'$inc': {'reputation': points}},
         upsert=True
     )
-
 
 @app.on_message(filters.command(["info"]))
 async def info_command(client, message):
@@ -155,23 +157,14 @@ async def info_command(client, message):
             async for photo in client.get_chat_photos(user_id, limit=1):
                 photo_file_id = photo.file_id
                 
-            caption = (
-                f"📊 <b>User Info:</b>\n\n"
-                f"🪪 <b>User ID:</b> <code>{user_id}</code>\n"
-                f"👤 <b>Name:</b> {user.get('first_name', 'Unknown')} {user.get('last_name', '')}\n"
-                f"📈 <b>Waifu Count:</b> {len(user.get('characters', []))} / {HAREM_SIZE_LIMIT}\n"
-                f"💼 <b>Status:</b> {'👑 Harem Master' if len(user.get('characters', [])) >= HAREM_SIZE_LIMIT else '✨ Keep Collecting!' }\n"
-            )
-            
             if photo_file_id:
-                await message.reply_photo(photo_file_id, caption=caption, reply_markup=keyboard)
+                await message.reply_photo(photo_file_id, caption=user_info, reply_markup=keyboard)
             else:
-                await message.reply_text(caption, reply_markup=keyboard)
+                await message.reply_text(user_info, reply_markup=keyboard)
         else:
             await message.reply_text(user_info)
     else:
         await message.reply_text("⚠️ <b>Please specify a user ID or reply to a user's message to fetch their info.</b>")
-
 
 @app.on_callback_query(filters.regex(r'^delete_harem_'))
 async def callback_delete_harem(client, callback_query):
