@@ -92,6 +92,28 @@ async def get_user_info(user_id):
             'valentine': sum(1 for char in characters if char.get('rarity') == 'valentine')
         }
 
+        # Build the rarity counts section by including only non-zero entries
+        rarity_text = "✳️ <b>Rarity Counts:</b>\n╭───────────────────\n"
+        rarity_symbols = {
+            'legendary': "🟡 Legendary",
+            'rare': "🟠 Rare",
+            'medium': "🔵 Medium",
+            'common': "⚪ Common",
+            'chibi': "👶 Chibi",
+            'limited edition': "🔮 Limited Edition",
+            'premium': "🫧 Premium",
+            'exclusive': "💮 Exclusive",
+            'exotic': "🌸 Exotic",
+            'astral': "🎐 Astral",
+            'valentine': "💞 Valentine"
+        }
+
+        for rarity, count in rarity_counts.items():
+            if count > 0:
+                rarity_text += f"├─➩ {rarity_symbols[rarity]}: {count}\n"
+
+        rarity_text += "╰───────────────────"
+
         user_info = (
             f"🎭 <b>User Profile:</b>\n\n"
             f"🪪 <b>Name:</b> {user.get('first_name', 'Unknown')} {user.get('last_name', '')}\n"
@@ -99,20 +121,7 @@ async def get_user_info(user_id):
             f"🔩 <b>User ID:</b> <code>{user_id}</code>\n"
             f"👒 <b>Waifu Count:</b> {harem_size} / {HAREM_SIZE_LIMIT} <b>(Max)</b>\n"
             f"🌟 <b>Status:</b> {'👑 Harem Master' if harem_size >= HAREM_SIZE_LIMIT else '✨ Keep Collecting!'}\n\n"
-            f"✳️ <b>Rarity Counts:</b>\n"
-            f"╭───────────────────\n"
-            f"├─➩ 🟡 <b>Legendary:</b> {rarity_counts['legendary']}\n"
-            f"├─➩ 🟠 <b>Rare:</b> {rarity_counts['rare']}\n"
-            f"├─➩ 🔵 <b>Medium:</b> {rarity_counts['medium']}\n"
-            f"├─➩ ⚪ <b>Common:</b> {rarity_counts['common']}\n"
-            f"├─➩ 👶 <b>Chibi:</b> {rarity_counts['chibi']}\n"
-            f"├─➩ 🔮 <b>Limited Edition:</b> {rarity_counts['limited edition']}\n"
-            f"├─➩ 🫧 <b>Premium:</b> {rarity_counts['premium']}\n"
-            f"├─➩ 💮 <b>Exclusive:</b> {rarity_counts['exclusive']}\n"
-            f"├─➩ 🌸 <b>Exotic:</b> {rarity_counts['exotic']}\n"
-            f"├─➩ 🎐 <b>Astral:</b> {rarity_counts['astral']}\n"
-            f"├─➩ 💞 <b>Valentine:</b> {rarity_counts['valentine']}\n"
-            f"╰───────────────────"
+            f"{rarity_text}"
         )
 
         return user_info, user
