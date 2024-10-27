@@ -138,27 +138,35 @@ async def change_event_callback(client, callback_query):
 # Set new event for waifu
 @app.on_callback_query(filters.regex('^set_new_event_'))
 async def set_new_event_callback(client, callback_query):
-    _, event_name, waifu_id = callback_query.data.split('_', 2)
+    try:
+        # Ensure callback data has the correct format and split properly
+        _, event_name, waifu_id = callback_query.data.split('_', 2)
+        
+        # Check if the event name exists in event_emojis
+        if event_name == "none":
+            # Clear the event if "Skip Event" is chosen
+            updated_waifu = await collection.find_one_and_update(
+                {"id": waifu_id},
+                {"$set": {"event_emoji": "", "event_name": ""}},
+                return_document=ReturnDocument.AFTER
+            )
+            message_text = f"The event has been cleared for waifu ID '{waifu_id}'."
+        elif event_name in event_emojis:
+            # Set the chosen event
+            updated_waifu = await collection.find_one_and_update(
+                {"id": waifu_id},
+                {"$set": {"event_emoji": event_emojis[event_name], "event_name": event_name}},
+                return_document=ReturnDocument.AFTER
+            )
+            message_text = f"The event has been updated to '{event_name}' for waifu ID '{waifu_id}'."
+        else:
+            # Handle unknown event_name values
+            message_text = "Invalid event selected. Please choose a valid event."
 
-    if event_name == "none":
-        # Clear the event
-        updated_waifu = await collection.find_one_and_update(
-            {"id": waifu_id},
-            {"$set": {"event_emoji": "", "event_name": ""}},
-            return_document=ReturnDocument.AFTER
-        )
-    else:
-        # Set the new event
-        updated_waifu = await collection.find_one_and_update(
-            {"id": waifu_id},
-            {"$set": {"event_emoji": event_emojis[event_name], "event_name": event_name}},
-            return_document=ReturnDocument.AFTER
-        )
-
-    if updated_waifu:
-        await callback_query.message.edit_text(f"The event has been updated to '{event_name}' for waifu ID '{waifu_id}'.")
-    else:
-        await callback_query.message.edit_text("Failed to update the waifu's event.")
+        await callback_query.message.edit_text(message_text)
+    except Exception as e:
+        await callback_query.message.edit_text("An error occurred while updating the event.")
+        print(f"Error in set_new_event_callback: {str(e)}")
         
 @app.on_callback_query(filters.regex('^add_waifu$'))
 async def add_waifu_callback(client, callback_query):
