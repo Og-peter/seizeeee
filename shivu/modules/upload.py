@@ -292,7 +292,7 @@ async def receive_photo(client, message):
                 f"OwO! Check out this waifu!\n\n"
                 f"<b>{user_data['anime']}</b>\n"
                 f"{waifu_id}: {user_data['name']} [{character['event_emoji']}]\n"
-                f"({rarity_emojis[user_data['rarity']]} 𝙍𝘼𝙍𝙄𝙏𝙔: {user_data['rarity']})\n\n"
+                f"(𝙍𝘼𝙍𝙄𝙏𝙔: {user_data['rarity']})\n\n"
                 f"{character['event_name']}\n\n"
                 f"➼ ᴀᴅᴅᴇᴅ ʙʏ: <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a>"
             )
