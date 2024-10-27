@@ -117,7 +117,6 @@ async def edit_waifu_command(client, message):
     except Exception as e:
         await message.reply_text(f"An error occurred: {str(e)}")
 
-# Start adding waifu and choose anime
 @app.on_callback_query(filters.regex('^add_waifu$'))
 async def add_waifu_callback(client, callback_query):
     await callback_query.message.edit_text(
@@ -131,19 +130,24 @@ async def add_waifu_callback(client, callback_query):
             ]
         )
     )
-    user_states[callback_query.from_user.id] = {
-        "state": "selecting_anime",
-        "anime": None,
-        "name": None,
-        "rarity": None,
-        "action": "add",
-        "event_emoji": None,
-        "event_name": None
-    }
+    # Initialize user state if not already initialized
+    if callback_query.from_user.id not in user_states:
+        user_states[callback_query.from_user.id] = {
+            "state": "selecting_anime",
+            "anime": None,
+            "name": None,
+            "rarity": None,
+            "action": "add",
+            "event_emoji": None,
+            "event_name": None
+        }
 
-# After selecting anime, ask for waifu's name
 @app.on_callback_query(filters.regex('^add_waifu_'))
 async def choose_anime_callback(client, callback_query):
+    # Check if user state exists, if not initialize it
+    if callback_query.from_user.id not in user_states:
+        user_states[callback_query.from_user.id] = {"state": "awaiting_waifu_name"}
+    
     selected_anime = callback_query.data.split('_', 2)[-1]
     user_states[callback_query.from_user.id]["anime"] = selected_anime
     user_states[callback_query.from_user.id]["state"] = "awaiting_waifu_name"
