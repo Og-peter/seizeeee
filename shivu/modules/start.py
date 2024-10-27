@@ -119,6 +119,30 @@ async def start(update: Update, context: CallbackContext) -> None:
         await context.bot.send_sticker(chat_id=update.effective_chat.id, sticker=sticker_url)
         await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=caption, reply_markup=reply_markup, parse_mode='MarkdownV2')
     else:
+        # Your function
+async def your_function(update, context):
+    user_mention = f"[{update.effective_user.first_name}](tg://user?id={update.effective_user.id})"
+    keyboard = [
+        [InlineKeyboardButton("💌 PM", url='https://t.me/Character_seize_bot?start=true')],
+        [InlineKeyboardButton("💬 Support Group", url='https://t.me/your_support_group_link')],
+        [InlineKeyboardButton("📣 Support Channel", url='https://t.me/your_support_channel_link')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    video_url = "https://telegra.ph/file/0b2e8e33d07a0d0e5914f.mp4"
+    
+    caption = (
+        f"✨ Hey there, {user_mention}! ✨\n\n"
+        f"⚡️ I am alive and ready to help! ⚡️\n\n"
+        f"💥 Feel free to reach out if you need any assistance 💥"
+    )
+    
+    await context.bot.send_video(
+        chat_id=update.effective_chat.id, 
+        video=video_url, 
+        caption=caption, 
+        reply_markup=reply_markup, 
+        parse_mode='Markdown'
+    )
         keyboard = [
             [InlineKeyboardButton("PM", url='https://t.me/Character_seize_bot?start=true')],
         ]
