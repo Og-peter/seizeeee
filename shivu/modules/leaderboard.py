@@ -8,7 +8,7 @@ from telegram.ext import CommandHandler, CallbackContext
 
 from shivu import (application, PHOTO_URL, OWNER_ID,
                    user_collection, top_global_groups_collection,
-                   group_user_totals_collection)
+                   group_user_totals_collection, db)
 from shivu import sudo_users as SUDO_USERS
 
 # List of video links
@@ -161,68 +161,53 @@ async def send_groups_document(update: Update, context: CallbackContext) -> None
     except Exception as e:
         await update.message.reply_text(f"An error occurred: {e}")
 
-async def stats(update: Update, context: CallbackContext) -> None:
-    OWNER_ID = 6402009857  # Define your OWNER_ID here
+# Define the /stat command handler
+async def stat(update: Update, context: CallbackContext) -> None:
+    try:
+        # Retrieve statistics from collections
+        total_groups = await groups_collection.count_documents({})
+        total_users = await users_collection.count_documents({})
+        total_characters = await characters_collection.count_documents({})
 
-    # Ensure only the OWNER_ID can access this command
-    if update.effective_user.id != OWNER_ID:
-        await update.message.reply_text("🚫 You are not authorized to use this command.", parse_mode="HTML")
-        return
+        # Retrieve harem count
+        total_harem_count = await characters_collection.count_documents({'rarity': 'harem'})  # Adjust if needed
 
-    # Counting total users and groups, adding constants
-    user_count = await user_collection.count_documents({})
-    group_count = await group_user_totals_collection.distinct('group_id')
-    adjusted_user_count = user_count + 40000
-    adjusted_group_count = len(group_count) + 5900
+        # Count characters by rarity
+        rarity_counts = {
+            "⚪ Common": await characters_collection.count_documents({'rarity': 'common'}),
+            "🟢 Medium": await characters_collection.count_documents({'rarity': 'medium'}),
+            "🟠 Rare": await characters_collection.count_documents({'rarity': 'rare'}),
+            "🟡 Legendary": await characters_collection.count_documents({'rarity': 'legendary'}),
+            "💠 Cosmic": await characters_collection.count_documents({'rarity': 'cosmic'}),
+            "💮 Exclusive": await characters_collection.count_documents({'rarity': 'exclusive'}),
+            "🔮 Limited Edition": await characters_collection.count_documents({'rarity': 'limited'})
+        }
 
-    # Define rarity types as they appear in your database
-    rarity_levels = [
-        {"name": "⚪️ Common", "db_name": "common"},
-        {"name": "🔵 Medium", "db_name": "medium"},
-        {"name": "👶 Chibi", "db_name": "chibi"},
-        {"name": "🟠 Rare", "db_name": "rare"},
-        {"name": "🟡 Legendary", "db_name": "legendary"},
-        {"name": "💮 Exclusive", "db_name": "exclusive"},
-        {"name": "🫧 Premium", "db_name": "premium"},
-        {"name": "🔮 Limited Edition", "db_name": "limited Edition"},
-        {"name": "🌸 Exotic", "db_name": "exotic"},
-        {"name": "🎐 Astral", "db_name": "astral"},
-        {"name": "💞 Valentine", "db_name": "valentine"}
-    ]
-    rarity_counts = {}
+        # Format the statistics message
+        stats_message = (
+            f"📊 <b>Bot Stats</b> 📊\n\n"
+            f"<b>👥 Total Groups:</b> {total_groups}\n"
+            f"<b>👤 Total Users:</b> {total_users}\n"
+            f"<b>🎴 Total Characters:</b> {total_characters}\n"
+            f"<b>🔢 Harem Count:</b> {total_harem_count}\n\n"
+            f"<b>⚜️ Characters Count By Rarity:</b>\n"
+        )
 
-    # Fetch and log counts for each rarity level
-    for rarity in rarity_levels:
-        count = await user_collection.count_documents({"rarity": rarity["db_name"]})
-        rarity_counts[rarity["name"]] = count
-        logging.info(f"Rarity '{rarity['name']}' count: {count}")  # Log each count
+        # Add each rarity count to the message
+        for rarity, count in rarity_counts.items():
+            stats_message += f"{rarity}: {count}\n"
 
-    # Construct the stats message with rarity percentages
-    stats_message = (
-        f"<b>📊 𝘽𝙤𝙩 𝙎𝙩𝙖𝙩𝙞𝙨𝙩𝙞𝙘𝙨 📊</b>\n"
-        f"━━━━━━━━━━━━━━━━━━━\n"
-        f"<b>👤 Total Users:</b> <code>{adjusted_user_count}</code>\n"
-        f"<b>👥 Total Groups:</b> <code>{adjusted_group_count}</code>\n"
-        f"━━━━━━━━━━━━━━━━━━━\n"
-        f"<b>🌟 Rarity Statistics:</b>\n"
-    )
+        # Send the formatted statistics message
+        await update.message.reply_text(stats_message, parse_mode="HTML")
+    except Exception as e:
+        await update.message.reply_text(f"An error occurred: {str(e)}")
 
-    # Append rarity counts and percentages to the message
-    for rarity, count in rarity_counts.items():
-        percentage = (count / adjusted_user_count) * 100 if adjusted_user_count > 0 else 0
-        stats_message += f"<b>{rarity}:</b> <code>{count}</code> ({percentage:.2f}%)\n"
-
-    stats_message += (
-        f"━━━━━━━━━━━━━━━━━━━\n"
-        f"<i>📈 Stay tuned for more updates!</i>"
-    )
-
-    await update.message.reply_text(stats_message, parse_mode="HTML")
+# Register the /stat command handler with the application
+application.add_handler(CommandHandler("stats", stats))
   
 # Register the command handlers
 application.add_handler(CommandHandler('ctop', ctop, block=False))
 application.add_handler(CommandHandler('topGroups', global_leaderboard, block=False))
-application.add_handler(CommandHandler('stats', stats, block=False))
 
 application.add_handler(CommandHandler('list', send_users_document, block=False))
 application.add_handler(CommandHandler('groups', send_groups_document, block=False))
