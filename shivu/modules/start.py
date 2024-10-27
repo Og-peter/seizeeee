@@ -37,11 +37,11 @@ async def start(update: Update, context: CallbackContext) -> None:
         member_status = await context.bot.get_chat_member(SUPPORT_GROUP_ID, user_id)
         if member_status.status == 'left':
             join_button = InlineKeyboardMarkup([
-                [InlineKeyboardButton("Join Support Group", url=f"https://t.me/{SUPPORT_GROUP_ID.lstrip('@')}")]
+                [InlineKeyboardButton("๏ ᴊᴏɪɴ sᴜᴘᴘᴏʀᴛ ๏", url=f"https://t.me/{SUPPORT_GROUP_ID.lstrip('@')}")]
             ])
             await update.message.reply_photo(
                 photo=IMAGE_URL,  # Image URL for the "must join" prompt
-                caption="You must join our support group to use this bot!",
+                caption="๏ ᴀᴄᴄᴏʀᴅɪɴɢ ᴛᴏ ᴍʏ ᴅᴀᴛᴀʙᴀsᴇ ʏᴏᴜ'ᴠᴇ ɴᴏᴛ ᴊᴏɪɴᴇᴅ ๏sᴜᴘᴘᴏʀᴛ๏ ʏᴇᴛ, ɪғ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴜsᴇ ᴍᴇ ᴛʜᴇɴ ᴊᴏɪɴ ๏sᴜᴘᴘᴏʀᴛ๏ ᴀɴᴅ sᴛᴀʀᴛ ᴍᴇ ᴀɢᴀɪɴ !",
                 reply_markup=join_button
             )
             return
