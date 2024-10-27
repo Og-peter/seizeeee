@@ -37,11 +37,11 @@ async def start(update: Update, context: CallbackContext) -> None:
         member_status = await context.bot.get_chat_member(SUPPORT_GROUP_ID, user_id)
         if member_status.status == 'left':
             join_button = InlineKeyboardMarkup([
-                [InlineKeyboardButton("๏ ᴊᴏɪɴ sᴜᴘᴘᴏʀᴛ ๏", url=f"https://t.me/{SUPPORT_GROUP_ID.lstrip('@')}")]
+                [InlineKeyboardButton("๏ Join Support ๏", url=f"https://t.me/{SUPPORT_GROUP_ID.lstrip('@')}")]
             ])
             await update.message.reply_photo(
-                photo=IMAGE_URL,  # Image URL for the "must join" prompt
-                caption="๏ ᴀᴄᴄᴏʀᴅɪɴɢ ᴛᴏ ᴍʏ ᴅᴀᴛᴀʙᴀsᴇ ʏᴏᴜ'ᴠᴇ ɴᴏᴛ ᴊᴏɪɴᴇᴅ ๏sᴜᴘᴘᴏʀᴛ๏ ʏᴇᴛ, ɪғ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴜsᴇ ᴍᴇ ᴛʜᴇɴ ᴊᴏɪɴ ๏sᴜᴘᴘᴏʀᴛ๏ ᴀɴᴅ sᴛᴀʀᴛ ᴍᴇ ᴀɢᴀɪɴ !",
+                photo=IMAGE_URL,
+                caption="๏ It appears you haven't joined our Support Group yet. Please join to access my features!",
                 reply_markup=join_button
             )
             return
@@ -66,12 +66,11 @@ async def start(update: Update, context: CallbackContext) -> None:
         }
         await user_collection.insert_one(new_user)
 
-        # Add tokens to the referrer if there's a referring user
         if referring_user_id:
             referring_user_data = await user_collection.find_one({"id": referring_user_id})
             if referring_user_data:
                 await user_collection.update_one({"id": referring_user_id}, {"$inc": {"tokens": 1000}})
-                referrer_message = f"{first_name} referred you and you got 1000 tokens!"
+                referrer_message = f"{first_name} used your referral link and you've received 1000 tokens!"
                 try:
                     await context.bot.send_message(chat_id=referring_user_id, text=referrer_message)
                 except Exception as e:
@@ -79,8 +78,8 @@ async def start(update: Update, context: CallbackContext) -> None:
 
         await context.bot.send_message(
             chat_id=GROUP_ID,
-            text=f"🎉 #**New User Alert!** 🎉\n\n"
-                 f"👤 User: <a href='tg://user?id={user_id}'>{escape(first_name)}</a>",
+            text=f"🎉 #**New User Joined!** 🎉\n\n"
+                 f"👤 User: <a href='tg://user?id={user_id}'>{first_name}</a>",
             parse_mode='HTML'
         )
     else:
@@ -92,40 +91,38 @@ async def start(update: Update, context: CallbackContext) -> None:
             )
 
     if update.effective_chat.type == "private":
-        caption = escape_markdown(
-            f"""❖ Kᴏɴ'ɴɪᴄʜɪᴡᴀ {first_name} sᴀɴ 💌!!
-
-๏ I'ᴍ*** [ᴄʜᴀʀᴀᴄᴛᴇʀ sᴇɪᴢᴇʀ ʙᴏᴛ](https://t.me/Character_seize_bot) ʏᴏᴜʀ ғʀɪᴇɴᴅʟʏ ᴡᴀɪғᴜ sᴇɪᴢᴇʀ ʙᴏᴛ ☄.
-
-━━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━━
-❖ ᴡᴀɪғᴜ sᴇɪᴢᴇʀ ʙᴏᴛ ᴡɪʟʟ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ sᴘᴀᴡɴ ᴀ ɴᴇᴡ ᴡᴀɪғᴜ ɪɴ ʏᴏᴜʀ ᴄʜᴀᴛ ᴀғᴛᴇʀ ᴇᴠᴇʀʏ 100 ᴍᴇssᴀɢᴇs ʙʏ ᴅᴇғᴀᴜʟᴛ.
-❖ ʏᴏᴜ ᴄᴀɴ ᴀʟsᴏ ᴄᴜsᴛᴏᴍɪᴢᴇ ᴛʜᴇ sᴘᴀᴡɴ ʀᴀᴛᴇ ᴀɴᴅ ᴏᴛʜᴇʀ sᴇᴛᴛɪɴɢs ᴛᴏ ʏᴏᴜʀ ʟɪᴋɪɴɢ.
-━━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━━
-❖ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ:
- sɪᴍᴘʟʏ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ.
-━━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━━"""
+        caption = (
+            f"🌟 Hello, <a href='tg://user?id={user_id}'>{first_name}</a>! 🌟\n\n"
+            f"Welcome to the <b>{context.bot.username}</b>! I'm here to assist you in your adventure.\n\n"
+            "🚀 <b>Features:</b>\n"
+            "• Automatically spawn a new character in group chats every 100 messages by default.\n"
+            "• Customize the spawn rate and settings to suit your group.\n\n"
+            "👥 To start, add me to your group and enjoy the fun!\n\n"
+            "🌐 Support us and stay updated through the links below."
         )
 
         keyboard = [
-            [InlineKeyboardButton("❖ Λᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ❖", url='https://t.me/Character_seize_bot?startgroup=new')],
-            [InlineKeyboardButton("˹ 𝙎𝙪𝙥𝙥𝙤𝙧𝙩 ˼", url=f'https://t.me/{SUPPORT_GROUP_ID.lstrip("@")}'),
-             InlineKeyboardButton("˹ 𝙐𝙥𝙙𝙖𝙩𝙚𝙨 ˼", url='https://t.me/Seizer_updates')],
-            [InlineKeyboardButton("˹ 𝙁𝘼𝙌 ˼", url='https://telegra.ph/Seizer-Faq-Menu-09-05')],
+            [InlineKeyboardButton("Add Me to Your Group ➕", url=f'https://t.me/{context.bot.username}?startgroup=new')],
+            [InlineKeyboardButton("Support Group", url=f'https://t.me/{SUPPORT_GROUP_ID.lstrip("@")}'),
+             InlineKeyboardButton("Updates Channel", url='https://t.me/Seizer_updates')],
+            [InlineKeyboardButton("FAQ", url='https://telegra.ph/Seizer-Faq-Menu-09-05')],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         video_url = "https://telegra.ph/file/40254b3883dfcaec52120.mp4"
         sticker_url = "CAACAgUAAxkBAAEBeVpm-jtB-lkO8Oixy5SZHTAy1Ymp4QACEgwAAv75EFbYc5vQ3hQ1Ph4E"
         
         await context.bot.send_sticker(chat_id=update.effective_chat.id, sticker=sticker_url)
-        await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=caption, reply_markup=reply_markup, parse_mode='MarkdownV2')
+        await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=caption, reply_markup=reply_markup, parse_mode='HTML')
     else:
         keyboard = [
-            [InlineKeyboardButton("PM", url='https://t.me/Character_seize_bot?start=true')],
+            [InlineKeyboardButton("PM me", url=f'https://t.me/{context.bot.username}?start=true')],
+            [InlineKeyboardButton("Support Group", url=f'https://t.me/{SUPPORT_GROUP_ID.lstrip("@")}'),
+             InlineKeyboardButton("Updates Channel", url='https://t.me/Seizer_updates')]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         video_url = "https://telegra.ph/file/0b2e8e33d07a0d0e5914f.mp4"
-        await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=f"𝙃𝙚𝙮 𝙩𝙝𝙚𝙧𝙚! {first_name}\n\n✨𝙄 𝘼𝙈 𝘼𝙡𝙞𝙫𝙚 𝘽𝙖𝙗𝙮", reply_markup=reply_markup)
-
+        await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=f"👋 Hi there, <a href='tg://user?id={user_id}'>{first_name}</a>!\n\n✨ I'm online and ready to assist!", reply_markup=reply_markup, parse_mode='HTML')
+        
 start_handler = CommandHandler('start', start, block=False)
 application.add_handler(start_handler)
 
