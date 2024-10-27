@@ -95,7 +95,7 @@ async def start(update: Update, context: CallbackContext) -> None:
         caption = escape_markdown(
             f"""❖ Kᴏɴ'ɴɪᴄʜɪᴡᴀ {first_name} sᴀɴ 💌!!
 
-๏ I'ᴍ [ᴄʜᴀʀᴀᴄᴛᴇʀ sᴇɪᴢᴇʀ ʙᴏᴛ](https://t.me/Character_seize_bot) ʏᴏᴜʀ ғʀɪᴇɴᴅʟʏ ᴡᴀɪғᴜ sᴇɪᴢᴇʀ ʙᴏᴛ ☄.
+๏ I'ᴍ*** [ᴄʜᴀʀᴀᴄᴛᴇʀ sᴇɪᴢᴇʀ ʙᴏᴛ](https://t.me/Character_seize_bot) ʏᴏᴜʀ ғʀɪᴇɴᴅʟʏ ᴡᴀɪғᴜ sᴇɪᴢᴇʀ ʙᴏᴛ ☄.
 
 ━━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━━
 ❖ ᴡᴀɪғᴜ sᴇɪᴢᴇʀ ʙᴏᴛ ᴡɪʟʟ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ sᴘᴀᴡɴ ᴀ ɴᴇᴡ ᴡᴀɪғᴜ ɪɴ ʏᴏᴜʀ ᴄʜᴀᴛ ᴀғᴛᴇʀ ᴇᴠᴇʀʏ 100 ᴍᴇssᴀɢᴇs ʙʏ ᴅᴇғᴀᴜʟᴛ.
