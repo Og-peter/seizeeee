@@ -145,9 +145,10 @@ async def select_rarity_callback(client, callback_query):
         )
     )
 
+# Step 1: Add event emojis to `user_states` when selected
 @app.on_callback_query(filters.regex('^select_event$'))
 async def select_event_callback(client, callback_query):
-    # Display event options
+    # Display event options for user to choose
     event_buttons = [
         [InlineKeyboardButton(event, callback_data=f"set_event_{event}")] for event in event_emojis.keys()
     ]
@@ -162,51 +163,48 @@ async def set_event_callback(client, callback_query):
     user_states[callback_query.from_user.id]["event_emoji"] = event_emojis[event_name]
     user_states[callback_query.from_user.id]["event_name"] = event_name
     await callback_query.message.edit_text(f"Event '{event_name}' selected.")
-    
+    # Proceed to next step, for example, asking for waifu image
+    await callback_query.message.reply_text("Now, send the waifu's image.")
+
+# Step 2: Handle waifu image upload and store waifu with event emoji
 @app.on_message(filters.private & filters.photo)
 async def receive_photo(client, message):
     try:
         user_data = user_states.get(message.from_user.id)
+        
+        # Ensure all necessary data is available before proceeding
+        if user_data and user_data["state"] == "awaiting_waifu_image" and user_data["name"] and user_data["rarity"]:
+            photo_file_id = message.photo.file_id
+            waifu_id = str(await get_next_sequence_number('character_id')).zfill(2)
+            
+            # Construct waifu character document with event emoji and name
+            character = {
+                'img_url': photo_file_id,
+                'name': user_data["name"],
+                'anime': user_data["anime"],
+                'rarity': user_data["rarity"],
+                'id': waifu_id,
+                'event_emoji': user_data.get("event_emoji", ""),
+                'event_name': user_data.get("event_name", "")
+            }
+            await collection.insert_one(character)
+            await message.reply_text("⏳ Adding waifu...")
 
-        if user_data:
-            if user_data["state"] == "awaiting_waifu_image" and user_data["name"] and user_data["rarity"]:
-                # This condition handles adding a new waifu when awaiting the image
-                photo_file_id = message.photo.file_id
-                id = str(await get_next_sequence_number('character_id')).zfill(2)
-                character = {
-                    'img_url': photo_file_id,
-                    'name': user_data["name"],
-                    'anime': user_data["anime"],
-                    'rarity': user_data["rarity"],
-                    'id': id
-                }
-                await collection.insert_one(character)
-                await message.reply_text("⏳ Adding waifu...")
-                await app.send_photo(
-                   chat_id=CHARA_CHANNEL_ID,
-                   photo=photo_file_id,
-                   caption=(
-                            f"OwO! Check out this waifu!\n\n"
-                            f"<b>{user_data['anime']}</b>\n"  
-                            f"{id}: {user_data['name']} [{user_data.get('event_emoji', '')}]\n"  
-                            f"({rarity_emojis[user_data['rarity']]} 𝙍𝘼𝙍𝙄𝙏𝙔: {user_data['rarity']})\n\n"  
-                            f"{user_data.get('event_name', '')}\n\n"  
-                            f"➼ ᴀᴅᴅᴇᴅ ʙʏ: <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a>"
-                ),
-                )
-                await app.send_photo(
-                    chat_id=SUPPORT_CHAT,
-                    photo=photo_file_id,
-                    caption=(
-                            f"OwO! Check out this waifu!\n\n"
-                            f"<b>{user_data['anime']}</b>\n"  
-                            f"{id}: {user_data['name']} [{user_data.get('event_emoji', '')}]\n"  
-                            f"({rarity_emojis[user_data['rarity']]} 𝙍𝘼𝙍𝙄𝙏𝙔: {user_data['rarity']})\n\n"  
-                            f"{user_data.get('event_name', '')}\n\n"  
-                            f"➼ ᴀᴅᴅᴇᴅ ʙʏ: <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a>"
-                ),
-                )
-                await message.reply_text("✅ Waifu added successfully.")
+            # Step 3: Send notification message with event emoji and name
+            caption = (
+                f"OwO! Check out this waifu!\n\n"
+                f"<b>{user_data['anime']}</b>\n"  
+                f"{waifu_id}: {user_data['name']} [{character['event_emoji']}]\n"  
+                f"({rarity_emojis[user_data['rarity']]} 𝙍𝘼𝙍𝙄𝙏𝙔: {user_data['rarity']})\n\n"  
+                f"{character['event_name']}\n\n"  
+                f"➼ ᴀᴅᴅᴇᴅ ʙʏ: <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a>"
+            )
+            
+            await app.send_photo(chat_id=CHARA_CHANNEL_ID, photo=photo_file_id, caption=caption)
+            await app.send_photo(chat_id=SUPPORT_CHAT, photo=photo_file_id, caption=caption)
+
+            await message.reply_text("✅ Waifu added successfully.")
+
                 user_states.pop(message.from_user.id, None)
             elif user_data["state"] == "changing_image" and user_data["waifu_id"]:
                 # This condition handles changing the image of an existing waifu
