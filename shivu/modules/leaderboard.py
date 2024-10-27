@@ -11,6 +11,11 @@ from shivu import (application, PHOTO_URL, OWNER_ID,
                    group_user_totals_collection, db)
 from shivu import sudo_users as SUDO_USERS
 
+# Fetch from your specific collections
+groups_collection = db['top_global_groups']
+users_collection = db['user_collection_lmaoooo']
+characters_collection = db['anime_characters_lol']
+
 # List of video links
 video = [
     "https://files.catbox.moe/x7cjqd.mp4",
