@@ -166,8 +166,8 @@ async def send_groups_document(update: Update, context: CallbackContext) -> None
     except Exception as e:
         await update.message.reply_text(f"An error occurred: {e}")
 
-# Define the /stat command handler
-async def stat(update: Update, context: CallbackContext) -> None:
+# Define the /stats command handler
+async def stats(update: Update, context: CallbackContext) -> None:
     try:
         # Retrieve statistics from collections
         total_groups = await groups_collection.count_documents({})
@@ -207,7 +207,7 @@ async def stat(update: Update, context: CallbackContext) -> None:
     except Exception as e:
         await update.message.reply_text(f"An error occurred: {str(e)}")
 
-# Register the /stat command handler with the application
+# Register the /stats command handler with the application
 application.add_handler(CommandHandler("stats", stats))
   
 # Register the command handlers
