@@ -39,47 +39,7 @@ async def log_action(action, user_id, initiator_id):
     except Exception as e:
         print(f"Failed to send log to channel: {e}")
         
-async def get_user_info(user_id):
-    user = await user_collection.find_one({'id': user_id})
 
-    if user:
-        characters = user.get('characters', [])
-        harem_size = len(characters)
-
-        # Calculating rarity counts
-        rarity_counts = {
-            'legendary': sum(1 for char in characters if char.get('rarity') == 'legendary'),
-            'rare': sum(1 for char in characters if char.get('rarity') == 'rare'),
-            'medium': sum(1 for char in characters if char.get('rarity') == 'medium'),
-            'common': sum(1 for char in characters if char.get('rarity') == 'common'),
-            'chibi': sum(1 for char in characters if char.get('rarity') == 'chibi'),
-            'limited edition': sum(1 for char in characters if char.get('rarity') == 'limited edition'),
-            'permium': sum(1 for char in characters if char.get('rarity') == 'permium'), 
-            'exclusive': sum(1 for char in characters if char.get('rarity') == 'exclusive'),
-            'exotic': sum(1 for char in characters if char.get('rarity') == 'exotic'),
-            'astral': sum(1 for char in characters if char.get('rarity') == 'astral'),
-            'valentine': sum(1 for char in characters if char.get('rarity') == 'valentine')
-        }
-
-        user_info = (
-            f"🎭 <b>User Profile:</b>\n\n"
-            f"🪪 <b>Name:</b> {user.get('first_name', 'Unknown')} {user.get('last_name', '')}\n"
-            f"🧪 <b>Username:</b> @{user.get('username', 'None')}\n"
-            f"🔩 <b>User ID:</b> <code>{user_id}</code>\n"
-            f"👒 <b>Waifu Count:</b> {harem_size} / {HAREM_SIZE_LIMIT} <b>(Max)</b>\n"
-            f"🌟 <b>Status:</b> {'👑 Harem Master' if harem_size >= HAREM_SIZE_LIMIT else '✨ Keep Collecting!'}\n\n"
-            f"✳️ <b>Rarity Counts:</b>\n"
-            f"╭───────────────────\n"
-            f"├─➩ 🟡 <b>Legendary:</b> {rarity_counts['legendary']}\n"
-            f"├─➩ 🟠 <b>Rare:</b> {rarity_counts['rare']}\n"
-            f"├─➩ 🔵 <b>Medium:</b> {rarity_counts['medium']}\n"
-            f"├─➩ ⚪ <b>Common:</b> {rarity_counts['common']}\n"
-            f"╰───────────────────"
-        )
-
-        return user_info, user
-    else:
-        return "❌ <b>User not found in the database.</b>", None
 
 async def backup_characters(user_id, characters):
     await backup_collection.insert_one({
@@ -101,7 +61,54 @@ async def send_notification_to_specialgrade(eraser_id, eraser_name, target_id, t
     message = (
         f"🚨 <b>Action:</b> Delete Harem\n"
         f"✍️ <b>Eraser:</b> <a href='tg://user?id={eraser_id}'>{eraser_name}</a>\n"
-        f"🎯 <b>Target:</b> <a href='tg://user?id={target_id}'>{target_name}</a>\n"
+        f"🎯 <b>Target:</b> <a href='tg://user?id={target_id}'>async def get_user_info(user_id):
+    user = await user_collection.find_one({'id': user_id})
+
+    if user:
+        characters = user.get('characters', [])
+        harem_size = len(characters)
+
+        # Calculating rarity counts
+        rarity_counts = {
+            'legendary': sum(1 for char in characters if char.get('rarity') == 'legendary'),
+            'rare': sum(1 for char in characters if char.get('rarity') == 'rare'),
+            'medium': sum(1 for char in characters if char.get('rarity') == 'medium'),
+            'common': sum(1 for char in characters if char.get('rarity') == 'common'),
+            'chibi': sum(1 for char in characters if char.get('rarity') == 'chibi'),
+            'limited edition': sum(1 for char in characters if char.get('rarity') == 'limited edition'),
+            'premium': sum(1 for char in characters if char.get('rarity') == 'premium'), 
+            'exclusive': sum(1 for char in characters if char.get('rarity') == 'exclusive'),
+            'exotic': sum(1 for char in characters if char.get('rarity') == 'exotic'),
+            'astral': sum(1 for char in characters if char.get('rarity') == 'astral'),
+            'valentine': sum(1 for char in characters if char.get('rarity') == 'valentine')
+        }
+
+        user_info = (
+            f"🎭 <b>User Profile:</b>\n\n"
+            f"🪪 <b>Name:</b> {user.get('first_name', 'Unknown')} {user.get('last_name', '')}\n"
+            f"🧪 <b>Username:</b> @{user.get('username', 'None')}\n"
+            f"🔩 <b>User ID:</b> <code>{user_id}</code>\n"
+            f"👒 <b>Waifu Count:</b> {harem_size} / {HAREM_SIZE_LIMIT} <b>(Max)</b>\n"
+            f"🌟 <b>Status:</b> {'👑 Harem Master' if harem_size >= HAREM_SIZE_LIMIT else '✨ Keep Collecting!'}\n\n"
+            f"✳️ <b>Rarity Counts:</b>\n"
+            f"╭───────────────────\n"
+            f"├─➩ 🟡 <b>Legendary:</b> {rarity_counts['legendary']}\n"
+            f"├─➩ 🟠 <b>Rare:</b> {rarity_counts['rare']}\n"
+            f"├─➩ 🔵 <b>Medium:</b> {rarity_counts['medium']}\n"
+            f"├─➩ ⚪ <b>Common:</b> {rarity_counts['common']}\n"
+            f"├─➩ 🟢 <b>Chibi:</b> {rarity_counts['chibi']}\n"
+            f"├─➩ 🟣 <b>Limited Edition:</b> {rarity_counts['limited edition']}\n"
+            f"├─➩ 🟤 <b>Premium:</b> {rarity_counts['premium']}\n"
+            f"├─➩ 🔶 <b>Exclusive:</b> {rarity_counts['exclusive']}\n"
+            f"├─➩ 🔷 <b>Exotic:</b> {rarity_counts['exotic']}\n"
+            f"├─➩ ✨ <b>Astral:</b> {rarity_counts['astral']}\n"
+            f"├─➩ 💖 <b>Valentine:</b> {rarity_counts['valentine']}\n"
+            f"╰───────────────────"
+        )
+
+        return user_info, user
+    else:
+        return "❌ <b>User not found in the database.</b>", None{target_name}</a>\n"
         "⚔️ The user's harem has been <b>eliminated</b>."
     )
     keyboard = InlineKeyboardMarkup([
