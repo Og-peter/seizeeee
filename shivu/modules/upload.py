@@ -205,7 +205,7 @@ async def receive_photo(client, message):
 
             await message.reply_text("✅ Waifu added successfully.")
             user_states.pop(message.from_user.id, None)
-            elif user_data["state"] == "changing_image" and user_data["waifu_id"]:
+        elif user_data["state"] == "changing_image" and user_data["waifu_id"]:
                 # This condition handles changing the image of an existing waifu
                 waifu_id = user_data["waifu_id"]
                 new_image = message.photo.file_id
