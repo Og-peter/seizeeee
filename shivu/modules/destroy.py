@@ -61,7 +61,16 @@ async def send_notification_to_specialgrade(eraser_id, eraser_name, target_id, t
     message = (
         f"🚨 <b>Action:</b> Delete Harem\n"
         f"✍️ <b>Eraser:</b> <a href='tg://user?id={eraser_id}'>{eraser_name}</a>\n"
-        f"🎯 <b>Target:</b> <a href='tg://user?id={target_id}'>async def get_user_info(user_id):
+        f"🎯 <b>Target:</b> <a href='tg://user?id={target_id}'>{target_name}</a>\n"
+        "⚔️ The user's harem has been <b>eliminated</b>."
+    )
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🧬 Reverse", callback_data=f"reverse_{target_id}")]
+    ])
+    for user_id in SPECIALGRADE:
+        await app.send_message(user_id, message, reply_markup=keyboard)
+
+async def get_user_info(user_id):
     user = await user_collection.find_one({'id': user_id})
 
     if user:
@@ -108,14 +117,7 @@ async def send_notification_to_specialgrade(eraser_id, eraser_name, target_id, t
 
         return user_info, user
     else:
-        return "❌ <b>User not found in the database.</b>", None{target_name}</a>\n"
-        "⚔️ The user's harem has been <b>eliminated</b>."
-    )
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🧬 Reverse", callback_data=f"reverse_{target_id}")]
-    ])
-    for user_id in SPECIALGRADE:
-        await app.send_message(user_id, message, reply_markup=keyboard)
+        return "❌ <b>User not found in the database.</b>", None
 
 async def notify_user(user_id, message):
     try:
