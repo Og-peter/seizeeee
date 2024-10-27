@@ -33,16 +33,16 @@ rarity_emojis = {
         '💞 Valentine': '💞'
 }
 event_emojis = {
-    "Nurse": "🩺",
-    "Valentine": "💞",
-    "Halloween": "🎃",
-    "Christmas": "🎄",
-    "Birthday": "🎂",
-    "New Year": "🎆",
-    "Celestial": "🌌",
-    "Astral": "🎐",
-    "Spring": "🌸",
-    "Summer": "🏖️"
+    '🩺 Nurse': '🩺',
+    '💞 Valentine': '💞',
+    '🎃 Halloween': '🎃',
+    '🎄 Christmas': '🎄',
+    '🎂 Birthday': '🎂',
+    '🎆 New Year': '🎆',
+    '🌌 Celestial': '🌌',
+    '🎐 Astral': '🎐',
+    '🌸 Spring': '🌸',
+    '🏖️ Summer': '🏖️'
 }
 # Dictionary to store the selected anime for each user
 user_states = {}
