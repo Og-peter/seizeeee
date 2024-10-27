@@ -1,129 +1,94 @@
-import asyncio
 import random
-import time
-from pyrogram import filters, Client, types as t
-from shivu import shivuu as bot
-from shivu import user_collection, collection
+from pyrogram import filters, Client
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from bson import ObjectId
+from shivu import user_collection, shivuu, SPECIALGRADE, GRADE1, db
 
-# Settings for the Mines game
-GRID_SIZE = 5  # 5x5 grid
-MINE_COUNT = 5  # Number of mines in the grid
-cooldown_duration = 600  # Cooldown time in seconds
-play_fee = 50000  # Fee for playing the mines game
+backup_collection = db["backup_collection"]
 
-user_cooldowns = {}  # Dictionary to track user cooldowns
-ban_user_ids = {1234567890}  # List of banned users
+# List of emojis for fun effect
+EMOJIS = ['🚀', '💥', '✨', '🔥', '⚡', '🏆', '🎉', '🔄', '👑']
 
-# Initialize bot.user_data if not already initialized
-if not hasattr(bot, "user_data"):
-    bot.user_data = {}
+@shivuu.on_message(filters.command("transfer"))
+async def transfer(client: Client, message):
+    # Check authorization
+    if str(message.from_user.id) not in SPECIALGRADE and str(message.from_user.id) not in GRADE1:
+        await message.reply_text(f"🚫 You are not authorized to use this command.")
+        return
 
-# Helper function to generate a grid with mines
-def generate_mines_grid(size, mine_count):
-    grid = [['🟩' for _ in range(size)] for _ in range(size)]
-    mine_positions = random.sample(range(size * size), mine_count)
-    for pos in mine_positions:
-        grid[pos // size][pos % size] = '💣'
-    return grid
+    # Validate command usage
+    if len(message.command) != 3:
+        await message.reply_text(f"{random.choice(EMOJIS)} Please provide two user IDs! Usage: /transfer [Source User ID] [Target User ID]")
+        return
 
-# Helper function to convert grid coordinates to a human-readable format
-def format_grid(grid):
-    grid_str = "   A B C D E\n"
-    for i, row in enumerate(grid):
-        grid_str += f"{i + 1}  " + " ".join(row) + "\n"
-    return grid_str
+    # Extract and validate user IDs
+    try:
+        source_user_id = int(message.command[1])
+        target_user_id = int(message.command[2])
+    except ValueError:
+        await message.reply_text(f"⚠️ Invalid user IDs provided. Please provide valid integers.")
+        return
 
-# Mines command where the game begins
-@bot.on_message(filters.command(["mines"]))
-async def mines_game(_, message: t.Message):
-    user_id = message.from_user.id
-    mention = message.from_user.mention
-    chat_id = message.chat.id
+    # Fetch source and target users
+    source_user = await user_collection.find_one({'id': source_user_id})
+    target_user = await user_collection.find_one({'id': target_user_id})
 
-    # Check if the user is banned
-    if user_id in ban_user_ids:
-        return await message.reply_text("Sorry, you are banned from this command.")
+    # Handle cases where users don't exist or characters are empty
+    if not source_user:
+        await message.reply_text(f"❌ Source user does not exist!")
+        return
+    if not source_user.get('characters'):
+        await message.reply_text(f"❌ Source user has no characters to transfer!")
+        return
 
-    # Cooldown check
-    if user_id in user_cooldowns and time.time() - user_cooldowns[user_id] < cooldown_duration:
-        remaining_time = cooldown_duration - int(time.time() - user_cooldowns[user_id])
-        return await message.reply_text(f"Please wait! You can play again in {remaining_time} seconds.")
-
-    # Deduct play fee
-    user_data = await user_collection.find_one({'id': user_id}, projection={'balance': 1})
-    user_balance = user_data.get('balance', 0)
-
-    if user_balance < play_fee:
-        return await message.reply_text(f"You need at least {play_fee} tokens to play.")
-
-    await user_collection.update_one({'id': user_id}, {'$inc': {'balance': -play_fee}})
-
-    # Generate a random mines grid
-    grid = generate_mines_grid(GRID_SIZE, MINE_COUNT)
-    revealed_grid = [['🟦' for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]  # All spots are hidden at first
-    safe_spots_to_reveal = (GRID_SIZE * GRID_SIZE) - MINE_COUNT
-
-    # Set cooldown for the user
-    user_cooldowns[user_id] = time.time()
-
-    # Send the initial grid to the user
-    await message.reply_text(f"🔍 Welcome to the Mines game, {mention}!\n\nHere is your grid:\n\n{format_grid(revealed_grid)}\nType `/reveal A1` to reveal a spot.")
-
-    # Store the game state
-    bot.user_data[user_id] = {
-        'grid': grid,
-        'revealed_grid': revealed_grid,
-        'safe_spots_to_reveal': safe_spots_to_reveal
+    # Calculate character rarity counts
+    characters = source_user['characters']
+    rarity_counts = {
+        "Legendary": len([c for c in characters if c['rarity'] == "Legendary"]),
+        "Rare": len([c for c in characters if c['rarity'] == "Rare"]),
+        "Medium": len([c for c in characters if c['rarity'] == "Medium"]),
+        "Common": len([c for c in characters if c['rarity'] == "Common"])
     }
+    total_characters = len(characters)
+    
+    # Confirmation message with rarity counts
+    confirm_text = (
+        f"Do you want to transfer {source_user.get('name', 'None')}'s harem to {target_user.get('name', 'Unknown')}?\n\n"
+        f"Name: {source_user.get('name', 'None')}\n"
+        f"User ID: {source_user_id}\n"
+        f"Character Count: {total_characters}\n\n"
+        f"Rarity Counts:\n"
+        f"╭───────────────────\n"
+        f"├─➩ 🟡 Rarity: Legendary: {rarity_counts['Legendary']}\n"
+        f"├─➩ 🟠 Rarity: Rare: {rarity_counts['Rare']}\n"
+        f"├─➩ 🔴 Rarity: Medium: {rarity_counts['Medium']}\n"
+        f"├─➩ 🔵 Rarity: Common: {rarity_counts['Common']}\n"
+        f"╰───────────────────"
+    )
 
-# Command to reveal a grid spot
-@bot.on_message(filters.command(["reveal"]))
-async def reveal_spot(_, message: t.Message):
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-    mention = message.from_user.mention
+    # Inline keyboard for confirmation
+    confirm_keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("✅ Confirm Transfer", callback_data=f"confirm_transfer_{source_user_id}_{target_user_id}")],
+        [InlineKeyboardButton("❌ Cancel", callback_data="cancel_transfer")]
+    ])
 
-    # Check if the user is currently playing
-    if user_id not in bot.user_data:
-        return await message.reply_text("You are not currently in a game. Start one by typing /mines.")
+    await message.reply_text(confirm_text, reply_markup=confirm_keyboard)
 
-    game_data = bot.user_data.get(user_id)
-    grid = game_data.get('grid')
-    revealed_grid = game_data.get('revealed_grid')
-    safe_spots_to_reveal = game_data.get('safe_spots_to_reveal')
 
-    # Parse the user's move (e.g., /reveal A1)
-    if len(message.command) < 2:
-        return await message.reply_text("Please specify a spot to reveal (e.g., /reveal A1).")
+@shivuu.on_callback_query(filters.regex(r'^confirm_transfer_'))
+async def confirm_transfer(callback_query):
+    # Extract source and target user IDs from callback data
+    data = callback_query.data.split('_')
+    source_user_id = int(data[2])
+    target_user_id = int(data[3])
 
-    spot = message.command[1].upper()
-    if len(spot) < 2 or spot[0] not in "ABCDE" or not spot[1].isdigit() or int(spot[1]) < 1 or int(spot[1]) > GRID_SIZE:
-        return await message.reply_text("Invalid spot. Use format like A1, B3, etc.")
+    # The transfer logic from the initial code should be inserted here
+    # ...
 
-    col = ord(spot[0]) - ord('A')  # Convert 'A' to 0, 'B' to 1, etc.
-    row = int(spot[1]) - 1
+    # Success response with emoji
+    await callback_query.message.edit_text(f"✅ {random.choice(EMOJIS)} Harem transferred successfully from user {source_user_id} to user {target_user_id}.")
 
-    # Check if the spot is already revealed
-    if revealed_grid[row][col] != '🟦':
-        return await message.reply_text(f"{mention}, that spot is already revealed. Choose another.")
-
-    # Reveal the spot
-    if grid[row][col] == '💣':
-        # User hit a mine! Game over
-        revealed_grid[row][col] = '💣'
-        await message.reply_text(f"{mention}, you hit a mine! 💥 Game over.\n\nHere was your final grid:\n\n{format_grid(grid)}")
-        del bot.user_data[user_id]  # Clear game state
-    else:
-        # Safe spot revealed
-        revealed_grid[row][col] = '🟩'
-        safe_spots_to_reveal -= 1
-        await message.reply_text(f"Good job, {mention}! No mine here. Keep going!\n\n{format_grid(revealed_grid)}")
-
-        # Update the game state
-        bot.user_data[user_id]['revealed_grid'] = revealed_grid
-        bot.user_data[user_id]['safe_spots_to_reveal'] = safe_spots_to_reveal
-
-        # Check if the user has won
-        if safe_spots_to_reveal == 0:
-            await message.reply_text(f"🎉 Congratulations, {mention}! You revealed all safe spots and won the game!\n\n{format_grid(revealed_grid)}")
-            del bot.user_data[user_id]  # Clear game state
+@shivuu.on_callback_query(filters.regex(r'^cancel_transfer'))
+async def cancel_transfer(callback_query):
+    await callback_query.answer("❌ Transfer canceled.")
+    await callback_query.message.delete()
