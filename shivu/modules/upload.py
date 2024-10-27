@@ -117,6 +117,7 @@ async def edit_waifu_command(client, message):
     except Exception as e:
         await message.reply_text(f"An error occurred: {str(e)}")
 
+# Start adding waifu and choose anime
 @app.on_callback_query(filters.regex('^add_waifu$'))
 async def add_waifu_callback(client, callback_query):
     await callback_query.message.edit_text(
@@ -130,25 +131,51 @@ async def add_waifu_callback(client, callback_query):
             ]
         )
     )
-    user_states[callback_query.from_user.id] = {"state": "selecting_anime", "anime": None, "name": None, "rarity": None, "action": "add"}
+    user_states[callback_query.from_user.id] = {
+        "state": "selecting_anime",
+        "anime": None,
+        "name": None,
+        "rarity": None,
+        "action": "add",
+        "event_emoji": None,
+        "event_name": None
+    }
 
+# After selecting anime, ask for waifu's name
+@app.on_callback_query(filters.regex('^add_waifu_'))
+async def choose_anime_callback(client, callback_query):
+    selected_anime = callback_query.data.split('_', 2)[-1]
+    user_states[callback_query.from_user.id]["anime"] = selected_anime
+    user_states[callback_query.from_user.id]["state"] = "awaiting_waifu_name"
+    await callback_query.message.edit_text(f"You've selected {selected_anime}. Now, please enter the new waifu's name:")
 
+# Handle text input for waifu name and move to rarity selection
+@app.on_message(filters.private & filters.text)
+async def receive_text_message(client, message):
+    user_data = user_states.get(message.from_user.id)
+    if user_data and user_data["state"] == "awaiting_waifu_name":
+        user_states[message.from_user.id]["name"] = message.text.strip()
+        user_states[message.from_user.id]["state"] = "awaiting_waifu_rarity"
+        
+        # Prompt for rarity selection
+        await message.reply_text(
+            "Now, choose the waifu's rarity:",
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [InlineKeyboardButton(rarity, callback_data=f"select_rarity_{rarity}")] 
+                    for rarity in rarity_emojis.keys()
+                ]
+            )
+        )
+
+# Handle rarity selection and move to event selection
 @app.on_callback_query(filters.regex('^select_rarity_'))
 async def select_rarity_callback(client, callback_query):
     selected_rarity = callback_query.data.split('_', 2)[-1]
     user_states[callback_query.from_user.id]["rarity"] = selected_rarity
-    user_states[callback_query.from_user.id]["state"] = "awaiting_waifu_image"
-    await callback_query.message.edit_text(
-        "Now, send the waifu's image:",
-        reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("⚔️ Cancel", callback_data="cancel_add_waifu")]]
-        )
-    )
+    user_states[callback_query.from_user.id]["state"] = "selecting_event"
 
-# Step 1: Add event emojis to `user_states` when selected
-@app.on_callback_query(filters.regex('^select_event$'))
-async def select_event_callback(client, callback_query):
-    # Display event options for user to choose
+    # Prompt for event selection
     event_buttons = [
         [InlineKeyboardButton(event, callback_data=f"set_event_{event}")] for event in event_emojis.keys()
     ]
@@ -157,46 +184,45 @@ async def select_event_callback(client, callback_query):
         reply_markup=InlineKeyboardMarkup(event_buttons)
     )
 
+# Handle event selection and ask for waifu's image
 @app.on_callback_query(filters.regex('^set_event_'))
 async def set_event_callback(client, callback_query):
     event_name = callback_query.data.split('_', 2)[-1]
     user_states[callback_query.from_user.id]["event_emoji"] = event_emojis[event_name]
     user_states[callback_query.from_user.id]["event_name"] = event_name
-    await callback_query.message.edit_text(f"Event '{event_name}' selected.")
-    # Proceed to next step, for example, asking for waifu image
-    await callback_query.message.reply_text("Now, send the waifu's image.")
+    user_states[callback_query.from_user.id]["state"] = "awaiting_waifu_image"
+    await callback_query.message.edit_text(f"Event '{event_name}' selected. Now, send the waifu's image.")
 
-# Step 2: Handle waifu image upload and store waifu with event emoji
+# Handle waifu image upload and save waifu details
 @app.on_message(filters.private & filters.photo)
 async def receive_photo(client, message):
     try:
         user_data = user_states.get(message.from_user.id)
         
-        # Ensure all necessary data is available before proceeding
-        if user_data and user_data["state"] == "awaiting_waifu_image" and user_data["name"] and user_data["rarity"]:
+        if user_data and user_data["state"] == "awaiting_waifu_image":
             photo_file_id = message.photo.file_id
             waifu_id = str(await get_next_sequence_number('character_id')).zfill(2)
             
-            # Construct waifu character document with event emoji and name
+            # Build waifu data with rarity, event emoji, and name
             character = {
                 'img_url': photo_file_id,
                 'name': user_data["name"],
                 'anime': user_data["anime"],
                 'rarity': user_data["rarity"],
                 'id': waifu_id,
-                'event_emoji': user_data.get("event_emoji", ""),
-                'event_name': user_data.get("event_name", "")
+                'event_emoji': user_data["event_emoji"] or "",
+                'event_name': user_data["event_name"] or ""
             }
             await collection.insert_one(character)
             await message.reply_text("⏳ Adding waifu...")
 
-            # Step 3: Send notification message with event emoji and name
+            # Send notification with event emoji and rarity
             caption = (
                 f"OwO! Check out this waifu!\n\n"
-                f"<b>{user_data['anime']}</b>\n"  
-                f"{waifu_id}: {user_data['name']} [{character['event_emoji']}]\n"  
-                f"({rarity_emojis[user_data['rarity']]} 𝙍𝘼𝙍𝙄𝙏𝙔: {user_data['rarity']})\n\n"  
-                f"{character['event_name']}\n\n"  
+                f"<b>{user_data['anime']}</b>\n"
+                f"{waifu_id}: {user_data['name']} [{character['event_emoji']}]\n"
+                f"({rarity_emojis[user_data['rarity']]} 𝙍𝘼𝙍𝙄𝙏𝙔: {user_data['rarity']})\n\n"
+                f"{character['event_name']}\n\n"
                 f"➼ ᴀᴅᴅᴇᴅ ʙʏ: <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a>"
             )
             
