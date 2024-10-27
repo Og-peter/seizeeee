@@ -144,15 +144,23 @@ async def add_waifu_callback(client, callback_query):
 
 @app.on_callback_query(filters.regex('^add_waifu_'))
 async def choose_anime_callback(client, callback_query):
-    # Check if user state exists, if not initialize it
-    if callback_query.from_user.id not in user_states:
-        user_states[callback_query.from_user.id] = {"state": "awaiting_waifu_name"}
-    
     selected_anime = callback_query.data.split('_', 2)[-1]
-    user_states[callback_query.from_user.id]["anime"] = selected_anime
-    user_states[callback_query.from_user.id]["state"] = "awaiting_waifu_name"
-    await callback_query.message.edit_text(f"You've selected {selected_anime}. Now, please enter the new waifu's name:")
+    user_states[callback_query.from_user.id] = {"state": "awaiting_waifu_name", "anime": selected_anime, "name": None, "rarity": None}
 
+    # Check if message exists before attempting to edit it
+    if callback_query.message:
+        await callback_query.message.edit_text(
+            f"You've selected {selected_anime}. Now, please enter the new waifu's name:",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("Cancel", callback_data="cancel_add_waifu")]]
+            )
+        )
+    else:
+        await callback_query.answer(
+            f"You've selected {selected_anime}. Now, please enter the new waifu's name.",
+            show_alert=True
+            )
+        
 # Handle text input for waifu name and move to rarity selection
 @app.on_message(filters.private & filters.text)
 async def receive_text_message(client, message):
