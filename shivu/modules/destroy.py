@@ -51,7 +51,14 @@ async def get_user_info(user_id):
             'legendary': sum(1 for char in characters if char.get('rarity') == 'legendary'),
             'rare': sum(1 for char in characters if char.get('rarity') == 'rare'),
             'medium': sum(1 for char in characters if char.get('rarity') == 'medium'),
-            'common': sum(1 for char in characters if char.get('rarity') == 'common')
+            'common': sum(1 for char in characters if char.get('rarity') == 'common'),
+            'chibi': sum(1 for char in characters if char.get('rarity') == 'chibi'),
+            'limited edition': sum(1 for char in characters if char.get('rarity') == 'limited edition'),
+            'permium': sum(1 for char in characters if char.get('rarity') == 'permium'), 
+            'exclusive': sum(1 for char in characters if char.get('rarity') == 'exclusive'),
+            'exotic': sum(1 for char in characters if char.get('rarity') == 'exotic'),
+            'astral': sum(1 for char in characters if char.get('rarity') == 'astral'),
+            'valentine': sum(1 for char in characters if char.get('rarity') == 'valentine')
         }
 
         user_info = (
@@ -65,8 +72,8 @@ async def get_user_info(user_id):
             f"╭───────────────────\n"
             f"├─➩ 🟡 <b>Legendary:</b> {rarity_counts['legendary']}\n"
             f"├─➩ 🟠 <b>Rare:</b> {rarity_counts['rare']}\n"
-            f"├─➩ 🔴 <b>Medium:</b> {rarity_counts['medium']}\n"
-            f"├─➩ 🔵 <b>Common:</b> {rarity_counts['common']}\n"
+            f"├─➩ 🔵 <b>Medium:</b> {rarity_counts['medium']}\n"
+            f"├─➩ ⚪ <b>Common:</b> {rarity_counts['common']}\n"
             f"╰───────────────────"
         )
 
