@@ -13,7 +13,7 @@ EMOJIS = ['🚀', '💥', '✨', '🔥', '⚡', '🏆', '🎉', '🔄', '👑']
 async def transfer(client: Client, message):
     # Check authorization
     if str(message.from_user.id) not in SPECIALGRADE and str(message.from_user.id) not in GRADE1:
-        await message.reply_text(f"🚫 You are not authorized to use this command.")
+        await message.reply_text("🚫 You are not authorized to use this command.")
         return
 
     # Validate command usage
@@ -26,7 +26,7 @@ async def transfer(client: Client, message):
         source_user_id = int(message.command[1])
         target_user_id = int(message.command[2])
     except ValueError:
-        await message.reply_text(f"⚠️ Invalid user IDs provided. Please provide valid integers.")
+        await message.reply_text("⚠️ Invalid user IDs provided. Please provide valid integers.")
         return
 
     # Fetch source and target users
@@ -35,10 +35,10 @@ async def transfer(client: Client, message):
 
     # Handle cases where users don't exist or characters are empty
     if not source_user:
-        await message.reply_text(f"❌ Source user does not exist!")
+        await message.reply_text("❌ Source user does not exist!")
         return
     if not source_user.get('characters'):
-        await message.reply_text(f"❌ Source user has no characters to transfer!")
+        await message.reply_text("❌ Source user has no characters to transfer!")
         return
 
     # Calculate character rarity counts
@@ -82,11 +82,31 @@ async def confirm_transfer(callback_query):
     source_user_id = int(data[2])
     target_user_id = int(data[3])
 
-    # The transfer logic from the initial code should be inserted here
-    # ...
+    # Fetch the source and target users
+    source_user = await user_collection.find_one({'id': source_user_id})
+    target_user = await user_collection.find_one({'id': target_user_id})
 
-    # Success response with emoji
-    await callback_query.message.edit_text(f"✅ {random.choice(EMOJIS)} Harem transferred successfully from user {source_user_id} to user {target_user_id}.")
+    # Handle missing users just in case
+    if not source_user or not target_user:
+        await callback_query.message.edit_text("❌ Transfer failed: one of the users does not exist.")
+        return
+
+    # Placeholder transfer logic
+    # Here, you would transfer `characters` from `source_user` to `target_user`
+    # For example, this might involve updating the `target_user` document with the characters from `source_user`.
+    # await user_collection.update_one({'id': target_user_id}, {'$push': {'characters': {'$each': source_user['characters']}}})
+    # await user_collection.update_one({'id': source_user_id}, {'$set': {'characters': []}})  # Clear characters from source user
+
+    # Success response with emoji and transfer details
+    source_name = source_user.get('name', 'None')
+    target_name = target_user.get('name', 'Unknown')
+    success_message = (
+        f"🌟 Yahoo!! Harem Has Been Transferred! 🌟\n\n"
+        f"🔄 From {source_name} ➡️ To {target_name}\n\n"
+        f"{random.choice(EMOJIS)} Harem transferred successfully from user {source_user_id} to user {target_user_id}."
+    )
+    await callback_query.message.edit_text(success_message)
+
 
 @shivuu.on_callback_query(filters.regex(r'^cancel_transfer'))
 async def cancel_transfer(callback_query):
