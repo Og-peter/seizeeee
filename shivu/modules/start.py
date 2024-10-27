@@ -7,6 +7,7 @@ from shivu import application, GROUP_ID, user_collection
 # Define your sudo users' IDs here
 sudo_user_ids = [6402009857]  # Replace with actual user IDs of the sudo users
 SUPPORT_GROUP_ID = "@dynamic_gangs"  # Replace with the actual group username or ID
+IMAGE_URL = "https://example.com/your-image.jpg"  # Replace with the actual image URL
 
 async def notify_sudo_users(application: Application):
     """Notify sudo users that the bot has restarted."""
@@ -32,13 +33,15 @@ async def start(update: Update, context: CallbackContext) -> None:
     referring_user_id = None
 
     try:
+        # Check if user has joined the support group
         member_status = await context.bot.get_chat_member(SUPPORT_GROUP_ID, user_id)
         if member_status.status == 'left':
             join_button = InlineKeyboardMarkup([
                 [InlineKeyboardButton("Join Support Group", url=f"https://t.me/{SUPPORT_GROUP_ID.lstrip('@')}")]
             ])
-            await update.message.reply_text(
-                "You must join our support group to use this bot!",
+            await update.message.reply_photo(
+                photo=IMAGE_URL,  # Image URL for the "must join" prompt
+                caption="You must join our support group to use this bot!",
                 reply_markup=join_button
             )
             return
@@ -47,6 +50,7 @@ async def start(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text("An error occurred. Please try again later.")
         return
 
+    # Handle referral if present
     if args and args[0].startswith('r_'):
         referring_user_id = int(args[0][2:])
 
@@ -62,6 +66,7 @@ async def start(update: Update, context: CallbackContext) -> None:
         }
         await user_collection.insert_one(new_user)
 
+        # Add tokens to the referrer if there's a referring user
         if referring_user_id:
             referring_user_data = await user_collection.find_one({"id": referring_user_id})
             if referring_user_data:
@@ -79,6 +84,7 @@ async def start(update: Update, context: CallbackContext) -> None:
             parse_mode='HTML'
         )
     else:
+        # Update user info if it has changed
         if user_data['first_name'] != first_name or user_data['username'] != username:
             await user_collection.update_one(
                 {"id": user_id},
