@@ -135,7 +135,7 @@ async def ttop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     ).sort('tokens', -1).limit(10).to_list(10)
     
     # Enhanced message format with unique styling
-    top_users_message = "<b>🏆 ᴛᴏᴋᴇs ʜᴏʟᴅᴇʀs ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ\n"
+    top_users_message = "<b>🏆 ᴛᴏᴋᴇɴ ʜᴏʟᴅᴇʀs ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ</b>\n"
     top_users_message += "───────────────────────────\n"
 
     for i, user in enumerate(top_users, start=1):
@@ -147,15 +147,15 @@ async def ttop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         tokens = user.get('tokens', 0)
 
         # Adding a distinct format for each rank
-        top_users_message += f"{i}. {user_link} - 'Ŧ{tokens:,.0f}'\n"
+        top_users_message += f"<b>{i}. {user_link}</b> - <code>Ŧ{tokens:,.0f}</code>\n"
 
     top_users_message += "───────────────────────────\n"
-    top_users_message += "ᴊᴏɪɴ ᴜs ᴀᴛ @Character_seize_bot "
+    top_users_message += "<i>ᴊᴏɪɴ ᴜs ᴀᴛ @Character_seize_bot</i>"
 
     # URL to the leaderboard image
     photo_path = 'https://files.catbox.moe/9cr9lu.jpg'
     await update.message.reply_photo(photo=photo_path, caption=top_users_message, parse_mode='HTML')
-
+    
 # Register the /ttop command handler
 application.add_handler(CommandHandler("ttop", ttop))
     
@@ -321,7 +321,7 @@ async def treset(update: Update, context: CallbackContext) -> None:
     # Reset tokens for all users
     await user_collection.update_many({}, {'$set': {'tokens': 10000}})
     
-    await update.message.reply_text("🔄 **All user tokens have been reset to** `0` **tokens.**")
+    await update.message.reply_text("🔄 All user tokens have been reset to 10000 tokens.")
 
 # Register the /treset command handler
 application.add_handler(CommandHandler("treset", treset))
