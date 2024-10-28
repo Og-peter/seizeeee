@@ -58,7 +58,7 @@ async def get_user_info(user, already=False):
         balance_formatted = f"{balance:,}"
 
         # Profile display with borders and unique style
-info_text = f"""
+        info_text = f"""
 ┌┬─────────────────⦿
 │├─────────────────╮
 │├ 👤 ᴛɢ ɴᴧᴍᴇ - {first_name}
@@ -84,7 +84,7 @@ info_text = f"""
         return ["⚠️ Error fetching user information.", None]
 
 @shivuu.on_message(filters.command("status"))
-async def profile(client, message):
+async def profile(client, message: Message):
     user = None
     if message.reply_to_message:
         user = message.reply_to_message.from_user.id
@@ -111,12 +111,11 @@ async def profile(client, message):
     
     try:
         photo = await shivuu.download_media(photo_id)
+        await m.delete()  # Delete the loading message before sending the photo
         await message.reply_photo(photo, caption=info_text, reply_markup=keyboard)
     except Exception as e:
         print(f"⚠️ Error downloading photo: {e}")
         await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
     finally:
-        if photo and os.path.exists(photo):
+        if 'photo' in locals() and os.path.exists(photo):
             os.remove(photo)
-
-    await m.delete()
