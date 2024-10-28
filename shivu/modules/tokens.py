@@ -42,6 +42,7 @@ COST_PER_TOKEN = 1000000
 COOLDOWN_SECONDS = 300 
 
 user_last_command_times = {}
+cooldown = {}
 
 LOG_GROUP_ID = -1001992198513
 
