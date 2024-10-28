@@ -43,7 +43,8 @@ event_emojis = {
     '🎒 School': '🎒',
     '🥻 Saree': '🥻',
     '🏖️ Summer': '🏖️',
-    '🏀 Basketball': '🏀'
+    '🏀 Basketball': '🏀',
+    '⚽ Soccer': '⚽'
 }
 # Dictionary to store the selected anime for each user
 user_states = {}
