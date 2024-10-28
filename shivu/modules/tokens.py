@@ -30,7 +30,7 @@ async def tokens(update: Update, context: CallbackContext):
 """
 
         # URL of the image to send along with the balance message
-        image_url = 'https://example.com/path/to/your/image.jpg'  # Replace with your actual image URL
+        image_url = 'https://files.catbox.moe/pnb8ok.jpg'  # Replace with your actual image URL
         await update.message.reply_photo(photo=image_url, caption=balance_message, parse_mode="Markdown")
     else:
         balance_message = (
