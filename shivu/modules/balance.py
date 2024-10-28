@@ -308,14 +308,14 @@ async def add_tokens(update: Update, context: CallbackContext) -> None:
     # Update the balance by adding tokens
     new_balance = target_user.get('balance', 0) + amount
     await user_collection.update_one({'id': target_user_id}, {'$set': {'balance': new_balance}})
-    await update.message.reply_text(f"✅ **Added** `{amount}` **tokens to user** `{target_user_id}`. \n💰 **New balance:** `{new_balance}` tokens.")
+    await update.message.reply_text(f"✅ **Added** `{amount}` **wealth to user** `{target_user_id}`. \n💰 **New balance:** `{new_balance}` wealth.")
 
 async def delete_tokens(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
 
     # Check if the user is a sudo user
     if not await is_user_sudo(user_id):
-        await update.message.reply_text("🚫 **You don't have permission to delete tokens.**")
+        await update.message.reply_text("🚫 **You don't have permission to delete wealth.**")
         return
 
     # Check if the command includes the required arguments
@@ -339,7 +339,7 @@ async def delete_tokens(update: Update, context: CallbackContext) -> None:
     # Check if there are enough tokens to delete
     current_balance = target_user.get('balance', 0)
     if current_balance < amount:
-        await update.message.reply_text("❌ **Insufficient tokens to delete.**")
+        await update.message.reply_text("❌ **Insufficient wealth to delete.**")
         return
 
     # Update the balance by deleting tokens
@@ -357,7 +357,7 @@ async def reset_tokens(update: Update, context: CallbackContext) -> None:
     # Reset tokens for all users
     await user_collection.update_many({}, {'$set': {'balance': 10000}})
     
-    await update.message.reply_text("🔄 **All user tokens have been reset to** `10,000` **tokens.**")
+    await update.message.reply_text("🔄 **All user wealth have been reset to** `10,000` **wealth.**")
 
 # Add handlers for the commands
 application.add_handler(CommandHandler("addt", add_tokens, block=False))
