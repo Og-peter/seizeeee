@@ -15,20 +15,25 @@ async def tokens(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     user_balance = await user_collection.find_one({'id': user_id}, projection={'tokens': 1})
 
+    # Mention the user
+    user_mention = f"[{update.effective_user.first_name}](tg://user?id={user_id})"
+
     if user_balance:
         balance_amount = user_balance.get('tokens', 0)
         formatted_balance = "{:,.0f}".format(balance_amount)
-        balance_message = (
-            "💰 Your Current Token Balance:\n"
-            f"Ŧ {formatted_balance}"
-        )
+        balance_message = f"""
+┬── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┬
+ **{user_mention}'s ᴛσкєη ʙᴀʟᴀɴᴄᴇ** 💰
+🪙 **ᴀᴍᴏᴜnt:** Ŧ `{formatted_balance}`
+┴── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┴
+"""
     else:
         balance_message = (
             "⚠️ Attention:\n"
-            "You need to register first by starting the bot in DMs."
+            f"{user_mention}, you need to register first by starting the bot in DMs."
         )
 
-    await update.message.reply_text(balance_message)
+    await update.message.reply_text(balance_message, disable_web_page_preview=True)
 
 application.add_handler(CommandHandler("tokens", tokens, block=False))
 
