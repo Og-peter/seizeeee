@@ -122,6 +122,7 @@ async def pay_tokens(update: Update, context: CallbackContext):
 # Add the command handler for /tpay
 application.add_handler(CommandHandler("tpay", pay_tokens, block=False))
             
+# Define the ttop function
 async def ttop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Fetch top 10 users by tokens
     top_users = await user_collection.find(
@@ -150,6 +151,9 @@ async def ttop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # URL to the leaderboard image
     photo_path = 'https://telegra.ph/file/5ccbb080aa1761a5c2a49.jpg'
     await update.message.reply_photo(photo=photo_path, caption=top_users_message, parse_mode='HTML')
+    
+# Register the /ttop command handler
+application.add_handler(CommandHandler("ttop", ttop))
     
 @app.on_message(filters.command(["convert"]))
 async def convert_tokens(client, message: Message):
