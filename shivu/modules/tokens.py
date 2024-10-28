@@ -135,7 +135,7 @@ async def ttop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     ).sort('tokens', -1).limit(10).to_list(10)
     
     # Enhanced message format with unique styling
-    top_users_message = "<b>🏆 Token Holders Leaderboard</b>\n"
+    top_users_message = "<b>🏆 ᴛᴏᴋᴇs ʜᴏʟᴅᴇʀs ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ\n"
     top_users_message += "───────────────────────────\n"
 
     for i, user in enumerate(top_users, start=1):
@@ -147,10 +147,10 @@ async def ttop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         tokens = user.get('tokens', 0)
 
         # Adding a distinct format for each rank
-        top_users_message += f"<b>{i}.</b> {user_link} - <i>Ŧ{tokens:,.0f}</i>\n"
+        top_users_message += f"{i}. {user_link} - 'Ŧ{tokens:,.0f}'\n"
 
     top_users_message += "───────────────────────────\n"
-    top_users_message += "<i>Join us at @Character_seize_bot</i>"
+    top_users_message += "ᴊᴏɪɴ ᴜs ᴀᴛ @Character_seize_bot "
 
     # URL to the leaderboard image
     photo_path = 'https://files.catbox.moe/9cr9lu.jpg'
