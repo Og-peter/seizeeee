@@ -22,10 +22,10 @@ async def tokens(update: Update, context: CallbackContext):
         balance_amount = user_balance.get('tokens', 0)
         formatted_balance = "{:,.0f}".format(balance_amount)
         balance_message = f"""
-┬── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┬
+┬•┈┈••┈┈••●••┈┈••┈┈•┬
  **{user_mention}'s ᴛσкєη ʙᴀʟᴀɴᴄᴇ** 💰
 🪙 **ᴀᴍᴏᴜnt:** Ŧ `{formatted_balance}`
-┴── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┴
+┬•┈┈••┈┈••●••┈┈••┈┈•┬
 """
     else:
         balance_message = (
