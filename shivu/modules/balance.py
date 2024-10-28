@@ -43,22 +43,31 @@ async def check_balance(_, message: Message):
         await send_start_button(message.chat.id)
         return
 
+    # Get user's balance and other wealth-related data
     balance = user_data.get('balance', 0)
     formatted_balance = "{:,.0f}".format(balance)
-    first_name = user_data.get('first_name', 'User')
+    total_transactions = user_data.get('total_transactions', 0)  # Example additional feature
+    last_transaction = user_data.get('last_transaction', 'No transactions yet')  # Last transaction info
+    account_age = user_data.get('account_age', 'N/A')  # How long the account has existed
 
-    # Enhanced message with the image URL
+    # Mention the user
+    user_mention = f"[{message.from_user.first_name}](tg://user?id={user_id})"
+
+    # Enhanced message with additional information
     custom_message = f"""
 ┬── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┬
- **{first_name}'s ᴡᴀᴇʟᴛʜ ᴏᴠᴇʀᴠɪᴇᴡ** 🏵️
-🫧 **ᴄᴜʀʀᴇɴᴛ ʙᴀʟᴀɴᴄᴇ:** ₩ `{formatted_balance}` [.](https://telegra.ph/file/af20fd1f2bed03d2bc438.jpg)
+ **{user_mention}'s ᴡᴀᴇʟᴛʜ ᴏᴠᴇʀᴠɪᴇᴡ** 🏵️
+🫧 **ᴄᴜʀʀᴇɴᴛ ʙᴀʟᴀɴᴄᴇ:** ₩ `{formatted_balance}` 
+🔢 **ᴛᴏᴛᴀʟ ᴛʀᴀɴsᴀᴄᴛɪᴏns:** `{total_transactions}`
+🗓️ **ᴀᴄᴄᴏᴜɴᴛ ᴀɢᴇ:** `{account_age}`
+🕒 **ʟᴀsᴛ ᴛʀᴀɴsᴀᴄᴛɪᴏn:** `{last_transaction}`
 ┴── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┴
 ╭── ⋅ ⋅ ─── ✩ ─── ⋅ ⋅ ──╮
 **sᴛᴀʏ ᴀᴄᴛɪᴠᴇ ғᴏʀ ᴍᴏʀᴇ ʀᴇᴡᴀʀᴅs!**
 ╰── ⋅ ⋅ ─── ✩ ─── ⋅ ⋅ ──╯
 """
 
-    await message.reply_text(custom_message)
+    await message.reply_text(custom_message, disable_web_page_preview=True)
     
 async def pay(update, context):
     sender_id = update.effective_user.id
