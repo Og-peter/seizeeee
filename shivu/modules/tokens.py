@@ -23,8 +23,8 @@ async def tokens(update: Update, context: CallbackContext):
         formatted_balance = "{:,.0f}".format(balance_amount)
         balance_message = f"""
 ┌─━═━─━═━─━═━─━═━─━═━─━═━─┐
-💼 **{user_mention}'s Token Balance** 💼
-🪙 **Current Balance:** Ŧ `{formatted_balance}`
+🫧 **{user_mention}'s Token Balance** 🌿
+❄️ **Current Balance:** Ŧ `{formatted_balance}`
 └─━═━─━═━─━═━─━═━─━═━─━═━─┘
 """
     else:
@@ -45,7 +45,8 @@ user_last_command_times = {}
 
 LOG_GROUP_ID = -1001992198513
 
-async def pay_tokens(update, context):
+# The pay_tokens function to handle the /tpay command
+async def pay_tokens(update: Update, context: CallbackContext):
     sender_id = update.effective_user.id
     keyboard = [[InlineKeyboardButton("🆘 Contact Support", url='https://t.me/dynamic_gangs')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -116,6 +117,9 @@ async def pay_tokens(update, context):
             await context.bot.send_message(log_group_id, logs_message, parse_mode='HTML')
         except Exception as e:
             print(f"Error sending transaction log to group {log_group_id}: {str(e)}")
+
+# Add the command handler for /tpay
+application.add_handler(CommandHandler("tpay", pay_tokens, block=False))
             
 @app.on_message(filters.command(["convert"]))
 async def convert_tokens(client, message: Message):
