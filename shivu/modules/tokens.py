@@ -310,5 +310,20 @@ async def deletetokens(update: Update, context: CallbackContext) -> None:
     await user_collection.update_one({'id': target_user_id}, {'$inc': {'tokens': -amount}})
     await update.message.reply_text(f"✅ Deleted {amount} tokens from user {target_user_id}.")
 
+# Define the function to reset tokens
+async def treset(update: Update, context: CallbackContext) -> None:
+    owner_id = 6402009857  # Replace with the actual owner's user ID
+    # Check if the user invoking the command is the owner
+    if update.effective_user.id != owner_id:
+        await update.message.reply_text("🚫 **You don't have permission to perform this action.**")
+        return
+
+    # Reset tokens for all users
+    await user_collection.update_many({}, {'$set': {'tokens': 10000}})
+    
+    await update.message.reply_text("🔄 **All user tokens have been reset to** `0` **tokens.**")
+
+# Register the /treset command handler
+application.add_handler(CommandHandler("treset", treset))
 application.add_handler(CommandHandler("at", addtokens, block=False))
 application.add_handler(CommandHandler("dt", deletetokens, block=False))
