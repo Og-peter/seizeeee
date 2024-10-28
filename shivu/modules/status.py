@@ -57,23 +57,26 @@ async def get_user_info(user, already=False):
         tokens_formatted = f"{tokens:,}"
         balance_formatted = f"{balance:,}"
 
-        # Profile display without borders and with an additional unique line
-        info_text = f"""
-✨ **User Profile** ✨
-👤 *Name:* `{first_name}`
-🆔 *ID:* `{user_id}`
-
-🌸 *Total Waifus:* {total_count} / {global_count}
-📊 *Waifu Percentage:* `{round((total_count / global_count) * 100, 2)}%`
-📈 *Level:* `{level}`
-🎮 *XP:* `{xp}`
-💰 *Tokens:* `{tokens_formatted}`
-
-🏆 *Global Position:* `{global_rank}`
-🌐 *Chat Position:* `{global_coin_rank}`
-🔥 *Login Streak:* {streak} days
-
-🙏 Thank you for being an active member of our community!
+        # Profile display with borders and unique style
+info_text = f"""
+┌┬─────────────────⦿
+│├─────────────────╮
+│├ ᴛɢ ɴᴧᴍᴇ - {first_name}
+│├ ᴜsєʀ ɪᴅ - {user_id}
+│├─────────────────╯
+├┼─────────────────⦿
+├┤~ 🌸 ᴛσᴛᴧʟ ᴡᴧɪғυs: {total_count} / {global_count}
+├┤~ 📊 ᴡᴧɪғυ ᴘєꝛᴄєηᴛᴧɢє: `{round((total_count / global_count) * 100, 2)}%`
+├┤~ 📈 ʟєᴠєʟ: `{level}`
+├┤~ 🎮 xᴘ: `{xp}`
+├┤~ 💰 ᴛσᴋєηs: `{tokens_formatted}`
+├┼─────────────────⦿
+│├─────────────────╮
+│├ 🏆 ɢʟσʙᴧʟ ᴘσsɪᴛɪση: `{global_rank}`
+│├ 🌐 ᴄʜᴧᴛ ᴘσsɪᴛɪση: `{global_coin_rank}`
+│├ 🔥 ʟσɢɪη sᴛʀєᴧᴋ: `{streak} ᴅᴧʏs`
+│├─────────────────╯
+└┴─────────────────⦿
 """
         return info_text.strip(), photo_id
     except Exception as e:
