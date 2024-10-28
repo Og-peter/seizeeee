@@ -294,16 +294,26 @@ async def guess(update: Update, context: CallbackContext) -> None:
             reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
+# Assuming rarity_map and rarity_active are predefined dictionaries
+# rarity_map = {1: "Common", 2: "Rare", ...}
+# rarity_active = {"Common": False, "Rare": True, ...}
+
+AUTHORIZED_USER_ID = 6402009857
+AUTHORIZED_USER_NAME = "my Sensei @The_clan_killer_12"
+
 # Command to turn a rarity on
-async def set_on(update: Update, context: CallbackContext) -> None:
+async def set_on(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
-    if user_id != 6402009857:
-        await update.message.reply_text("only `my sensei @The_clan_killer_12` can use this command.")
+    if user_id != AUTHORIZED_USER_ID:
+        await update.message.reply_text(
+            f"Only {AUTHORIZED_USER_NAME} can use this command."
+        )
         return
     try:
         rarity_number = int(context.args[0])
         rarity = rarity_map.get(rarity_number)
-        if rarity and rarity in rarity_active:
+        
+        if rarity in rarity_active:
             if not rarity_active[rarity]:
                 rarity_active[rarity] = True
                 await update.message.reply_text(f'Rarity {rarity} is now ON and will spawn from now on.')
@@ -311,18 +321,23 @@ async def set_on(update: Update, context: CallbackContext) -> None:
                 await update.message.reply_text(f'Rarity {rarity} is already ON.')
         else:
             await update.message.reply_text('Invalid rarity number.')
+            
     except (IndexError, ValueError):
         await update.message.reply_text('Please provide a valid rarity number.')
+
 # Command to turn a rarity off
-async def set_off(update: Update, context: CallbackContext) -> None:
+async def set_off(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
-    if user_id != 6402009857:
-        await update.message.reply_text("Only `my Sensei @The_clan_killer_12` Can use this command.")
+    if user_id != AUTHORIZED_USER_ID:
+        await update.message.reply_text(
+            f"Only {AUTHORIZED_USER_NAME} can use this command."
+        )
         return
     try:
         rarity_number = int(context.args[0])
         rarity = rarity_map.get(rarity_number)
-        if rarity and rarity in rarity_active:
+        
+        if rarity in rarity_active:
             if rarity_active[rarity]:
                 rarity_active[rarity] = False
                 await update.message.reply_text(f'Rarity {rarity} is now OFF and will not spawn from now on.')
@@ -330,9 +345,11 @@ async def set_off(update: Update, context: CallbackContext) -> None:
                 await update.message.reply_text(f'Rarity {rarity} is already OFF.')
         else:
             await update.message.reply_text('Invalid rarity number.')
+            
     except (IndexError, ValueError):
         await update.message.reply_text('Please provide a valid rarity number.')
-        
+
+# Register handlers
 application.add_handler(CommandHandler('set_on', set_on, block=False))
 application.add_handler(CommandHandler('set_off', set_off, block=False))
 
