@@ -22,10 +22,10 @@ async def tokens(update: Update, context: CallbackContext):
         balance_amount = user_balance.get('tokens', 0)
         formatted_balance = "{:,.0f}".format(balance_amount)
         balance_message = f"""
-┬•┈┈••┈┈••●••┈┈••┈┈•┬
- **{user_mention}'s ᴛσкєη ʙᴀʟᴀɴᴄᴇ** 💰
-🪙 **ᴀᴍᴏᴜnt:** Ŧ `{formatted_balance}`
-┬•┈┈••┈┈••●••┈┈••┈┈•┬
+┌─━═━─━═━─━═━─━═━─━═━─━═━─┐
+💼 **{user_mention}'s Token Balance** 💼
+🪙 **Current Balance:** Ŧ `{formatted_balance}`
+└─━═━─━═━─━═━─━═━─━═━─━═━─┘
 """
     else:
         balance_message = (
@@ -33,7 +33,7 @@ async def tokens(update: Update, context: CallbackContext):
             f"{user_mention}, you need to register first by starting the bot in DMs."
         )
 
-    await update.message.reply_text(balance_message, disable_web_page_preview=True)
+    await update.message.reply_text(balance_message, parse_mode="Markdown", disable_web_page_preview=True)
 
 application.add_handler(CommandHandler("tokens", tokens, block=False))
 
@@ -53,7 +53,9 @@ async def pay_tokens(update, context):
     # Check if the user is still in cooldown
     if sender_id in cooldowns and (time.time() - cooldowns[sender_id]) < 1200:
         remaining_time = int(1200 - (time.time() - cooldowns[sender_id]))
-        await update.message.reply_text(f"⏱️ Hold on! You can use /tpay again in {remaining_time // 60} minutes and {remaining_time % 60} seconds.")
+        await update.message.reply_text(
+            f"⏱️ Hold on! You can use /tpay again in {remaining_time // 60} minutes and {remaining_time % 60} seconds."
+        )
         return
 
     if not update.message.reply_to_message:
@@ -64,7 +66,6 @@ async def pay_tokens(update, context):
 
     try:
         amount = int(context.args[0])
-        # Check if the amount is negative
         if amount < 0:
             raise ValueError("Negative amounts are not allowed.")
     except (IndexError, ValueError):
@@ -81,7 +82,7 @@ async def pay_tokens(update, context):
         await update.message.reply_text("⚠️ Not enough tokens for this transaction.")
         return
 
-    disallowed_words = ['negative', 'badword']  # Add your disallowed words here
+    disallowed_words = ['negative', 'badword']  # Add disallowed words here
     payment_message = update.message.text.lower()
     if any(word in payment_message for word in disallowed_words):
         await update.message.reply_text("🚫 Transaction message contains restricted words.")
