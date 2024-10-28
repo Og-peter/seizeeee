@@ -149,7 +149,7 @@ async def ttop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     top_users_message += "<i>Join us at @Character_seize_bot</i>"
 
     # URL to the leaderboard image
-    photo_path = 'https://telegra.ph/file/5ccbb080aa1761a5c2a49.jpg'
+    photo_path = 'https://files.catbox.moe/9cr9lu.jpg'
     await update.message.reply_photo(photo=photo_path, caption=top_users_message, parse_mode='HTML')
 
 # Register the /ttop command handler
