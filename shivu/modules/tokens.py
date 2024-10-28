@@ -28,13 +28,18 @@ async def tokens(update: Update, context: CallbackContext):
 ❄️ **Current Balance:** Ŧ `{formatted_balance}`
 └─━═━─━═━─━═━─━═━─━═━─━═━─┘
 """
+
+        # URL of the image to send along with the balance message
+        image_url = 'https://example.com/path/to/your/image.jpg'  # Replace with your actual image URL
+        await update.message.reply_photo(photo=image_url, caption=balance_message, parse_mode="Markdown", disable_web_page_preview=True)
     else:
         balance_message = (
             "⚠️ Attention:\n"
             f"{user_mention}, you need to register first by starting the bot in DMs."
         )
 
-    await update.message.reply_text(balance_message, parse_mode="Markdown", disable_web_page_preview=True)
+        await update.message.reply_text(balance_message, parse_mode="Markdown", disable_web_page_preview=True)
+        
 
 application.add_handler(CommandHandler("tokens", tokens, block=False))
 
