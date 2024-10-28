@@ -43,24 +43,20 @@ async def check_balance(_, message: Message):
         await send_start_button(message.chat.id)
         return
 
-    # Get user's balance and other wealth-related data
+    # Get user's balance and rank-related data
     balance = user_data.get('balance', 0)
     formatted_balance = "{:,.0f}".format(balance)
-    total_transactions = user_data.get('total_transactions', 0)  # Example additional feature
-    last_transaction = user_data.get('last_transaction', 'No transactions yet')  # Last transaction info
-    account_age = user_data.get('account_age', 'N/A')  # How long the account has existed
+    user_rank = user_data.get('user_rank', 'Unranked')  # User rank information
 
     # Mention the user
     user_mention = f"[{message.from_user.first_name}](tg://user?id={user_id})"
 
-    # Enhanced message with additional information
+    # Enhanced message with balance and user rank
     custom_message = f"""
 ┬── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┬
  **{user_mention}'s ᴡᴀᴇʟᴛʜ ᴏᴠᴇʀᴠɪᴇᴡ** 🏵️
 🫧 **ᴄᴜʀʀᴇɴᴛ ʙᴀʟᴀɴᴄᴇ:** ₩ `{formatted_balance}` 
-🔢 **ᴛᴏᴛᴀʟ ᴛʀᴀɴsᴀᴄᴛɪᴏns:** `{total_transactions}`
-🗓️ **ᴀᴄᴄᴏᴜɴᴛ ᴀɢᴇ:** `{account_age}`
-🕒 **ʟᴀsᴛ ᴛʀᴀɴsᴀᴄᴛɪᴏn:** `{last_transaction}`
+🏅 **ᴜsєʀ ʀᴀɴк:** `{user_rank}`
 ┴── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┴
 ╭── ⋅ ⋅ ─── ✩ ─── ⋅ ⋅ ──╮
 **sᴛᴀʏ ᴀᴄᴛɪᴠᴇ ғᴏʀ ᴍᴏʀᴇ ʀᴇᴡᴀʀᴅs!**
