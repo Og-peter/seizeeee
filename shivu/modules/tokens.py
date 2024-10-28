@@ -30,8 +30,8 @@ async def tokens(update: Update, context: CallbackContext):
 """
 
         # URL of the image to send along with the balance message
-        image_url = 'https://files.catbox.moe/pnb8ok.jpg'  # Replace with your actual image URL
-        await update.message.reply_photo(photo=image_url, caption=balance_message, parse_mode="Markdown", disable_web_page_preview=True)
+        image_url = 'https://example.com/path/to/your/image.jpg'  # Replace with your actual image URL
+        await update.message.reply_photo(photo=image_url, caption=balance_message, parse_mode="Markdown")
     else:
         balance_message = (
             "⚠️ Attention:\n"
@@ -40,7 +40,6 @@ async def tokens(update: Update, context: CallbackContext):
 
         await update.message.reply_text(balance_message, parse_mode="Markdown", disable_web_page_preview=True)
         
-
 application.add_handler(CommandHandler("tokens", tokens, block=False))
 
 MAX_DAILY_TOKENS = 20000
