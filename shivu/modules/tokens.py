@@ -122,6 +122,35 @@ async def pay_tokens(update: Update, context: CallbackContext):
 # Add the command handler for /tpay
 application.add_handler(CommandHandler("tpay", pay_tokens, block=False))
             
+async def ttop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # Fetch top 10 users by tokens
+    top_users = await user_collection.find(
+        {}, projection={'id': 1, 'first_name': 1, 'last_name': 1, 'tokens': 1}
+    ).sort('tokens', -1).limit(10).to_list(10)
+    
+    # Enhanced message format with unique styling
+    top_users_message = "🌌✨ <b>Leaderboard: Top Token Holders</b> ✨🌌\n"
+    top_users_message += "══════════════════════════\n"
+
+    for i, user in enumerate(top_users, start=1):
+        first_name = user.get('first_name', 'Anonymous')
+        last_name = user.get('last_name', '')
+        user_id = user.get('id', 'Unknown')
+        full_name = f"{first_name} {last_name}" if last_name else first_name
+        user_link = f"<a href='tg://user?id={user_id}'>{html.escape(full_name)}</a>"
+        tokens = user.get('tokens', 0)
+
+        # Adding a distinct format for each rank
+        top_users_message += f"<b>🏅 {i}ᵗʰ Place</b> - {user_link}\n"
+        top_users_message += f"💰 <i>Tokens:</i> <code>Ŧ{tokens:,.0f}</code>\n\n"
+
+    top_users_message += "══════════════════════════\n"
+    top_users_message += "🔰 <i>Powered by @Character_seize_bot</i> 🔰"
+
+    # URL to the leaderboard image
+    photo_path = 'https://telegra.ph/file/5ccbb080aa1761a5c2a49.jpg'
+    await update.message.reply_photo(photo=photo_path, caption=top_users_message, parse_mode='HTML')
+    
 @app.on_message(filters.command(["convert"]))
 async def convert_tokens(client, message: Message):
     try:
