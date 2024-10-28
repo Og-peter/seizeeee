@@ -131,28 +131,27 @@ async def ttop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     ).sort('tokens', -1).limit(10).to_list(10)
     
     # Enhanced message format with unique styling
-    top_users_message = "🌌✨ <b>Leaderboard: Top Token Holders</b> ✨🌌\n"
-    top_users_message += "══════════════════════════\n"
+    top_users_message = "<b>🏆 Token Holders Leaderboard</b>\n"
+    top_users_message += "───────────────────────────\n"
 
     for i, user in enumerate(top_users, start=1):
         first_name = user.get('first_name', 'Anonymous')
         last_name = user.get('last_name', '')
         user_id = user.get('id', 'Unknown')
-        full_name = f"{first_name} {last_name}" if last_name else first_name
+        full_name = f"{first_name} {last_name}".strip()  # Clean up the name
         user_link = f"<a href='tg://user?id={user_id}'>{html.escape(full_name)}</a>"
         tokens = user.get('tokens', 0)
 
         # Adding a distinct format for each rank
-        top_users_message += f"<b>🏅 {i}ᵗʰ Place</b> - {user_link}\n"
-        top_users_message += f"💰 <i>Tokens:</i> <code>Ŧ{tokens:,.0f}</code>\n\n"
+        top_users_message += f"<b>{i}.</b> {user_link} - <i>Ŧ{tokens:,.0f}</i>\n"
 
-    top_users_message += "══════════════════════════\n"
-    top_users_message += "🔰 <i>Powered by @Character_seize_bot</i> 🔰"
+    top_users_message += "───────────────────────────\n"
+    top_users_message += "<i>Join us at @Character_seize_bot</i>"
 
     # URL to the leaderboard image
     photo_path = 'https://telegra.ph/file/5ccbb080aa1761a5c2a49.jpg'
     await update.message.reply_photo(photo=photo_path, caption=top_users_message, parse_mode='HTML')
-    
+
 # Register the /ttop command handler
 application.add_handler(CommandHandler("ttop", ttop))
     
