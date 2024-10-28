@@ -386,7 +386,10 @@ async def view_characters_callback(client, callback_query):
     waifus = await collection.find({"anime": anime_name}).to_list(length=None)
     
     if waifus:
-        character_list = "\n".join([f"{waifu['name']} ({waifu['rarity']})" for waifu in waifus])
+        # Safely access 'name' and 'rarity' with a default value if they are missing
+        character_list = "\n".join([
+            f"{waifu.get('name', 'Unknown')} ({waifu.get('rarity', 'Unknown')})" for waifu in waifus
+        ])
         await callback_query.message.edit_text(
             f"Characters in '{anime_name}':\n\n{character_list}",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="back_to_anime_list")]])
