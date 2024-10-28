@@ -364,7 +364,8 @@ async def search_anime(client, inline_query):
             inline_buttons = [
                 [InlineKeyboardButton("Add Waifu", callback_data=f"add_waifu_{title_encoded}")],
                 [InlineKeyboardButton("Rename Anime", callback_data=f"rename_anime_{title_encoded}")],
-                [InlineKeyboardButton("Remove Anime", callback_data=f"remove_anime_{title_encoded}")]
+                [InlineKeyboardButton("Remove Anime", callback_data=f"remove_anime_{title_encoded}")],
+                [InlineKeyboardButton("View Characters", callback_data=f"view_characters_{title_encoded}")],  # New button
             ]
             reply_markup = InlineKeyboardMarkup(inline_buttons)
             results.append(
@@ -377,6 +378,29 @@ async def search_anime(client, inline_query):
             )
         
         await inline_query.answer(results, cache_time=1)
+
+# Callback handler to display the list of characters for a specific anime
+@app.on_callback_query(filters.regex('^view_characters_'))
+async def view_characters_callback(client, callback_query):
+    anime_name = callback_query.data.split('_', 2)[-1]
+    waifus = await collection.find({"anime": anime_name}).to_list(length=None)
+    
+    if waifus:
+        character_list = "\n".join([f"{waifu['name']} ({waifu['rarity']})" for waifu in waifus])
+        await callback_query.message.edit_text(
+            f"Characters in '{anime_name}':\n\n{character_list}",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="back_to_anime_list")]])
+        )
+    else:
+        await callback_query.message.edit_text("No characters found for this anime.")
+        
+# Back button to return to the anime list
+@app.on_callback_query(filters.regex('^back_to_anime_list$'))
+async def back_to_anime_list(client, callback_query):
+    await callback_query.message.edit_text(
+        "Returning to the anime list.",
+        reply_markup=None
+        )
 
 @app.on_message(filters.private & filters.text)
 async def receive_text_message(client, message):
