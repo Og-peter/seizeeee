@@ -50,14 +50,11 @@ async def check_balance(_, message: Message):
     # Enhanced message with the image URL
     custom_message = f"""
 ┬── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┬
- **{first_name}'s Wealth Overview** 🏵️
-🫧 **Current Balance:** ₩ `{formatted_balance}` [.](https://telegra.ph/file/af20fd1f2bed03d2bc438.jpg)
-
-🔹 **Keep growing your wealth!** 🔹
-🪭 **Your success story is just beginning...** 🪭
+ **{first_name}'s ᴡᴀᴇʟᴛʜ ᴏᴠᴇʀᴠɪᴇᴡ** 🏵️
+🫧 **ᴄᴜʀʀᴇɴᴛ ʙᴀʟᴀɴᴄᴇ:** ₩ `{formatted_balance}` [.](https://telegra.ph/file/af20fd1f2bed03d2bc438.jpg)
 ┴── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┴
 ╭── ⋅ ⋅ ─── ✩ ─── ⋅ ⋅ ──╮
- 🔥 **Stay active for more rewards!** 🔥
+**sᴛᴀʏ ᴀᴄᴛɪᴠᴇ ғᴏʀ ᴍᴏʀᴇ ʀᴇᴡᴀʀᴅs!**
 ╰── ⋅ ⋅ ─── ✩ ─── ⋅ ⋅ ──╯
 """
 
