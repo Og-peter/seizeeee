@@ -33,17 +33,23 @@ def escape_markdown(text):
 
 archived_characters = {}
 
-async def message_counter(update: Update, context: CallbackContext) -> None:
+# Initialize dictionaries for locks, last user, message counts, and warned users
+locks = {}
+last_user = {}
+message_counts = {}
+warned_users = {}
+
+async def message_counter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = str(update.effective_chat.id)
     user_id = update.effective_user.id
 
-    # Lock setup for the chat
+    # Initialize lock for the chat if it doesn't exist
     if chat_id not in locks:
         locks[chat_id] = asyncio.Lock()
     lock = locks[chat_id]
 
     async with lock:
-        # Fetch or set default message frequency
+        # Fetch or set default message frequency for the chat
         chat_frequency = await user_totals_collection.find_one({'chat_id': chat_id})
         message_frequency = chat_frequency.get('message_frequency', 100) if chat_frequency else 100
 
@@ -56,8 +62,9 @@ async def message_counter(update: Update, context: CallbackContext) -> None:
                     return
                 else:
                     # Stylized warning message
-                    warning_message = stylize_text(
-                        f"🚫 Excessive Messages Detected!\n⛔️ {update.effective_user.first_name}, please take a break! You are being ignored for 10 minutes."
+                    warning_message = (
+                        f"🚫 Excessive Messages Detected!\n⛔️ {update.effective_user.first_name}, "
+                        f"please take a break! You are being ignored for 10 minutes."
                     )
                     await update.message.reply_text(warning_message)
                     warned_users[user_id] = time.time()
