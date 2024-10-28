@@ -38,11 +38,12 @@ event_emojis = {
     '🎃 Halloween': '🎃',
     '🎄 Christmas': '🎄',
     '🎩 Tuxedo': '🎩',
-    '🎆 New Year': '🎆',
-    '🌌 Celestial': '🌌',
-    '🎐 Astral': '🎐',
-    '🌸 Spring': '🌸',
-    '🏖️ Summer': '🏖️'
+    '☃️ Winter': '☃️',
+    '👘 Kimono': '👘',
+    '🎒 School': '🎒',
+    '🥻 Saree': '🥻',
+    '🏖️ Summer': '🏖️',
+    '🏀 Basketball': '🏀'
 }
 # Dictionary to store the selected anime for each user
 user_states = {}
