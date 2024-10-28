@@ -47,17 +47,17 @@ LOG_GROUP_ID = -1001992198513
 
 async def pay_tokens(update, context):
     sender_id = update.effective_user.id
-    keyboard = [[InlineKeyboardButton("📩 Appeal Support", url='https://t.me/dynamic_gangs')]]
+    keyboard = [[InlineKeyboardButton("🆘 Contact Support", url='https://t.me/dynamic_gangs')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     # Check if the user is still in cooldown
     if sender_id in cooldowns and (time.time() - cooldowns[sender_id]) < 1200:
         remaining_time = int(1200 - (time.time() - cooldowns[sender_id]))
-        await update.message.reply_text(f"⏳ Please wait {remaining_time // 60} minutes and {remaining_time % 60} seconds before using /pay_tokens again.")
+        await update.message.reply_text(f"⏱️ Hold on! You can use /tpay again in {remaining_time // 60} minutes and {remaining_time % 60} seconds.")
         return
 
     if not update.message.reply_to_message:
-        await update.message.reply_text("❌ Please reply to a user to /tpay.")
+        await update.message.reply_text("🚫 Please reply to a user to send tokens using /tpay.")
         return
 
     recipient_id = update.message.reply_to_message.from_user.id
@@ -68,23 +68,23 @@ async def pay_tokens(update, context):
         if amount < 0:
             raise ValueError("Negative amounts are not allowed.")
     except (IndexError, ValueError):
-        await update.message.reply_text("🚫 Invalid amount. Usage: /tpay <amount>")
+        await update.message.reply_text("❗ Invalid amount. Usage: /tpay <amount>")
         return
 
     # Check if the amount is greater than the maximum allowed
     if amount > MAX_DAILY_TOKENS:
-        await update.message.reply_text(f"💸 You can't pay more than Ŧ{MAX_DAILY_TOKENS}.")
+        await update.message.reply_text(f"💸 You can’t transfer more than Ŧ{MAX_DAILY_TOKENS}.")
         return
 
     sender_balance = await user_collection.find_one({'id': sender_id}, projection={'tokens': 1})
     if not sender_balance or sender_balance.get('tokens', 0) < amount:
-        await update.message.reply_text("❌ Insufficient token balance to make the payment.")
+        await update.message.reply_text("⚠️ Not enough tokens for this transaction.")
         return
 
     disallowed_words = ['negative', 'badword']  # Add your disallowed words here
     payment_message = update.message.text.lower()
     if any(word in payment_message for word in disallowed_words):
-        await update.message.reply_text("🚫 Sorry, your payment message contains disallowed words.")
+        await update.message.reply_text("🚫 Transaction message contains restricted words.")
         return
 
     # Process the payment
@@ -93,9 +93,9 @@ async def pay_tokens(update, context):
 
     # Send a success message with enhanced formatting
     success_message = (
-        f"✅ <b>Ŧ Token Payment Successful!</b> 🎉\n"
-        f"You paid <b>Ŧ{amount}</b> to <b>{update.message.reply_to_message.from_user.first_name}</b>.\n"
-        f"💰 Your new token balance: <code>Ŧ{sender_balance['tokens'] - amount}</code>"
+        f"🎉 <b>Success!</b> Ŧ Token Transfer Completed 🥂\n\n"
+        f"👤 You sent <b>Ŧ{amount}</b> to <b>{update.message.reply_to_message.from_user.first_name}</b>.\n"
+        f"💼 Updated Balance: <code>Ŧ{sender_balance['tokens'] - amount}</code>"
     )
     await update.message.reply_text(success_message, parse_mode='HTML')
 
@@ -104,17 +104,17 @@ async def pay_tokens(update, context):
 
     # Log payment information
     logs_message = (
-        f"🔄 <b>Token Payment Log</b>\n"
-        f"👤 Sender: @{update.effective_user.username} (ID: {sender_id})\n"
-        f"💵 Amount: <b>Ŧ{amount}</b>\n"
-        f"📬 Recipient: @{update.message.reply_to_message.from_user.username} (ID: {recipient_id})"
+        f"📜 <b>Transaction Log</b>\n"
+        f"🔸 Sender: @{update.effective_user.username} (ID: {sender_id})\n"
+        f"🔸 Amount: <b>Ŧ{amount}</b>\n"
+        f"🔸 Recipient: @{update.message.reply_to_message.from_user.username} (ID: {recipient_id})"
     )
 
     for log_group_id in logs:
         try:
             await context.bot.send_message(log_group_id, logs_message, parse_mode='HTML')
         except Exception as e:
-            print(f"Error sending token payment log to group {log_group_id}: {str(e)}")
+            print(f"Error sending transaction log to group {log_group_id}: {str(e)}")
             
 @app.on_message(filters.command(["convert"]))
 async def convert_tokens(client, message: Message):
