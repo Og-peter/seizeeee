@@ -60,7 +60,7 @@ async def process_claim(user_id, chat_id, user_first_name):
             for character in unique_characters
         ]
         for img_url, caption in zip(img_urls, captions):
-            await bot.send_photo(chat_id=chat_id, photo=img_url, caption=caption, parse_mode="HTML")
+            await bot.send_photo(chat_id=chat_id, photo=img_url, caption=caption)  # Removed parse_mode
     except Exception as e:
         await send_error_to_devs(f"Error in process_claim: {traceback.format_exc()}")
 
@@ -78,8 +78,7 @@ async def claim_waifu(_, message: t.Message):
             "🚫 **This command can only be used in Group 2.**\n\n"
             "Please join the group using the button below to claim your waifu!",
             reply_markup=keyboard,
-            quote=True,
-            parse_mode="HTML"
+            quote=True
         )
 
     if user_id == 7162166061:
@@ -92,8 +91,7 @@ async def claim_waifu(_, message: t.Message):
             next_claim_time = (last_claim_date + timedelta(days=1)).strftime("%H:%M:%S")
             return await message.reply_text(
                 f"⏰ **Please wait until {next_claim_time} to claim your next waifu.**",
-                quote=True,
-                parse_mode="HTML"
+                quote=True
             )
 
     last_claim_time[user_id] = now
