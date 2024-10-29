@@ -79,7 +79,7 @@ async def claim_waifu(_, message: t.Message):
     user_id = message.from_user.id
     chat_id = message.chat.id
     user_first_name = message.from_user.first_name
-    message_id = message.message_id  # Get the message ID
+    message_id = message.id  # Corrected line to get the message ID
 
     if chat_id != GROUP_ID:
         keyboard = InlineKeyboardMarkup([
