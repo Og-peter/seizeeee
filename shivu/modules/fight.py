@@ -79,25 +79,29 @@ async def sfight(_, message: t.Message):
     current_time = time.time()
 
     # Log the usage of the command
-    log_message = f"⚔️ <b>Fight Command Used</b>\n\n👤 User: {mention} (ID: <code>{user_id}</code>)\n💬 Chat ID: <code>{chat_id}</code>"
+    log_message = (
+        f"⚔️ **<b>ғɪɢʜᴛ ᴄᴏᴍᴍᴀɴᴅ ᴜsᴇᴅ</b>**\n\n"
+        f"👤 **ᴜsᴇʀ:** {mention} (ID: <code>{user_id}</code>)\n"
+        f"💬 **ᴄʜᴀᴛ ɪᴅ:** <code>{chat_id}</code>"
+    )
     await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message)
 
     # Check if the user is banned
     if user_id in BAN_USER_IDS:
-        return await message.reply_text("❌ Sorry, you are banned from this command. Contact @dynamic_gangs for help.")
+        return await message.reply_text("❌ **sᴏʀʀʏ, ʏᴏᴜ ᴀʀᴇ ʙᴀɴɴᴇᴅ ғʀᴏᴍ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ. ᴄᴏɴᴛᴀᴄᴛ @dynamic_gangs ғᴏʀ ʜᴇʟᴘ.**")
 
     # Check if the user is on cooldown
     if user_id in user_cooldowns and current_time - user_cooldowns[user_id] < COOLDOWN_DURATION:
         remaining_time = COOLDOWN_DURATION - int(current_time - user_cooldowns[user_id])
         minutes, seconds = divmod(remaining_time, 60)
-        return await message.reply_text(f"⏳ Please wait! Your fighters are resting. Cooldown: {minutes} min {seconds} sec.")
+        return await message.reply_text(f"⏳ **ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ! ʏᴏᴜʀ ғɪɢʜᴛᴇʀs ᴀʀᴇ ʀᴇsᴛɪɴɢ.** **ᴄᴏᴏʟᴅᴏᴡɴ:** {minutes} ᴍɪɴ {seconds} sᴇᴄ.")
 
     # Deduct the fight fee from the user's balance
     user_data = await user_collection.find_one({'id': user_id}, projection={'balance': 1})
     user_balance = user_data.get('balance', 0)
 
     if user_balance < FIGHT_FEE:
-        return await message.reply_text("🚫 You don't have enough tokens to initiate a battle. You need at least 30,000.")
+        return await message.reply_text("🚫 **ʏᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴇɴᴏᴜɢʜ ᴛᴏᴋᴇɴs ᴛᴏ ɪɴɪᴛɪᴀᴛᴇ ᴀ ʙᴀᴛᴛʟᴇ. ʏᴏᴜ ɴᴇᴇᴅ ᴀᴛ ʟᴇᴀsᴛ 30,000.**")
 
     # Deduct fee
     await user_collection.update_one({'id': user_id}, {'$inc': {'balance': -FIGHT_FEE}})
@@ -143,10 +147,10 @@ async def sfight(_, message: t.Message):
 
             img_urls = [character['img_url'] for character in random_characters]
             captions = [
-                f"🔥 {mention}, you won the fight! 🔥\n"
-                f"**Name:** {character['name']}\n"
-                f"**Rarity:** {character['rarity']}\n"
-                f"**Anime:** {character['anime']}\n"
+                f"🔥 **{mention}, ʏᴏᴜ ᴡᴏɴ ᴛʜᴇ ғɪɢʜᴛ!** 🔥\n"
+                f"🥂 **ɴᴀᴍᴇ:** {character['name']}\n"
+                f"❄️ **ʀᴀʀɪᴛʏ:** {character['rarity']}\n"
+                f"⛩️ **ᴀɴɪᴍᴇ:** {character['anime']}\n"
                 for character in random_characters
             ]
 
@@ -155,20 +159,20 @@ async def sfight(_, message: t.Message):
 
             # Add a retry button
             retry_button = InlineKeyboardMarkup(
-                [[InlineKeyboardButton("⚔️ Try Another Fight ⚔️", callback_data="retry_fight")]]
+                [[InlineKeyboardButton("⚔️ ᴛʀʏ ᴀɴᴏᴛʜᴇʀ ғɪɢʜᴛ ⚔️", callback_data="retry_fight")]]
             )
-            await message.reply_text("💪 Ready for another battle?", reply_markup=retry_button)
+            await message.reply_text("💪 ʀᴇᴀᴅʏ ғᴏʀ ᴀɴᴏᴛʜᴇʀ ʙᴀᴛᴛʟᴇ?", reply_markup=retry_button)
 
         else:
             # User loses the fight
             await asyncio.sleep(2)
-            await message.reply_text(f"{mention}, you lost the fight. Sukuna has defeated Gojo! 💀")
+            await message.reply_text(f"💀 **{mention}, ʏᴏᴜ ʟᴏsᴛ ᴛʜᴇ ғɪɢʜᴛ. sᴜᴋᴜɴᴀ ʜᴀs ᴅᴇғᴇᴀᴛᴇᴅ ɢᴏᴊᴏ!** 💀")
             loss_video = random.choice(BATTLE_VIDEOS)
-            await bot.send_video(chat_id, video=loss_video, caption="💀 Tough loss, better luck next time!")
+            await bot.send_video(chat_id, video=loss_video, caption="💀 **ᴛᴏᴜɢʜ ʟᴏss, ʙᴇᴛᴛᴇʀ ʟᴜᴄᴋ ɴᴇxᴛ ᴛɪᴍᴇ!**")
 
     except Exception as e:
         print(f"⚠️ Error during fight: {e}")
-        await message.reply_text("⚠️ Something went wrong. Please try again later.")
+        await message.reply_text("⚠️ **sᴏᴍᴇᴛʜɪɴɢ ᴡᴇɴᴛ ᴡʀᴏɴɢ. ᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ ʟᴀᴛᴇʀ.**")
 
 # Retry fight callback handler
 @bot.on_callback_query(filters.regex("retry_fight"))
