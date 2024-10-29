@@ -222,8 +222,8 @@ async def claim_daily_cmd(update: Update, context: CallbackContext):
             hours, remainder = divmod(remaining_time.total_seconds(), 3600)
             minutes, seconds = divmod(remainder, 60)
             await update.message.reply_html(
-                f"<b>⏳ {user_name}, you can only claim daily rewards once every 24 hours. "
-                f"Please wait {int(hours)}h {int(minutes)}m {int(seconds)}s before your next claim.</b>"
+                f"<b>⏳ {user_name}, ʏᴏᴜ ᴄᴀɴ ᴏɴʟʏ ᴄʟᴀɪᴍ ᴅᴀɪʟʏ ʀᴇᴡᴀʀᴅs ᴏɴᴄᴇ ᴇᴠᴇʀʏ 24 ʜᴏᴜʀs. "
+                f"ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ {int(hours)}ʜ {int(minutes)}ᴍ {int(seconds)}s ʙᴇғᴏʀᴇ ʏᴏᴜʀ ɴᴇxᴛ ᴄʟᴀɪᴍ.</b>"
             )
             return
 
@@ -246,14 +246,14 @@ async def claim_daily_cmd(update: Update, context: CallbackContext):
     characters = await get_random_character()
     if not characters:
         await update.message.reply_html(
-            f"<b>❌ {user_name}, failed to fetch a random character for your daily reward.</b>"
+            f"<b>❌ {user_name}, ғᴀɪʟᴇᴅ ᴛᴏ ғᴇᴛᴄʜ ᴀ ʀᴀɴᴅᴏᴍ ᴄʜᴀʀᴀᴄᴛᴇʀ ғᴏʀ ʏᴏᴜʀ ʀᴇᴡᴀʀᴅ.</b>"
         )
         return
 
     character = characters[0]
     character_info_text = (
-        f"<b>🌟 Character: {character['name']}</b> from <i>{character['anime']}</i>:\n"
-        f"🎨 Rarity: {character['rarity']}\n"
+        f"<b>❄️ ᴄʜᴀʀᴀᴄᴛᴇʀ: {character['name']}</b> ғʀᴏᴍ <i>{character['anime']}</i>:\n"
+        f"⚜️ ʀᴀʀɪᴛʏ: {character['rarity']}\n"
     )
     
     pass_details['last_claim_date'] = datetime.now()
@@ -275,7 +275,7 @@ async def claim_daily_cmd(update: Update, context: CallbackContext):
         caption=(
             f"🎁 ❰ <b>𝗗 𝗔 𝗜 𝗟 𝗬 𝗥 𝗘 𝗪 𝗔 𝗥 𝗗 🎉</b> ❱\n\n"
             f"{character_info_text}\n"
-            f"💰 Reward: <b>{daily_reward} Tokens</b> 🎊"
+            f"💰 ʀᴇᴡᴀʀᴅ: <b>{daily_reward} ᴛᴏᴋᴇɴs</b> 🎊"
         ),
         parse_mode='HTML',
         reply_to_message_id=update.message.message_id
@@ -287,16 +287,16 @@ async def claim_weekly_cmd(update: Update, context: CallbackContext):
     
     if not user_data.get('pass'):
         await update.message.reply_html(
-            "<b>🚫 You don't have a membership pass. "
-            "Buy one to unlock extra rewards!\n\n"
-            "🛒 Use /pass to purchase a pass.</b>"
+            "<b>🚫 ʏᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴀ ᴍᴇᴍʙᴇʀsʜɪᴘ ᴘᴀss. "
+            "ʙᴜʏ ᴏɴᴇ ᴛᴏ ᴜɴʟᴏᴄᴋ ᴇxᴛʀᴀ ʀᴇᴡᴀʀᴅs!\n\n"
+            "🛒 ᴜsᴇ /pass ᴛᴏ ᴘᴜʀᴄʜᴀsᴇ ᴀ ᴘᴀss.</b>"
         )
         return
     
     pass_details = user_data.get('pass_details', {})
     if pass_details.get('total_claims', 0) < 6:
         await update.message.reply_html(
-            "<b>⚠️ You must claim daily rewards at least 6 times to claim your weekly reward.</b>"
+            "<b>⚠️ ʏᴏᴜ ᴍᴜsᴛ ᴄʟᴀɪᴍ ᴅᴀɪʟʏ ʀᴇᴡᴀʀᴅs ᴀᴛ ʟᴇᴀsᴛ 6 ᴛɪᴍᴇs ᴛᴏ ᴄʟᴀɪᴍ ʏᴏᴜʀ ᴡᴇᴇᴋʟʏ ʀᴇᴡᴀʀᴅ.</b>"
         )
         return
 
@@ -304,7 +304,7 @@ async def claim_weekly_cmd(update: Update, context: CallbackContext):
     last_weekly_claim_date = pass_details.get('last_weekly_claim_date')
     if last_weekly_claim_date and (today - last_weekly_claim_date).days <= 7:
         await update.message.reply_html(
-            "<b>❌ You have already claimed your weekly reward this week.</b>"
+            "<b>❌ ʏᴏᴜ ʜᴀᴠᴇ ᴀʟʀᴇᴀᴅʏ ᴄʟᴀɪᴍᴇᴅ ʏᴏᴜʀ ᴡᴇᴇᴋʟʏ ʀᴇᴡᴀʀᴅ ᴛʜɪs ᴡᴇᴇᴋ.</b>"
         )
         return
 
@@ -323,7 +323,7 @@ async def claim_weekly_cmd(update: Update, context: CallbackContext):
     
     await update.message.reply_html(
         "<b>🎉 ❰ 𝗪 𝗘 𝗘 𝗸 𝗟 𝗬 𝗥 𝗘 𝗪 𝗔 𝗥 𝗗 🎁 ❱\n\n"
-        f"🏆 <b>{weekly_reward} Tokens</b> successfully claimed!</b>"
+        f"🏆 <b>{weekly_reward} ᴛᴏᴋᴇɴs</b> sᴜᴄᴄᴇssғᴜʟʟʏ ᴄʟᴀɪᴍᴇᴅ!</b>"
     )
 
 async def claim_pass_bonus_cmd(update: Update, context: CallbackContext):
@@ -332,17 +332,17 @@ async def claim_pass_bonus_cmd(update: Update, context: CallbackContext):
     
     if not user_data.get('pass'):
         await update.message.reply_html(
-            "<b>🚫 You don't have a membership pass. "
-            "Buy one to unlock extra rewards!\n\n"
-            "🛒 Use /pass to purchase a pass.</b>"
+            "<b>🚫 ʏᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴀ ᴍᴇᴍʙᴇʀsʜɪᴘ ᴘᴀss. "
+            "ʙᴜʏ ᴏɴᴇ ᴛᴏ ᴜɴʟᴏᴄᴋ ᴇxᴛʀᴀ ʀᴇᴡᴀʀᴅs!\n\n"
+            "🛒 ᴜsᴇ /pass ᴛᴏ ᴘᴜʀᴄʜᴀsᴇ ᴀ ᴘᴀss.</b>"
         )
         return
     
     current_streak = user_data.get('streak', 0)
     if current_streak < 10:
         await update.message.reply_html(
-            f"<b>⚡️ You need to maintain a streak of 10 in /guess to claim the pass bonus.\n"
-            f"Your current streak: {current_streak}⚡️.</b>"
+            f"<b>⚡️ ʏᴏᴜ ɴᴇᴇᴅ ᴛᴏ ᴍᴀɪɴᴛᴀɪɴ ᴀ sᴛʀᴇᴀᴋ ᴏғ 10 ɪɴ /guess ᴛᴏ ᴄʟᴀɪᴍ ᴛʜᴇ ᴘᴀss ʙᴏɴᴜs.\n"
+            f"ʏᴏᴜʀ ᴄᴜʀʀᴇɴᴛ sᴛʀᴇᴀᴍ: {current_streak}⚡️.</b>"
         )
         return
 
@@ -354,7 +354,7 @@ async def claim_pass_bonus_cmd(update: Update, context: CallbackContext):
 
     await update.message.reply_html(
         "<b>🎊 ❰ 𝗣 𝗔 𝗦 𝗦 𝗕 𝗢 𝗡 𝗨 𝗦 🎁 ❱\n"
-        f"💰 <b>{PASS_BONUS_TOKENS} Tokens</b> awarded! Your streak has been reset.</b>"
+        f"💰 <b>{PASS_BONUS_TOKENS} ᴛᴏᴋᴇsɴ</b> ᴀᴡᴀʀᴅᴇᴅ! ʏᴏᴜʀ sᴛʀᴇᴀᴋ ʜᴀs ʙᴇᴇɴ ʀᴇsᴇᴛ.</b>"
     )
 
 async def reset_passes_cmd(update: Update, context: CallbackContext):
@@ -363,7 +363,7 @@ async def reset_passes_cmd(update: Update, context: CallbackContext):
     # Check if the user issuing the command is the authorized user
     if user_id != AUTHORIZED_USER_ID:
         await update.message.reply_html(
-            "<b>🔒 You are not authorized to reset passes.</b>"
+            "<b>🔒 ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀᴜᴛʜᴏʀɪᴢᴇᴅ ᴛᴏ ʀᴇsᴇᴛ ᴘᴀssᴇs.</b>"
         )
         return
 
@@ -385,7 +385,7 @@ async def reset_passes_cmd(update: Update, context: CallbackContext):
     )
     
     await update.message.reply_html(
-        "<b>🔄 All passes have been reset. Users will need to purchase again.</b>"
+        "<b>🔄 ᴀʟʟ ᴘᴀssᴇs ʜᴀᴠᴇ ʙᴇᴇɴ ʀᴇsᴇᴛ. ᴜsᴇʀs ᴡɪʟʟ ɴᴇᴇᴅ ᴛᴏ ᴘᴜʀᴄʜᴀsᴇ ᴀɢᴀɪɴ.</b>"
         )
 
 # Register the command handler
