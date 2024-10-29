@@ -254,7 +254,7 @@ async def on_callback_query(client, callback_query):
             break
 
     if not trade_found:
-        await callback_query.answer("🚫 This gift does not belong to you!", show_alert=True)
+        await callback_query.answer("🚫 ᴛʜɪs ɢɪғᴛ ᴅᴏᴇs ɴᴏᴛ ʙᴇʟᴏɴɢ ᴛᴏ ʏᴏᴜ!", show_alert=True)
         return
 
     if callback_query.data.lower() == "confirm_gift":
@@ -293,24 +293,25 @@ async def on_callback_query(client, callback_query):
 
         # Gift confirmation message
         message_text = (
-            f"🎉 **✨ Gift Completed! ✨** 🎉\n\n"
-            f"🍃 **Congratulations, [{sender_first_name}](tg://user?id={sender_id})!**\n\n"
-            f"📜 **You received:**\n"
-            f" **Name:** `{character_name}`\n"
-            f" **Rarity:** {rarity_emoji} `{rarity}`\n"
-            f" **Anime:** `{anime_name}`"
+            f"🥂 **ɢɪғᴛ Cᴏᴍᴘʟᴇᴛᴇᴅ!** 🎉\n\n"
+            f"❄️ **Cᴏngrᴀᴛᴜʟᴀᴛɪᴏɴs, [{sender_first_name}](tg://user?id={sender_id})!**\n\n"
+            f"🌋 **Yᴏᴜ ʀᴇᴄᴇɪᴠᴇᴅ:**\n"
+            f" **Nᴀᴍᴇ:** `{character_name}`\n"
+            f" **Rᴀʀɪᴛʏ:** {rarity_emoji} `{rarity}`\n"
+            f" **ᴀɴɪᴍᴇ:** `{anime_name}`\n\n"
+            "🌪️ ʏᴏᴜ'ʀᴇ ɴᴏᴡ ᴏᴜᴛ ᴏғ ᴏᴘᴛɪᴏɴs! ᴡʜᴏᴇᴠᴇʀ sʜɪɴᴏʙᴜ ʙᴇʟɪᴇᴠᴇs ᴛʜᴇ ᴍᴀʟʟ ᴡɪʟʟ ʙᴇ ʏᴏᴜ!"
         )
 
         # Send message to receiver's PM
         await app.send_photo(receiver_id, photo=img_url, caption=message_text)
 
-        await callback_query.message.edit_text("🎁 **Gift Successfully Delivered!** 🎁\n\n" + message_text)
+        await callback_query.message.edit_text("🎁 **ɢɪғᴛ sᴜᴄᴄᴇssfᴜʟʟʏ dᴇlɪvᴇʀᴇd!** 🎁\n\n" + message_text)
 
     elif callback_query.data.lower() == "cancel_gift":
         del pending_gifts[(sender_id, receiver_id)]
-        await callback_query.message.edit_text("❌ **Gift Canceled Successfully!** ❌\n\n*You can always gift again!*")
+        await callback_query.message.edit_text("❌ **ɢɪғᴛ Cᴀɴᴄᴇʟᴇᴅ sᴜᴄᴄᴇssfᴜʟʟʏ!** ❌\n\n*ʏᴏᴜ ᴄᴀɴ ᴀʟᴡᴀʏs ɢɪғᴛ ᴀɢᴀɪɴ!*")
 
-    await callback_query.answer("✅ Action Completed!")
+    await callback_query.answer("✅ ᴀᴄᴛɪᴏɴ Cᴏᴍᴘʟᴇᴛᴇᴅ!")
 
 # Function to check if a user has an ongoing transaction (trade or gift)
 async def has_ongoing_transaction(user_id):
@@ -339,22 +340,22 @@ def get_rarity_emoji(rarity_name):
         'Astral': '🎐',
         'Valentine': '💞'
        }
-    return RARITY_EMOJIS.get(rarity_name, f'⚠️ Rarity: {rarity_name}')
+    return RARITY_EMOJIS.get(rarity_name, f'⚠️ ʀᴀʀɪᴛʏ: {rarity_name}')
 
 # Function to generate trade info message with rarity emojis
 def get_trade_info_message(sender_character, receiver_character, sender_rarity_emoji, receiver_rarity_emoji):
     return (
-        f"📩 **🌟 Trade Request 🌟**\n\n"
-        f"🔄 **You Receive:**\n"
-        f" **Name:** `{receiver_character['name']}`\n"
-        f" **Rarity:** {receiver_rarity_emoji} `{receiver_character['rarity']}`\n"
-        f" **Anime:** `{receiver_character['anime']}`\n\n"
-        f"➡️ **You Give:**\n"
-        f" **Name:** `{sender_character['name']}`\n"
-        f" **Rarity:** {sender_rarity_emoji} `{sender_character['rarity']}`\n"
-        f" **Anime:** `{sender_character['anime']}`\n\n"
-        "⚠️ Click 'Accept' to accept this offer.\n"
-        "❌ Click 'Reject' to decline."
+        f"📩 **ᴛʀᴀᴅᴇ RᴇQᴜᴇsᴛ**\n\n"
+        f"🔄 **Yᴏᴜ Rᴇᴄᴇɪᴠᴇ:**\n"
+        f" **Nᴀᴍᴇ:** `{receiver_character['name']}`\n"
+        f" **Rᴀʀɪᴛʏ:** {receiver_rarity_emoji} `{receiver_character['rarity']}`\n"
+        f" **ᴀɴɪᴍᴇ:** `{receiver_character['anime']}`\n\n"
+        f"➡️ **Yᴏᴜ Gɪᴠᴇ:**\n"
+        f" **Nᴀᴍᴇ:** `{sender_character['name']}`\n"
+        f" **Rᴀʀɪᴛʏ:** {sender_rarity_emoji} `{sender_character['rarity']}`\n"
+        f" **ᴀɴɪᴍᴇ:** `{sender_character['anime']}`\n\n"
+        "⚠️ Cʟɪᴄᴋ 'ᴀᴄᴄᴇᴘᴛ' ᴛᴏ ᴀᴄᴄᴇᴘᴛ ᴛʜɪs ᴏғғᴇʀ.\n"
+        "❌ Cʟɪᴄᴋ 'ʀᴇjᴇct' ᴛᴏ dᴇclɪɴᴇ."
     )
 
 # Command to reset ongoing transactions
@@ -365,6 +366,6 @@ async def reset(client, message):
     if await has_ongoing_transaction(sender_id):
         pending_trades.clear()
         pending_gifts.clear()
-        await message.reply_text("🗑️ **Transaction Reset!**\n\nYour ongoing trade and gift transactions have been reset successfully! 🎉")
+        await message.reply_text("🗑️ **ᴛʀᴀɴsᴀcᴛɪᴏɴ Rᴇsᴇᴛ!**\n\nYᴏᴜʀ ᴏɴɢᴏɪɴɢ ᴛʀᴀᴅᴇ ᴀɴᴅ ɢɪғᴛ ᴛʀᴀɴsᴀcᴛɪᴏɴs ʜᴀᴠᴇ bᴇᴇɴ ʀᴇsᴇᴛ sᴜᴄᴄᴇssfᴜʟʟʏ! 🎉")
     else:
-        await message.reply_text("🔍 **No Active Transactions!**\n\nYou don't have any ongoing trade or gift transactions to reset.")
+        await message.reply_text("🔍 **ɴᴏ ᴀᴄtɪᴠᴇ ᴛʀᴀɴsᴀcᴛɪᴏɴs!**\n\nYᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴀɴʏ ᴏɴɢᴏɪɴɢ ᴛʀᴀᴅᴇ ᴏʀ ɢɪғᴛ ᴛʀᴀɴsᴀcᴛɪᴏɴs ᴛᴏ ʀᴇsᴇᴛ.")
