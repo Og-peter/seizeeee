@@ -65,16 +65,16 @@ async def fav(client: Client, message):
     confirmation_message = await message.reply_photo(
         photo=character['img_url'],
         caption=(
-            f"🌟 **Are you sure you want to set this character as your favorite?** 🌟\n\n"
-            f"🧃 **Name:** `{name}`\n"
-            f"⚜️ **Anime:** `{anime}`\n"
-            f"🥂 **Rarity:** {rarity_emoji} `{rarity_display}`\n\n"
-            "🔍 **Choose an option:**"
+            f"❄️ **ᴀʀᴇ ʏᴏᴜ sᴜʀᴇ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ sᴇᴛ ᴛʜɪs ᴄʜᴀʀᴀᴄᴛᴇʀ ᴀs ʏᴏᴜʀ ғᴀᴠᴏʀɪᴛᴇ?** ❄️\n\n"
+            f"🫧 **ɴᴀᴍᴇ:** `{name}`\n"
+            f"⛩️ **ᴀɴɪᴍᴇ:** `{anime}`\n"
+            f"🥂 **ʀᴀʀɪᴛʏ:** {rarity_emoji} `{rarity_display}`\n\n"
+            "⚜️ **ᴄʜᴏᴏsᴇ ᴀɴ ᴏᴘᴛɪᴏɴ:**"
         ),
         reply_markup=InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("🟢 Confirm", callback_data=f"fav_yes_{character_id}"),
-                InlineKeyboardButton("🔴 Cancel", callback_data=f"fav_no_{character_id}")
+                InlineKeyboardButton("🟢 ᴄᴏɴғɪʀᴍ", callback_data=f"fav_yes_{character_id}"),
+                InlineKeyboardButton("🔴 ᴄᴀɴᴄᴇʟ", callback_data=f"fav_no_{character_id}")
             ]
         ])
     )
@@ -117,7 +117,7 @@ async def handle_fav_confirmation(client: Client, callback_query):
         )
         await callback_query.message.edit_caption(
             caption=(
-                f"🔒 **Locked!** You've chosen `{character['name']}` as your latest favorite character! "
+                f"🔒 **ʟᴏᴏᴋᴇᴅ!** ʏᴏᴜ'ᴠᴇ ᴄʜᴏsᴇɴ `{character['name']}` ᴀs ʏᴏᴜʀ ʟᴀᴛᴇsᴛ ғᴀᴠᴏʀɪᴛᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ! "
                 f"{random.choice(SUCCESS_EMOJIS)}"
             ),
             reply_markup=None  # Disable buttons after confirmation
@@ -150,7 +150,7 @@ async def handle_fav_confirmation(client: Client, callback_query):
 
     elif action == "no":
         await callback_query.message.edit_caption(
-            caption=f"{random.choice(CANCEL_EMOJIS)} **Operation cancelled.**",
+            caption=f"{random.choice(CANCEL_EMOJIS)} **ᴏᴘᴇʀᴀᴛɪᴏɴ ᴄᴀɴᴄᴇʟʟᴇᴅ.**",
             reply_markup=None  # Disable buttons after cancellation
         )
 
@@ -164,7 +164,7 @@ async def unfav(client: Client, message):
     await user_collection.update_one({'id': user_id}, {'$unset': {'favorites': ''}})
     
     # Generate an exciting message to notify the user
-    exciting_message = generate_exciting_message("🎉 Your favorite character has been reset!")
+    exciting_message = generate_exciting_message("🎉 ʏᴏᴜʀ ғᴀᴠᴏʀɪᴛᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀs ʙᴇᴇɴ ʀᴇsᴇᴛ!")
     await message.reply_text(exciting_message)
 
 # Function to add some excitement to the fav command's messages
