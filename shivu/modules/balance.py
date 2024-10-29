@@ -25,15 +25,17 @@ logs = {logs_group_id}
 async def send_start_button(chat_id):
     await app.send_message(chat_id, "🚀 You need to register first by starting the bot in DM. Type `/start` to begin your journey!")
 
+
 @app.on_message(filters.command(["sinv", "balance", "bal", "wealth"]))
 async def check_balance(_, message: Message):
     user_id = message.from_user.id
     replied_user_id = None
 
+    # Check if the command was used as a reply
     if message.reply_to_message:
         replied_user_id = message.reply_to_message.from_user.id
 
-    # Check if the command was used as a reply
+    # If replying to a message, use the replied user's ID
     if replied_user_id:
         user_id = replied_user_id
 
@@ -52,9 +54,9 @@ async def check_balance(_, message: Message):
     user_rank = get_rank_description(rank_value)  # Get rank description based on value
 
     # Mention the user
-    user_mention = f"[{message.from_user.first_name}](tg://user?id={user_id})"
+    user_mention = f"[{user_data.get('first_name', 'User')}](tg://user?id={user_id})"  # Use user_data for mention
 
-    # Add an image URL (you can customize this URL)
+    # Add an image URL (customize this URL as needed)
     image_url = "https://files.catbox.moe/86pzuh.jpg"  # Replace with your image URL
 
     # Enhanced message with balance and user rank
@@ -70,7 +72,6 @@ async def check_balance(_, message: Message):
 """
 
     await message.reply_photo(photo=image_url, caption=custom_message, disable_web_page_preview=True)
-
 
 def get_rank_description(rank_value):
     """
