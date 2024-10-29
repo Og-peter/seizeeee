@@ -55,7 +55,7 @@ async def check_balance(_, message: Message):
     user_mention = f"[{message.from_user.first_name}](tg://user?id={user_id})"
 
     # Add an image URL (you can customize this URL)
-    image_url = "https://example.com/path/to/your/image.jpg"  # Replace with your image URL
+    image_url = "https://files.catbox.moe/86pzuh.jpg"  # Replace with your image URL
 
     # Enhanced message with balance and user rank
     custom_message = f"""
