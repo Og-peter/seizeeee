@@ -5,7 +5,7 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from shivu import user_collection, shivuu as app, LEAVELOGS, JOINLOGS
 
 # Replace this with the actual URL of the welcome image you'd like to use
-WELCOME_PHOTO_URL = "https://i.ibb.co/0B6KsPm/photo-2024-10-25-11-14-35.jpg"
+WELCOME_PHOTO_URL = "https://files.catbox.moe/h8hiod.jpg"
 
 # Welcome messages with styled text and emojis
 WELCOME_MESSAGES = [
