@@ -17,16 +17,16 @@ async def hmode(client, message):
 
     keyboard = [
         [
-            InlineKeyboardButton("🍜 **Sort By Rarity**", callback_data="sort_rarity"),
+            InlineKeyboardButton("sᴏʀᴛ ʙʏ ʀᴀʀɪᴛʏ", callback_data="sort_rarity"),
         ],
-        [InlineKeyboardButton("🌐 **Reset Preferences**", callback_data="reset_preferences")],
-        [InlineKeyboardButton("🚮 **Close**", callback_data="close")]
+        [InlineKeyboardButton("ʀᴇsᴇᴛ ᴘʀᴇғᴇʀᴇɴᴄᴇs", callback_data="reset_preferences")],
+        [InlineKeyboardButton("ᴄʟᴏsᴇ", callback_data="close")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await message.reply_photo(
         photo="https://telegra.ph/file/1fc98964f8a467b947853.jpg",
-        caption="🎉 **Set Your Harem Mode:**\n\nChoose your preferences using the buttons below!",
+        caption="🎉 **sᴇᴛ ʏᴏᴜʀ ʜᴀʀᴇᴍ ᴍᴏᴅᴇ:**\n\nᴄʜᴏᴏsᴇ ʏᴏᴜᴛ ᴘʀᴇғᴇʀᴇɴᴄᴇs ᴜsɪɴɢ ᴛʜᴇ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ!",
         reply_markup=reply_markup,
     )
 
@@ -95,7 +95,7 @@ async def get_sorted_characters_by_rarity(user_id):
     return []
 
 async def send_rarity_preferences(callback_query: CallbackQuery):
-    """Send user a message to choose their preferred rarity of characters."""
+    """sᴇɴᴅ ᴜsᴇʀ ᴀ ᴍᴇssᴀɢᴇ ᴛᴏ ᴄʜᴏᴏss ᴛʜᴇɪʀ ᴘʀᴇғᴇʀʀᴇᴅ ʀᴀʀɪᴛʏ ᴏғ ᴄʜᴀʀᴀᴄᴛᴇʀs."""
     rarity_order = [
         "⚪️ Common",
         "🔮 Limited Edition",
@@ -114,14 +114,14 @@ async def send_rarity_preferences(callback_query: CallbackQuery):
     keyboard = [
         [InlineKeyboardButton(f"✨ {rarity} ✨", callback_data=f"rarity_{rarity.split(' ')[-1]}")] for rarity in rarity_order
     ]
-    keyboard.append([InlineKeyboardButton("🔙 Back to Menu", callback_data="harem_menu")])  # Back to main menu
+    keyboard.append([InlineKeyboardButton("🔙 ʙᴀᴄᴋ ᴛᴏ ᴍᴇɴᴜ", callback_data="harem_menu")])  # Back to main menu
     
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     # Edit the previous message to prompt user for rarity preference
     await callback_query.message.edit_text(
-        "🎴 **Choose Your Preferred Rarity:**\n\n"
-        "Select from the options below to filter your character collection!",
+        "🎴 **ᴄʜᴏᴏsᴇ ʏᴏᴜʀ ᴘʀᴇғᴇʀʀᴇᴅ ʀᴀʀɪᴛʏ:**\n\n"
+        "sᴇʟᴇᴄᴛ ғʀᴏᴍ ᴛʜᴇ ᴏᴘᴛɪᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ғɪʟᴛᴇʀ ʏᴏᴜʀ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ!",
         reply_markup=reply_markup
     )
 
@@ -144,9 +144,9 @@ async def rarity_callback(client, callback_query: CallbackQuery):
 
         # Success message with additional feedback
         await callback_query.message.edit_text(
-            f"✨ **Harem Interface Updated!** ✨\n"
-            f"Your rarity preference has been set to: **{rarity}**\n\n"
-            "🔄 Navigating you back to the Harem Mode..."
+            f"✨ **ʜᴀʀᴇᴍ ɪɴᴛᴇʀғᴀᴄᴇ ᴜᴘᴅᴀᴛᴇᴅ!** ✨\n"
+            f"ʏᴏᴜʀ ʀᴀʀɪᴛʏ ᴘʀᴇғᴇʀᴇɴᴄᴇ ʜᴀs ʙᴇᴇɴ sᴇᴛ ᴛᴏ: **{rarity}**\n\n"
+            "🔄 ɴᴀᴠɪɢᴀᴛɪɴɢ ʏᴏᴜ ʙᴀᴄᴋ ᴛᴏ ᴛʜᴇ ʜᴀʀᴇᴍ ᴍᴏᴅᴇ..."
         )
         
         # Optionally, add a delay before returning to harem mode for a smoother transition
@@ -168,9 +168,9 @@ async def reset_preferences(client, callback_query: CallbackQuery):
     
     # Enhanced success message
     await callback_query.message.edit_text(
-        "🌋 **Rarity Preferences Reset!** 🌋\n"
-        "Your preferences have been cleared. You can now set new ones anytime!\n\n"
-        "🔄 Returning to Harem Mode..."
+        "🌋 **ʀᴀʀɪᴛʏ ᴘʀᴇғᴇʀᴇɴᴄᴇs ʀᴇsᴇᴛ!** 🌋\n"
+        "ʏᴏᴜʀ ᴘʀᴇғᴇʀᴇɴᴄᴇs ʜᴀᴠᴇ ʙᴇᴇɴ ᴄʟᴇᴀʀᴇᴅ. ʏᴏᴜ ᴄᴀɴ ɴᴏᴡ sᴇᴛ ɴᴇᴡ ᴏɴᴇs ᴀɴʏᴛɪᴍᴇ!\n\n"
+        "🔄 ʀᴇᴛᴜʀɴɪɴɢ ᴛᴏ ʜᴀʀᴇᴍ ᴍᴏᴅᴇ..."
     )
 
     # Optional delay for smooth transition
