@@ -159,7 +159,7 @@ async def sfight(_, message: t.Message):
 
             # Add a retry button
             retry_button = InlineKeyboardMarkup(
-                [[InlineKeyboardButton("⚔️ ᴛʀʏ ᴀɴᴏᴛʜᴇʀ ғɪɢʜᴛ ⚔️", callback_data="retry_fight")]]
+                [[InlineKeyboardButton("⚔️ ᴛʀʏ ᴀɴᴏᴛʜᴇʀ ғɪɢʜᴛ ⚔️", callback_data=f"retry_fight_{user_id}")]]
             )
             await message.reply_text("💪 ʀᴇᴀᴅʏ ғᴏʀ ᴀɴᴏᴛʜᴇʀ ʙᴀᴛᴛʟᴇ?", reply_markup=retry_button)
 
@@ -176,9 +176,19 @@ async def sfight(_, message: t.Message):
                 await message.reply_text("😤 **ɢᴏᴊᴏ:** sᴜᴋᴜɴᴀ, ʏᴏᴜ ᴀʀᴇ ɴᴏᴛʜɪɴɢ ʙᴜᴛ ᴀ ʙʟᴏᴏᴅʏ ᴡʜɪsᴘᴇʀ. ɴᴏᴡ ʟᴇᴀᴠᴇ ᴏʀ ɪ'ʟʟ ᴘᴇʀᴍᴀɴᴇɴᴛʟʏ ᴅᴇsᴛʀᴏʏ ʏᴏᴜ!")
 
             loss_video = random.choice(BATTLE_VIDEOS)
-            await bot.send_video(chat_id, video=loss_video, caption="💀 **ᴛᴏᴜɢʜ ʟᴏss, ʙᴇᴛᴛᴇʀ ʟᴜᴄᴋ ɴᴇxᴛ ᴛɪᴍᴇ!**")
-
+            await bot.send_video(chat_id, video=loss_video, caption="💀 **ᴛᴏᴜɢʜ ʟᴏss, ʙᴇᴛᴛᴇʀ ʟᴜᴄᴋ ɴᴇxᴛ ᴛɪᴍᴇ** 🦍")
+           
 # Retry fight callback handler
-@bot.on_callback_query(filters.regex("retry_fight"))
+@bot.on_callback_query(filters.regex(r"retry_fight_(\d+)"))
 async def retry_fight(_, callback_query: t.CallbackQuery):
+    user_id = int(callback_query.data.split("_")[2])
+
+    # Verify that the callback query was initiated by the correct user
+    if callback_query.from_user.id != user_id:
+        return await callback_query.answer("❌ ᴛʜɪs ғɪɢʜᴛ ɪs ɴᴏᴛ ғᴏʀ ʏᴏᴜ!", show_alert=True)
+
+    # Acknowledge the callback query
+    await callback_query.answer()
+
+    # Run the fight command again as if it's a new message
     await sfight(_, callback_query.message)
