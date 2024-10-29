@@ -217,9 +217,9 @@ async def hunt(update: Update, context: CallbackContext):
         await save_safari_user(user_id)
 
         text = (
-            f" **A wild {waifu_name} ( {waifu_rarity} ) has appeared!** \n\n"
-            f"🔍 **Explore Limit:** {user_data['used_hunts']}/{user_data['hunt_limit']} \n"
-            f"🧊 **Contract Crystals:** {user_data['safari_balls']} \n"
+            f" **A wild** {waifu_name} ( {waifu_rarity} ) **has appeared!**\n\n"
+            f"🔍 **Explore Limit:** {user_data['used_hunts']}/{user_data['hunt_limit']}\n"
+            f"🧊 **Contract Crystals:** {user_data['safari_balls']}\n"
         )
         
         keyboard = InlineKeyboardMarkup(
