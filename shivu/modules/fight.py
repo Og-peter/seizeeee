@@ -167,8 +167,9 @@ async def sfight(_, message: t.Message):
             # User loses the fight
             await asyncio.sleep(2)
     
-           # Add character-specific dialogues based on the loser
-           if random.random() < 0.5:  # Randomly decide if Sukuna or Gojo loses
+            # Add character-specific dialogues based on the loser
+            if random.random() < 0.5:  # Randomly decide if Sukuna or Gojo loses
+        
             await message.reply_text(f"💀 **{mention}, ʏᴏᴜ ʟᴏsᴛ ᴛʜᴇ ғɪɢʜᴛ. sᴜᴋᴜɴᴀ ʜᴀs ᴅᴇғᴇᴀᴛᴇᴅ ɢᴏᴊᴏ!** 💀")
             await message.reply_text("😈 **sᴜᴋᴜɴᴀ:** ʏᴏᴜ ʜᴀᴅ ɴᴏ ᴄʜᴀɴᴄᴇs, ɢᴏᴊᴏ! ᴏʀ ɴᴏᴡ, ᴛʜʀᴏᴡ ʏᴏᴜʀsᴇʟғ ᴀᴡᴀʏ.")
         else:
