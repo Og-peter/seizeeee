@@ -109,9 +109,9 @@ async def dice(_, message: t.Message):
             await message.reply_animation(
                 animation="https://files.catbox.moe/p62bql.mp4",  # Medium roll gif
                 caption=(
-                    f"✨ **ɴɪᴄᴇ ʀᴏʟʟ, {mention}!** ✨\n\n"
-                    f"ʏᴏᴜ ʀᴏʟʟᴇᴅ ᴀ {value}, ɴᴏᴛ ʙᴀᴅ ᴀᴛ ᴀʟʟ not bad at all! 🍀 Keep trying for the jackpot!\n\n"
-                    f"🌟 **ʙᴇᴛᴛᴇʀ ʟᴜᴄᴋ ɴᴇxᴛ ᴛɪᴍᴇ!** 🌟"
+                    f"❄️ **ɴɪᴄᴇ ʀᴏʟʟ, {mention}!** ❄️\n\n"
+                    f"ʏᴏᴜ ʀᴏʟʟᴇᴅ ᴀ {value}, ɴᴏᴛ ʙᴀᴅ ᴀᴛ ᴀʟʟ ɴᴏᴛ ʙᴀᴅ ᴀᴛ ᴀʟʟ! 🩷 ᴋᴇᴇᴘ ᴛʀʏɪɴɢ ғᴏʀ ᴛʜᴇ ᴊᴀᴄᴋᴘᴏᴛ!\n\n"
+                    f"🥂 **ʙᴇᴛᴛᴇʀ ʟᴜᴄᴋ ɴᴇxᴛ ᴛɪᴍᴇ!** 🥂"
                 ),
                 quote=True
             )
@@ -122,8 +122,8 @@ async def dice(_, message: t.Message):
                 animation="https://files.catbox.moe/hn08wr.mp4",  # Low roll gif
                 caption=(
                     f"💔 **Oᴏᴘs, {mention}.**\n\n"
-                    f"ʏᴏᴜ ʀᴏʟʟᴇᴅ ᴀ {value}... 😢\n\n"
-                    f"ᴅᴏɴ'ᴛ ɢɪᴠᴇ ᴜᴘ! ᴛʀʏ ᴀɢᴀɪɴ ᴀɴᴅ ᴀɪᴍ ғᴏʀ sᴛᴀʀs! 🌌"
+                    f"ʏᴏᴜ ʀᴏʟʟᴇᴅ ᴀ {value}... 🪭\n\n"
+                    f"ᴅᴏɴ'ᴛ ɢɪᴠᴇ ᴜᴘ! ᴛʀʏ ᴀɢᴀɪɴ ᴀɴᴅ ᴀɪᴍ ғᴏʀ sᴛᴀʀs! 💫"
                 ),
                 quote=True
             )
