@@ -91,8 +91,8 @@ async def start(update: Update, context: CallbackContext) -> None:
             )
 
     if update.effective_chat.type == "private":
-        bot_id = "YOUR_BOT_ID"  # Replace with the actual bot ID
-        bot_name = "Character Seize Bot"  # Replace with the bot's display name
+        bot_id = "7335799800"  # Replace with the actual bot ID
+        bot_name = "ᴄʜᴧʀᴧᴄᴛєʀ sєɪᴢє ʙσᴛ"  # Replace with the bot's display name
 
         caption = (
             f"┬── ⋅ ⋅ ───── ᯽ ───── ⋅ ⋅ ──┬\n"
