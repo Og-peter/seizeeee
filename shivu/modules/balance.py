@@ -71,7 +71,7 @@ async def check_balance(_, message: Message):
 ╰── ⋅ ⋅ ─── ✩ ─── ⋅ ⋅ ──╯
 """
 
-    await message.reply_photo(photo=image_url, caption=custom_message, disable_web_page_preview=True)
+    await message.reply_photo(photo=image_url, caption=custom_message)
 
 def get_rank_description(rank_value):
     """
