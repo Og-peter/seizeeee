@@ -1,6 +1,6 @@
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from shivu import db, user_collection, SPECIALGRADE
+from shivu import db, user_collection, collection, SPECIALGRADE
 from shivu import shivuu as app
 import asyncio
 import time
@@ -76,7 +76,7 @@ async def get_user_info(user_id):
     if user_data:
         user_first_name = user_data.get('first_name', 'Unknown')
         user_id = user_data.get('id', 'Unknown')
-        total_characters = await log_collection.count_documents({})
+        total_characters = await collection.count_documents({})
         characters = user_data.get('characters', [])
         characters_count = len(characters)
         character_percentage = (characters_count / total_characters * 100) if total_characters > 0 else 0
