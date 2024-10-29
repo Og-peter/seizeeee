@@ -63,8 +63,8 @@ async def message_counter(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 else:
                     # Stylized warning message
                     warning_message = (
-                        f"🚫 Excessive Messages Detected!\n⛔️ {update.effective_user.first_name}, "
-                        f"please take a break! You are being ignored for 10 minutes."
+                        f"🚫 ᴇxᴄᴇssɪᴠᴇ ᴍᴇssᴀɢᴇs ᴅᴇᴛᴇᴄᴛᴇᴅ!\n⛔️ {update.effective_user.first_name}, "
+                        f"ᴘʟᴇᴀsᴇ ᴛᴀᴋᴇ ᴀ ʙʀᴇᴀᴋ! ʏᴏᴜ ᴀʀᴇ ʙᴇɪɴɢ ɪɢɴᴏʀᴇᴅ ғᴏʀ 10 ᴍɪɴᴜᴛᴇs."
                     )
                     await update.message.reply_text(warning_message)
                     warned_users[user_id] = time.time()
