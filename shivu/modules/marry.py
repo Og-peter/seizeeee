@@ -35,16 +35,16 @@ async def get_unique_characters(receiver_id, target_rarities=target_rarities):
 # Fun Congratulatory Message with Styled Fonts
 def get_congratulatory_message(mention, character):
     messages = [
-        f"🎉 ✨『Congratulations』✨ {mention}! You've just 『𝒎𝒂𝒓𝒓𝒊𝒆𝒅』 {character['name']} from {character['anime']} 💍!",
-        f"💞 𝑯𝒂𝒊 {mention}! {character['name']} from {character['anime']} 🌸 𝑖𝑠 𝑤𝑎𝑖𝑡𝑖𝑛𝑔 𝑖𝑛 𝑦𝑜𝑢𝑟 𝒉𝒂𝒓𝒆𝒎!"
+        f"💥 ᴄᴏɴɢᴇᴀᴛᴜʟᴀᴛɪᴏɴs {mention}! ʏᴏᴜ'ᴠᴇ ᴊᴜsᴛ ᴍᴀʀʀɪᴇᴅ {character['name']} ғʀᴏᴍ {character['anime']} 💍!",
+        f"🌿 ʜᴀɪ {mention}! {character['name']} ғʀᴏᴍ {character['anime']} 🏵️ ɪs ᴡᴀɪᴛɪɴɢ ɪɴ ʏᴏᴜʀ ʜᴀʀᴇᴍ!"
     ]
     return random.choice(messages)
 
 # Failure Message with Styled Fonts
 def get_rejection_message(mention):
     messages = [
-        f"💔 𝑯𝒂𝒓𝒅 𝒍𝒖𝒄𝒌, {mention}! She slipped away and left you 『💀』",
-        f"💀 Better luck next time, {mention}. She 『𝑟𝑒𝑓𝑢𝑠𝑒𝑑』 and vanished! 👻",
+        f"💔 ʜᴀʀs ʟᴜᴄᴋ, {mention}! sʜᴇ sʟɪᴘᴘᴇᴅ ᴀᴡᴀʏ ᴀɴᴅ ʟᴇғᴛ ʏᴏᴜ",
+        f"💀 ʙᴇᴛᴛᴇʀ ʟᴜᴄᴋ ɴᴇxᴛ ᴛɪᴍᴇ, {mention}. sʜᴇ ʀᴇғᴜsᴇᴅ ᴀɴᴅ ᴠᴀɴɪsʜᴇᴅ! 👻",
     ]
     return random.choice(messages)
 
@@ -55,7 +55,7 @@ def get_cooldown_message(cooldown_time):
 
 # Streak Bonus Message
 def get_streak_bonus_message(mention, streak):
-    return f"🔥 𝑾𝒐𝒘 {mention}, you've reached a 𝒔𝒕𝒓𝒆𝒂𝒌 of {streak}! 🔥"
+    return f"🫧 ᴡᴏᴡ {mention}, ʏᴏᴜ'ᴠᴇ ʀᴇᴀᴄʜᴇᴅ ᴀ sᴛʀᴇᴀᴋ ᴏғ {streak}! 🔥"
 
 # Marry Command with Advanced Features
 @bot.on_message(filters.command(["dice", "marry"]))
@@ -77,7 +77,7 @@ async def dice(_: bot, message: t.Message):
     cooldowns[user_id] = time.time()
 
     # Rolling Dice with Styled Message
-    await message.reply_text("🎲 『Rolling』 🎲")
+    await message.reply_text("🎲 ʀᴏʟʟɪɴɢ 🎲")
     dice_msg = await bot.send_dice(chat_id=chat_id)
     value = int(dice_msg.dice.value)
 
@@ -101,7 +101,7 @@ async def dice(_: bot, message: t.Message):
 
         # Success Message with Emojis
         success_emojis = ['🎉', '💍', '💖', '🥳']
-        await message.reply_text(f"{random.choice(success_emojis)} 『𝑳𝒖𝒄𝒌𝒚 𝑹𝒐𝒍𝒍』! 💍 Your proposal was accepted!")
+        await message.reply_text(f"{random.choice(success_emojis)} ʟᴜᴄᴋʏ ʀᴏʟʟ! 💍 ʏᴏᴜʀ ᴘʀᴏᴘᴏsᴀʟ ᴡᴀs ᴀᴄᴄᴇᴘᴛᴇᴅ!")
 
         # Bonus for Streaks
         if roll_streaks[mention] > 1:
