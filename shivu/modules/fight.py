@@ -182,4 +182,3 @@ async def sfight(_, message: t.Message):
 @bot.on_callback_query(filters.regex("retry_fight"))
 async def retry_fight(_, callback_query: t.CallbackQuery):
     await sfight(_, callback_query.message)
-    
