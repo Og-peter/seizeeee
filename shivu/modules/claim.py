@@ -48,10 +48,16 @@ last_claim_time = {}
 
 async def process_claim(user_id, chat_id, user_first_name, message_id):
     unique_characters = await get_unique_characters(user_id)
+    
+    if not unique_characters:
+        await send_error_to_devs(f"No unique characters found for user {user_id}.")
+        await bot.send_message(chat_id, f"🚫 **No new characters available for you, {user_first_name}.**")
+        return  # Exit if no characters found
+
     try:
         # Update user's character list in the database
         await user_collection.update_one({'id': user_id}, {'$push': {'characters': {'$each': unique_characters}}})
-        
+
         # Prepare image URLs and captions with additional text and user mention
         img_urls = [character['img_url'] for character in unique_characters]
         captions = [
@@ -62,7 +68,7 @@ async def process_claim(user_id, chat_id, user_first_name, message_id):
             f"🍃 **ᴅᴏɴ'ᴛ ғᴏʀɢᴇᴛ ᴛᴏ ᴄᴏᴍᴇ ʙᴀᴄᴋ ᴛᴏᴍᴏʀʀᴏᴡ ғᴏʀ ᴍᴏʀᴇ ᴄʟᴀɪᴍs!**"
             for character in unique_characters
         ]
-        
+
         # Send each image with caption, replying to the specified message
         for img_url, caption in zip(img_urls, captions):
             await bot.send_photo(
