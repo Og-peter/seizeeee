@@ -62,10 +62,10 @@ async def dice(_, message: t.Message):
             await user_collection.update_one({'id': receiver_id}, {'$push': {'characters': {'$each': unique_characters}}})
             img_urls = [character['img_url'] for character in unique_characters]
             captions = [
-                f"🏆🎊 Yo {mention}, you hit the *JACKPOT*! 🎊🏆\n\n"
-                f"🧩 **Name:** {character['name']}\n"
-                f"✨ **Rarity:** {character['rarity']}\n"
-                f"📺 **Anime:** {character['anime']}\n\n"
+                f"🩵 Yo {mention}, ʏᴏᴜ ʜɪᴛ ᴛʜᴇ *ᴊᴀᴄᴋᴘᴏᴛ*! ❄️\n\n"
+                f"🍃 **ɴᴀᴍᴇ:** {character['name']}\n"
+                f"⚜️ **ʀᴀʀɪᴛʏ:** {character['rarity']}\n"
+                f"⛩️ **ᴀɴɪᴍᴇ:** {character['anime']}\n\n"
                 f"━━━━━━━━━━━━━━━\n"
                 for character in unique_characters
             ]
@@ -91,13 +91,13 @@ async def dice(_, message: t.Message):
 
             img_urls = [character['img_url'] for character in unique_characters]
             captions = [
-                f"🎉🌟 𝗝𝗔𝗖𝗞𝗣𝗢𝗧! 🌟🎉\n"
-                f"🎲 𝗬𝗼𝘂 𝗿𝗼𝗹𝗹𝗲𝗱 𝗮 *{value}*, {mention}!\n\n"
-                f"🎯 **𝗟𝗲𝗴𝗲𝗻𝗱𝗮𝗿𝘆 𝗖𝗵𝗮𝗿𝗮𝗰𝘁𝗲𝗿 𝗨𝗻𝗹𝗼𝗰𝗸𝗲𝗱!** 🎯\n"
-                f"🧩 **𝗡𝗮𝗺𝗲:** {character['name']}\n"
-                f"✨ **𝗥𝗮𝗿𝗶𝘁𝘆:** {character['rarity']}\n"
-                f"📺 **𝗔𝗻𝗶𝗺𝗲:** {character['anime']}\n\n"
-                f"🚀 **𝗚𝗼𝗼𝗱 𝗹𝘂𝗰𝗸 𝗼𝗻 𝘆𝗼𝘂𝗿 𝗻𝗲𝘅𝘁 𝗿𝗼𝗹𝗹!** 🚀\n"
+                f"🩵 ᴊᴀᴄᴋᴘᴏᴛ! ❄️\n"
+                f"🏮 ʏᴏᴜ ʀᴏʟʟᴇᴅ ᴀ {value}, {mention}!\n\n"
+                f"🥂 **ᴜɴɪǫᴜᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴜɴʟᴏᴄᴋᴇᴅ!** 🥂\n"
+                f"🍃 **ɴᴀᴍᴇ:** {character['name']}\n"
+                f"⚜️ **ʀᴀʀɪᴛʏ:** {character['rarity']}\n"
+                f"⛩️ **ᴀɴɪᴍᴇ:** {character['anime']}\n\n"
+                f"🫧 **ɢᴏᴏᴅ ʟᴜᴄᴋ ᴏɴ ʏᴏᴜʀ ɴᴇxᴛ ʀᴏʟʟ!** 🫧\n"
                 f"━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                 for character in unique_characters
             ]
@@ -109,9 +109,9 @@ async def dice(_, message: t.Message):
             await message.reply_animation(
                 animation="https://files.catbox.moe/p62bql.mp4",  # Medium roll gif
                 caption=(
-                    f"✨ **Nice roll, {mention}!** ✨\n\n"
-                    f"You rolled a *{value}*, not bad at all! 🍀 Keep trying for the jackpot!\n\n"
-                    f"🌟 **Better luck next time!** 🌟"
+                    f"✨ **ɴɪᴄᴇ ʀᴏʟʟ, {mention}!** ✨\n\n"
+                    f"ʏᴏᴜ ʀᴏʟʟᴇᴅ ᴀ {value}, ɴᴏᴛ ʙᴀᴅ ᴀᴛ ᴀʟʟ not bad at all! 🍀 Keep trying for the jackpot!\n\n"
+                    f"🌟 **ʙᴇᴛᴛᴇʀ ʟᴜᴄᴋ ɴᴇxᴛ ᴛɪᴍᴇ!** 🌟"
                 ),
                 quote=True
             )
@@ -121,7 +121,7 @@ async def dice(_, message: t.Message):
             await message.reply_animation(
                 animation="https://files.catbox.moe/hn08wr.mp4",  # Low roll gif
                 caption=(
-                    f"💔 **Oops, {mention}.**\n\n"
+                    f"💔 **Oᴏᴘs, {mention}.**\n\n"
                     f"You rolled a *{value}*... 😢\n\n"
                     f"Don't give up! Try again and aim for the stars! 🌌"
                 ),
