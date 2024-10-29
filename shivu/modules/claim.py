@@ -48,16 +48,10 @@ last_claim_time = {}
 
 async def process_claim(user_id, chat_id, user_first_name, message_id):
     unique_characters = await get_unique_characters(user_id)
-    
-    if not unique_characters:
-        await send_error_to_devs(f"No unique characters found for user {user_id}.")
-        await bot.send_message(chat_id, f"🚫 **No new characters available for you, {user_first_name}.**")
-        return  # Exit if no characters found
-
     try:
         # Update user's character list in the database
         await user_collection.update_one({'id': user_id}, {'$push': {'characters': {'$each': unique_characters}}})
-
+        
         # Prepare image URLs and captions with additional text and user mention
         img_urls = [character['img_url'] for character in unique_characters]
         captions = [
@@ -68,7 +62,7 @@ async def process_claim(user_id, chat_id, user_first_name, message_id):
             f"🍃 **ᴅᴏɴ'ᴛ ғᴏʀɢᴇᴛ ᴛᴏ ᴄᴏᴍᴇ ʙᴀᴄᴋ ᴛᴏᴍᴏʀʀᴏᴡ ғᴏʀ ᴍᴏʀᴇ ᴄʟᴀɪᴍs!**"
             for character in unique_characters
         ]
-
+        
         # Send each image with caption, replying to the specified message
         for img_url, caption in zip(img_urls, captions):
             await bot.send_photo(
@@ -79,12 +73,13 @@ async def process_claim(user_id, chat_id, user_first_name, message_id):
             )
     except Exception as e:
         await send_error_to_devs(f"Error in process_claim: {traceback.format_exc()}")
-        
+
 @bot.on_message(filters.command(["wclaim"]))
 async def claim_waifu(_, message: t.Message):
     user_id = message.from_user.id
     chat_id = message.chat.id
     user_first_name = message.from_user.first_name
+    message_id = message.message_id  # Get the message ID
 
     if chat_id != GROUP_ID:
         keyboard = InlineKeyboardMarkup([
@@ -106,7 +101,7 @@ async def claim_waifu(_, message: t.Message):
         if last_claim_date.date() == now.date():
             next_claim_time = (last_claim_date + timedelta(days=1)).strftime("%H:%M:%S")
             return await message.reply_text(
-                             f"⏰ **ɢᴏᴍᴇɴ'ɴᴀsᴀɪ, @{update.effective_user.username}!**\n"
+                             f"⏰ **ɢᴏᴍᴇɴ'ɴᴀsᴀɪ, @{message.from_user.username}!**\n"
                              f"**ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ ᴜɴᴛɪʟ {next_claim_time} ᴛᴏ ᴄʟᴀɪᴍ ʏᴏᴜʀ ɴᴇxᴛ ᴄʜᴀʀᴀᴄᴛᴇʀ.**",
                              quote=True
                         )
@@ -125,7 +120,7 @@ async def claim_waifu(_, message: t.Message):
         await asyncio.sleep(1)
         await animation_message.edit_text(msg)
 
-    await process_claim(user_id, chat_id, user_first_name)
+    await process_claim(user_id, chat_id, user_first_name, message_id)  # Pass the message ID
 
     # Send a log message about the claim
     log_message = (
