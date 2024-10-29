@@ -12,12 +12,13 @@ async def trade(client, message):
 
     if await has_ongoing_transaction(sender_id):
         await message.reply_text(
-            "🚧 **Active Trade Detected!**\n\n"
-            "You’re already engaged in a trade or gift exchange. Please complete it first or use **`/reset`** to clear all pending actions and start fresh."
+            "🚧 **ᴀᴄᴛɪᴠᴇ ᴛʀᴀᴅᴇ ᴅᴇᴛᴇᴄᴛᴇᴅ!**\n\n"
+            "Yᴏᴜ'ʀᴇ ᴀʟʀᴇᴀᴅʏ ᴇɴɢᴀɢᴇᴅ ɪɴ ᴀ ᴛʀᴀᴅᴇ ᴏʀ ɢɪꜰᴛ ᴇxᴄʜᴀɴɢᴇ. Pʟᴇᴀsᴇ cᴏᴍᴘʟᴇᴛᴇ ɪᴛ ғɪʀsᴛ ᴏʀ ᴜsᴇ `/reset` ᴛᴏ cʟᴇᴀʀ ᴀʟʟ pᴇɴᴅɪɴɢ ᴀᴄᴛɪᴏɴs ᴀɴᴅ sᴛᴀʀᴛ ғʀᴇsʜ."
         )
         return
 
     await start_trade(sender_id, message)
+
 # Command to initiate a gift
 @app.on_message(filters.command("gift"))
 async def gift(client, message):
@@ -26,15 +27,15 @@ async def gift(client, message):
     # Check if the sender has ongoing transactions
     if await has_ongoing_transaction(sender_id):
         await message.reply_text(
-            "⚠️ **Active Transaction Alert!**\n\n"
-            "You're currently involved in a trade or gift exchange. Complete it first, or use **`/reset`** to cancel all active transactions."
+            "⚠️ **ᴀᴄᴛɪᴠᴇ ᴛʀᴀɴsᴀᴄᴛɪᴏɴ ᴀʟᴇʀᴛ!**\n\n"
+            "Yᴏᴜ'ʀᴇ cᴜʀʀᴇɴᴛʟʏ ɪɴᴠᴏʟᴠᴇᴅ ɪɴ ᴀ ᴛʀᴀᴅᴇ ᴏʀ ɢɪғᴛ ᴇxᴄʜᴀɴɢᴇ. Cᴏᴍᴘʟᴇᴛᴇ ɪᴛ ꜰɪʀsᴛ ᴏʀ ᴜsᴇ **`/reset`** ᴛᴏ ᴄʟᴇᴀʀ ᴀʟʟ pᴇɴdɪɴɢ ᴀᴄᴛɪᴏɴs."
         )
         return
 
     if not message.reply_to_message:
         await message.reply_text(
-            "💌 **Whoops!**\n\n"
-            "To gift a character, please reply to the intended user's message."
+            "💌 **Wʜᴏᴏᴘs!**\n\n"
+            "Tᴏ ɢɪғᴛ ᴀ ᴄʜᴀʀᴀᴄᴛᴇʀ, ᴘʟᴇᴀsᴇ rᴇᴘʟʏ ᴛᴏ ᴛʜᴇ ɪɴᴛᴇɴᴅᴇᴅ ᴜsᴇʀ's mᴇssᴀɢᴇ."
         )
         return
 
@@ -43,11 +44,11 @@ async def gift(client, message):
     receiver_first_name = message.reply_to_message.from_user.first_name
 
     if sender_id == receiver_id:
-        await message.reply_text("🚫 You can't gift a character to yourself!")
+        await message.reply_text("🚫 Yᴏᴜ ᴄᴀɴ'ᴛ ɢɪғᴛ ᴀ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴛᴏ yᴏᴜʀsᴇʟғ!")
         return
 
     if len(message.command) != 2:
-        await message.reply_text("❗ **Character ID Missing!**\n\nPlease provide the character ID to proceed with the gift.")
+        await message.reply_text("❗ **Cʜᴀʀᴀᴄᴛᴇʀ ID Mɪssɪɴɢ!**\n\nPʟᴇᴀsᴇ prᴏvɪdᴇ ᴛʜᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ ID ᴛᴏ prᴏcᴇᴇd wɪᴛʜ ᴛʜᴇ ɢɪғᴛ.")
         return
 
     character_id = message.command[1]
@@ -57,7 +58,7 @@ async def gift(client, message):
     character = next((character for character in sender['characters'] if character.get('id') == character_id), None)
 
     if not character:
-        await message.reply_text("❌ **Character Not Found!**\n\nIt seems you don't own this character.")
+        await message.reply_text("❌ **Cʜᴀʀᴀᴄᴛᴇʀ Nᴏᴛ Fᴏᴜɴᴅ!**\n\nIᴛ sᴇᴇms yᴏᴜ dᴏɴ'ᴛ ᴏᴡɴ tʜɪs cʜᴀʀᴀᴄᴛᴇʀ.")
         return
 
     pending_gifts[(sender_id, receiver_id)] = {
@@ -68,30 +69,30 @@ async def gift(client, message):
 
     keyboard = InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("🎁 Confirm Gift ✅", callback_data="confirm_gift")],
-            [InlineKeyboardButton("❌ Cancel Gift ❌", callback_data="cancel_gift")]
+            [InlineKeyboardButton("🎁 Cᴏɴfɪʀᴍ Gɪғᴛ ✅", callback_data="confirm_gift")],
+            [InlineKeyboardButton("❌ Cᴀɴᴄᴇʟ Gɪғᴛ ❌", callback_data="cancel_gift")]
         ]
     )
 
     # Construct message with receiver's first name as a clickable link
     message_text = (
-        f"🎉 **Confirm Your Gift!**\n\n"
-        f"Do you want to send this character to **[{receiver_first_name}](tg://user?id={receiver_id})**?\n\n"
-        f"✨ **Character Details**:\n"
-        f"   • **Name:** `{character['name']}`\n"
-        f"   • **Rarity:** `{character['rarity']}`\n"
-        f"   • **Anime:** `{character['anime']}`\n\n"
-        f"Click 'Confirm Gift' to proceed or 'Cancel Gift' to stop."
+        f"🌬️ **Cᴏɴfɪʀᴍ Yᴏᴜʀ Gɪғᴛ!**\n\n"
+        f"Dᴏ yᴏᴜ wᴀɴᴛ tᴏ sᴇɴd tʜɪs cʜᴀʀᴀᴄᴛᴇʀ tᴏ **[{receiver_first_name}](tg://user?id={receiver_id})**?\n\n"
+        f"🩵 **Cʜᴀʀᴀᴄᴛᴇʀ Dᴇᴛᴀɪʟs**:\n"
+        f"❄️ **Nᴀᴍᴇ:** `{character['name']}`\n"
+        f"⚜️ **Rᴀʀɪᴛʏ:** `{character['rarity']}`\n"
+        f"⛩️ **ᴀɴɪᴍᴇ:** `{character['anime']}`\n\n"
+        f"Click 'Cᴏɴfɪʀᴍ Gɪғᴛ' tᴏ prᴏcᴇᴇd ᴏʀ 'Cᴀɴᴄᴇʟ Gɪғᴛ' tᴏ sᴛᴏp."
     )
 
     await message.reply_text(message_text, reply_markup=keyboard)
-
+    
 # Start a trade transaction
 async def start_trade(sender_id, message):
     if not message.reply_to_message:
         await message.reply_text(
-            "❌ **Incorrect Usage!**\n\n"
-            "ℹ️ To initiate a trade, please reply to the user you wish to trade with using:\n\n"
+            "❌ **ɪɴᴄᴏʀʀᴇᴄᴛ ᴜsᴀɢᴇ!**\n\n"
+            "ℹ️ ᴛᴏ ɪɴɪᴛɪᴀᴛᴇ ᴀ ᴛʀᴀᴅᴇ, ᴘʟᴇᴀsᴇ ʀᴇᴘʟʏ ᴛᴏ ᴛʜᴇ ᴜsᴇʀ ʏᴏᴜ ᴡɪsʜ ᴛᴏ ᴛʀᴀᴅᴇ ᴡɪᴛʜ ᴜsɪɴɢ:\n\n"
             "`/trade character_id_1 character_id_2`"
         )
         return
@@ -99,20 +100,20 @@ async def start_trade(sender_id, message):
     receiver_id = message.reply_to_message.from_user.id
 
     if sender_id == receiver_id:
-        await message.reply_text("🚫 You cannot trade with yourself!")
+        await message.reply_text("🚫 ʏᴏᴜ ᴄᴀɴ'ᴛ ᴛʀᴀᴅᴇ ᴡɪᴛʜ ʏᴏᴜʀsᴇʟғ!")
         return
 
     if await has_ongoing_transaction(receiver_id):
         receiver = await user_collection.find_one({'id': receiver_id})
         await message.reply_text(
-            f"⚠️ **Alert!**\n\n"
-            f"{receiver.get('first_name')} is currently involved in ongoing deals. "
-            "Please ask them to use **`/reset`** to cancel their ongoing transactions."
+            f"⚠️ **ᴀʟᴇʀᴛ!**\n\n"
+            f"{receiver.get('first_name')} ɪs cᴜʀʀᴇɴᴛʟʏ ɪɴᴠᴏʟᴠᴇᴅ ɪɴ ᴏɴɢᴏɪɴɢ ᴅᴇᴀʟs. "
+            "Pʟᴇᴀsᴇ ᴀsᴋ ᴛʜᴇᴍ ᴛᴏ ᴜsᴇ **`/reset`** ᴛᴏ ᴄᴀɴᴄᴇʟ ᴛʜᴇɪʀ ᴏɴɢᴏɪɴɢ ᴛʀᴀɴsᴀᴄᴛɪᴏɴs."
         )
         return
 
     if len(message.command) != 3:
-        await message.reply_text("⚠️ **Character ID Missing!**\n\nYou need to provide two character IDs!")
+        await message.reply_text("⚠️ **ᴄʜᴀʀᴀᴄᴛᴇʀ ID ᴍɪssɪɴɢ!**\n\nYᴏᴜ ɴᴇᴇᴅ ᴛᴏ ᴘʀᴏᴠɪᴅᴇ ᴛᴡᴏ ᴄʜᴀʀᴀᴄᴛᴇʀ IDs!")
         return
 
     sender_character_id, receiver_character_id = message.command[1], message.command[2]
@@ -124,11 +125,11 @@ async def start_trade(sender_id, message):
     receiver_character = next((character for character in receiver['characters'] if character.get('id') == receiver_character_id), None)
 
     if not sender_character:
-        await message.reply_text("❌ **Character Not Found!**\n\nYou don't have the character you're trying to trade.")
+        await message.reply_text("❌ **ᴄʜᴀʀᴀᴄᴛᴇʀ ɴᴏᴛ ғᴏᴜɴᴅ!**\n\nYᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴛʜᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ ʏᴏᴜ'ʀᴇ ᴛʀʏɪɴɢ ᴛᴏ ᴛʀᴀᴅᴇ.")
         return
 
     if not receiver_character:
-        await message.reply_text("❌ **Character Not Found!**\n\nThe other user doesn't possess the character they're attempting to trade.")
+        await message.reply_text("❌ **ᴄʜᴀʀᴀᴄᴛᴇʀ ɴᴏᴛ ғᴏᴜɴᴅ!**\n\nTʜᴇ ᴏᴛʜᴇʀ ᴜsᴇʀ ᴅᴏᴇsn't ᴘᴏssᴇss ᴛʜᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴛʜᴇʏ'ʀᴇ ᴀttᴇᴍᴘᴛɪɴɢ ᴛᴏ ᴛʀᴀᴅᴇ.")
         return
 
     pending_trades[(sender_id, receiver_id)] = (sender_character, receiver_character)
@@ -138,17 +139,17 @@ async def start_trade(sender_id, message):
     receiver_rarity_emoji = get_rarity_emoji(receiver_character['rarity'])
 
     trade_info_message = (
-        f"🔄 **Trade Proposal**\n\n"
-        f"**You:** {sender_character['name']} {sender_rarity_emoji}\n"
-        f"**Trading with:** [{receiver.get('first_name')}](tg://user?id={receiver_id})\n"
-        f"**They are offering:** {receiver_character['name']} {receiver_rarity_emoji}\n\n"
-        "Please review the trade details and confirm your decision!"
+        f"🔄 **ᴛʀᴀᴅᴇ ᴘʀᴏᴘᴏsᴀʟ**\n\n"
+        f"**Yᴏᴜ:** {sender_character['name']} {sender_rarity_emoji}\n"
+        f"**ᴛʀᴀᴅɪɴɢ ᴡɪᴛʜ:** [{receiver.get('first_name')}](tg://user?id={receiver_id})\n"
+        f"**ᴛʜᴇʏ ᴀʀᴇ ᴏғғᴇʀɪɴɢ:** {receiver_character['name']} {receiver_rarity_emoji}\n\n"
+        "Pʟᴇᴀsᴇ ʀᴇvɪᴇw ᴛʜᴇ ᴛʀᴀᴅᴇ ᴅᴇᴛᴀɪʟs ᴀɴᴅ ᴄᴏɴғɪʀᴍ ʏᴏᴜʀ dᴇcɪsɪᴏn!"
     )
 
     keyboard = InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("✅ Confirm Trade", callback_data=f"confirm_trade:{sender_id}:{receiver_id}")],
-            [InlineKeyboardButton("❌ Cancel Trade", callback_data="cancel_trade")]
+            [InlineKeyboardButton("✅ Cᴏɴғɪʀᴍ ᴛʀᴀᴅᴇ", callback_data=f"confirm_trade:{sender_id}:{receiver_id}")],
+            [InlineKeyboardButton("❌ Cᴀɴᴄᴇʟ ᴛʀᴀᴅᴇ", callback_data="cancel_trade")]
         ]
     )
 
@@ -161,11 +162,11 @@ async def on_trade_callback_query(client, callback_query):
     receiver_id = int(data[2])
 
     if callback_query.from_user.id != receiver_id:
-        await callback_query.answer("🚫 This trade confirmation is not for you!", show_alert=True)
+        await callback_query.answer("🚫 ᴛʜɪs ᴛʀᴀᴅᴇ ᴄᴏɴғɪʀᴍᴀᴛɪᴏɴ ɪs ɴᴏᴛ ғᴏʀ ʏᴏᴜ!", show_alert=True)
         return
 
     if (sender_id, receiver_id) not in pending_trades:
-        await callback_query.answer("❌ This trade is no longer available.", show_alert=True)
+        await callback_query.answer("❌ ᴛʜɪs ᴛʀᴀᴅᴇ ɪs ɴᴏ ʟᴏɴɢᴇʀ ᴀᴠᴀɪʟᴀʙʟᴇ.", show_alert=True)
         return
 
     sender = await user_collection.find_one({'id': sender_id})
@@ -187,28 +188,30 @@ async def on_trade_callback_query(client, callback_query):
 
     # Trade completion message
     message_text = (
-        "🔄 **Trade Completed!**\n\n"
-        f"**🌟 {sender.get('first_name', 'Unknown')}** has traded:\n"
-        f"➡️ `{sender_character['name']}` to **[{receiver.get('first_name', 'Unknown')}](tg://user?id={receiver_id})**\n\n"
-        f"**🌟 {receiver.get('first_name', 'Unknown')}** has traded:\n"
-        f"➡️ `{receiver_character['name']}` to **[{sender.get('first_name', 'Unknown')}](tg://user?id={sender_id})**"
+        "🔄 **ᴛʀᴀᴅᴇ ᴄᴏᴍᴘʟᴇᴛᴇᴅ!**\n\n"
+        f"**🌟 {sender.get('first_name', 'Unknown')}** ʜᴀs ᴛʀᴀᴅᴇᴅ:\n"
+        f"➡️ `{sender_character['name']}` ᴛᴏ **[{receiver.get('first_name', 'Unknown')}](tg://user?id={receiver_id})**\n\n"
+        f"**🌟 {receiver.get('first_name', 'Unknown')}** ʜᴀs ᴛʀᴀᴅᴇᴅ:\n"
+        f"➡️ `{receiver_character['name']}` ᴛᴏ **[{sender.get('first_name', 'Unknown')}](tg://user?id={sender_id})**\n\n"
+        "✨ ᴇᴠᴇʀʏᴏɴᴇ ᴡɪɴs! ʙᴏᴛʜ ᴘʟᴀʏᴇʀs ɢᴀɪɴ ɴᴇᴡ ᴄʜᴀʀᴀᴄᴛᴇʀs!"
     )
 
     await callback_query.message.edit_text(message_text)
 
     # Send private message to sender
     sender_trade_confirmation_message = (
-        "✅ **Trade Successful!**\n\n"
-        f"**🎉 {receiver.get('first_name', 'Unknown')}** accepted your trade offer!\n\n"
-        "ℹ️ **You received:**\n"
-        f"**🌟 Name:** `{sender_character['name']}`\n"
-        f"**🌟 Rarity:** `{sender_character['rarity']}`\n"
-        f"**🌟 Anime:** `{sender_character['anime']}`\n"
+        "✅ **ᴛʀᴀᴅᴇ sᴜᴄᴄᴇssғᴜʟ!**\n\n"
+        f"**💐 {receiver.get('first_name', 'Unknown')}** ᴀᴄᴄᴇᴘᴛᴇᴅ ʏᴏᴜʀ ᴛʀᴀᴅᴇ ᴏғғᴇʀ!\n\n"
+        "ℹ️ **Yᴏᴜ ʀᴇᴄᴇɪᴠᴇᴅ:**\n"
+        f"**🌿 Nᴀᴍᴇ:** `{sender_character['name']}`\n"
+        f"**🌋 Rᴀʀɪᴛʏ:** `{sender_character['rarity']}`\n"
+        f"**⛩️ Aɴɪᴍᴇ:** `{sender_character['anime']}`\n"
+        "😈 ʜᴀʜᴀʜᴀ! ʏᴏᴜ'ʀᴇ ɴᴏᴡ ᴏᴍɴɪᴘᴏᴛᴇɴᴛ!"
     )
 
     await app.send_photo(sender_id, photo=sender_character['img_url'], caption=sender_trade_confirmation_message)
 
-    await callback_query.answer("✅ Trade confirmed!")
+    await callback_query.answer("✅ ᴛʀᴀᴅᴇ ᴄᴏɴғɪʀᴍᴇᴅ!")
 
 # Callback query handler for rejecting trade transactions
 @app.on_callback_query(filters.create(lambda _, __, query: query.data == "cancel_trade"))
@@ -222,22 +225,23 @@ async def on_cancel_trade_callback_query(client, callback_query):
             break
 
     if not trade_found:
-        await callback_query.answer("🚫 This trade does not belong to you!", show_alert=True)
+        await callback_query.answer("🚫 ᴛʜɪs ᴛʀᴀᴅᴇ ᴅᴏᴇs ɴᴏᴛ ʙᴇʟᴏɴɢ ᴛᴏ ʏᴏᴜ!", show_alert=True)
         return
 
     del pending_trades[(trade_sender_id, receiver_id)]
     
     # Canceled trade message with advanced formatting
     cancellation_message = (
-        "❌ **Trade Canceled!** ❌\n\n"
-        f"**🔔 Notification:** The trade you initiated with **[{receiver_id}](tg://user?id={receiver_id})** has been successfully canceled.\n"
-        "If you wish to trade again, please initiate a new trade using the `/trade` command!"
+        "❌ **ᴛʀᴀᴅᴇ ᴄᴀɴᴄᴇʟᴇᴅ!** ❌\n\n"
+        f"**🔔 ɴᴏᴛɪғɪᴄᴀᴛɪᴏɴ:** ᴛʜᴇ ᴛʀᴀᴅᴇ ʏᴏᴜ ɪɴɪᴛɪᴀᴛᴇᴅ ᴡɪᴛʜ **[{receiver_id}](tg://user?id={receiver_id})** ʜᴀs ʙᴇᴇɴ sᴜᴄᴄᴇssғᴜʟʟʏ ᴄᴀɴᴄᴇʟᴇᴅ.\n"
+        "😢 ᴅᴏɴ'ᴛ ᴡᴏʀʀʏ! ɪᴅɪᴏᴛs ᴄᴀɴ'ᴛ ᴍᴀᴋᴇ ᴛʜɪs ᴡᴏʀᴋ.\n"
+        "ɪғ ʏᴏᴜ ᴡɪsʜ ᴛᴏ ᴛʀᴀᴅᴇ ᴀɢᴀɪɴ, ᴘʟᴇᴀsᴇ ɪɴɪᴛɪᴀᴛᴇ ᴀ ɴᴇᴡ ᴛʀᴀᴅᴇ ᴜsɪɴɢ ᴛʜᴇ `/trade` ᴄᴏᴍᴍᴀɴᴅ!"
     )
 
     await callback_query.message.edit_text(cancellation_message)
 
-    await callback_query.answer("✅ Trade has been canceled!")
-
+    await callback_query.answer("✅ ᴛʀᴀᴅᴇ ʜᴀs ʙᴇᴇɴ ᴄᴀɴᴄᴇʟᴇᴅ!")
+    
 # Callback query handler for gift confirmation
 @app.on_callback_query(filters.create(lambda _, __, query: query.data.lower() in ["confirm_gift", "cancel_gift"]))
 async def on_callback_query(client, callback_query):
