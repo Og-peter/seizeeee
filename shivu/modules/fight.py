@@ -134,12 +134,12 @@ async def sfight(_, message: t.Message):
             await asyncio.sleep(1)
 
         # Determine if the user wins or loses the battle
-if random.random() < (WIN_RATE_PERCENTAGE / 100):
-    # User wins the fight
-    await asyncio.sleep(3)  # Add some delay for realism
+        if random.random() < (WIN_RATE_PERCENTAGE / 100):
+        # User wins the fight
+        await asyncio.sleep(3)  # Add some delay for realism
 
-    for character in random_characters:
-        try:
+        for character in random_characters:
+          try:
             # Add the character to the user's collection
             await user_collection.update_one({'id': user_id}, {'$push': {'characters': character}})
         except Exception as e:
