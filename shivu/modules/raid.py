@@ -34,21 +34,21 @@ async def gems_command(_, message: Message):
 
     if user_data and 'gems' in user_data and user_data['gems']:
         gem_inventory = user_data['gems']
-        inventory_text = "<b>💎 𝗬𝗢𝗨𝗥 𝗜𝗧𝗘𝗠 𝗟𝗜𝗦𝗧 💎</b>\n\n"
+        inventory_text = "<b>💎 **ʏᴏᴜʀ ɪᴛᴇᴍ ʟɪsᴛ** 💎</b>\n\n"
         
         # Iterate through the gem inventory
         for gem, quantity in gem_inventory.items():
             # Check if gem price is available to avoid KeyError
             gem_emoji = gem_prices.get(gem, {}).get('emoji', '❓')  # Default to a question mark if not found
-            inventory_text += f"{gem_emoji} <b>{gem}</b>: <b>{quantity}</b>\n"
+            inventory_text += f"{gem_emoji} **{gem}**: **{quantity}**\n"
         
         # Add a footer for clarity and encouragement
-        inventory_text += "\n<b>✨ Keep collecting more gems and unlock amazing rewards!</b>"
+        inventory_text += "\n✨ **ᴋᴇᴇᴘ ᴄᴏʟʟᴇᴄᴛɪɴɢ ᴍᴏʀᴇ ɢᴇᴍs ᴀɴᴅ ᴜɴʟᴏᴄᴋ ᴀᴍᴀᴢɪɴɢ ʀᴇᴡᴀʀᴅs!**"
 
         # Use reply method without parse_mode
         await message.reply(inventory_text)
     else:
-        await message.reply("<b>🚫 You haven't collected any items yet! Start gathering some gems to fill your inventory.</b>")
+        await message.reply("🚫 **ʏᴏᴜ ʜᴀᴠᴇɴ'ᴛ ᴄᴏʟʟᴇᴄᴛᴇᴅ ᴀɴʏ ɪᴛᴇᴍs ʏᴇᴛ! sᴛᴀʀᴛ ɢᴀᴛʜᴇʀɪɴɢ sᴏᴍᴇ ɢᴇᴍs ᴛᴏ ғɪʟʟ ʏᴏᴜʀ ɪɴᴠᴇɴᴛᴏʀʏ.**")
         
 # Command to sell gems
 @bot.on_message(filters.command(["sellitem"]))
@@ -57,13 +57,13 @@ async def sell_command(_, message: Message):
     command_parts = message.text.split()
 
     if len(command_parts) != 3:
-        return await message.reply_html("<b>❌ Invalid command. Usage: /sellitem <item name> <quantity></b>")
+        return await message.reply_html("<b>❌ **ɪɴᴠᴀʟɪᴅ ᴄᴏᴍᴍᴀɴᴅ. ᴜsᴀɢᴇ:** /sellitem &lt;item name&gt; &lt;quantity&gt;</b>")
 
     item_name = command_parts[1]
     try:
         quantity = int(command_parts[2])
     except ValueError:
-        return await message.reply_html("<b>⚠️ Please enter a valid quantity.</b>")
+        return await message.reply_html("<b>⚠️ **ᴘʟᴇᴀsᴇ ᴇɴᴛᴇʀ ᴀ ᴠᴀʟɪᴅ ǫᴜᴀɴᴛɪᴛʏ.**</b>")
 
     # Check if the item exists and the user has it in their inventory
     found_item = None
@@ -73,14 +73,14 @@ async def sell_command(_, message: Message):
             break
 
     if not found_item:
-        return await message.reply_html("<b>🚫 Invalid item name. Please check your input.</b>")
+        return await message.reply_html("<b>🚫 **ɪɴᴠᴀʟɪᴅ ɪᴛᴇᴍ ɴᴀᴍᴇ. ᴘʟᴇᴀsᴇ ᴄʜᴇᴄᴋ ʏᴏᴜʀ ɪɴᴘᴜᴛ.**</b>")
 
     user_data = await user_collection.find_one({'id': user_id}, projection={'gems': 1})
 
     if user_data and user_data.get('gems') and found_item in user_data['gems']:
         # Check if the user has enough quantity of the item to sell
         if user_data['gems'][found_item] < quantity:
-            return await message.reply_html("<b>⚠️ You don't have enough quantity of this item to sell.</b>")
+            return await message.reply_html("<b>⚠️ **ʏᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴇɴᴏᴜɢʜ ǫᴜᴀɴᴛɪᴛʏ ᴏғ ᴛʜɪs ɪᴛᴇᴍ ᴛᴏ sᴇʟʟ.**</b>")
 
         # Calculate the total price for the items
         total_price = gem_prices[found_item]["price"] * quantity
@@ -92,11 +92,10 @@ async def sell_command(_, message: Message):
         await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': total_price}})
         
         await message.reply_html(
-            f"<b>✅ You have successfully sold {quantity} {gem_prices[found_item]['emoji']} {found_item} for a total of <u>{total_price} tokens</u>.</b>"
+            f"<b>✅ **ʏᴏᴜ ʜᴀᴠᴇ sᴜᴄᴄᴇssғᴜʟʟʏ sᴏʟᴅ {quantity} {gem_prices[found_item]['emoji']} {found_item} ғᴏʀ ᴀ ᴛᴏᴛᴀʟ ᴏғ <u>{total_price} ᴛᴏᴋᴇɴs</u>.**</b>"
         )
     else:
-        await message.reply_html("<b>🚫 You don't have this item to sell. Please check your inventory.</b>")
-
+        await message.reply_html("<b>🚫 **ʏᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴛʜɪs ɪᴛᴇᴍ ᴛᴏ sᴇʟʟ. ᴘʟᴇᴀsᴇ ᴄʜᴇᴄᴋ ʏᴏᴜʀ ɪɴᴠᴇɴᴛᴏʀʏ.**</b>")
         
 # Dictionary of gem sets with their images, captions, win chances, and text messages
 gem_sets = {
