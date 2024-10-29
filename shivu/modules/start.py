@@ -78,8 +78,8 @@ async def start(update: Update, context: CallbackContext) -> None:
 
         await context.bot.send_message(
             chat_id=GROUP_ID,
-            text=f"🎉 #**New User Joined!** 🎉\n\n"
-                 f"👤 User: <a href='tg://user?id={user_id}'>{first_name}</a>",
+            text=f"🫧 #ɴᴇᴡ ᴜsᴇʀ ᴊᴏɪɴᴇᴅ \n\n"
+                 f"🌿 User: <a href='tg://user?id={user_id}'>{first_name}</a>",
             parse_mode='HTML'
         )
     else:
@@ -92,27 +92,27 @@ async def start(update: Update, context: CallbackContext) -> None:
 
     if update.effective_chat.type == "private":
         caption = (
-            f"┬── ⋅ ⋅ ───── ᯽ ───── ⋅ ⋅ ──┬\n"
-            f" Kᴏɴ'ɴɪᴄʜɪᴡᴀ <a href='tg://user?id={user_id}'>{first_name}</a>!\n"
-            f"┴── ⋅ ⋅ ───── ᯽ ───── ⋅ ⋅ ──┴\n\n"
-            f"─────────────────────────\n"
-            f"│ ᴡєʟᴄσϻє ᴛσ ˹<b>{context.bot.username}</b>˼ ʏᴏᴜʀ ғʀɪᴇɴᴅʟʏ ᴡᴀɪғᴜ sᴇɪᴢᴇʀ ʙᴏᴛ ☄ │\n"
-            f"─────────────────────────\n\n"
-            f"╭── ⋅ ⋅ ───── ✩ ───── ⋅ ⋅ ──╮\n"
-            f" ❖ ᴡᴀɪғᴜ sᴇɪᴢᴇʀ ʙᴏᴛ ᴡɪʟʟ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ sᴘᴀᴡɴ ᴀ ɴᴇᴡ ᴡᴀɪғᴜ ɪɴ ʏᴏᴜʀ ᴄʜᴀᴛ ᴀғᴛᴇʀ ᴇᴠᴇʀʏ 100 ᴍᴇssᴀɢᴇs ʙʏ ᴅᴇғᴀᴜʟᴛ.\n"
-            f" ❖ ʏᴏᴜ ᴄᴀɴ ᴀʟsᴏ ᴄᴜsᴛᴏᴍɪᴢᴇ ᴛʜᴇ sᴘᴀᴡɴ ʀᴀᴛᴇ ᴀɴᴅ ᴏᴛʜᴇʀ sᴇᴛᴛɪɴɢs ᴛᴏ ʏᴏᴜʀ ʟɪᴋɪɴɢ.\n"
-            f"╰── ⋅ ⋅ ───── ✩ ───── ⋅ ⋅ ──╯\n\n"
-            f"──────────────────────\n"
-            f"❖ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ:\n"
-            f" sɪᴍᴘʟʏ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ.\n"
-            f"─────────────────────────\n"
-           )
+    f"┬── ⋅ ⋅ ───── ᯽ ───── ⋅ ⋅ ──┬\n"
+    f"  Kση'ηɪᴄʜɪᴡᴧ <a href='tg://user?id={user_id}'>{first_name}</a>!\n"
+    f"┴── ⋅ ⋅ ───── ᯽ ───── ⋅ ⋅ ──┴\n\n"
+    f"─────────────────────────\n"
+    f"│ ᴡєʟᴄσϻє ᴛσ ˹<b>{context.bot.username}</b>˼ ʏσυꝛ ғʀɪєηᴅʟʏ ᴡᴧiғᴜ sєɪᴢєꝛ ʙσᴛ ☄ │\n"
+    f"─────────────────────────\n\n"
+    f"━━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ \n"
+    f" ❖ ᴡᴧɪғᴜ sєɪᴢєꝛ ʙσᴛ ᴡɪʟʟ  ᴧυᴛσϻᴧᴛɪᴄᴧʟʟʏ sᴘᴧᴡη ᴧ ηєᴡ  ᴡᴧɪғυ ɪη ʏσυꝛ ᴄʜᴧᴛ ᴀғᴛєꝛ єᴠєꝛʏ  100 ϻєssᴧɢєs ʙʏ ᴅєғᴧυʟᴛ.\n"
+    f" ❖ ʏσᴜ ᴄᴧη ᴧʟsσ ᴄυsᴛσᴍɪᴢє ᴛʜє  sᴘᴧᴡη ʀᴧᴛє ᴧηᴅ σᴛʜєꝛ sєᴛᴛɪηɢs  ᴛσ ʏσυꝛ ʟɪᴋɪηɢ.\n"
+    f"━━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ ━ \n\n"
+    f"──────────────────────\n"
+    f"❖ ʜσᴡ ᴛσ υsє ᴍє:\n"
+    f" sɪϻᴘʟʏ ᴧᴅᴅ ϻє ᴛσ ʏσυꝛ ɢꝛσυᴘ.\n"
+    f"─────────────────────────\n"
+        )
 
         keyboard = [
-            [InlineKeyboardButton("Add Me to Your Group ➕", url=f'https://t.me/{context.bot.username}?startgroup=new')],
-            [InlineKeyboardButton("Support Group", url=f'https://t.me/{SUPPORT_GROUP_ID.lstrip("@")}'),
-             InlineKeyboardButton("Updates Channel", url='https://t.me/Seizer_updates')],
-            [InlineKeyboardButton("FAQ", url='https://telegra.ph/Seizer-Faq-Menu-09-05')],
+            [InlineKeyboardButton("✜ ᴧᴅᴅ ϻє ɪη ʏσυʀ ɢʀσυᴘ ✜", url=f'https://t.me/{context.bot.username}?startgroup=new')],
+            [InlineKeyboardButton("˹ sυᴘᴘσʀᴛ ˼", url=f'https://t.me/{SUPPORT_GROUP_ID.lstrip("@")}'),
+             InlineKeyboardButton("˹ ᴜᴘᴅᴧᴛєs ˼", url='https://t.me/Seizer_updates')],
+            [InlineKeyboardButton("˹ ʜєʟᴘ ғᴧǫ ˼", url='https://telegra.ph/Seizer-Faq-Menu-09-05')],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         video_url = "https://telegra.ph/file/40254b3883dfcaec52120.mp4"
@@ -122,9 +122,9 @@ async def start(update: Update, context: CallbackContext) -> None:
         await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=caption, reply_markup=reply_markup, parse_mode='HTML')
     else:
         keyboard = [
-            [InlineKeyboardButton("PM me", url=f'https://t.me/{context.bot.username}?start=true')],
-            [InlineKeyboardButton("Support Group", url=f'https://t.me/{SUPPORT_GROUP_ID.lstrip("@")}'),
-             InlineKeyboardButton("Updates Channel", url='https://t.me/Seizer_updates')]
+            [InlineKeyboardButton("Ⰶ ᴘᴍ ᴍᴇ Ⰶ", url=f'https://t.me/{context.bot.username}?start=true')],
+            [InlineKeyboardButton("ꔷ sυᴘᴘσʀᴛ ꔷ", url=f'https://t.me/{SUPPORT_GROUP_ID.lstrip("@")}'),
+             InlineKeyboardButton("ꔷ ᴜᴘᴅᴧᴛєs ꔷ", url='https://t.me/Seizer_updates')]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         video_url = "https://telegra.ph/file/0b2e8e33d07a0d0e5914f.mp4"
@@ -142,3 +142,4 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
+    
