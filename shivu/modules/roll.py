@@ -122,8 +122,8 @@ async def dice(_, message: t.Message):
                 animation="https://files.catbox.moe/hn08wr.mp4",  # Low roll gif
                 caption=(
                     f"💔 **Oᴏᴘs, {mention}.**\n\n"
-                    f"You rolled a *{value}*... 😢\n\n"
-                    f"Don't give up! Try again and aim for the stars! 🌌"
+                    f"ʏᴏᴜ ʀᴏʟʟᴇᴅ ᴀ {value}... 😢\n\n"
+                    f"ᴅᴏɴ'ᴛ ɢɪᴠᴇ ᴜᴘ! ᴛʀʏ ᴀɢᴀɪɴ ᴀɴᴅ ᴀɪᴍ ғᴏʀ sᴛᴀʀs! 🌌"
                 ),
                 quote=True
             )
