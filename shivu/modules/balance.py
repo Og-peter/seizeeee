@@ -46,10 +46,16 @@ async def check_balance(_, message: Message):
     # Get user's balance and rank-related data
     balance = user_data.get('balance', 0)
     formatted_balance = "{:,.0f}".format(balance)
-    user_rank = user_data.get('user_rank', 'Unranked')  # User rank information
+
+    # Improved rank logic
+    rank_value = user_data.get('user_rank', 0)  # Assuming user_rank is a numeric value
+    user_rank = get_rank_description(rank_value)  # Get rank description based on value
 
     # Mention the user
     user_mention = f"[{message.from_user.first_name}](tg://user?id={user_id})"
+
+    # Add an image URL (you can customize this URL)
+    image_url = "https://example.com/path/to/your/image.jpg"  # Replace with your image URL
 
     # Enhanced message with balance and user rank
     custom_message = f"""
@@ -63,7 +69,24 @@ async def check_balance(_, message: Message):
 ╰── ⋅ ⋅ ─── ✩ ─── ⋅ ⋅ ──╯
 """
 
-    await message.reply_text(custom_message, disable_web_page_preview=True)
+    await message.reply_photo(photo=image_url, caption=custom_message, disable_web_page_preview=True)
+
+
+def get_rank_description(rank_value):
+    """
+    Returns a string description of the rank based on the given rank value.
+    Adjust the ranges and descriptions as necessary.
+    """
+    if rank_value >= 1000:
+        return "Legendary"
+    elif rank_value >= 500:
+        return "Elite"
+    elif rank_value >= 100:
+        return "Pro"
+    elif rank_value >= 10:
+        return "Intermediate"
+    else:
+        return "Novice"
     
 async def pay(update, context):
     sender_id = update.effective_user.id
