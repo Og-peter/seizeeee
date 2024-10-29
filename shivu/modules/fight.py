@@ -169,13 +169,12 @@ async def sfight(_, message: t.Message):
     
             # Add character-specific dialogues based on the loser
             if random.random() < 0.5:  # Randomly decide if Sukuna or Gojo loses
-        
-            await message.reply_text(f"💀 **{mention}, ʏᴏᴜ ʟᴏsᴛ ᴛʜᴇ ғɪɢʜᴛ. sᴜᴋᴜɴᴀ ʜᴀs ᴅᴇғᴇᴀᴛᴇᴅ ɢᴏᴊᴏ!** 💀")
-            await message.reply_text("😈 **sᴜᴋᴜɴᴀ:** ʏᴏᴜ ʜᴀᴅ ɴᴏ ᴄʜᴀɴᴄᴇs, ɢᴏᴊᴏ! ᴏʀ ɴᴏᴡ, ᴛʜʀᴏᴡ ʏᴏᴜʀsᴇʟғ ᴀᴡᴀʏ.")
-        else:
-            await message.reply_text(f"💀 **{mention}, ʏᴏᴜ ʟᴏsᴛ ᴛʜᴇ ғɪɢʜᴛ. ɢᴏᴊᴏ ʜᴀs ᴅᴇғᴇᴀᴛᴇᴅ sᴜᴋᴜɴᴀ!** 💀")
-            await message.reply_text("😤 **ɢᴏᴊᴏ:** sᴜᴋᴜɴᴀ, ʏᴏᴜ ᴀʀᴇ ɴᴏᴛʜɪɴɢ ʙᴜᴛ ᴀ ʙʟᴏᴏᴅʏ ᴡʜɪsᴘᴇʀ. ɴᴏᴡ ʟᴇᴀᴠᴇ ᴏʀ ɪ'ʟʟ ᴘᴇʀᴍᴀɴᴇɴᴛʟʏ ᴅᴇsᴛʀᴏʏ ʏᴏᴜ!")
-    
+                await message.reply_text(f"💀 **{mention}, ʏᴏᴜ ʟᴏsᴛ ᴛʜᴇ ғɪɢʜᴛ. sᴜᴋᴜɴᴀ ʜᴀs ᴅᴇғᴇᴀᴛᴇᴅ ɢᴏᴊᴏ!** 💀")
+                await message.reply_text("😈 **sᴜᴋᴜɴᴀ:** ʏᴏᴜ ʜᴀᴅ ɴᴏ ᴄʜᴀɴᴄᴇs, ɢᴏᴊᴏ! ᴏʀ ɴᴏᴡ, ᴛʜʀᴏᴡ ʏᴏᴜʀsᴇʟғ ᴀᴡᴀʏ.")
+            else:
+                await message.reply_text(f"💀 **{mention}, ʏᴏᴜ ʟᴏsᴛ ᴛʜᴇ ғɪɢʜᴛ. ɢᴏᴊᴏ ʜᴀs ᴅᴇғᴇᴀᴛᴇᴅ sᴜᴋᴜɴᴀ!** 💀")
+                await message.reply_text("😤 **ɢᴏᴊᴏ:** sᴜᴋᴜɴᴀ, ʏᴏᴜ ᴀʀᴇ ɴᴏᴛʜɪɴɢ ʙᴜᴛ ᴀ ʙʟᴏᴏᴅʏ ᴡʜɪsᴘᴇʀ. ɴᴏᴡ ʟᴇᴀᴠᴇ ᴏʀ ɪ'ʟʟ ᴘᴇʀᴍᴀɴᴇɴᴛʟʏ ᴅᴇsᴛʀᴏʏ ʏᴏᴜ!")
+
             loss_video = random.choice(BATTLE_VIDEOS)
             await bot.send_video(chat_id, video=loss_video, caption="💀 **ᴛᴏᴜɢʜ ʟᴏss, ʙᴇᴛᴛᴇʀ ʟᴜᴄᴋ ɴᴇxᴛ ᴛɪᴍᴇ!**")
 
@@ -183,3 +182,4 @@ async def sfight(_, message: t.Message):
 @bot.on_callback_query(filters.regex("retry_fight"))
 async def retry_fight(_, callback_query: t.CallbackQuery):
     await sfight(_, callback_query.message)
+    
