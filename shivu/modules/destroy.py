@@ -72,7 +72,17 @@ async def send_notification_to_specialgrade(eraser_id, eraser_name, target_id, t
 
 async def get_user_info(user_id):
     user = await user_collection.find_one({'id': user_id})
-
+    
+    # Retrieve user information from the database
+    user_data = await user_collection.find_one({'id': user_id})
+   
+    if user_data:
+       user_first_name = user_data.get('first_name', 'Unknown')
+       user_id = user_data.get('id', 'Unknown')
+       total_characters = await collection.count_documents({})
+       characters_count = len(user_data.get('characters', []))
+       character_percentage = (characters_count / total_characters) * 100
+  
     if user:
         characters = user.get('characters', [])
         harem_size = len(characters)
@@ -103,14 +113,17 @@ async def get_user_info(user_id):
             'valentine': "💞 Valentine"
         }
 
+        for char in user_data.get('characters', []):
+                rarity = char.get('rarity', '⚪️ Common')
+                if rarity in rarity_counts:
+                    rarity_counts[rarity] += 1
+
         # Create rarity breakdown message
         rarity_message = "\n".join([
-            f"├─➩ {rarity_symbols[rarity]}: {count}"
-            for rarity, count in rarity_counts.items() if count > 0
+          f"├─➩ {rarity.split()[0]} Rarity: {' '.join(rarity.split()[1:])}: {count}"
+          for rarity, count in rarity_counts.items()
         ])
         
-        rarity_text += rarity_message + "\n╰───────────────────"
-
         user_info = (
             f"🎭 <b>User Profile:</b>\n\n"
             f"🪪 <b>Name:</b> {user.get('first_name', 'Unknown')} {user.get('last_name', '')}\n"
@@ -118,7 +131,7 @@ async def get_user_info(user_id):
             f"🔩 <b>User ID:</b> <code>{user_id}</code>\n"
             f"👒 <b>Waifu Count:</b> {harem_size} / {HAREM_SIZE_LIMIT} <b>(Max)</b>\n"
             f"🌟 <b>Status:</b> {'👑 Harem Master' if harem_size >= HAREM_SIZE_LIMIT else '✨ Keep Collecting!'}\n\n"
-            f"{rarity_text}"
+            f"{rarity_message}"
         )
 
         return user_info, user
@@ -136,7 +149,7 @@ async def restore_characters(user_id):
     if backup:
         # Ensure cooldown time for restoration has passed
         if time.time() - backup['backup_time'] < RESTORE_COOLDOWN:
-            return False, "⏳ Cooldown: You must wait before restoring the harem!"
+            return False, "⏳ Cooldown: You must wait before reing the harem!"
         
         await user_collection.update_one(
             {'id': user_id},
