@@ -175,30 +175,35 @@ async def hunt(update: Update, context: CallbackContext):
 
     async with user_locks[user_id]:
         if user_id not in safari_users:
-            await message.reply_text("🚫 **You’re not in the Seize Zone!** \nJoin the adventure first by using /wtour.")
+            await message.reply_text("🚫 **You’re not in the Seize Zone!**\n"
+                                      "Join the adventure first by using /wtour.")
             return
 
         if user_id in current_hunts and current_hunts[user_id] is not None:
             if user_id not in current_engagements:
-                await message.reply_text("⚠️ **Hunt in Progress!** \nComplete your current hunt before embarking on a new one.")
+                await message.reply_text("⚠️ **Hunt in Progress!**\n"
+                                          "Complete your current hunt before embarking on a new one.")
                 return
 
         user_data = safari_users[user_id]
         if user_data['used_hunts'] >= user_data['hunt_limit']:
-            await message.reply_text("🚷 **Hunt Limit Reached!** \nYou’ve exhausted your hunting quota. You'll be removed from the Seize Zone.")
+            await message.reply_text("🚷 **Hunt Limit Reached!**\n"
+                                      "You’ve exhausted your hunting quota. You'll be removed from the Seize Zone.")
             del safari_users[user_id]
             await safari_users_collection.delete_one({'user_id': user_id})
             return
 
         if user_data['safari_balls'] <= 0:
-            await message.reply_text("💔 **No Contract Crystals Left!** \nYou need more crystals to continue your hunt. You’ll be removed from the Seize Zone.")
+            await message.reply_text("💔 **No Contract Crystals Left!**\n"
+                                      "You need more crystals to continue your hunt. You’ll be removed from the Seize Zone.")
             del safari_users[user_id]
             await safari_users_collection.delete_one({'user_id': user_id})
             return
 
         waifu = await get_random_waifu()
         if not waifu:
-            await message.reply_text("🚫 **No Characters Available!** \nPlease check back later for new waifus.")
+            await message.reply_text("🚫 **No Characters Available!**\n"
+                                      "Please check back later for new waifus.")
             return
 
         waifu_name = waifu['name']
@@ -219,7 +224,7 @@ async def hunt(update: Update, context: CallbackContext):
         text = (
             f"🌟 **A wild {waifu_name} (Rarity: {waifu_rarity}) has appeared!** 🌟\n\n"
             f"🔍 **Explore Limit:** {user_data['used_hunts']}/{user_data['hunt_limit']}\n"
-            f"🧊 **Contract Crystals Available:** {user_data['safari_balls']}\n"
+            f"🧊 **Contract Crystals Available:** {user_data['safari_balls']}\n\n"
             f"✨ **Prepare for the adventure ahead!**"
         )
         
