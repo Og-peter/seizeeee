@@ -84,7 +84,7 @@ async def enter_safari(update: Update, context: CallbackContext):
         await safe_send_message(
             context.bot,
             message.chat_id,
-            "⚠️ Alert! You’re already within the Seize Zone!"
+            "⚠️ ʙᴀᴋᴀ ! ʏᴏᴜ'ʀᴇ ᴀʟʀᴇᴀᴅʏ ᴡɪᴛʜɪɴ ᴛʜᴇ sᴇɪᴢᴇ ᴢᴏɴᴇ!"
         )
         return
 
@@ -106,7 +106,7 @@ async def enter_safari(update: Update, context: CallbackContext):
         await safe_send_message(
             context.bot,
             message.chat_id,
-            f"⏳ Cooldown Active You’ll be able to re-enter in {hours}h {minutes}m. Prepare yourself!"
+            f"⏳ ᴄᴏᴏʟᴅᴏᴡɴ ᴀᴄᴛɪᴠᴇ ʏᴏᴜ'ʟʟ ʙᴇ ᴀʙʟᴇ ᴛᴏ ʀᴇ-ᴇɴᴛᴇʀ ɪɴ {hours}ʜ {minutes}ᴍ. ᴘʀᴇᴘᴀʀᴇ ʏᴏᴜʀsᴇʟғ!"
         )
         return
 
@@ -115,7 +115,7 @@ async def enter_safari(update: Update, context: CallbackContext):
         await safe_send_message(
             context.bot,
             message.chat_id,
-            "🚷 Access Denied Please register by starting the bot in direct message."
+            "🚷 ɴᴏ ɴᴏ ᴘʟᴇᴀsᴇ ʀᴇɢɪsᴛᴇʀ ʙʏ sᴛᴀʀᴛɪɴɢ ᴛʜᴇ ʙᴏᴛ ɪɴ ᴅɪʀᴇᴄᴛ ᴍᴇssɢᴀᴇ."
         )
         return
 
@@ -124,7 +124,7 @@ async def enter_safari(update: Update, context: CallbackContext):
         await safe_send_message(
             context.bot,
             message.chat_id,
-            "💰 Insufficient Tokens You need 10 tokens to enter the Seize Zone."
+            "💰 sᴀᴅ ɪɴsᴜғғɪᴄɪᴇɴᴛ ᴛᴏᴋᴇɴs ʏᴏᴜ ɴᴇᴇᴅ 10 ᴛᴏᴋᴇɴs ᴛᴏ ᴇɴᴛᴇʀ sᴇɪᴢᴇ ᴢᴏɴᴇ."
         )
         return
 
@@ -148,7 +148,7 @@ async def enter_safari(update: Update, context: CallbackContext):
     await safe_send_message(
         context.bot,
         message.chat_id,
-        "🎉 Welcome to the Seize Zone! Your entry fee of 10 tokens has been deducted.\n\n Start your journey with /explore and discover rare catches!"
+        "🥂 ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ sᴇɪᴢᴇ ᴢᴏɴᴇ ʙᴀʙʏ! ʏᴏᴜʀ ᴇɴᴛʀʏ ғᴇᴇ ᴏғ 10 ᴛᴏᴋᴇɴs ʜᴀs ʙᴇᴇɴ ᴅᴇᴅᴜᴄᴛᴇᴅ.\n\n sᴛᴀʀᴛ ʏᴏᴜʀ ᴊᴏᴜʀɴᴇʏ ᴡɪᴛʜ /explore ᴀɴᴅ ᴅɪsᴄᴏᴠᴇʀ ʀᴀʀᴇ ᴄᴀᴛᴄʜᴇs!"
     )
   
 async def exit_safari(update: Update, context: CallbackContext):
@@ -156,18 +156,18 @@ async def exit_safari(update: Update, context: CallbackContext):
     user_id = message.from_user.id
 
     if user_id not in safari_users:
-        await message.reply_text("⚠️ Exit Denied You are currently not in the Seize Zone!")
+        await message.reply_text("⚠️ ᴇxɪᴛ ᴅᴇɴɪᴇᴅ ʏᴏᴜ ᴀʀᴇ ᴄᴜʀʀᴇɴᴛʟʏ ɴᴏᴛ ɪɴ ᴛʜᴇ sᴇɪᴢᴇ ᴢᴏɴᴇ!")
         return
 
     del safari_users[user_id]
     await safari_users_collection.delete_one({'user_id': user_id})
 
     # Sending the exit message in parts
-    await message.reply_text("✅ Success!")
+    await message.reply_text("✅ sᴜᴄᴄᴇss!")
     await asyncio.sleep(1)  # Small delay between messages
-    await message.reply_text("You have gracefully exited the Seize Zone.")
+    await message.reply_text("ʏᴏᴜ ʜᴀᴠᴇ ɢʀᴀᴄᴇғᴜʟʟʏ ᴇxɪᴛᴇᴅ ᴛʜᴇ sᴇɪᴢᴇ ᴢᴏɴᴇ.")
     await asyncio.sleep(1)  # Small delay between messages
-    await message.reply_text("Until next time!")
+    await message.reply_text("ᴜɴᴛɪʟ ɴᴇxᴛ ᴛɪᴍᴇ!")
 
 async def hunt(update: Update, context: CallbackContext):
     message = update.message
@@ -175,8 +175,8 @@ async def hunt(update: Update, context: CallbackContext):
 
     async with user_locks[user_id]:
         if user_id not in safari_users:
-            await message.reply_text("🚫 *You’re not in the Seize Zone!*\n"
-                                      "Join the adventure first by using /wtour.")
+            await message.reply_text("🚫 ʏᴏᴜ'ʀᴇ ɴᴏᴛ ɪɴ ᴛʜᴇ sᴇɪᴢᴇ ᴢᴏɴᴇ ʙᴀᴋᴀ!\n"
+                                      "ᴊᴏɪɴ ᴛʜᴇ ᴀᴅᴠᴇɴᴛᴜʀᴇ ғɪʀsᴛ ʙʏ ᴜsɪɴɢ /wtour.")
             return
 
         if user_id in current_hunts and current_hunts[user_id] is not None:
@@ -222,7 +222,7 @@ async def hunt(update: Update, context: CallbackContext):
         await save_safari_user(user_id)
 
         text = (
-            f"🫧 ᴀ ᴡɪʟᴅ {waifu_name} (ʀᴀʀɪᴛʏ: {waifu_rarity}) ʜᴀs ᴀᴘᴘᴇᴀʀᴇᴅ! 🫧\n\n"
+            f"⛩️ ᴀ ᴡɪʟᴅ {waifu_name} (ʀᴀʀɪᴛʏ: {waifu_rarity}) ʜᴀs ᴀᴘᴘᴇᴀʀᴇᴅ! 🫧\n\n"
             f"⚜️ ᴇxᴏʟᴏʀᴇ ʟɪᴍɪᴛ: {user_data['used_hunts']}/{user_data['hunt_limit']}\n"
             f"❄️ ᴄᴏɴᴛʀᴀᴄᴛ ᴄʀʏsᴛᴀʟs ᴀᴠᴀɪʟᴀʙʟᴇ: {user_data['safari_balls']}\n\n"
             f"🥂 ᴘʀᴇᴘᴀʀᴇ ғᴏʀ ᴛʜᴇ ᴀᴅᴠᴇɴᴛᴜʀᴇ ᴀʜᴇᴀᴅ!"
