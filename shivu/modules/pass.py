@@ -58,9 +58,9 @@ async def pass_cmd(update: Update, context: CallbackContext):
     if not user_data.get('pass'):
         # Button for purchasing a pass
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("💳 Buy Pass (30,000 tokens)", callback_data=f'buy_pass:{user_id}')]
+            [InlineKeyboardButton("💳 ʙᴜʏ ᴘᴀss (30,000 ᴛᴏᴋᴇɴs)", callback_data=f'buy_pass:{user_id}')]
         ])
-        await update.message.reply_html("<b>🚫 You don't have a membership pass. Buy one to unlock extra rewards.</b>", reply_markup=keyboard)
+        await update.message.reply_html("<b>🚫 ʏᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴀ ᴍᴇᴍʙᴇʀsʜɪᴘ ᴘᴀss. ʙᴜʏ ᴏɴᴇ ᴛᴏ ᴜɴʟᴏᴄᴋ ᴇxᴛʀᴀ ʀᴇᴡᴀʀᴅs.</b>", reply_markup=keyboard)
         return
     
     pass_details = user_data.get('pass_details', {})
@@ -80,14 +80,14 @@ async def pass_cmd(update: Update, context: CallbackContext):
     pass_info_text = (
         f"❰ 𝗦 𝗘 𝗜 𝗭 𝗘  𝗣 𝗔 𝗦 𝗦 🎟️ ❱\n"
         f"▰▱▰▱▰▱▰▱▰▱\n\n"
-        f"✤ **Owner of Pass:** {update.effective_user.first_name}\n"
+        f"✤ **ᴏᴡɴᴇʀ ᴏғ ᴘᴀss:** {update.effective_user.first_name}\n"
         f"───────────────\n"
-        f"✤ **Daily Claimed:** {daily_claimed}\n"
-        f"✤ **Weekly Claimed:** {weekly_claimed}\n"
-        f"✤ **Total Claims:** {total_claims}\n"
+        f"✤ **ᴅᴀɪʟʏ ᴄʟᴀɪᴍᴇᴅ:** {daily_claimed}\n"
+        f"✤ **ᴡᴇᴇᴋʟʏ ᴄʟᴀɪᴍᴇᴅ:** {weekly_claimed}\n"
+        f"✤ **ᴛᴏᴛᴀʟ ᴄʟᴀɪᴍs:** {total_claims}\n"
         f"───────────────\n"
-        f"✤ **Pass Expiry:** {pass_expiry}\n"
-        f"✤ **Claim Reset:** Sunday at 00:00 UTC"
+        f"✤ **ᴘᴀss ᴇxᴘɪʀʏ:** {pass_expiry}\n"
+        f"✤ **ᴄʟᴀɪᴍ ʀᴇsᴇᴛ:** sᴜɴᴅᴀʏ ᴀᴛ 00:00 ᴜᴛᴄ"
     )
     
     await update.message.reply_text(pass_info_text, parse_mode="Markdown")
@@ -100,26 +100,26 @@ async def button_callback(update: Update, context: CallbackContext):
     
     # Verify user authorization
     if query.from_user.id != user_id:
-        await query.answer("🚫 You are not authorized to use this button.", show_alert=True)
+        await query.answer("🚫 ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀᴜᴛʜᴏʀɪᴢᴇᴅ ᴛᴏ ᴜsᴇ ᴛʜɪs ʙᴜᴛᴛᴏɴ.", show_alert=True)
         return
     
     if action == 'buy_pass':
         user_data = await get_user_data(user_id)
         if user_data.get('pass'):
-            await query.answer("✅ You already have a membership pass.", show_alert=True)
+            await query.answer("✅ ʏᴏᴜ ᴀʟʀᴇᴀᴅʏ ʜᴀᴠᴇ ᴀ ᴍᴇᴍʙᴇʀsʜɪᴘ ᴘᴀss.", show_alert=True)
             return
         
         if user_data['tokens'] < 30000:
-            await query.answer("💔 You don't have enough tokens to buy a pass.", show_alert=True)
+            await query.answer("💔 ʏᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴇɴᴏᴜɢʜ ᴛᴏᴋᴇɴs ᴛᴏ ʙᴜʏ ᴀ ᴘᴀss.", show_alert=True)
             return
         
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✔️ Confirm Purchase", callback_data=f'confirm_buy_pass:{user_id}')],
-            [InlineKeyboardButton("❌ Cancel Purchase", callback_data=f'cancel_buy_pass:{user_id}')],
+            [InlineKeyboardButton("✔️ ᴄᴏɴғɪʀᴍ ᴘᴜʀᴄʜᴀsᴇ", callback_data=f'confirm_buy_pass:{user_id}')],
+            [InlineKeyboardButton("❌ ᴄᴀɴᴄᴇʟ ᴘᴜʀᴄʜᴀsᴇ", callback_data=f'cancel_buy_pass:{user_id}')],
         ])
         await query.message.edit_text(
-            "💳 **Are you sure you want to buy a pass for 30,000 tokens?**\n\n"
-            "🛡️ This pass unlocks special features and rewards!",
+            "💳 **ᴀʀᴇ ʏᴏᴜ sᴜʀᴇ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ʙᴜʏ ᴀ ᴘᴀss ғᴏʀ 30,000 ᴛᴏᴋᴇɴs?**\n\n"
+            "🛡️ ᴛʜɪs ᴘᴀss ᴜɴʟᴏᴄᴋs sᴘᴇᴄɪᴀʟ ғᴇᴀᴛᴜʀᴇs ᴀɴᴅ ʀᴇᴡᴀʀᴅs!",
             reply_markup=keyboard,
             parse_mode='Markdown'
         )
@@ -127,12 +127,12 @@ async def button_callback(update: Update, context: CallbackContext):
     elif action == 'claim_free_pass':
         user_data = await get_user_data(user_id)
         if user_data.get('pass'):
-            await query.answer("✅ You already have a membership pass.", show_alert=True)
+            await query.answer("✅ ʏᴏᴜ ᴀʟʀᴇᴀᴅʏ ʜᴀᴠᴇ ᴀ ᴍᴇᴍʙᴇʀsʜɪᴘ ᴘᴀss.", show_alert=True)
             return
         
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✔️ Confirm Claim", callback_data=f'confirm_claim_free_pass:{user_id}')],
-            [InlineKeyboardButton("❌ Cancel Claim", callback_data=f'cancel_claim_free_pass:{user_id}')],
+            [InlineKeyboardButton("✔️ ᴄᴏɴғɪʀᴍ ᴄʟᴀɪᴍ", callback_data=f'confirm_claim_free_pass:{user_id}')],
+            [InlineKeyboardButton("❌ ᴄᴀɴᴄᴇʟ ᴄʟᴀɪᴍ", callback_data=f'cancel_claim_free_pass:{user_id}')],
         ])
         await query.message.edit_text(
             "🎁 **Are you sure you want to claim a free pass?**\n\n"
@@ -149,13 +149,13 @@ async def confirm_callback(update: Update, context: CallbackContext):
     
     # Verify user authorization
     if query.from_user.id != user_id:
-        await query.answer("🚫 You are not authorized to use this button.", show_alert=True)
+        await query.answer("🚫 ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀᴜᴛʜᴏʀɪᴢᴇᴅ ᴛᴏ ᴜsᴇ ᴛʜɪs ʙᴜᴛᴛᴏɴ.", show_alert=True)
         return
     
     if action == 'confirm_buy_pass':
         user_data = await get_user_data(user_id)
         if user_data.get('pass'):
-            await query.answer("✅ You already have a membership pass.", show_alert=True)
+            await query.answer("✅ ʏᴏᴜ ᴀʟʀᴇᴀᴅʏ ʜᴀᴠᴇ ᴀ ᴍᴇᴍʙᴇʀsʜɪᴘ ᴘᴀss.", show_alert=True)
             return
         
         user_data['tokens'] -= 30000
@@ -163,19 +163,19 @@ async def confirm_callback(update: Update, context: CallbackContext):
         await user_collection.update_one({'id': user_id}, {'$set': {'tokens': user_data['tokens'], 'pass': True}})
         
         await query.message.edit_text(
-            "🎉 **Pass successfully purchased!**\n"
-            "✨ Enjoy your new benefits and exclusive features! 🌟",
+            "🎉 **ᴘᴀss sᴜᴄᴄᴇssғᴜʟʟʏ ᴘᴜʀᴄʜᴀsᴇᴅ!**\n"
+            "✨ ᴇɴᴊᴏʏ ʏᴏᴜʀ ɴᴇᴡ ʙᴇɴᴇғɪᴛs ᴀɴᴅ ᴇxᴄʟᴜsɪᴠᴇ ғᴇᴀᴛᴜʀᴇs! 🌟",
             parse_mode='Markdown'
         )
     
     elif action == 'cancel_buy_pass':
-        await query.message.edit_text("❌ **Purchase canceled.**\n\n"
-                                       "If you change your mind, feel free to try again!")
+        await query.message.edit_text("❌ **ᴘᴜʀᴄʜᴀsᴇ ᴄᴀɴᴄᴇʟᴇᴅ.**\n\n"
+                                       "ɪғ ʏᴏᴜ ᴄʜᴀɴɢᴇ ʏᴏᴜʀ ᴍɪɴᴅ, ғᴇᴇʟ ғʀᴇᴇ ᴛᴏ ᴛʀʏ ᴀɢᴀɪɴ!")
 
     elif action == 'confirm_claim_free_pass':
         user_data = await get_user_data(user_id)
         if user_data.get('pass'):
-            await query.answer("✅ You already have a membership pass.", show_alert=True)
+            await query.answer("✅ ʏᴏᴜ ᴀʟʀᴇᴀᴅʏ ʜᴀᴠᴇ ᴀ ᴍᴇᴍʙᴇʀsʜɪᴘ ᴘᴀss.", show_alert=True)
             return
         
         user_data['pass'] = True
@@ -206,9 +206,9 @@ async def claim_daily_cmd(update: Update, context: CallbackContext):
     
     if not user_data.get('pass'):
         await update.message.reply_html(
-            f"<b>🚫 {user_name}, you don't have a membership pass. "
-            "Buy one to unlock extra rewards!\n\n"
-            "🛒 Use /pass to purchase a pass.</b>"
+            f"<b>🚫 {user_name}, ʏᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴀ ᴍᴇᴍʙᴇʀsʜɪᴘ ᴘᴀss. "
+            "ʙᴜʏ ᴏɴᴇ ᴛᴏ ᴜɴʟᴏᴄᴋ ᴇxᴛʀᴀ ʀᴇᴡᴀʀᴅs!\n\n"
+            "🛒 ᴜsᴇ /pass ᴛᴏ ᴘᴜʀᴄʜᴀsᴇ ᴀ ᴘᴀss.</b>"
         )
         return
     
