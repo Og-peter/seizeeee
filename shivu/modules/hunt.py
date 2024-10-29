@@ -426,7 +426,7 @@ async def dc_command(update: Update, context: CallbackContext):
         result = await safari_cooldown_collection.delete_one({'user_id': replied_user_id})
         
         if result.deleted_count == 1:
-            await update.message.reply_text(f"✅ The tour cooldown for user replied_user_id} has been reset.")
+            await update.message.reply_text(f"✅ The tour cooldown for user {replied_user_id} has been reset.")
         else:
             await update.message.reply_text(f"⚠️ The user {replied_user_id} doesn't have an active tour cooldown.")
     
