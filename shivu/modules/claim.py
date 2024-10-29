@@ -52,11 +52,11 @@ async def process_claim(user_id, chat_id, user_first_name):
         await user_collection.update_one({'id': user_id}, {'$push': {'characters': {'$each': unique_characters}}})
         img_urls = [character['img_url'] for character in unique_characters]
         captions = [
-            f"🎉 **Congratulations, {user_first_name}!** 🏮\n\n"
-            f"🧩 **Character Acquired:** {character['name']}\n"
-            f"👾 **Rarity:** {character['rarity']}\n"
-            f"🏖️ **Anime:** {character['anime']}\n\n"
-            f"⏳ **Don't forget to come back tomorrow for more claims!**"
+            f"❄️ **ᴏᴡᴏ, {user_first_name}!** 🏮\n\n"
+            f"🥂 **ɴᴀᴍᴇ:** {character['name']}\n"
+            f"☃️ **ʀᴀʀɪᴛʏ:** {character['rarity']}\n"
+            f"⛩️ **ᴀɴɪᴍᴇ:** {character['anime']}\n\n"
+            f"🍃 **ᴅᴏɴ'ᴛ ғᴏʀɢᴇᴛ ᴛᴏ ᴄᴏᴍᴇ ʙᴀᴄᴋ ᴛᴏᴍᴏʀʀᴏᴡ ғᴏʀ ᴍᴏʀᴇ ᴄʟᴀɪᴍs!**"
             for character in unique_characters
         ]
         for img_url, caption in zip(img_urls, captions):
@@ -72,11 +72,11 @@ async def claim_waifu(_, message: t.Message):
 
     if chat_id != GROUP_ID:
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("Join Group to Claim", url="https://t.me/dynamic_gangs")]
+            [InlineKeyboardButton("ᴊᴏɪɴ ɢʀᴏᴜᴘ ᴛᴏ ᴄʟᴀɪᴍ", url="https://t.me/dynamic_gangs")]
         ])
         return await message.reply_text(
-            "🚫 **This command can only be used in Group 2.**\n\n"
-            "Please join the group using the button below to claim your waifu!",
+            "🚫 **ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ᴄᴀɴ ᴏɴʟʏ ʙᴇ ᴜsᴇᴅ ɪɴ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ.**\n\n"
+            "ᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴛʜᴇ ɢʀᴏᴜᴘ ᴜsɪɴɢ ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ᴄʟᴀɪᴍ ʏᴏᴜʀ ᴄʜᴀʀᴀᴄᴛᴇʀ!",
             reply_markup=keyboard,
             quote=True
         )
@@ -97,10 +97,10 @@ async def claim_waifu(_, message: t.Message):
     last_claim_time[user_id] = now
 
     animation_messages = [
-        "🔥 **Getting your claim ready...**",
-        "⚡ **Preparing the rewards...**",
-        "❄️ **Almost there...**",
-        "🎉 **Here comes your reward!**"
+        "🔥 **ɢᴇᴛᴛɪɴɢ ʏᴏᴜʀ ᴄʟᴀɪᴍ ʀᴇᴀᴅʏ...**",
+        "⚡ **ᴘʀᴇᴘᴀʀɪɴɢ ᴛʜᴇ ʀᴇᴡᴀʀᴅs...**",
+        "❄️ **ᴡᴀɪᴛᴏ ʙᴀᴋᴀ...**",
+        "🎉 **ʜᴇʀᴇ ᴄᴏᴍᴇs ʏᴏᴜʀ ʀᴇᴡᴀʀᴅ ʙᴀʙʏ!**"
     ]
 
     animation_message = await message.reply_text(animation_messages[0])
