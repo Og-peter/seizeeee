@@ -29,29 +29,29 @@ BATTLE_VIDEOS = [
 
 # Random battle outcomes
 BATTLE_MESSAGES = [
-    "⚔️ The epic battle between Gojo and Sukuna begins! 🏹",
-    "💥 A fierce fight is about to unfold between Gojo and Sukuna! 💥",
-    "🔮 The domain expansion fight between Gojo and Sukuna is happening!"
+    "⚔️ **ᴛʜᴇ ᴇᴘɪᴄ ʙᴀᴛᴛʟᴇ ʙᴇᴛᴡᴇᴇɴ ɢᴏᴊᴏ ᴀɴᴅ sᴜᴋᴜɴᴀ ʙᴇɢɪɴs!** 🏹",
+    "💥 **ᴀ ғɪᴇʀᴄᴇ ғɪɢʜᴛ ɪs ᴀʙᴏᴜᴛ ᴛᴏ ᴜɴғᴏʟᴅ ʙᴇᴛᴡᴇᴇɴ ɢᴏᴊᴏ ᴀɴᴅ sᴜᴋᴜɴᴀ!** 💥",
+    "🔮 **ᴛʜᴇ ᴅᴏᴍᴀɪɴ ᴇxᴘᴀɴsɪᴏɴ ғɪɢʜᴛ ʙᴇᴛᴡᴇᴇɴ ɢᴏᴊᴏ ᴀɴᴅ sᴜᴋᴜɴᴀ ɪs ʜᴀᴘᴘᴇɴɪɴɢ!**"
 ]
 
 # Sukuna and Gojo's Moves
 SUKUNA_MOVES = [
-    "🌀 Sukuna uses his **Dismantle** to tear through the battlefield!",
-    "💀 Sukuna unleashes **Malevolent Shrine**, engulfing Gojo in a destructive domain!",
-    "🔥 Sukuna summons **Cleave** to slice through Gojo's defenses!"
+    "🌀 **sᴜᴋᴜɴᴀ ᴜsᴇs ʜɪs Dɪsᴍᴀɴᴛʟᴇ ᴛᴏ ᴛᴇᴀʀ ᴛʜʀᴏᴜɢʜ ᴛʜᴇ ʙᴀᴛᴛʟᴇғɪᴇʟᴅ!**",
+    "💀 **sᴜᴋᴜɴᴀ ᴜɴʟᴇᴀsʜᴇs ᴍᴀʟᴇᴠᴏʟᴇɴᴛ sʜʀɪɴᴇ, ᴇɴɢᴜʟғɪɴɢ ɢᴏᴊᴏ ɪɴ ᴀ ᴅᴇsᴛʀᴜᴄᴛɪᴠᴇ ᴅᴏᴍᴀɪɴ!**",
+    "🔥 **sᴜᴋᴜɴᴀ sᴜᴍᴍᴏɴs Cʟᴇᴀᴠᴇ ᴛᴏ sʟɪᴄᴇ ᴛʜʀᴏᴜɢʜ ɢᴏᴊᴏ's ᴅᴇғᴇɴsᴇs!**"
 ]
 
 GOJO_MOVES = [
-    "🔵 Gojo activates **Infinity**, blocking Sukuna's attack with an impenetrable barrier!",
-    "🌌 Gojo uses **Hollow Purple**, erasing everything in its path!",
-    "⚡ Gojo performs **Red Reversal**, sending Sukuna flying!"
+    "🔵 **ɢᴏᴊᴏ ᴀᴄᴛɪᴠᴀᴛᴇs Iɴғɪɴɪᴛʏ, ʙʟᴏᴄᴋɪɴɢ sᴜᴋᴜɴᴀ's ᴀᴛᴛᴀᴄᴋ ᴡɪᴛʜ ᴀɴ ɪᴍᴘᴇɴᴇᴛʀᴀʙʟᴇ ʙᴀʀʀɪᴇʀ!**",
+    "🌌 **ɢᴏᴊᴏ ᴜsᴇs ʜᴏʟʟᴏᴡ ᴘᴜʀᴘʟᴇ, ᴇʀᴀsɪɴɢ ᴇᴠᴇʀʏᴛʜɪɴɢ ɪɴ ɪᴛs ᴘᴀᴛʜ!**",
+    "⚡ **ɢᴏᴊᴏ ᴘᴇʀғᴏʀᴍs Rᴇᴅ Rᴇᴠᴇʀsᴀʟ, sᴇɴᴅɪɴɢ sᴜᴋᴜɴᴀ ғʟʏɪɴɢ!**"
 ]
 
 # Fight preparation animations
 FIGHT_PREPARATION = [
-    "⚔️ Preparing your team... 🛡️",
-    "💥 Powering up your domain expansion... 🌌",
-    "🔥 Gathering your strongest warriors... 💪"
+    "⚔️ **ᴘʀᴇᴘᴀʀɪɴɢ ʏᴏᴜʀ ᴛᴇᴀᴍ...** 🛡️",
+    "💥 **ᴘᴏᴡᴇʀɪɴɢ ᴜᴘ ʏᴏᴜʀ ᴅᴏᴍᴀɪɴ ᴇxᴘᴀɴsɪᴏɴ...** 🌌",
+    "🔥 **ɢᴀᴛʜᴇʀɪɴɢ ʏᴏᴜʀ sᴛʀᴏɴɢᴇsᴛ ᴡᴀʀʀɪᴏʀs...** 💪"
 ]
 
 # Function to get random characters from the database
