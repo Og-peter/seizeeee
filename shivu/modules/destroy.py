@@ -107,12 +107,12 @@ async def get_user_info(user_id):
                 rarity = char.get('rarity', '⚪️ Common')
                 if rarity in rarity_counts:
                     rarity_counts[rarity] += 1
-
-            # Create rarity breakdown message
-            rarity_message = "\n".join([
-                f"├─➩ {rarity.split()[0]} Rarity: {' '.join(rarity.split()[1:])}: {count}"
-                for rarity, count in rarity_counts.items()
-            ])
+                    
+        # Create rarity breakdown message
+        rarity_message = "\n".join([
+          f"├─➩ {rarity.split()[0]} Rarity: {' '.join(rarity.split()[1:])}: {count}"
+          for rarity, count in rarity_counts.items()
+        ])
         
         rarity_text += "╰───────────────────"
 
