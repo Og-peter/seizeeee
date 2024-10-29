@@ -68,7 +68,10 @@ async def start_anime_guess_cmd(update: Update, context: CallbackContext):
     character_message_links[chat_id] = correct_character['img_url']
 
     # Send the question with the character's image
-    question = f"<b>🏮 **ɢᴜᴇss ᴛʜᴇ ᴀɴɪᴍᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ!** 🏮</b>\n"
+    question = (
+    f"<b>❄️ **ɢᴜᴇss ᴛʜᴇ ᴀɴɪᴍᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ!** ❄️</b>\n"
+    f"<i>**ʜɪɴᴛ:** ᴛʜɪs ᴄʜᴀʀᴀᴄᴛᴇʀ ɪs ᴋɴᴏᴡɴ ғᴏʀ ᴛʜᴇɪʀ ᴜɴɪqᴜᴇ sᴛʏʟᴇ ᴀɴᴅ ᴍᴏʏᴏᴜᴋɪᴅ ᴘᴏᴡᴇʀs!</i>"
+    )
     await context.bot.send_photo(
         chat_id=chat_id,
         photo=correct_character['img_url'],
