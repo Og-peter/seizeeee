@@ -46,24 +46,34 @@ async def get_unique_characters(receiver_id, target_rarities=None):
 
 last_claim_time = {}
 
-async def process_claim(user_id, chat_id, user_first_name):
+async def process_claim(user_id, chat_id, user_first_name, message_id):
     unique_characters = await get_unique_characters(user_id)
     try:
+        # Update user's character list in the database
         await user_collection.update_one({'id': user_id}, {'$push': {'characters': {'$each': unique_characters}}})
+        
+        # Prepare image URLs and captions with additional text and user mention
         img_urls = [character['img_url'] for character in unique_characters]
         captions = [
-            f"❄️ **ᴏᴡᴏ, {user_first_name}!** 🏮\n\n"
+            f"❄️ **ᴏᴡᴏ, {user_first_name} (@{user_id})! ʜᴇʀᴇ ɪs ᴀ sᴘᴇᴄɪᴀʟ ᴄʟᴀɪᴍ ғᴏʀ ʏᴏᴜ!** 🏮\n\n"
             f"🥂 **ɴᴀᴍᴇ:** {character['name']}\n"
             f"☃️ **ʀᴀʀɪᴛʏ:** {character['rarity']}\n"
             f"⛩️ **ᴀɴɪᴍᴇ:** {character['anime']}\n\n"
             f"🍃 **ᴅᴏɴ'ᴛ ғᴏʀɢᴇᴛ ᴛᴏ ᴄᴏᴍᴇ ʙᴀᴄᴋ ᴛᴏᴍᴏʀʀᴏᴡ ғᴏʀ ᴍᴏʀᴇ ᴄʟᴀɪᴍs!**"
             for character in unique_characters
         ]
+        
+        # Send each image with caption, replying to the specified message
         for img_url, caption in zip(img_urls, captions):
-            await bot.send_photo(chat_id=chat_id, photo=img_url, caption=caption)  # Removed parse_mode
+            await bot.send_photo(
+                chat_id=chat_id,
+                photo=img_url,
+                caption=caption,
+                reply_to_message_id=message_id  # Replying to a specific message
+            )
     except Exception as e:
         await send_error_to_devs(f"Error in process_claim: {traceback.format_exc()}")
-
+        
 @bot.on_message(filters.command(["wclaim"]))
 async def claim_waifu(_, message: t.Message):
     user_id = message.from_user.id
@@ -90,9 +100,10 @@ async def claim_waifu(_, message: t.Message):
         if last_claim_date.date() == now.date():
             next_claim_time = (last_claim_date + timedelta(days=1)).strftime("%H:%M:%S")
             return await message.reply_text(
-                f"⏰ **Please wait until {next_claim_time} to claim your next waifu.**",
-                quote=True
-            )
+                             f"⏰ **ɢᴏᴍᴇɴ'ɴᴀsᴀɪ, @{update.effective_user.username}!**\n"
+                             f"**ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ ᴜɴᴛɪʟ {next_claim_time} ᴛᴏ ᴄʟᴀɪᴍ ʏᴏᴜʀ ɴᴇxᴛ ᴄʜᴀʀᴀᴄᴛᴇʀ.**",
+                             quote=True
+                        )
 
     last_claim_time[user_id] = now
 
