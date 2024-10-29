@@ -24,7 +24,10 @@ safari_users = {}
 allowed_group_id = -1002041586214
 current_hunts = {}
 current_engagements = {}
-  
+
+# Initialize user_locks as a defaultdict of asyncio.Lock
+user_locks = defaultdict(asyncio.Lock)
+
 async def get_random_waifu():
     target_rarities = ['🔮 Limited Edition', '🫧 Premium']  # Example rarities
     selected_rarity = random.choice(target_rarities)
