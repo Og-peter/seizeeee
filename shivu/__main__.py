@@ -61,9 +61,9 @@ async def message_counter(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 if user_id in warned_users and time.time() - warned_users[user_id] < 600:
                     return
                 else:
-                    # Stylized warning message
+                    # Stylized warning message without parse mode
                     warning_message = (
-                        f"🚫 ᴇxᴄᴇssɪᴠᴇ ᴍᴇssᴀɢᴇs ᴅᴇᴛᴇᴄᴛᴇᴅ!\n⛔️ {update.effective_user.first_name}, "
+                        f"🚫 ᴇxᴄᴇssɪᴠᴇ ᴍᴇssᴀɢᴇs ᴅᴇᴛᴇᴄᴛᴇᴅ!\n⛔️ @{update.effective_user.username}, "
                         f"ᴘʟᴇᴀsᴇ ᴛᴀᴋᴇ ᴀ ʙʀᴇᴀᴋ! ʏᴏᴜ ᴀʀᴇ ʙᴇɪɴɢ ɪɢɴᴏʀᴇᴅ ғᴏʀ 10 ᴍɪɴᴜᴛᴇs."
                     )
                     await update.message.reply_text(warning_message)
