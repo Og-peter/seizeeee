@@ -135,49 +135,48 @@ async def sfight(_, message: t.Message):
 
         # Determine if the user wins or loses the battle
         if random.random() < (WIN_RATE_PERCENTAGE / 100):
-        # User wins the fight
-        await asyncio.sleep(3)  # Add some delay for realism
+            # User wins the fight
+            await asyncio.sleep(3)  # Add some delay for realism
 
-        for character in random_characters:
-          try:
-            # Add the character to the user's collection
-            await user_collection.update_one({'id': user_id}, {'$push': {'characters': character}})
-        except Exception as e:
-            print(f"Error adding character to user: {e}")
+            for character in random_characters:
+                try:
+                    # Add the character to the user's collection
+                    await user_collection.update_one({'id': user_id}, {'$push': {'characters': character}})
+                except Exception as e:
+                    print(f"Error adding character to user: {e}")
 
-    img_urls = [character['img_url'] for character in random_characters]
-    captions = [
-        f"🔥 **{mention}, ʏᴏᴜ ᴡᴏɴ ᴛʜᴇ ғɪɢʜᴛ!** 🔥\n"
-        f"🥂 **ɴᴀᴍᴇ:** {character['name']}\n"
-        f"❄️ **ʀᴀʀɪᴛʏ:** {character['rarity']}\n"
-        f"⛩️ **ᴀɴɪᴍᴇ:** {character['anime']}\n"
-        for character in random_characters
-    ]
+            img_urls = [character['img_url'] for character in random_characters]
+            captions = [
+                f"🔥 **{mention}, ʏᴏᴜ ᴡᴏɴ ᴛʜᴇ ғɪɢʜᴛ!** 🔥\n"
+                f"🥂 **ɴᴀᴍᴇ:** {character['name']}\n"
+                f"❄️ **ʀᴀʀɪᴛʏ:** {character['rarity']}\n"
+                f"⛩️ **ᴀɴɪᴍᴇ:** {character['anime']}\n"
+                for character in random_characters
+            ]
 
-    for img_url, caption in zip(img_urls, captions):
-        await message.reply_photo(photo=img_url, caption=caption)
+            for img_url, caption in zip(img_urls, captions):
+                await message.reply_photo(photo=img_url, caption=caption)
 
-    # Add a retry button
-    retry_button = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("⚔️ ᴛʀʏ ᴀɴᴏᴛʜᴇʀ ғɪɢʜᴛ ⚔️", callback_data="retry_fight")]]
-    )
-    await message.reply_text("💪 ʀᴇᴀᴅʏ ғᴏʀ ᴀɴᴏᴛʜᴇʀ ʙᴀᴛᴛʟᴇ?", reply_markup=retry_button)
+            # Add a retry button
+            retry_button = InlineKeyboardMarkup(
+                [[InlineKeyboardButton("⚔️ ᴛʀʏ ᴀɴᴏᴛʜᴇʀ ғɪɢʜᴛ ⚔️", callback_data="retry_fight")]]
+            )
+            await message.reply_text("💪 ʀᴇᴀᴅʏ ғᴏʀ ᴀɴᴏᴛʜᴇʀ ʙᴀᴛᴛʟᴇ?", reply_markup=retry_button)
 
-else:
-    # User loses the fight
-    await asyncio.sleep(2)
-    
-    # Add character-specific dialogues based on the loser
-    if random.random() < 0.5:  # Randomly decide if Sukuna or Gojo loses
-        await message.reply_text(f"💀 **{mention}, ʏᴏᴜ ʟᴏsᴛ ᴛʜᴇ ғɪɢʜᴛ. sᴜᴋᴜɴᴀ ʜᴀs ᴅᴇғᴇᴀᴛᴇᴅ ɢᴏᴊᴏ!** 💀")
-        await message.reply_text("😈 **sᴜᴋᴜɴᴀ:** ʏᴏᴜ ʜᴀᴅ ɴᴏ ᴄʜᴀɴᴄᴇs, ɢᴏᴊᴏ! ᴏʀ ɴᴏᴡ, ᴛʜʀᴏᴡ ʏᴏᴜʀsᴇʟғ ᴀᴡᴀʏ.")
-    else:
-        await message.reply_text(f"💀 **{mention}, ʏᴏᴜ ʟᴏsᴛ ᴛʜᴇ ғɪɢʜᴛ. ɢᴏᴊᴏ ʜᴀs ᴅᴇғᴇᴀᴛᴇᴅ sᴜᴋᴜɴᴀ!** 💀")
-        await message.reply_text("😤 **ɢᴏᴊᴏ:** sᴜᴋᴜɴᴀ, ʏᴏᴜ ᴀʀᴇ ɴᴏᴛʜɪɴɢ ʙᴜᴛ ᴀ ʙʟᴏᴏᴅʏ ᴡʜɪsᴘᴇʀ. ɴᴏᴡ ʟᴇᴀᴠᴇ ᴏʀ ɪ'ʟʟ ᴘᴇʀᴍᴀɴᴇɴᴛʟʏ ᴅᴇsᴛʀᴏʏ ʏᴏᴜ!")
-    
-    loss_video = random.choice(BATTLE_VIDEOS)
-    await bot.send_video(chat_id, video=loss_video, caption="💀 **ᴛᴏᴜɢʜ ʟᴏss, ʙᴇᴛᴛᴇʀ ʟᴜᴄᴋ ɴᴇxᴛ ᴛɪᴍᴇ!**")
-    
+        else:
+            # User loses the fight
+            await asyncio.sleep(2)
+            await message.reply_text(f"💀 **{mention}, ʏᴏᴜ ʟᴏsᴛ ᴛʜᴇ ғɪɢʜᴛ. sᴜᴋᴜɴᴀ ʜᴀs ᴅᴇғᴇᴀᴛᴇᴅ ɢᴏᴊᴏ!** 💀")
+            loss_video = random.choice(BATTLE_VIDEOS)
+            await bot.send_video(chat_id, video=loss_video, caption="💀 **ᴛᴏᴜɢʜ ʟᴏss, ʙᴇᴛᴛᴇʀ ʟᴜᴄᴋ ɴᴇxᴛ ᴛɪᴍᴇ!**")
+
+            # Sukuna's dialogue upon victory
+            await message.reply_text("😈 **sᴜᴋᴜɴᴀ: ʏᴏᴜ'ʀᴇ ʟᴇss ᴛʜᴀɴ ɪ ᴡɪʟʟ ʙʟɪɴᴅ ʏᴏᴜ ᴡɪᴛʜ ᴅᴇsᴛʀᴜᴄᴛɪᴏɴ!**")
+
+    except Exception as e:
+        print(f"⚠️ Error during fight: {e}")
+        await message.reply_text("⚠️ **sᴏᴍᴇᴛʜɪɴɢ ᴡᴇɴᴛ ᴡʀᴏɴɢ. ᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ ʟᴀᴛᴇʀ.**")
+
 # Retry fight callback handler
 @bot.on_callback_query(filters.regex("retry_fight"))
 async def retry_fight(_, callback_query: t.CallbackQuery):
