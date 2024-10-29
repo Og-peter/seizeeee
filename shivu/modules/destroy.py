@@ -103,11 +103,17 @@ async def get_user_info(user_id):
             'valentine': "💞 Valentine"
         }
 
-        # Only display rarities that have counts > 0
-        for rarity, count in rarity_counts.items():
-            if count > 0:
-                rarity_text += f"├─➩ {rarity_symbols[rarity]}: {count}\n"
+        for char in user_data.get('characters', []):
+                rarity = char.get('rarity', '⚪️ Common')
+                if rarity in rarity_counts:
+                    rarity_counts[rarity] += 1
 
+            # Create rarity breakdown message
+            rarity_message = "\n".join([
+                f"├─➩ {rarity.split()[0]} Rarity: {' '.join(rarity.split()[1:])}: {count}"
+                for rarity, count in rarity_counts.items()
+            ])
+        
         rarity_text += "╰───────────────────"
 
         user_info = (
