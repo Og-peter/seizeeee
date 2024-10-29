@@ -78,7 +78,7 @@ async def enter_safari(update: Update, context: CallbackContext):
     user_id = message.from_user.id
 
     if user_id in safari_users:
-        await safe_send_message(context.bot, message.chat_id, "<b>⚠️ Alert!</b>\nYou’re already within the Seize Zone!")
+        await safe_send_message(context.bot, message.chat_id, "<b>⚠️ Alert!</b><br>You’re already within the Seize Zone!")
         return
 
     current_time = time.time()
@@ -99,7 +99,7 @@ async def enter_safari(update: Update, context: CallbackContext):
         await safe_send_message(
             context.bot,
             message.chat_id,
-            f"<b>⏳ Cooldown Active</b>\nYou’ll be able to re-enter in {hours}h {minutes}m.\nPrepare yourself!"
+            f"<b>⏳ Cooldown Active</b><br>You’ll be able to re-enter in {hours}h {minutes}m.<br>Prepare yourself!"
         )
         return
 
@@ -108,7 +108,7 @@ async def enter_safari(update: Update, context: CallbackContext):
         await safe_send_message(
             context.bot,
             message.chat_id,
-            "<b>🚷 Access Denied</b>\nPlease register by starting the bot in direct message."
+            "<b>🚷 Access Denied</b><br>Please register by starting the bot in direct message."
         )
         return
 
@@ -117,7 +117,7 @@ async def enter_safari(update: Update, context: CallbackContext):
         await safe_send_message(
             context.bot,
             message.chat_id,
-            "<b>💰 Insufficient Tokens</b>\nYou need 10 tokens to enter the Seize Zone."
+            "<b>💰 Insufficient Tokens</b><br>You need 10 tokens to enter the Seize Zone."
         )
         return
 
@@ -141,8 +141,8 @@ async def enter_safari(update: Update, context: CallbackContext):
     await safe_send_message(
         context.bot,
         message.chat_id,
-        "<b>🎉 Welcome to the Seize Zone!</b>\nEntry fee of 10 tokens deducted.\n\n<i>Start your journey with /explore and discover rare catches!</i>"
-    )
+        "<b>🎉 Welcome to the Seize Zone!</b><br>Entry fee of 10 tokens deducted.<br><br><i>Start your journey with /explore and discover rare catches!</i>"
+  )
   
 async def exit_safari(update: Update, context: CallbackContext):
     message = update.message
