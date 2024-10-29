@@ -18,14 +18,14 @@ OWNER_ID = 6402009857  # Owner ID
 
 # Message Templates
 START_MESSAGES = [
-    "✨『𝑻𝒉𝒆 𝒎𝒐𝒎𝒆𝒏𝒕 𝒉𝒂𝒔 𝒂𝒓𝒓𝒊𝒗𝒆𝒅』✨",
-    "💫『𝑳𝒆𝒕'𝒔 𝒈𝒐!』💫",
-    "🌟『𝑻𝒊𝒎𝒆 𝒇𝒐𝒓 𝒚𝒐𝒖𝒓 𝒍𝒖𝒄𝒌𝒚 𝒔𝒉𝒐𝒕』🌟"
+    "🥂 ᴛʜᴇ ᴍᴏᴍᴇɴᴛ ʜᴀs ᴀʀʀɪᴠᴇᴅ 🥂",
+    "🫧 ʟᴇᴛ's ɢᴏ! 🫧",
+    "💐 ᴛɪᴍᴇ ғᴏʀ ʏᴏᴜʀ ʟᴜᴄᴋʏ sʜᴏᴛ 💐"
 ]
 REJECTION_CAPTIONS = [
-    "💔『𝑺𝒉𝒆 𝒔𝒍𝒂𝒑𝒑𝒆𝒅 𝒂𝒏𝒅 𝒓𝒂𝒏!』 😂",
-    "💀『𝑺𝒉𝒆 𝒔𝒂𝒊𝒅 '𝒏𝒐'!』 😂",
-    "😞『𝑺𝒐𝒓𝒓𝒚, 𝒃𝒖𝒕 𝒊𝒕'𝒔 𝒂 𝒓𝒆𝒋𝒆𝒄𝒕!』 😂"
+    "💔 sʜᴇ sʟᴀᴘᴘᴇᴅ ᴀɴᴅ ʀᴀɴ! 🥀",
+    "💀 sʜᴇ sᴀɪᴅ 'ɴᴏ'! 🌬️",
+    "😞 sᴏʀʀʏ, ʙᴜᴛ ɪᴛ's ᴀ ʀᴇᴊᴇᴄᴛ! 🏮"
 ]
 ACCEPTANCE_IMAGES = [
     "https://te.legra.ph/file/4fe133737bee4866a3549.png",
@@ -123,7 +123,7 @@ async def propose_command(_: bot, message: t.Message):
     await bot.send_photo(chat_id, photo=random.choice(ACCEPTANCE_IMAGES), caption=start_message)
 
     # Animated steps of proposal
-    for step in ["💍 Kneeling down...", "💞 Extending the ring...", "🎉 Asking the big question..."]:
+    for step in ["💍 ᴋɴᴇᴇʟɪɴɢ ᴅᴏᴡɴ...", "💞 ᴇxᴛᴇɴᴅɪɴɢ ᴛʜᴇ ʀɪɴɢ...", "🎉 ᴀsᴋɪɴɢ ᴛʜᴇ ʙɪɢ ǫᴜᴇsᴛɪᴏɴ..."]:
         await message.reply_text(step)
         await asyncio.sleep(1)
 
@@ -136,16 +136,16 @@ async def propose_command(_: bot, message: t.Message):
         for character in random_characters:
             await message.reply_photo(
                 photo=character['img_url'],
-                caption=(f"😍 <b>{character['name']}</b> accepted! 🌹\n"
-                         f"『𝑵𝒂𝒎𝒆』: {character['name']}\n"
-                         f"『𝑹𝒂𝒓𝒊𝒕𝒚』: {character['rarity']}\n"
-                         f"『𝑨𝒏𝒊𝒎𝒆』: {character['anime']}")
+                caption=(f"🥂 <b>{character['name']}</b> ᴀᴄᴄᴇᴘᴛᴇᴅ! 🌹\n"
+                         f"❄️ ɴᴀᴍᴇ: {character['name']}\n"
+                         f"🫧 ʀᴀʀɪᴛʏ: {character['rarity']}\n"
+                         f"⛩️ ᴀɴɪᴍᴇ: {character['anime']}")
             )
         await message.reply_text(
-            "💖 Try again or view your characters!",
+            "💖 ᴛʀʏ ᴀɢᴀɪɴ ᴏʀ ᴠɪᴇᴡ ʏᴏᴜʀ ᴄʜᴀʀᴀᴄᴛᴇʀs!",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🔁 Retry Proposal", callback_data="retry_proposal")],
-                [InlineKeyboardButton("📜 View Characters", url=f"https://t.me/{MUST_JOIN}")]
+                [InlineKeyboardButton("🌿 ʀᴇᴛʀʏ ᴘʀᴏᴘᴏsᴀʟ", callback_data="retry_proposal")],
+                [InlineKeyboardButton("🪭 ᴠɪᴇᴡ ᴄʜᴀʀᴀᴄᴛᴇʀs", url=f"https://t.me/{MUST_JOIN}")]
             ])
         )
     else:
