@@ -84,7 +84,7 @@ async def enter_safari(update: Update, context: CallbackContext):
         await safe_send_message(
             context.bot,
             message.chat_id,
-            "<b>⚠️ Alert!</b><br>You’re already within the Seize Zone!"
+            "⚠️ Alert! You’re already within the Seize Zone!"
         )
         return
 
@@ -106,7 +106,7 @@ async def enter_safari(update: Update, context: CallbackContext):
         await safe_send_message(
             context.bot,
             message.chat_id,
-            f"<b>⏳ Cooldown Active</b><br>You’ll be able to re-enter in {hours}h {minutes}m.<br>Prepare yourself!"
+            f"⏳ Cooldown Active You’ll be able to re-enter in {hours}h {minutes}m. Prepare yourself!"
         )
         return
 
@@ -115,7 +115,7 @@ async def enter_safari(update: Update, context: CallbackContext):
         await safe_send_message(
             context.bot,
             message.chat_id,
-            "<b>🚷 Access Denied</b><br>Please register by starting the bot in direct message."
+            "🚷 Access Denied Please register by starting the bot in direct message."
         )
         return
 
@@ -124,7 +124,7 @@ async def enter_safari(update: Update, context: CallbackContext):
         await safe_send_message(
             context.bot,
             message.chat_id,
-            "<b>💰 Insufficient Tokens</b><br>You need 10 tokens to enter the Seize Zone."
+            "💰 Insufficient Tokens You need 10 tokens to enter the Seize Zone."
         )
         return
 
@@ -148,7 +148,7 @@ async def enter_safari(update: Update, context: CallbackContext):
     await safe_send_message(
         context.bot,
         message.chat_id,
-        "<b>🎉 Welcome to the Seize Zone!</b><br>Your entry fee of 10 tokens has been deducted.<br><br><i>Start your journey with /explore and discover rare catches!</i>"
+        "🎉 Welcome to the Seize Zone! Your entry fee of 10 tokens has been deducted.\n\n Start your journey with /explore and discover rare catches!"
     )
   
 async def exit_safari(update: Update, context: CallbackContext):
@@ -156,18 +156,18 @@ async def exit_safari(update: Update, context: CallbackContext):
     user_id = message.from_user.id
 
     if user_id not in safari_users:
-        await message.reply_text("<b>⚠️ Exit Denied</b><br>You are currently not in the Seize Zone!")
+        await message.reply_text("⚠️ Exit Denied You are currently not in the Seize Zone!")
         return
 
     del safari_users[user_id]
     await safari_users_collection.delete_one({'user_id': user_id})
 
     # Sending the exit message in parts
-    await message.reply_text("<b>✅ Success!</b>")
+    await message.reply_text("✅ Success!")
     await asyncio.sleep(1)  # Small delay between messages
-    await message.reply_text("<br>You have gracefully exited the Seize Zone.")
+    await message.reply_text("You have gracefully exited the Seize Zone.")
     await asyncio.sleep(1)  # Small delay between messages
-    await message.reply_text("<br><i>Until next time!</i>")
+    await message.reply_text("Until next time!")
 
 async def hunt(update: Update, context: CallbackContext):
     message = update.message
@@ -175,30 +175,30 @@ async def hunt(update: Update, context: CallbackContext):
 
     async with user_locks[user_id]:
         if user_id not in safari_users:
-            await message.reply_text("<b>🚫 Not in the Seize Zone!</b><br>Please use /wtour to enter first.")
+            await message.reply_text("🚫 Not in the Seize Zone! Please use /wtour to enter first.")
             return
 
         if user_id in current_hunts and current_hunts[user_id] is not None:
             if user_id not in current_engagements:
-                await message.reply_text("<b>⚠️ Ongoing Hunt!</b><br>You must finish your current hunt before starting a new one!")
+                await message.reply_text("⚠️ Ongoing Hunt! You must finish your current hunt before starting a new one!")
                 return
 
         user_data = safari_users[user_id]
         if user_data['used_hunts'] >= user_data['hunt_limit']:
-            await message.reply_text("<b>🚷 Hunt Limit Reached!</b><br>You have exhausted your hunt quota.<br>You will be removed from the Seize Zone.")
+            await message.reply_text("🚷 Hunt Limit Reached! You have exhausted your hunt quota. You will be removed from the Seize Zone.")
             del safari_users[user_id]
             await safari_users_collection.delete_one({'user_id': user_id})
             return
 
         if user_data['safari_balls'] <= 0:
-            await message.reply_text("<b>💔 Out of Contract Crystals!</b><br>You cannot continue hunting without more crystals.<br>You will be removed from the Seize Zone.")
+            await message.reply_text("💔 Out of Contract Crystals! You cannot continue hunting without more crystals. You will be removed from the Seize Zone.")
             del safari_users[user_id]
             await safari_users_collection.delete_one({'user_id': user_id})
             return
 
         waifu = await get_random_waifu()
         if not waifu:
-            await message.reply_text("<b>🚫 No Characters Available!</b><br>Please try again later.")
+            await message.reply_text("🚫 No Characters Available! Please try again later.")
             return
 
         waifu_name = waifu['name']
@@ -217,9 +217,9 @@ async def hunt(update: Update, context: CallbackContext):
         await save_safari_user(user_id)
 
         text = (
-            f"<b>A wild {waifu_name} ( {waifu_rarity} ) has appeared!</b><br><br>"
-            f"<b>🔍 Explore Limit: {user_data['used_hunts']}/{user_data['hunt_limit']}</b><br>"
-            f"<b>🧊 Contract Crystals: {user_data['safari_balls']}</b>"
+            f" **A wild {waifu_name} ( {waifu_rarity} ) has appeared!** \n\n"
+            f"🔍 **Explore Limit:** {user_data['used_hunts']}/{user_data['hunt_limit']} \n"
+            f"🧊 **Contract Crystals:** {user_data['safari_balls']} \n"
         )
         
         keyboard = InlineKeyboardMarkup(
