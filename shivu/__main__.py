@@ -123,7 +123,6 @@ RARITY_WEIGHTS = {
     "🎐 𝘼𝙎𝙏𝙍𝘼𝙇": 0.1,
     "💞 𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀": 0.1,
 }
-
 async def send_image(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     message_id = update.message.message_id
@@ -133,45 +132,25 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
 
-    # Reset sent characters if all have been sent
     if len(sent_characters[chat_id]) == len(all_characters):
         sent_characters[chat_id] = []
 
-    # Determine if we are in the special support group
-    is_support_group = chat_id == -1002104939708  # Replace with your actual support group ID
-
-    # Filter available characters based on group type
     if 'available_characters' not in context.user_data:
-        if is_support_group:
-            # Filter characters with the 🎃 emoji at the end of their name
-            context.user_data['available_characters'] = [
-                c for c in all_characters
-                if 'id' in c
-                and c['id'] not in sent_characters.get(chat_id, [])
-                and c.get('name', '').endswith('🎃')  # Only include characters with 🎃 emoji
-            ]
-        else:
-            # In other groups, include all characters except those that are Valentine Special
-            context.user_data['available_characters'] = [
-                c for c in all_characters
-                if 'id' in c
-                and c['id'] not in sent_characters.get(chat_id, [])
-                and c.get('rarity') is not None
-                and c.get('rarity') != '💞 Valentine Special'
-            ]
+        context.user_data['available_characters'] = [
+            c for c in all_characters 
+            if 'id' in c 
+            and c['id'] not in sent_characters.get(chat_id, [])
+            and c.get('rarity') is not None 
+            and c.get('rarity') != '💞 Valentine Special'
+        ]
 
     available_characters = context.user_data['available_characters']
 
-    # Ensure we only use cumulative weights if there are available characters
     cumulative_weights = []
     cumulative_weight = 0
     for character in available_characters:
         cumulative_weight += RARITY_WEIGHTS.get(character.get('rarity'), 1)
         cumulative_weights.append(cumulative_weight)
-
-    # If no characters are available, revert to all characters
-    if not available_characters:
-        available_characters = all_characters
 
     rand = random.uniform(0, cumulative_weight)
     selected_character = None
@@ -187,7 +166,6 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     sent_characters[chat_id].append(selected_character['id'])
     last_characters[chat_id] = selected_character
 
-    # Clear first correct guesses for this chat if present
     if chat_id in first_correct_guesses:
         del first_correct_guesses[chat_id]
 
@@ -206,16 +184,13 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     }
 
     rarity_emoji, rarity_name = rarity_to_emoji.get(selected_character.get('rarity'), ("❓", "Unknown"))
-
-    # Sending the selected character image
+   
     message = await context.bot.send_photo(
         chat_id=chat_id,
         photo=selected_character['img_url'],
-        caption=f"""<b>{rarity_emoji} ᴋᴀᴡᴀɪ ! ᴀ {rarity_name} ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀs ᴀᴘᴘᴇᴀʀᴇᴅ!</b>\n<b>ᴀᴅᴅ ʜᴇʀ ᴛᴏ ʏᴏᴜʀ ʜᴀʀᴇᴍ ʙʏ sᴇɴᴅɪɴɢ</b>\n<b>/seize ɴᴀᴍᴇ</b>""",
-        parse_mode='HTML'
-    )
+        caption=f"""<b>{character['rarity'][0]} ᴋᴀᴡᴀɪ ! ᴀ {character['rarity'][2:]} ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀs ᴀᴘᴘᴇᴀʀᴇᴅ!</b>\n<b>ᴀᴅᴅ ʜᴇʀ ᴛᴏ ʏᴏᴜʀ ʜᴀʀᴇᴍ ʙʏ sᴇɴᴅɪɴɢ</b>\n<b>/seize ɴᴀᴍᴇ</b>""",
+        parse_mode='HTML')
 
-    # Generate message link for reference
     if update.effective_chat.type == "private":
         message_link = f"https://t.me/c/{chat_id}/{message.message_id}"
     else:
@@ -316,7 +291,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
         message_link = character_message_links.get(chat_id, "#")
         keyboard = [[InlineKeyboardButton("★ sᴇᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ ★", url=message_link)]]
         await update.message.reply_text(
-            '❌ ᴄʜᴀʀᴀᴄᴛᴇʀ ɴᴀᴍᴇ ɪs ɴᴏᴛ ᴄᴏʀʀᴇᴄᴛ. 🔍 ᴘʟᴇᴀsᴇ ᴛʏ ᴀɢᴀɪɴ!',
+            '❌ ᴄʜᴀʀᴀᴄᴛᴇʀ ɴᴀᴍᴇ ɪs ɴᴏᴛ ᴄᴏʀʀᴇᴄᴛ. ᴘʟᴇᴀsᴇ ᴛʏ ᴀɢᴀɪɴ!',
             reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
