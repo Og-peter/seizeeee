@@ -121,6 +121,47 @@ async def on_left_chat_member(_, message: Message):
 # Spam words list
 SPAM_WORDS = ["spamword1", "spamword2", "example.com"]
 
+WELCOME_TEMPLATE = """
+╭─────────★
+🌟 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 🌟
+╰─────────★
+
+👤 **Name:** {name}
+🆔 **ID:** `{user_id}`
+🔗 **Username:** @{username}
+👥 **Total Members:** {total_members}
+
+🔰 Enjoy your stay and feel free to interact with our community!
+"""
+
+# Custom welcome message handler
+@app.on_message(filters.new_chat_members)
+async def custom_welcome_message(client: Client, message: Message):
+    total_members = await client.get_chat_members_count(message.chat.id)
+    for user in message.new_chat_members:
+        name = user.first_name
+        user_id = user.id
+        username = user.username if user.username else "No Username"
+
+        welcome_text = WELCOME_TEMPLATE.format(
+            name=name,
+            user_id=user_id,
+            username=username,
+            total_members=total_members
+        )
+
+        # Inline keyboard buttons
+        buttons = InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton("👤 VIEW NEW MEMBER 👤", url=f"tg://user?id={user_id}")],
+                [InlineKeyboardButton("➕ KIDNAP ME ➕", url="https://t.me/example_bot")]
+            ]
+        )
+
+        # Send welcome message with photo (optional)
+        welcome_photo_url = "https://files.catbox.moe/h8hiod.jpg"
+        await send_photo_message(message.chat.id, welcome_text, welcome_photo_url, reply_markup=buttons)
+        
 @app.on_message(filters.text)
 async def spam_filter(client: Client, message: Message):
     if any(word in message.text.lower() for word in SPAM_WORDS):
