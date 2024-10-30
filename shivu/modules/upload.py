@@ -497,6 +497,7 @@ user_states = {}
 # Collection for storing anime (replace with actual DB reference)
 # collection = your_database.collection_name
 
+# Handler for adding a new anime
 @app.on_callback_query(filters.regex('^add_anime$'))
 async def add_anime_callback(client, callback_query):
     await callback_query.message.edit_text(
@@ -504,19 +505,21 @@ async def add_anime_callback(client, callback_query):
     )
     user_states[callback_query.from_user.id] = {"state": "adding_anime"}
 
+# Handler to receive and process the anime name
 @app.on_message(filters.text & filters.user(list(user_states.keys())))
 async def handle_anime_name(client, message):
     user_id = message.from_user.id
     state = user_states.get(user_id)
 
+    # Check if the user is in the 'adding_anime' state
     if state and state["state"] == "adding_anime":
         anime_name = message.text
         mention = f"[{message.from_user.first_name}](tg://user?id={user_id})"
 
-        # Simulate adding anime to database
+        # Simulate adding anime to database (uncomment if needed)
         # await collection.insert_one({"anime": anime_name})
 
-        # Notify user and support chat
+        # Notify the user and support chat
         await message.reply_text(f"✅ **{mention} added a new anime!**\n\n⛩️ **Title:** {anime_name}")
         await client.send_message(
             SUPPORT_CHAT,
