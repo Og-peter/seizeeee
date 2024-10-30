@@ -15,20 +15,11 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     # If no user found, send a message
     if not user:
-        message = '⬤ ʏᴏᴜ ʜᴀᴠᴇ ɴᴏᴛ sᴇɪᴢᴇᴅ ᴀɴʏ ᴄʜᴀʀᴀᴄᴛᴇʀs ʏᴇᴛ..'
-        if update.message:
-            await update.message.reply_text(message)
-        else:
-            await update.callback_query.edit_message_text(message)
+        await send_message(update, "⬤ You have not seized any characters yet.")
         return
 
     # Sort characters by anime and ID
     characters = sorted(user['characters'], key=lambda x: (x.get('anime', ''), x.get('id', '')))
-
-    # Filter based on rarity preference if present
-    if 'rarity_preference' in user:
-        rarity = user['rarity_preference']
-        characters = [char for char in characters if char.get('rarity') == rarity]
 
     # Count occurrences of characters by their ID
     character_counts = {k: len(list(v)) for k, v in groupby(characters, key=lambda x: x.get('id'))}
@@ -40,26 +31,25 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     total_pages = math.ceil(len(unique_characters) / 15)
 
     # Ensure the page number is within bounds
-    if page < 0 or page >= total_pages:
-        page = 0
+    page = max(0, min(page, total_pages - 1))
 
-    harem_message = f"<b>{escape(update.effective_user.first_name)}'s ʜᴀʀᴇᴍ - ᴘᴀɢᴇ [{page + 1}/{total_pages}]</b>\n"
+    harem_message = f"<b>{escape(update.effective_user.first_name)}'s Harem - Page [{page + 1}/{total_pages}]</b>\n"
 
     # Paginate and group by anime
     current_characters = unique_characters[page * 15:(page + 1) * 15]
     current_grouped_characters = {k: list(v) for k, v in groupby(current_characters, key=lambda x: x.get('anime', ''))}
 
     rarity_emojis = {
-        '⚪️ ᴄᴏᴍᴍᴏɴ': '⚪️',
-        '🔮 ʟɪᴍɪᴛᴇᴅ ᴇᴅɪᴛɪᴏɴ': '🔮',
-        '🫧 ᴘʀᴇᴍɪᴜᴍ': '🫧',
-        '🌸 ᴇxᴏᴛɪᴄ': '🌸',
-        '💮 ᴇxᴄʟᴜsɪᴠᴇ': '💮',
-        '🟡 ʟᴇɢᴇɴᴅᴀʀʏ': '🟡',
-        '🟠 ʀᴀʀᴇ': '🟠',
-        '🔵 ᴍᴇᴅɪᴜᴍ': '🔵',
-        '🎐 ᴀsᴛʀᴀʟ': '🎐',
-        '💞 ᴠᴀʟᴇɴᴛɪɴᴇ': '💞'
+        '⚪️ Common': '⚪️',
+        '🔮 Limited Edition': '🔮',
+        '🫧 Premium': '🫧',
+        '🌸 Exotic': '🌸',
+        '💮 Exclusive': '💮',
+        '🟡 Legendary': '🟡',
+        '🟠 Rare': '🟠',
+        '🔵 Medium': '🔵',
+        '🎐 Astral': '🎐',
+        '💞 Valentine': '💞'
     }
 
     for anime, chars in current_grouped_characters.items():
@@ -85,12 +75,12 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
             nav_buttons.append(InlineKeyboardButton("➡️", callback_data=f"harem:{page + 1}:{user_id}"))
         keyboard.append(nav_buttons)
 
-    # Share Button with globe icon
-    keyboard.append([InlineKeyboardButton("🌐", switch_inline_query_current_chat=f"collection.{user_id}")])
+    # Share Button
+    keyboard.append([InlineKeyboardButton("🌐 ɪɴʟɪɴᴇ", switch_inline_query_current_chat=f"collection.{user_id}")])
 
     # Fast Forward Button
     if page < total_pages - 2:
-        keyboard.append([InlineKeyboardButton("FAST ⏩", callback_data=f"harem:{page + 2}:{user_id}")])
+        keyboard.append([InlineKeyboardButton("ғᴀsᴛ ⏩", callback_data=f"harem:{page + 2}:{user_id}")])
 
     # Trash Button
     keyboard.append([InlineKeyboardButton("🗑️ ᴛʀᴀsʜ", callback_data=f"trash:{user_id}")])
@@ -103,40 +93,33 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         fav_character = next((c for c in user['characters'] if c.get('id') == fav_character_id), None)
 
         if fav_character and 'img_url' in fav_character:
-            if update.message:
-                await update.message.reply_photo(photo=fav_character['img_url'], caption=harem_message, reply_markup=reply_markup, parse_mode='HTML')
-            else:
-                if update.callback_query.message.photo:
-                    await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup, parse_mode='HTML')
-                else:
-                    await update.callback_query.edit_message_text(harem_message, reply_markup=reply_markup, parse_mode='HTML')
+            await send_photo_or_message(update, fav_character['img_url'], harem_message, reply_markup)
         else:
-            if update.message:
-                await update.message.reply_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
-            else:
-                await update.callback_query.edit_message_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
-    # If there is no favorite, choose a random character or display message
+            await send_message(update, harem_message, reply_markup)
     else:
         if user['characters']:
             random_character = random.choice(user['characters'])
             if 'img_url' in random_character:
-                if update.message:
-                    await update.message.reply_photo(photo=random_character['img_url'], caption=harem_message, reply_markup=reply_markup, parse_mode='HTML')
-                else:
-                    if update.callback_query.message.photo:
-                        await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup, parse_mode='HTML')
-                    else:
-                        await update.callback_query.edit_message_text(harem_message, reply_markup=reply_markup, parse_mode='HTML')
+                await send_photo_or_message(update, random_character['img_url'], harem_message, reply_markup)
             else:
-                if update.message:
-                    await update.message.reply_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
-                else:
-                    await update.callback_query.edit_message_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
+                await send_message(update, harem_message, reply_markup)
         else:
-            if update.message:
-                await update.message.reply_text("⬤ ʏᴏᴜʀ ʟɪsᴛ ɪs sᴏ ᴇᴍᴘᴛʏ :)")
-            else:
-                await update.callback_query.edit_message_text("⬤ ʏᴏᴜʀ ʟɪsᴛ ɪs sᴏ ᴇᴍᴘᴛʏ :)")
+            await send_message(update, "⬤ Your list is so empty :)")
+
+async def send_photo_or_message(update: Update, photo_url, caption, reply_markup):
+    if update.message:
+        await update.message.reply_photo(photo=photo_url, caption=caption, reply_markup=reply_markup, parse_mode='HTML')
+    else:
+        if update.callback_query.message.photo:
+            await update.callback_query.edit_message_caption(caption=caption, reply_markup=reply_markup, parse_mode='HTML')
+        else:
+            await update.callback_query.edit_message_text(caption, reply_markup=reply_markup, parse_mode='HTML')
+
+async def send_message(update: Update, message, reply_markup=None):
+    if update.message:
+        await update.message.reply_text(message, reply_markup=reply_markup, parse_mode='HTML')
+    else:
+        await update.callback_query.edit_message_text(message, reply_markup=reply_markup, parse_mode='HTML')
 
 # Callback function for handling harem pagination
 async def harem_callback(update: Update, context: CallbackContext) -> None:
@@ -144,18 +127,18 @@ async def harem_callback(update: Update, context: CallbackContext) -> None:
     data = query.data
 
     # Extract page and user ID from the callback data
-    _, page_str, user_id = data.split(':')
+    if data.startswith("harem:"):
+        _, page_str, user_id = data.split(':')
+        current_page = int(page_str)
+        user_id = int(user_id)
 
-    current_page = int(page_str)
-    user_id = int(user_id)
+        # Ensure users cannot interact with other users' harems
+        if query.from_user.id != user_id:
+            await query.answer("⬤ Don't stalk other user's harem", show_alert=True)
+            return
 
-    # Ensure users cannot interact with other users' harems
-    if query.from_user.id != user_id:
-        await query.answer("⬤ Don't stalk other user's harem", show_alert=True)
-        return
-
-    # Display the harem with the selected page
-    await harem(update, context, current_page)
+        # Display the harem with the selected page
+        await harem(update, context, current_page)
 
 # Register handlers after defining all functions
 application.add_handler(CommandHandler(["harem", "collection"], harem, block=False))
