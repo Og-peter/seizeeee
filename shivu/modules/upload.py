@@ -732,7 +732,7 @@ async def notify_restart():
     # Notify each sudo user about the bot restart
     for sudo_user in sudo_users:
         try:
-            await app.send_message(sudo_users, message_text)
+            await app.send_message(sudo_users, message_text)  # Fix here: send message to sudo_user, not sudo_users
         except BadRequest as e:
             print(f"Failed to notify sudo user {sudo_user}: {e}")
 
