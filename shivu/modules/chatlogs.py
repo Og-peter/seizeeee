@@ -4,9 +4,6 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from shivu import user_collection, shivuu as app, LEAVELOGS, JOINLOGS
 
-# Replace this with the actual URL of the welcome image you'd like to use
-WELCOME_PHOTO_URL = "https://files.catbox.moe/h8hiod.jpg"
-
 # Welcome messages with styled text and emojis
 WELCOME_MESSAGES = [
     "🎉✨ 𝗪𝗲𝗹𝗰𝗼𝗺𝗲, {user}! ✨ Thrilled to have you here!",
@@ -38,75 +35,6 @@ RULES = (
     "4️⃣ Follow Telegram's terms.\n\n"
     "🚫 Violation may result in removal."
 )
-
-# Function to send a welcome message when a new member joins the chat
-@app.on_message(filters.new_chat_members)
-async def on_new_chat_members(client: Client, message: Message):
-    for user in message.new_chat_members:
-        # Get total members count in the chat
-        total_members = await client.get_chat_members_count(message.chat.id)
-        user_name = user.first_name or "User"
-        user_id = user.id
-        user_mention = user.mention
-        user_username = f"@{user.username}" if user.username else "Not set"
-
-        # Custom welcome message layout
-        welcome_text = (
-            f"╭─────────◆\n"
-            f"╽ 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 {user_mention}\n"
-            f"╽───────────────╮\n\n"
-            f"╭─────────◆\n"
-            f"┃ 👤 NAME: {user_name}\n"
-            f"┃ 🆔 ID: {user_id}\n"
-            f"┃ 🏷 Username: {user_username}\n"
-            f"┃ 👥 Total Members: {total_members}\n"
-            f"╰───────────────◆\n\n"
-            f"Thank you for joining! Enjoy your stay here.\n\n"
-            f"Here are some quick links to get you started:"
-        )
-
-        # Inline keyboard buttons as shown in your screenshots
-        buttons = InlineKeyboardMarkup(
-            [
-                [InlineKeyboardButton("ᴠɪᴇᴡ ɴᴇᴡ ᴍᴇᴍʙᴇʀs", url="https://t.me/dynamic_gangs")],
-                [InlineKeyboardButton("ᴋɪᴅɴᴀᴘ ᴍᴇ", callback_data="kidnap")]
-            ]
-        )
-
-        # Send the welcome message with the welcome photo
-        await app.send_photo(
-            message.chat.id,
-            photo=WELCOME_PHOTO_URL,
-            caption=welcome_text,
-            reply_markup=buttons
-        )
-
-        # Send group rules after a delay of 5 seconds
-        await asyncio.sleep(5)
-        rules_text = (
-            "🚨 𝗚𝗿𝗼𝘂𝗽 𝗥𝘂𝗹𝗲𝘀 🚨\n\n"
-            "1️⃣ Be respectful at all times.\n"
-            "2️⃣ No spamming or self-promotion.\n"
-            "3️⃣ Stay on topic.\n"
-            "4️⃣ Follow Telegram's terms.\n\n"
-            "🚫 Violation may result in removal."
-        )
-        await app.send_message(message.chat.id, text=rules_text)
-
-# Optional: Handle the "Kidnap Me" button
-@app.on_callback_query(filters.regex("kidnap"))
-async def on_kidnap_button(client: Client, callback_query):
-    await callback_query.answer("You've been 'kidnapped'! Just for fun!", show_alert=True)
-
-# Optional: Send a message when a member leaves the chat
-@app.on_message(filters.left_chat_member)
-async def on_left_chat_member(client: Client, message: Message):
-    user = message.left_chat_member
-    leave_text = (
-        f"😢 {user.mention} has left the chat.\n"
-        f"👥 Total Members: {await client.get_chat_members_count(message.chat.id)}"
-    )
-    await app.send_message(message.chat.id, text=leave_text)
 
 # Helper function to send a text message
 async def send_message(chat_id: int, message: str):
@@ -168,7 +96,7 @@ async def on_new_chat_members(client: Client, message: Message):
                     f"🍃..𝗦𝘁𝗮𝘆 𝗔𝘄𝗲𝘀𝗼𝗺𝗲....🍂"
                 )
                 await send_message(added_by.id, thanks_message)
-                
+
 # Handler for when the bot is removed from a chat
 @app.on_message(filters.left_chat_member)
 async def on_left_chat_member(_, message: Message):
