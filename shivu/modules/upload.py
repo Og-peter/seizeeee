@@ -545,7 +545,7 @@ async def rename_anime_callback(client, callback_query):
         text=f"You've selected '{selected_anime}'. Please enter the new name for this anime:"
     )
 
-@app.on_message(filters.text & filters.user(user_states.keys()))
+@app.on_message(filters.text & filters.user(list(user_states.keys())))
 async def handle_rename_anime(client, message):
     user_id = message.from_user.id
     state = user_states.get(user_id)
