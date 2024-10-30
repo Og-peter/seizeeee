@@ -135,6 +135,36 @@ async def harem_callback(update: Update, context: CallbackContext) -> None:
         # Ensure users cannot interact with other users' harems
         if query.from_user.id != user_id:
             await query.answer("⬤ Don't stalk other user's harem", show_alert=True)
+
+async def send_photo_or_message(update: Update, photo_url, caption, reply_markup):
+    if update.message:
+        await update.message.reply_photo(photo=photo_url, caption=caption, reply_markup=reply_markup, parse_mode='HTML')
+    else:
+        if update.callback_query.message.photo:
+            await update.callback_query.edit_message_caption(caption=caption, reply_markup=reply_markup, parse_mode='HTML')
+        else:
+            await update.callback_query.edit_message_text(caption, reply_markup=reply_markup, parse_mode='HTML')
+
+async def send_message(update: Update, message, reply_markup=None):
+    if update.message:
+        await update.message.reply_text(message, reply_markup=reply_markup, parse_mode='HTML')
+    else:
+        await update.callback_query.edit_message_text(message, reply_markup=reply_markup, parse_mode='HTML')
+
+# Callback function for handling harem pagination
+async def harem_callback(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    data = query.data
+
+    # Extract page and user ID from the callback data
+    if data.startswith("harem:"):
+        _, page_str, user_id = data.split(':')
+        current_page = int(page_str)
+        user_id = int(user_id)
+
+        # Ensure users cannot interact with other users' harems
+        if query.from_user.id != user_id:
+            await query.answer("⬤ Don't stalk other user's harem", show_alert=True)
             return
 
         # Display the harem with the selected page
