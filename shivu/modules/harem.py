@@ -12,10 +12,10 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     # Fetch user from the database
     user = await user_collection.find_one({'id': user_id})
-    
+
     # If no user found, send a message
     if not user:
-        message = 'You have not seized any characters yet..'
+        message = '⬤ ʏᴏᴜ ʜᴀᴠᴇ ɴᴏᴛ sᴇɪᴢᴇᴅ ᴀɴʏ ᴄʜᴀʀᴀᴄᴛᴇʀs ʏᴇᴛ..'
         if update.message:
             await update.message.reply_text(message)
         else:
@@ -43,23 +43,23 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     if page < 0 or page >= total_pages:
         page = 0
 
-    harem_message = f"<b>{escape(update.effective_user.first_name)}'s Harem - Page [{page+1}/{total_pages}]</b>\n"
+    harem_message = f"<b>{escape(update.effective_user.first_name)}'s ʜᴀʀᴇᴍ - ᴘᴀɢᴇ [{page + 1}/{total_pages}]</b>\n"
 
     # Paginate and group by anime
     current_characters = unique_characters[page * 15:(page + 1) * 15]
     current_grouped_characters = {k: list(v) for k, v in groupby(current_characters, key=lambda x: x.get('anime', ''))}
 
     rarity_emojis = {
-        '⚪️ Common': '⚪️',
-        '🔮 Limited Edition': '🔮',
-        '🫧 Premium': '🫧',
-        '🌸 Exotic': '🌸',
-        '💮 Exclusive': '💮',
-        '🟡 Legendary': '🟡',
-        '🟠 Rare': '🟠',
-        '🔵 Medium': '🔵',
-        '🎐 Astral': '🎐',
-        '💞 Valentine': '💞'
+        '⚪️ ᴄᴏᴍᴍᴏɴ': '⚪️',
+        '🔮 ʟɪᴍɪᴛᴇᴅ ᴇᴅɪᴛɪᴏɴ': '🔮',
+        '🫧 ᴘʀᴇᴍɪᴜᴍ': '🫧',
+        '🌸 ᴇxᴏᴛɪᴄ': '🌸',
+        '💮 ᴇxᴄʟᴜsɪᴠᴇ': '💮',
+        '🟡 ʟᴇɢᴇɴᴅᴀʀʏ': '🟡',
+        '🟠 ʀᴀʀᴇ': '🟠',
+        '🔵 ᴍᴇᴅɪᴜᴍ': '🔵',
+        '🎐 ᴀsᴛʀᴀʟ': '🎐',
+        '💞 ᴠᴀʟᴇɴᴛɪɴᴇ': '💞'
     }
 
     for anime, chars in current_grouped_characters.items():
@@ -79,10 +79,10 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     if total_pages > 1:
         nav_buttons = []
         if page > 0:
-            nav_buttons.append(InlineKeyboardButton("⬅️", callback_data=f"harem:{page-1}:{user_id}"))
-        nav_buttons.append(InlineKeyboardButton(f"{page+1}/{total_pages}", callback_data="noop"))
+            nav_buttons.append(InlineKeyboardButton("⬅️", callback_data=f"harem:{page - 1}:{user_id}"))
+        nav_buttons.append(InlineKeyboardButton(f"{page + 1}/{total_pages}", callback_data="noop"))
         if page < total_pages - 1:
-            nav_buttons.append(InlineKeyboardButton("➡️", callback_data=f"harem:{page+1}:{user_id}"))
+            nav_buttons.append(InlineKeyboardButton("➡️", callback_data=f"harem:{page + 1}:{user_id}"))
         keyboard.append(nav_buttons)
 
     # Share Button with globe icon
@@ -93,7 +93,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         keyboard.append([InlineKeyboardButton("FAST ⏩", callback_data=f"harem:{page + 2}:{user_id}")])
 
     # Trash Button
-    keyboard.append([InlineKeyboardButton("🗑️ Trash", callback_data=f"trash:{user_id}")])
+    keyboard.append([InlineKeyboardButton("🗑️ ᴛʀᴀsʜ", callback_data=f"trash:{user_id}")])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -134,9 +134,9 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
                     await update.callback_query.edit_message_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
         else:
             if update.message:
-                await update.message.reply_text("⬤ Your list is so empty :)")
+                await update.message.reply_text("⬤ ʏᴏᴜʀ ʟɪsᴛ ɪs sᴏ ᴇᴍᴘᴛʏ :)")
             else:
-                await update.callback_query.edit_message_text("⬤ Your list is so empty :)")
+                await update.callback_query.edit_message_text("⬤ ʏᴏᴜʀ ʟɪsᴛ ɪs sᴏ ᴇᴍᴘᴛʏ :)")
 
 # Callback function for handling harem pagination
 async def harem_callback(update: Update, context: CallbackContext) -> None:
