@@ -486,52 +486,12 @@ async def choose_anime_callback(client, callback_query):
         )
     )
 
-
-# Define IDs for channel and support chat
-CHARA_CHANNEL_ID = -1002049694247  # Replace with your actual channel ID
-SUPPORT_CHAT = -1002104939708  # Replace with your actual support chat ID
-
-# Dictionary to manage user states
-user_states = {}
-
-# Collection for storing anime (replace with actual DB reference)
-# collection = your_database.collection_name
-
-# Handler for adding a new anime
 @app.on_callback_query(filters.regex('^add_anime$'))
 async def add_anime_callback(client, callback_query):
     await callback_query.message.edit_text(
         "Please enter the name of the anime you want to add:"
     )
     user_states[callback_query.from_user.id] = {"state": "adding_anime"}
-
-# Handler to receive and process the anime name
-@app.on_message(filters.text & filters.user(list(user_states.keys())))
-async def handle_anime_name(client, message):
-    user_id = message.from_user.id
-    state = user_states.get(user_id)
-
-    # Check if the user is in the 'adding_anime' state
-    if state and state["state"] == "adding_anime":
-        anime_name = message.text
-        mention = f"[{message.from_user.first_name}](tg://user?id={user_id})"
-
-        # Simulate adding anime to database (uncomment if needed)
-        # await collection.insert_one({"anime": anime_name})
-
-        # Notify the user and support chat
-        await message.reply_text(f"✅ **{mention} added a new anime!**\n\n⛩️ **Title:** {anime_name}")
-        await client.send_message(
-            SUPPORT_CHAT,
-            f"📢 **New Anime Added!**\n\n👤 Added by: {mention}\n⛩️ **Title:** {anime_name}"
-        )
-        await client.send_message(
-            CHARA_CHANNEL_ID,
-            f"🆕 **A new anime has been added!**\n\n⛩️ **Title:** {anime_name}"
-        )
-
-        # Clear user state after completion
-        user_states.pop(user_id, None)
 
 @app.on_callback_query(filters.regex('^cancel_add_waifu$'))
 async def cancel_add_waifu_callback(client, callback_query):
@@ -543,39 +503,17 @@ async def rename_anime_callback(client, callback_query):
     selected_anime = callback_query.data.split('_', 2)[-1]
     user_states[callback_query.from_user.id] = {"state": "renaming_anime", "anime": selected_anime}
 
-    await client.send_message(
+    await app.send_message(
         chat_id=callback_query.from_user.id,
         text=f"You've selected '{selected_anime}'. Please enter the new name for this anime:"
     )
-
-@app.on_message(filters.text & filters.user(list(user_states.keys())))
-async def handle_rename_anime(client, message):
-    user_id = message.from_user.id
-    state = user_states.get(user_id)
-
-    if state and state["state"] == "renaming_anime" and "anime" in state:
-        old_anime_name = state["anime"]
-        new_anime_name = message.text
-
-        # Simulate renaming in database
-        # await collection.update_one({"anime": old_anime_name}, {"$set": {"anime": new_anime_name}})
-
-        # Notify user and support chat
-        await message.reply_text(f"🔄 **Anime renamed successfully!**\n\n⛩️ **Old Title:** {old_anime_name}\n📺 **New Title:** {new_anime_name}")
-        await client.send_message(
-            SUPPORT_CHAT,
-            f"🔄 **Anime Renamed!**\n\n📺 **Old Title:** {old_anime_name}\n⛩️ **New Title:** {new_anime_name}"
-        )
-
-        # Clear user state after renaming
-        user_states.pop(user_id, None)
 
 @app.on_callback_query(filters.regex('^remove_anime_'))
 async def remove_anime_callback(client, callback_query):
     selected_anime = callback_query.data.split('_', 2)[-1]
     user_states[callback_query.from_user.id] = {"state": "confirming_removal", "anime": selected_anime}
 
-    await client.send_message(
+    await app.send_message(
         chat_id=callback_query.from_user.id,
         text=f"Are you sure you want to delete the anime '{selected_anime}'?",
         reply_markup=InlineKeyboardMarkup(
@@ -585,34 +523,25 @@ async def remove_anime_callback(client, callback_query):
             ]
         )
     )
+   
+
 
 @app.on_callback_query(filters.regex('^confirm_remove_anime$'))
 async def confirm_remove_anime_callback(client, callback_query):
     user_data = user_states.get(callback_query.from_user.id)
     if user_data and user_data.get("state") == "confirming_removal" and user_data.get("anime"):
         selected_anime = user_data["anime"]
-
-        # Simulate removing anime from database
-        # await collection.delete_many({"anime": selected_anime})
-
-        # Notify user and support chat
+        await collection.delete_many({"anime": selected_anime})
         await callback_query.message.edit_text(f"The anime '{selected_anime}' has been deleted successfully.")
-        await client.send_message(
-            CHARA_CHANNEL_ID,
-            f"📢 The sudo user deleted the anime '{selected_anime}'."
-        )
-        await client.send_message(
-            SUPPORT_CHAT,
-            f"📢 The sudo user deleted the anime '{selected_anime}'."
-        )
-
-        # Clear user state after deletion
+        await app.send_message(CHARA_CHANNEL_ID, f"📢 The sudo user deleted the anime '{selected_anime}'.")
+        await app.send_message(SUPPORT_CHAT, f"📢 The sudo user deleted the anime '{selected_anime}'.")
         user_states.pop(callback_query.from_user.id, None)
 
 @app.on_callback_query(filters.regex('^cancel_remove_anime$'))
 async def cancel_remove_anime_callback(client, callback_query):
     user_states.pop(callback_query.from_user.id, None)
     await callback_query.message.edit_text("Operation canceled successfully.")
+
 
 @app.on_callback_query(filters.regex('^rename_waifu_'))
 async def rename_waifu_callback(client, callback_query):
