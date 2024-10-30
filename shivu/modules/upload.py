@@ -722,22 +722,27 @@ async def cancel_remove_waifu_callback(client, callback_query):
 # Function to notify bot restart
 async def notify_restart():
     message_text = "🚨 Bot has restarted!"
-    
+
     # Send a message to the logs channel
     try:
         await app.send_message(CHARA_CHANNEL_ID, message_text)
     except BadRequest as e:
         print(f"Failed to send message to channel: {e}")
-    
+
     # Notify each sudo user about the bot restart
     for sudo_user in sudo_users:
         try:
-            await app.send_message(sudo_user, message_text)
+            await app.send_message(sudo_users, message_text)
         except BadRequest as e:
             print(f"Failed to notify sudo user {sudo_user}: {e}")
 
 # Main function
 async def main():
-    await notify_restart()
     await app.start()
+    await notify_restart()  # Notify after the bot has started
     await app.idle()  # Keeps the bot running
+
+# Entry point to run the bot
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
