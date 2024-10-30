@@ -107,7 +107,7 @@ async def on_left_chat_member(client: Client, message: Message):
         f"👥 Total Members: {await client.get_chat_members_count(message.chat.id)}"
     )
     await app.send_message(message.chat.id, text=leave_text)
-    
+
 # Helper function to send a text message
 async def send_message(chat_id: int, message: str):
     await app.send_message(chat_id=chat_id, text=message)
@@ -168,7 +168,7 @@ async def on_new_chat_members(client: Client, message: Message):
                     f"🍃..𝗦𝘁𝗮𝘆 𝗔𝘄𝗲𝘀𝗼𝗺𝗲....🍂"
                 )
                 await send_message(added_by.id, thanks_message)
-
+                
 # Handler for when the bot is removed from a chat
 @app.on_message(filters.left_chat_member)
 async def on_left_chat_member(_, message: Message):
