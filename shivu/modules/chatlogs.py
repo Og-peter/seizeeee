@@ -153,8 +153,8 @@ async def custom_welcome_message(client: Client, message: Message):
         # Inline keyboard buttons
         buttons = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("👤 VIEW NEW MEMBER 👤", url=f"tg://user?id={user_id}")],
-                [InlineKeyboardButton("➕ KIDNAP ME ➕", url="https://t.me/example_bot")]
+                [InlineKeyboardButton("❖ ᴠɪєᴡ ᴍєϻʙєʀ ❖", url=f"tg://user?id={user_id}")],
+                [InlineKeyboardButton("✜ ᴧᴅᴅ ϻє ɪη ʏσυʀ ɢʀσυᴘ ✜", url="https://t.me/Character_seize_bot?startgroup=new")]
             ]
         )
 
