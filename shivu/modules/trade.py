@@ -285,6 +285,7 @@ async def on_callback_query(client, callback_query):
 
         # Prepare message components
         sender_first_name = sender.get('first_name', 'Unknown')
+        receiver_first_name = receiver.get('first_name', 'Unknown')
         character_name = sender_character.get('name', 'Unknown')
         rarity_emoji = get_rarity_emoji(sender_character['rarity'])
         rarity = sender_character['rarity']
@@ -294,7 +295,8 @@ async def on_callback_query(client, callback_query):
         # Gift confirmation message
         message_text = (
             f"🥂 **ɢɪғᴛ Cᴏᴍᴘʟᴇᴛᴇᴅ!** 🎉\n\n"
-            f"❄️ **Cᴏngrᴀᴛᴜʟᴀᴛɪᴏɴs, [{sender_first_name}](tg://user?id={sender_id})!**\n\n"
+            f"❄️ **Cᴏngrᴀᴛᴜʟᴀᴛɪᴏɴs, [{receiver_first_name}](tg://user?id={receiver_id})!**\n"
+            f"**[{sender_first_name}](tg://user?id={sender_id})** ʜᴀs ɢɪғᴛᴇᴅ ʏᴏᴜ ᴀ ᴄʜᴀʀᴀᴄᴛᴇʀ!\n\n"
             f"🌋 **Yᴏᴜ ʀᴇᴄᴇɪᴠᴇᴅ:**\n"
             f" **Nᴀᴍᴇ:** `{character_name}`\n"
             f" **Rᴀʀɪᴛʏ:** {rarity_emoji} `{rarity}`\n"
@@ -305,14 +307,14 @@ async def on_callback_query(client, callback_query):
         # Send message to receiver's PM
         await app.send_photo(receiver_id, photo=img_url, caption=message_text)
 
-        await callback_query.message.edit_text("🎁 **ɢɪғᴛ sᴜᴄᴄᴇssfᴜʟʟʏ dᴇlɪvᴇʀᴇd!** 🎁\n\n" + message_text)
+        await callback_query.message.edit_text("🎁 **ɢɪғᴛ sᴜᴄᴄᴇssfᴜʟʟʏ dᴇlɪvᴇʀᴇᴅ!** 🎁\n\n" + message_text)
 
     elif callback_query.data.lower() == "cancel_gift":
         del pending_gifts[(sender_id, receiver_id)]
         await callback_query.message.edit_text("❌ **ɢɪғᴛ Cᴀɴᴄᴇʟᴇᴅ sᴜᴄᴄᴇssfᴜʟʟʏ!** ❌\n\n*ʏᴏᴜ ᴄᴀɴ ᴀʟᴡᴀʏs ɢɪғᴛ ᴀɢᴀɪɴ!*")
 
     await callback_query.answer("✅ ᴀᴄᴛɪᴏɴ Cᴏᴍᴘʟᴇᴛᴇᴅ!")
-
+    
 # Function to check if a user has an ongoing transaction (trade or gift)
 async def has_ongoing_transaction(user_id):
     return await has_ongoing_trade(user_id) or await has_ongoing_gift(user_id)
