@@ -50,7 +50,7 @@ async def get_user_info(user, already=False):
             {'$set': {'last_login': current_login.strftime('%Y-%m-%d'), 'login_streak': streak}}
         )
 
-        # Format the profile information
+        # Profile Information Message Formatting
         info_text = f"""
 ┌───⦿ **Hunter License** ⦿───┐
 │ **Name:** {first_name}
@@ -61,6 +61,8 @@ async def get_user_info(user, already=False):
 │ **XP:** `{xp}`
 │ **Global Position:** `{global_rank}`
 │ **Login Streak:** `{streak} days`
+│
+│ You can set your favorite profile picture using `/setpic` by replying to an image.
 └─────────────────────────────┘
 """
 
