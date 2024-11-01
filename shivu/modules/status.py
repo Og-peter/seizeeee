@@ -4,6 +4,9 @@ from shivu import shivuu
 from shivu import SUPPORT_CHAT, user_collection, collection
 import os
 from datetime import datetime
+from PIL import Image, ImageDraw, ImageFont
+
+# Ensure to add PIL to your environment: pip install pillow
 
 # Global rank based on user balance
 async def get_global_rank(user_id):
@@ -58,24 +61,46 @@ async def get_user_info(user, already=False):
 
         # Profile Information Message Formatting
         info_text = f"""
-┌───⦿ **Hunter License** ⦿───┐
-│ **Name:** {first_name}
-│ **User ID:** `{user_id}`
-│ **Total Waifus:** {total_waifus}/{total_characters}
-│ **Waifu Percentage:** `{round((total_waifus / total_characters) * 100, 2)}%`
-│ **Level:** `{level}`
-│ **XP:** `{xp}`
-│ **Tokens:** `{tokens_formatted}`
-│ **Global Position:** `{global_rank}`
-│ **Token Position:** `{global_coin_rank}`
-│ **Login Streak:** `{streak} days`
-└─────────────────────────────┘
+Name: {first_name}
+User ID: {user_id}
+Total Waifus: {total_waifus}/{total_characters}
+Waifu Percentage: {round((total_waifus / total_characters) * 100, 2)}%
+Level: {level}
+XP: {xp}
+Tokens: {tokens_formatted}
+Global Position: {global_rank}
+Token Position: {global_coin_rank}
+Login Streak: {streak} days
 """
 
         return info_text.strip(), photo_id
     except Exception as e:
         print(f"⚠️ Error in get_user_info: {e}")
         return ["⚠️ Error fetching user information.", None]
+
+async def create_profile_image(info_text, profile_photo_path):
+    # Create background
+    background = Image.open("/path/to/background-image.jpg").convert("RGBA")  # Load your preferred background
+    profile_photo = Image.open(profile_photo_path).convert("RGBA").resize((100, 100))  # Resize to fit circle
+
+    # Create circular profile picture
+    mask = Image.new("L", profile_photo.size, 0)
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((0, 0, profile_photo.size[0], profile_photo.size[1]), fill=255)
+    profile_photo.putalpha(mask)
+
+    # Place profile photo on background
+    background.paste(profile_photo, (50, 50), profile_photo)  # Adjust position as needed
+
+    # Draw text
+    draw = ImageDraw.Draw(background)
+    font = ImageFont.truetype("arial.ttf", 20)  # Load an appropriate font
+    draw.text((200, 50), info_text, font=font, fill="white")  # Adjust position and color as needed
+
+    # Save or return the image
+    output_path = "/tmp/profile_image.png"
+    background.save(output_path)
+    return output_path
 
 @shivuu.on_message(filters.command("status"))
 async def profile(client, message: Message):
@@ -91,25 +116,26 @@ async def profile(client, message: Message):
 
     try:
         info_text, photo_id = await get_user_info(user)
+        if photo_id:
+            profile_photo_path = await shivuu.download_media(photo_id)
+        else:
+            profile_photo_path = None
     except Exception as e:
         import traceback
         print(f"❌ Something went wrong: {e}\n{traceback.format_exc()}")
         return await m.edit(f"⚠️ Sorry, something went wrong. Please report at @{SUPPORT_CHAT}.")
 
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("💬 Support", url=f"https://t.me/{SUPPORT_CHAT}")]
-    ])
-    
-    if photo_id is None:
-        return await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
-    
     try:
-        photo = await shivuu.download_media(photo_id)
-        await m.delete()  # Delete the loading message before sending the photo
-        await message.reply_photo(photo, caption=info_text, reply_markup=keyboard)
+        if profile_photo_path:
+            profile_image_path = await create_profile_image(info_text, profile_photo_path)
+            await message.reply_photo(profile_image_path, caption="Here is your profile:")
+        else:
+            await m.edit(info_text)
     except Exception as e:
-        print(f"⚠️ Error downloading photo: {e}")
-        await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
+        print(f"⚠️ Error creating profile image: {e}")
+        await m.edit(info_text)
     finally:
-        if 'photo' in locals() and os.path.exists(photo):
-            os.remove(photo)
+        if profile_photo_path and os.path.exists(profile_photo_path):
+            os.remove(profile_photo_path)
+        if 'profile_image_path' in locals() and os.path.exists(profile_image_path):
+            os.remove(profile_image_path)
