@@ -136,3 +136,15 @@ async def set_profile_pic(client, message: Message):
         upsert=True
     )
     await message.reply_text("✅ Profile picture has been set successfully!")
+
+@shivuu.on_message(filters.command("copy") & filters.reply)
+async def copy_text(client, message: Message):
+    # Ensure there is a replied-to message to copy text from
+    if not message.reply_to_message or not message.reply_to_message.text:
+        return await message.reply_text("⚠️ Please reply to a text message to copy it.")
+
+    # Copy the text content of the replied message
+    copied_text = message.reply_to_message.text
+
+    # Respond with the copied text
+    await message.reply_text(f"📋 Copied text:\n\n{copied_text}")
