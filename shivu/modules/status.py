@@ -19,6 +19,13 @@ async def get_user_balance(user_id):
 def calculate_user_level(xp):
     return xp // 100
 
+# Generate a progress bar based on characters collected
+def generate_character_progress_bar(total_waifus, total_characters):
+    progress_percentage = (total_waifus / total_characters) * 100 if total_characters > 0 else 0
+    filled_bars = int(progress_percentage // 10)  # Number of "filled" segments
+    empty_bars = 10 - filled_bars  # Number of "empty" segments
+    return "▰" * filled_bars + "▱" * empty_bars
+
 async def get_user_info(user, already=False):
     try:
         # Ensure user is fetched if `already` is False
@@ -40,6 +47,7 @@ async def get_user_info(user, already=False):
         balance = await get_user_balance(user_id)
         xp = existing_user.get('xp', 0)
         level = calculate_user_level(xp)
+        progress_bar = generate_character_progress_bar(total_waifus, total_characters)
         current_login = datetime.now()
         last_login_date = existing_user.get('last_login')
         streak = existing_user.get('login_streak', 0) + 1 if last_login_date else 1
@@ -50,13 +58,14 @@ async def get_user_info(user, already=False):
             {'$set': {'last_login': current_login.strftime('%Y-%m-%d'), 'login_streak': streak}}
         )
 
-        # Profile Information Message Formatting
+        # Profile Information Message Formatting with user mention and progress bar
         info_text = f"""
 ┌───⦿ **Hunter License** ⦿───┐
-│ **Name:** {first_name}
+│ **Name:** [{first_name}](tg://user?id={user_id})
 │ **User ID:** `{user_id}`
 │ **Total Waifus:** {total_waifus}/{total_characters}
 │ **Waifu Percentage:** `{round((total_waifus / total_characters) * 100, 2)}%`
+│ **Progress:** `{progress_bar}` ({total_waifus}/{total_characters})
 │ **Level:** `{level}`
 │ **XP:** `{xp}`
 │ **Global Position:** `{global_rank}`
@@ -73,33 +82,36 @@ async def get_user_info(user, already=False):
 
 @shivuu.on_message(filters.command("status"))
 async def profile(client, message: Message):
+    user = None
+    if message.reply_to_message:
+        user = message.reply_to_message.from_user.id
+    elif len(message.command) == 1:
+        user = message.from_user.id
+    else:
+        user = message.text.split(None, 1)[1]
+
+    m = await message.reply_text("✨ Fetching Your Hunter License...")
+
     try:
-        # Determine user ID to fetch profile for
-        user_id = (message.reply_to_message.from_user.id if message.reply_to_message 
-                   else message.from_user.id if len(message.command) == 1 
-                   else int(message.command[1]))
-
-        m = await message.reply_text("✨ Fetching Your Hunter License...")
-
-        # Retrieve user info
-        info_text, custom_photo = await get_user_info(user_id)
-
-        # Keyboard with support link
-        keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("💬 Support", url=f"https://t.me/{SUPPORT_CHAT}")]
-        ])
-
-        # Handle cases with or without custom photo
-        if custom_photo:
-            await m.delete()  # Remove loading message before sending the photo
-            await message.reply_photo(custom_photo, caption=info_text, reply_markup=keyboard)
-        else:
-            await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
-
+        info_text, custom_photo = await get_user_info(user)
     except Exception as e:
         import traceback
-        print(f"❌ Error in profile command: {e}\n{traceback.format_exc()}")
-        await message.reply_text(f"⚠️ Something went wrong. Please report to @{SUPPORT_CHAT}.")
+        print(f"❌ Something went wrong: {e}\n{traceback.format_exc()}")
+        return await m.edit(f"⚠️ Sorry, something went wrong. Please report at @{SUPPORT_CHAT}.")
+
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("💬 Support", url=f"https://t.me/{SUPPORT_CHAT}")]
+    ])
+    
+    if custom_photo is None:
+        return await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
+    
+    try:
+        await m.delete()  # Delete the loading message before sending the photo
+        await message.reply_photo(custom_photo, caption=info_text, reply_markup=keyboard)
+    except Exception as e:
+        print(f"⚠️ Error displaying custom photo: {e}")
+        await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
 
 @shivuu.on_message(filters.command("setpic") & filters.reply)
 async def set_profile_pic(client, message: Message):
