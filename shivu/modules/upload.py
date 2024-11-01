@@ -1,3 +1,5 @@
+import asyncio
+from datetime import datetime, time
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Message, InlineQueryResultArticle, InputTextMessageContent, InlineQueryResultPhoto, ReplyKeyboardMarkup, KeyboardButton
 from pymongo import ReturnDocument
@@ -5,6 +7,51 @@ from shivu import user_collection, collection, CHARA_CHANNEL_ID, SUPPORT_CHAT, s
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.errors import BadRequest
 
+# Define the scheduled message times (in 24-hour format)
+GOOD_MORNING_TIME = time(8, 0)  # 8:00 AM
+GOOD_NIGHT_TIME = time(22, 0)   # 10:00 PM
+NEW_CHARACTER_TIME = time(18, 0) # 6:00 PM
+
+# Function to send scheduled messages to sudo users
+async def send_message_to_sudo_users(text):
+    for sudo_user in sudo_users:
+        try:
+            await app.send_message(sudo_user, text)
+        except Exception as e:
+            print(f"Failed to send message to {sudo_user}: {e}")
+
+# Function to send a scheduled message to a specific channel
+async def send_message_to_channel(channel_id, text):
+    try:
+        await app.send_message(channel_id, text)
+    except Exception as e:
+        print(f"Failed to send message to channel {channel_id}: {e}")
+
+# Notify bot restart to sudo users
+async def notify_restart():
+    message_text = "🚨 Bot has restarted!"
+    await send_message_to_sudo_users(message_text)
+
+# Scheduled messaging function
+async def scheduled_messages():
+    while True:
+        now = datetime.now().time()
+        
+        # Good Morning Message
+        if now.hour == GOOD_MORNING_TIME.hour and now.minute == GOOD_MORNING_TIME.minute:
+            await send_message_to_sudo_users("Good morning! ☀️ Have a great day!")
+
+        # Good Night Message
+        if now.hour == GOOD_NIGHT_TIME.hour and now.minute == GOOD_NIGHT_TIME.minute:
+            await send_message_to_sudo_users("Good night! 🌙 Sweet dreams!")
+
+        # New Character Notification
+        if now.hour == NEW_CHARACTER_TIME.hour and now.minute == NEW_CHARACTER_TIME.minute:
+            await send_message_to_channel(CHARA_CHANNEL_ID, "📢 New character coming soon! Please wait a bit longer.")
+
+        # Check every 60 seconds
+        await asyncio.sleep(60)
+        
 # Function to get the next sequence number for unique IDs
 async def get_next_sequence_number(sequence_name):
     sequence_collection = db.sequences
@@ -720,30 +767,12 @@ async def cancel_remove_waifu_callback(client, callback_query):
     user_states.pop(callback_query.from_user.id, None)
     await callback_query.message.edit_text("Operation canceled successfully.")
          
-# Function to notify bot restart
-async def notify_restart():
-    message_text = "🚨 Bot has restarted!"
-
-    # Send a message to the logs channel
-    try:
-        await app.send_message(CHARA_CHANNEL_ID, message_text)
-    except BadRequest as e:
-        print(f"Failed to send message to channel: {e}")
-
-    # Notify each sudo user about the bot restart
-    for sudo_user in sudo_users:
-        try:
-            await app.send_message(sudo_users, message_text)  # Fix here: send message to sudo_user, not sudo_users
-        except BadRequest as e:
-            print(f"Failed to notify sudo user {sudo_user}: {e}")
-
-# Main function
+# Main function to run the bot
 async def main():
     await app.start()
-    await notify_restart()  # Notify after the bot has started
-    await app.idle()  # Keeps the bot running
+    await notify_restart()  # Notify sudo users on bot startup
+    asyncio.create_task(scheduled_messages())  # Start the scheduled messages
+    await app.idle()
 
-# Entry point to run the bot
-if __name__ == "__main__":
-    import asyncio
+if name == "main":
     asyncio.run(main())
