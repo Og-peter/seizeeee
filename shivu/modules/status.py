@@ -69,7 +69,7 @@ async def get_user_info(user, already=False):
 │ **Global Position:** `{global_rank}`
 │ **Login Streak:** `{streak} days`
 │
-│ You can set your favorite profile picture using `/setpic` by replying to an image.
+│ You can set your favorite profile picture using /setpic by replying to an image.
 └─────────────────────────────┘
 """
 
