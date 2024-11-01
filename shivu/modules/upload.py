@@ -774,5 +774,5 @@ async def main():
     asyncio.create_task(scheduled_messages())  # Start the scheduled messages
     await app.idle()
 
-if name == "main":
+if __name__ == "__main__":
     asyncio.run(main())
