@@ -115,16 +115,24 @@ async def profile(client, message: Message):
 
 @shivuu.on_message(filters.command("setpic") & filters.reply)
 async def set_profile_pic(client, message: Message):
-    if not message.reply_to_message.photo:
-        return await message.reply_text("⚠️ Please reply to an image to set it as your profile picture.")
+    # Check if the reply has a photo, video, sticker, or animation (GIF)
+    if message.reply_to_message.photo:
+        custom_media_id = message.reply_to_message.photo.file_id
+    elif message.reply_to_message.video:
+        custom_media_id = message.reply_to_message.video.file_id
+    elif message.reply_to_message.sticker:
+        custom_media_id = message.reply_to_message.sticker.file_id
+    elif message.reply_to_message.animation:  # This is for GIFs
+        custom_media_id = message.reply_to_message.animation.file_id
+    else:
+        return await message.reply_text("⚠️ Please reply with a photo, video, sticker, or GIF to set it as your profile picture.")
     
     user_id = message.from_user.id
-    custom_photo_id = message.reply_to_message.photo.file_id
 
-    # Save the custom photo ID to the user's document in the database
+    # Save the custom media ID to the user's document in the database
     await user_collection.update_one(
         {'id': user_id},
-        {'$set': {'custom_photo': custom_photo_id}},
+        {'$set': {'custom_photo': custom_media_id}},
         upsert=True
     )
     await message.reply_text("✅ Profile picture has been set successfully!")
