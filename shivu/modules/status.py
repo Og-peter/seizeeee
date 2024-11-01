@@ -22,13 +22,12 @@ def calculate_user_level(xp):
 # Generate a progress bar based on characters collected
 def generate_character_progress_bar(total_waifus, total_characters):
     progress_percentage = (total_waifus / total_characters) * 100 if total_characters > 0 else 0
-    filled_bars = int(progress_percentage // 10)  # Number of "filled" segments
-    empty_bars = 10 - filled_bars  # Number of "empty" segments
+    filled_bars = int(progress_percentage // 10)
+    empty_bars = 10 - filled_bars
     return "▰" * filled_bars + "▱" * empty_bars
 
 async def get_user_info(user, already=False):
     try:
-        # Ensure user is fetched if `already` is False
         if not already:
             user = await shivuu.get_users(user)
         if not user or not user.first_name:
@@ -52,13 +51,11 @@ async def get_user_info(user, already=False):
         last_login_date = existing_user.get('last_login')
         streak = existing_user.get('login_streak', 0) + 1 if last_login_date else 1
 
-        # Update last login and streak in the database
         await user_collection.update_one(
             {'id': user_id},
             {'$set': {'last_login': current_login.strftime('%Y-%m-%d'), 'login_streak': streak}}
         )
 
-        # Profile Information Message Formatting with user mention and progress bar
         info_text = f"""
 ┌───⦿ **Hunter License** ⦿───┐
 │ **Name:** [{first_name}](tg://user?id={user_id})
@@ -107,7 +104,7 @@ async def profile(client, message: Message):
         return await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
     
     try:
-        await m.delete()  # Delete the loading message before sending the photo
+        await m.delete()
         await message.reply_photo(custom_photo, caption=info_text, reply_markup=keyboard)
     except Exception as e:
         print(f"⚠️ Error displaying custom photo: {e}")
@@ -115,36 +112,22 @@ async def profile(client, message: Message):
 
 @shivuu.on_message(filters.command("setpic") & filters.reply)
 async def set_profile_pic(client, message: Message):
-    # Check if the reply has a photo, video, sticker, or animation (GIF)
     if message.reply_to_message.photo:
         custom_media_id = message.reply_to_message.photo.file_id
     elif message.reply_to_message.video:
         custom_media_id = message.reply_to_message.video.file_id
     elif message.reply_to_message.sticker:
         custom_media_id = message.reply_to_message.sticker.file_id
-    elif message.reply_to_message.animation:  # This is for GIFs
+    elif message.reply_to_message.animation:
         custom_media_id = message.reply_to_message.animation.file_id
     else:
         return await message.reply_text("⚠️ Please reply with a photo, video, sticker, or GIF to set it as your profile picture.")
     
     user_id = message.from_user.id
 
-    # Save the custom media ID to the user's document in the database
     await user_collection.update_one(
         {'id': user_id},
         {'$set': {'custom_photo': custom_media_id}},
         upsert=True
     )
     await message.reply_text("✅ Profile picture has been set successfully!")
-
-@shivuu.on_message(filters.command("copy") & filters.reply)
-async def copy_text(client, message: Message):
-    # Ensure there is a replied-to message to copy text from
-    if not message.reply_to_message or not message.reply_to_message.text:
-        return await message.reply_text("⚠️ Please reply to a text message to copy it.")
-
-    # Copy the text content of the replied message
-    copied_text = message.reply_to_message.text
-
-    # Respond with the copied text
-    await message.reply_text(f"📋 Copied text:\n\n{copied_text}")
