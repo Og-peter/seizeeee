@@ -43,6 +43,7 @@ async def get_user_info(user, already=False):
         total_waifus = len(existing_user.get('characters', []))
         total_characters = await collection.count_documents({})
         custom_photo = existing_user.get('custom_photo')
+        media_type = existing_user.get('custom_media_type', 'photo')
         balance = await get_user_balance(user_id)
         xp = existing_user.get('xp', 0)
         level = calculate_user_level(xp)
@@ -72,10 +73,10 @@ async def get_user_info(user, already=False):
 └─────────────────────────────┘
 """
 
-        return info_text.strip(), custom_photo
+        return info_text.strip(), custom_photo, media_type
     except Exception as e:
         print(f"⚠️ Error in get_user_info: {e}")
-        return ["⚠️ Error fetching user information.", None]
+        return ["⚠️ Error fetching user information.", None, 'photo']
 
 @shivuu.on_message(filters.command("status"))
 async def profile(client, message: Message):
@@ -90,7 +91,7 @@ async def profile(client, message: Message):
     m = await message.reply_text("✨ Fetching Your Hunter License...")
 
     try:
-        info_text, custom_photo = await get_user_info(user)
+        info_text, custom_photo, media_type = await get_user_info(user)
     except Exception as e:
         import traceback
         print(f"❌ Something went wrong: {e}\n{traceback.format_exc()}")
@@ -105,21 +106,33 @@ async def profile(client, message: Message):
     
     try:
         await m.delete()
-        await message.reply_photo(custom_photo, caption=info_text, reply_markup=keyboard)
+        if media_type == "photo":
+            await message.reply_photo(custom_photo, caption=info_text, reply_markup=keyboard)
+        elif media_type == "video":
+            await message.reply_video(custom_photo, caption=info_text, reply_markup=keyboard)
+        elif media_type == "animation":
+            await message.reply_animation(custom_photo, caption=info_text, reply_markup=keyboard)
+        elif media_type == "sticker":
+            await message.reply_sticker(custom_photo)
+            await message.reply_text(info_text, reply_markup=keyboard)
     except Exception as e:
-        print(f"⚠️ Error displaying custom photo: {e}")
+        print(f"⚠️ Error displaying custom media: {e}")
         await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
 
 @shivuu.on_message(filters.command("setpic") & filters.reply)
 async def set_profile_pic(client, message: Message):
     if message.reply_to_message.photo:
         custom_media_id = message.reply_to_message.photo.file_id
+        media_type = "photo"
     elif message.reply_to_message.video:
         custom_media_id = message.reply_to_message.video.file_id
+        media_type = "video"
     elif message.reply_to_message.sticker:
         custom_media_id = message.reply_to_message.sticker.file_id
+        media_type = "sticker"
     elif message.reply_to_message.animation:
         custom_media_id = message.reply_to_message.animation.file_id
+        media_type = "animation"
     else:
         return await message.reply_text("⚠️ Please reply with a photo, video, sticker, or GIF to set it as your profile picture.")
     
@@ -127,7 +140,7 @@ async def set_profile_pic(client, message: Message):
 
     await user_collection.update_one(
         {'id': user_id},
-        {'$set': {'custom_photo': custom_media_id}},
+        {'$set': {'custom_photo': custom_media_id, 'custom_media_type': media_type}},
         upsert=True
     )
     await message.reply_text("✅ Profile picture has been set successfully!")
