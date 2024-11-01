@@ -34,6 +34,7 @@ rarity_emojis = {
 }
 event_emojis = {
     '🩺 Nurse': '🩺',
+    '🐰 Bunny': '🐰',
     '🧹 Maid': '🧹',
     '🎃 Halloween': '🎃',
     '🎄 Christmas': '🎄',
