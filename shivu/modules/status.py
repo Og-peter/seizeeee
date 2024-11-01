@@ -5,24 +5,23 @@ from shivu import SUPPORT_CHAT, user_collection, collection
 import os
 from datetime import datetime
 
-# Dummy function to simulate getting global rank (replace with actual implementation)
+# Global rank based on user balance
 async def get_global_rank(user_id):
-    # Implement your logic to get global rank
-    return 1  # Example placeholder
+    user_balance = await get_user_balance(user_id)
+    higher_balance_count = await user_collection.count_documents({'balance': {'$gt': user_balance}})
+    return higher_balance_count + 1
 
-# Dummy function to simulate getting user balance (replace with actual implementation)
+# Fetch user balance from database
 async def get_user_balance(user_id):
-    # Implement your logic to get user balance
-    return 1000  # Example placeholder
+    user = await user_collection.find_one({"id": user_id})
+    return user.get("balance", 0) if user else 0
 
-# Dummy function to calculate user level (replace with actual implementation)
+# Calculate user level based on XP
 def calculate_user_level(xp):
-    # Implement your logic to calculate level based on XP
-    return xp // 100  # Example placeholder
+    return xp // 100
 
 async def get_user_info(user, already=False):
     try:
-        # Fetch user info if not provided
         if not already:
             user = await shivuu.get_users(user)
         if not user.first_name:
@@ -35,49 +34,44 @@ async def get_user_info(user, already=False):
 
         first_name = user.first_name
         global_rank = await get_global_rank(user_id)
-        global_count = await collection.count_documents({})
-        total_count = len(existing_user.get('characters', []))
+        total_waifus = len(existing_user.get('characters', []))
+        total_characters = await collection.count_documents({})
         photo_id = user.photo.big_file_id if user.photo else None
         balance = await get_user_balance(user_id)
         global_coin_rank = await user_collection.count_documents({'balance': {'$gt': balance}}) + 1
         xp = existing_user.get('xp', 0)
         level = calculate_user_level(xp)
+        tokens = existing_user.get('tokens', 0)
         current_login = datetime.now()
         last_login_date = existing_user.get('last_login')
-        streak = existing_user.get('login_streak', 0) if last_login_date else 1
+        streak = existing_user.get('login_streak', 0) + 1 if last_login_date else 1
 
-        # Update login info and streak
+        # Update last login and streak in the database
         await user_collection.update_one(
             {'id': user_id},
             {'$set': {'last_login': current_login.strftime('%Y-%m-%d'), 'login_streak': streak}}
         )
 
-        # Format data
-        tokens = existing_user.get('tokens', 0)
+        # Formatting for tokens and balance
         tokens_formatted = f"{tokens:,}"
         balance_formatted = f"{balance:,}"
 
-        # Profile display with borders and unique style
+        # Profile Information Message Formatting
         info_text = f"""
-┌┬─────────────────⦿
-│├─────────────────╮
-│├ 👤 ᴛɢ ɴᴧᴍᴇ - {first_name}
-│├ 🔖 ᴜsєʀ ɪᴅ - {user_id}
-│├─────────────────╯
-├┼─────────────────⦿
-├┤~ 🌸 ᴛσᴛᴧʟ ᴡᴧɪғυs: {total_count} / {global_count}
-├┤~ 📊 ᴡᴧɪғυ ᴘєꝛᴄєηᴛᴧɢє: `{round((total_count / global_count) * 100, 2)}%`
-├┤~ 📈 ʟєᴠєʟ: `{level}`
-├┤~ 🎮 xᴘ: `{xp}`
-├┤~ 💰 ᴛσᴋєηs: `{tokens_formatted}`
-├┼─────────────────⦿
-│├─────────────────╮
-│├ 🏆 ɢʟσʙᴧʟ ᴘσsɪᴛɪση: `{global_rank}`
-│├ 🧾 ᴛσᴋєηs ᴘσsɪᴛɪση: `{global_coin_rank}`
-│├ 🌿 ʟσɢɪη sᴛʀєᴧᴋ: `{streak} ᴅᴧʏs`
-│├─────────────────╯
-└┴─────────────────⦿
+┌───⦿ **Hunter License** ⦿───┐
+│ **Name:** {first_name}
+│ **User ID:** `{user_id}`
+│ **Total Waifus:** {total_waifus}/{total_characters}
+│ **Waifu Percentage:** `{round((total_waifus / total_characters) * 100, 2)}%`
+│ **Level:** `{level}`
+│ **XP:** `{xp}`
+│ **Tokens:** `{tokens_formatted}`
+│ **Global Position:** `{global_rank}`
+│ **Token Position:** `{global_coin_rank}`
+│ **Login Streak:** `{streak} days`
+└─────────────────────────────┘
 """
+
         return info_text.strip(), photo_id
     except Exception as e:
         print(f"⚠️ Error in get_user_info: {e}")
