@@ -1,7 +1,6 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
-from shivu import shivuu
-from shivu import SUPPORT_CHAT, user_collection, collection
+from shivu import shivuu, SUPPORT_CHAT, user_collection, collection
 import os
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
