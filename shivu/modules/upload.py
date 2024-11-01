@@ -13,8 +13,8 @@ GOOD_NIGHT_TIME = time(22, 0)   # 10:00 PM
 NEW_CHARACTER_TIME = time(18, 0)  # 6:00 PM
 
 # Define specific sudo user ID and channel ID
-SUDO_USER_ID = "YOUR_SUDO_USER_ID"  # Replace with the actual sudo user ID
-CHANNEL_ID = "YOUR_CHANNEL_ID"  # Replace with the actual channel ID
+SUDO_USER_ID = "6402009857", "7004889403", "1135445089", "5158013355", "5630057244",  "1374057577", "6305653111", "5421067814", "7497950160", "7334126640",  "6835013483", "1993290981", "1742711103", 6180567980"  # Replace with the actual sudo user ID
+CHANNEL_ID = "-1002049694247"  # Replace with the actual channel ID
 
 # Function to send scheduled messages to a single sudo user
 async def send_message_to_sudo_user(text):
