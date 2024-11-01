@@ -12,45 +12,48 @@ GOOD_MORNING_TIME = time(8, 0)  # 8:00 AM
 GOOD_NIGHT_TIME = time(22, 0)   # 10:00 PM
 NEW_CHARACTER_TIME = time(18, 0)  # 6:00 PM
 
-# Define specific sudo user ID and channel ID
-SUDO_USER_ID = "6402009857", "7004889403", "1135445089", "5158013355", "5630057244",  "1374057577", "6305653111", "5421067814", "7497950160", "7334126640",  "6835013483", "1993290981", "1742711103", 6180567980"  # Replace with the actual sudo user ID
-CHANNEL_ID = "-1002049694247"  # Replace with the actual channel ID
+# Define specific sudo user IDs and channel ID
+SUDO_USER_IDS = (6402009857, 7004889403, 1135445089, 5158013355, 5630057244, 
+                 1374057577, 6305653111, 5421067814, 7497950160, 7334126640, 
+                 6835013483, 1993290981, 1742711103, 6180567980)  # Actual sudo user IDs as integers
+CHANNEL_ID = -1002049694247  # Actual channel ID as integer
 
-# Function to send scheduled messages to a single sudo user
-async def send_message_to_sudo_user(text):
-    try:
-        await app.send_message(SUDO_USER_ID, text)
-    except Exception as e:
-        print(f"Failed to send message to sudo user {SUDO_USER_ID}: {e}")
+# Function to send a message to all sudo users
+async def send_message_to_sudo_users(app, text):
+    for user_id in SUDO_USER_IDS:
+        try:
+            await app.send_message(user_id, text)
+        except Exception as e:
+            print(f"Failed to send message to sudo user {user_id}: {e}")
 
-# Function to send a scheduled message to a specific channel
-async def send_message_to_channel(channel_id, text):
+# Function to send a message to a specific channel
+async def send_message_to_channel(app, channel_id, text):
     try:
         await app.send_message(channel_id, text)
     except Exception as e:
         print(f"Failed to send message to channel {channel_id}: {e}")
 
-# Notify bot restart to the sudo user
-async def notify_restart():
+# Notify bot restart to the sudo users
+async def notify_restart(app):
     message_text = "🚨 Bot has restarted!"
-    await send_message_to_sudo_user(message_text)
+    await send_message_to_sudo_users(app, message_text)
 
 # Scheduled messaging function
-async def scheduled_messages():
+async def scheduled_messages(app):
     while True:
         now = datetime.now().time()
         
         # Good Morning Message
-        if now.hour == GOOD_MORNING_TIME.hour and now.minute == GOOD_MORNING_TIME.minute:
-            await send_message_to_sudo_user("Good morning! ☀️ Have a great day!")
+        if now == GOOD_MORNING_TIME:
+            await send_message_to_sudo_users(app, "Good morning! ☀️ Have a great day!")
 
         # Good Night Message
-        if now.hour == GOOD_NIGHT_TIME.hour and now.minute == GOOD_NIGHT_TIME.minute:
-            await send_message_to_sudo_user("Good night! 🌙 Sweet dreams!")
+        elif now == GOOD_NIGHT_TIME:
+            await send_message_to_sudo_users(app, "Good night! 🌙 Sweet dreams!")
 
         # New Character Notification
-        if now.hour == NEW_CHARACTER_TIME.hour and now.minute == NEW_CHARACTER_TIME.minute:
-            await send_message_to_channel(CHANNEL_ID, "📢 New character coming soon! Please wait a bit longer.")
+        elif now == NEW_CHARACTER_TIME:
+            await send_message_to_channel(app, CHANNEL_ID, "📢 New character coming soon! Please wait a bit longer.")
 
         # Check every 30 seconds to increase reliability
         await asyncio.sleep(30)
