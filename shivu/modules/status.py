@@ -79,63 +79,37 @@ Login Streak: {streak} days
         return ["⚠️ Error fetching user information.", None]
 
 async def create_profile_image(info_text, profile_photo_path):
-    # Create background
-    background = Image.open("/path/to/background-image.jpg").convert("RGBA")  # Load your preferred background
-    profile_photo = Image.open(profile_photo_path).convert("RGBA").resize((100, 100))  # Resize to fit circle
-
-    # Create circular profile picture
-    mask = Image.new("L", profile_photo.size, 0)
-    draw = ImageDraw.Draw(mask)
-    draw.ellipse((0, 0, profile_photo.size[0], profile_photo.size[1]), fill=255)
-    profile_photo.putalpha(mask)
-
-    # Place profile photo on background
-    background.paste(profile_photo, (50, 50), profile_photo)  # Adjust position as needed
-
-    # Draw text
-    draw = ImageDraw.Draw(background)
-    font = ImageFont.truetype("arial.ttf", 20)  # Load an appropriate font
-    draw.text((200, 50), info_text, font=font, fill="white")  # Adjust position and color as needed
-
-    # Save or return the image
-    output_path = "/tmp/profile_image.png"
-    background.save(output_path)
-    return output_path
-
-@shivuu.on_message(filters.command("status"))
-async def profile(client, message: Message):
-    user = None
-    if message.reply_to_message:
-        user = message.reply_to_message.from_user.id
-    elif len(message.command) == 1:
-        user = message.from_user.id
-    else:
-        user = message.text.split(None, 1)[1]
-
-    m = await message.reply_text("✨ Fetching Your Hunter License...")
-
     try:
-        info_text, photo_id = await get_user_info(user)
-        if photo_id:
-            profile_photo_path = await shivuu.download_media(photo_id)
-        else:
-            profile_photo_path = None
-    except Exception as e:
-        import traceback
-        print(f"❌ Something went wrong: {e}\n{traceback.format_exc()}")
-        return await m.edit(f"⚠️ Sorry, something went wrong. Please report at @{SUPPORT_CHAT}.")
+        # Load background image
+        background = Image.open("/path/to/background-image.jpg").convert("RGBA")
+        
+        # Check if profile photo path exists
+        if not profile_photo_path or not os.path.exists(profile_photo_path):
+            print("⚠️ Profile photo path does not exist.")
+            return None
+        
+        # Load and process profile photo
+        profile_photo = Image.open(profile_photo_path).convert("RGBA").resize((100, 100))
+        
+        # Create circular mask
+        mask = Image.new("L", profile_photo.size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0, profile_photo.size[0], profile_photo.size[1]), fill=255)
+        profile_photo.putalpha(mask)
 
-    try:
-        if profile_photo_path:
-            profile_image_path = await create_profile_image(info_text, profile_photo_path)
-            await message.reply_photo(profile_image_path, caption="Here is your profile:")
-        else:
-            await m.edit(info_text)
+        # Paste profile photo onto background
+        background.paste(profile_photo, (50, 50), profile_photo)
+
+        # Draw info text on the image
+        draw = ImageDraw.Draw(background)
+        font = ImageFont.truetype("/path/to/arial.ttf", 20)  # Ensure path to font file is correct
+        text_position = (200, 50)
+        draw.multiline_text(text_position, info_text, font=font, fill="white")  # Use multiline text
+
+        # Save and return the path to the image
+        output_path = "/tmp/profile_image.png"
+        background.save(output_path)
+        return output_path
     except Exception as e:
-        print(f"⚠️ Error creating profile image: {e}")
-        await m.edit(info_text)
-    finally:
-        if profile_photo_path and os.path.exists(profile_photo_path):
-            os.remove(profile_photo_path)
-        if 'profile_image_path' in locals() and os.path.exists(profile_image_path):
-            os.remove(profile_image_path)
+        print(f"⚠️ Error in create_profile_image: {e}")
+        return None
