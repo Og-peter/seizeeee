@@ -2,7 +2,6 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 from shivu import shivuu
 from shivu import SUPPORT_CHAT, user_collection, collection
-import os
 from datetime import datetime
 
 # Global rank based on user balance
@@ -11,7 +10,7 @@ async def get_global_rank(user_id):
     higher_balance_count = await user_collection.count_documents({'balance': {'$gt': user_balance}})
     return higher_balance_count + 1
 
-# Fetch user balance from database
+# Fetch user balance from the database
 async def get_user_balance(user_id):
     user = await user_collection.find_one({"id": user_id})
     return user.get("balance", 0) if user else 0
@@ -22,9 +21,10 @@ def calculate_user_level(xp):
 
 async def get_user_info(user, already=False):
     try:
+        # Ensure user is fetched if `already` is False
         if not already:
             user = await shivuu.get_users(user)
-        if not user.first_name:
+        if not user or not user.first_name:
             return ["⚠️ Deleted account", None]
 
         user_id = user.id
@@ -36,11 +36,10 @@ async def get_user_info(user, already=False):
         global_rank = await get_global_rank(user_id)
         total_waifus = len(existing_user.get('characters', []))
         total_characters = await collection.count_documents({})
-        custom_photo = existing_user.get('custom_photo', None)
+        custom_photo = existing_user.get('custom_photo')
         balance = await get_user_balance(user_id)
         xp = existing_user.get('xp', 0)
         level = calculate_user_level(xp)
-        tokens = existing_user.get('tokens', 0)
         current_login = datetime.now()
         last_login_date = existing_user.get('last_login')
         streak = existing_user.get('login_streak', 0) + 1 if last_login_date else 1
@@ -51,11 +50,7 @@ async def get_user_info(user, already=False):
             {'$set': {'last_login': current_login.strftime('%Y-%m-%d'), 'login_streak': streak}}
         )
 
-        # Formatting for tokens and balance
-        tokens_formatted = f"{tokens:,}"
-        balance_formatted = f"{balance:,}"
-
-        # Profile Information Message Formatting
+        # Format the profile information
         info_text = f"""
 ┌───⦿ **Hunter License** ⦿───┐
 │ **Name:** {first_name}
@@ -64,7 +59,6 @@ async def get_user_info(user, already=False):
 │ **Waifu Percentage:** `{round((total_waifus / total_characters) * 100, 2)}%`
 │ **Level:** `{level}`
 │ **XP:** `{xp}`
-│ **Tokens:** `{tokens_formatted}`
 │ **Global Position:** `{global_rank}`
 │ **Login Streak:** `{streak} days`
 └─────────────────────────────┘
@@ -77,36 +71,33 @@ async def get_user_info(user, already=False):
 
 @shivuu.on_message(filters.command("status"))
 async def profile(client, message: Message):
-    user = None
-    if message.reply_to_message:
-        user = message.reply_to_message.from_user.id
-    elif len(message.command) == 1:
-        user = message.from_user.id
-    else:
-        user = message.text.split(None, 1)[1]
-
-    m = await message.reply_text("✨ Fetching Your Hunter License...")
-
     try:
-        info_text, custom_photo = await get_user_info(user)
+        # Determine user ID to fetch profile for
+        user_id = (message.reply_to_message.from_user.id if message.reply_to_message 
+                   else message.from_user.id if len(message.command) == 1 
+                   else int(message.command[1]))
+
+        m = await message.reply_text("✨ Fetching Your Hunter License...")
+
+        # Retrieve user info
+        info_text, custom_photo = await get_user_info(user_id)
+
+        # Keyboard with support link
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("💬 Support", url=f"https://t.me/{SUPPORT_CHAT}")]
+        ])
+
+        # Handle cases with or without custom photo
+        if custom_photo:
+            await m.delete()  # Remove loading message before sending the photo
+            await message.reply_photo(custom_photo, caption=info_text, reply_markup=keyboard)
+        else:
+            await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
+
     except Exception as e:
         import traceback
-        print(f"❌ Something went wrong: {e}\n{traceback.format_exc()}")
-        return await m.edit(f"⚠️ Sorry, something went wrong. Please report at @{SUPPORT_CHAT}.")
-
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("💬 Support", url=f"https://t.me/{SUPPORT_CHAT}")]
-    ])
-    
-    if custom_photo is None:
-        return await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
-    
-    try:
-        await m.delete()  # Delete the loading message before sending the photo
-        await message.reply_photo(custom_photo, caption=info_text, reply_markup=keyboard)
-    except Exception as e:
-        print(f"⚠️ Error displaying custom photo: {e}")
-        await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
+        print(f"❌ Error in profile command: {e}\n{traceback.format_exc()}")
+        await message.reply_text(f"⚠️ Something went wrong. Please report to @{SUPPORT_CHAT}.")
 
 @shivuu.on_message(filters.command("setpic") & filters.reply)
 async def set_profile_pic(client, message: Message):
