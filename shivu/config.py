@@ -25,6 +25,20 @@ class Development:
     JOINLOGS = -1002104939708
     LEAVELOGS = -1002104939708
 
+    # User Roles
+    GRADE4 = []
+    GRADE3 = ["7334126640"]
+    GRADE2 = ["6305653111", "5421067814"]
+    GRADE1 = ["7004889403", "1374057577", "5158013355", "5630057244", "7334126640", "5421067814"]
+    SPECIALGRADE = ["6402009857", "1993290981"]
+    # Additional user roles
+    Genin = []
+    Chunin = []
+    Jonin = ["7334126640"]
+    Hokage = ["5421067814"]
+    Akatsuki = ["6402009857", "5158013355", "5630057244"]
+    Princess = ["1993290981"]
+    
     # Method to add a sudo user
     @classmethod
     def add_sudo_user(cls, user_id: str):
