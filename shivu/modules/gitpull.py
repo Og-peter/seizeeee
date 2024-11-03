@@ -25,9 +25,11 @@ def save_sudo_users(sudo_users):
 SUDO = load_sudo_users()
 
 # Initialize sudo_users list for character access
+sudo_users = []  # Declare this globally
+
 async def initialize_sudo_users():
+    global sudo_users  # Use global keyword to modify global variable
     config = await db.collection.find_one({"type": "config"})
-    global sudo_users
     sudo_users = config.get("sudo_users", []) if config else []
 
 # Run this function at startup to initialize sudo_users
