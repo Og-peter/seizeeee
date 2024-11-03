@@ -130,7 +130,7 @@ async def admin_panel(client, message):
         keyboard = InlineKeyboardMarkup(
             [
                 [
-                    InlineKeyboardButton("🆕 Add Waifu", callback_data="add_waifu"),
+                    InlineKeyboardButton("🆕 Add Character", callback_data="add_waifu"),
                     InlineKeyboardButton("Add Anime 🆕", callback_data="add_anime")
                 ],
                 [
@@ -159,12 +159,12 @@ async def edit_waifu_command(client, message):
                     caption=f"👧 Name: {waifu['name']}\n🎥 Anime: {waifu['anime']}\n🏷 Rarity: {waifu['rarity']}",
                     reply_markup=InlineKeyboardMarkup(
                         [
-                            [InlineKeyboardButton("🧩 Rename Waifu", callback_data=f"rename_waifu_{waifu_id}")],
+                            [InlineKeyboardButton("🧩 Rename Character", callback_data=f"rename_waifu_{waifu_id}")],
                             [InlineKeyboardButton("⛱️ Change Image", callback_data=f"change_image_{waifu_id}")],
                             [InlineKeyboardButton("⛩️ Change Rarity", callback_data=f"change_rarity_{waifu_id}")],
                             [InlineKeyboardButton("🎉 Edit Event", callback_data=f"change_event_{waifu_id}")],  # New button
-                            [InlineKeyboardButton("📢 Reset Waifu", callback_data=f"reset_waifu_{waifu_id}")],
-                            [InlineKeyboardButton("🗑️ Remove Waifu", callback_data=f"remove_waifu_{waifu_id}")]
+                            [InlineKeyboardButton("📢 Reset Character", callback_data=f"reset_waifu_{waifu_id}")],
+                            [InlineKeyboardButton("🗑️ Remove Character", callback_data=f"remove_waifu_{waifu_id}")]
                         ]
                     )
                 )
@@ -214,7 +214,7 @@ async def set_new_event_callback(client, callback_query):
                 {"$set": {"event_emoji": event_emojis[event_name], "event_name": event_name}},
                 return_document=ReturnDocument.AFTER
             )
-            message_text = f"The event has been updated to '{event_name}' for waifu ID '{waifu_id}'."
+            message_text = f"The event has been updated to '{event_name}' for Character ID '{waifu_id}'."
         else:
             # Handle unknown event_name values
             message_text = "Invalid event selected. Please choose a valid event."
@@ -264,7 +264,7 @@ async def choose_anime_callback(client, callback_query):
         )
     else:
         await callback_query.answer(
-            f"You've selected {selected_anime}. Now, please enter the new waifu's name.",
+            f"You've selected {selected_anime}. Now, please enter the new Character's name.",
             show_alert=True
             )
         
@@ -318,7 +318,7 @@ async def set_event_callback(client, callback_query):
         user_states[callback_query.from_user.id]["event_name"] = event_name
 
     user_states[callback_query.from_user.id]["state"] = "awaiting_waifu_image"
-    await callback_query.message.edit_text(f"Event '{event_name}' selected. Now, send the waifu's image.")
+    await callback_query.message.edit_text(f"Event '{event_name}' selected. Now, send the character's image.")
 
 # Handle waifu image upload and save waifu details
 @app.on_message(filters.private & filters.photo)
@@ -341,11 +341,11 @@ async def receive_photo(client, message):
                 'event_name': user_data["event_name"] or ""
             }
             await collection.insert_one(character)
-            await message.reply_text("⏳ Adding waifu...")
+            await message.reply_text("⏳ Adding Character...")
 
             # Send notification with event emoji and rarity
             caption = (
-                f"OwO! Check out this waifu!\n\n"
+                f"OwO! Check out this character!\n\n"
                 f"<b>{user_data['anime']}</b>\n"
                 f"{waifu_id}: {user_data['name']} [{character['event_emoji']}]\n"
                 f"(𝙍𝘼𝙍𝙄𝙏𝙔: {user_data['rarity']})\n\n"
@@ -356,7 +356,7 @@ async def receive_photo(client, message):
             await app.send_photo(chat_id=CHARA_CHANNEL_ID, photo=photo_file_id, caption=caption)
             await app.send_photo(chat_id=SUPPORT_CHAT, photo=photo_file_id, caption=caption)
 
-            await message.reply_text("✅ Waifu added successfully.")
+            await message.reply_text("✅ Character added successfully.")
             user_states.pop(message.from_user.id, None)
         elif user_data["state"] == "changing_image" and user_data["waifu_id"]:
                 # This condition handles changing the image of an existing waifu
@@ -372,7 +372,7 @@ async def receive_photo(client, message):
                     await app.send_photo(
                         chat_id=CHARA_CHANNEL_ID,
                         photo=new_image,
-                        caption=f'🖼 ᴜᴘᴅᴀᴛᴇ! ᴀ ᴡᴀɪꜰᴜ ʜᴀꜱ ɢᴏᴛ ᴀ ɴᴇᴡ ʟᴏᴏᴋ! 🖼\n'
+                        caption=f'🖼 ᴜᴘᴅᴀᴛᴇ! ᴀ ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀꜱ ɢᴏᴛ ᴀ ɴᴇᴡ ʟᴏᴏᴋ! 🖼\n'
                                 f'🆔 <b>ID:</b> {waifu_id}\n'
                                 f'👤 <b>Name:</b> {waifu["name"]}\n'
                                 f'🎌 <b>Anime:</b> {waifu["anime"]}',
@@ -380,7 +380,7 @@ async def receive_photo(client, message):
                     await app.send_photo(
                         chat_id=SUPPORT_CHAT,
                         photo=new_image,
-                        caption=f'🖼 ᴜᴘᴅᴀᴛᴇ! ᴀ ᴡᴀɪꜰᴜ ʜᴀꜱ ɢᴏᴛ ᴀ ɴᴇᴡ ʟᴏᴏᴋ! 🖼\n'
+                        caption=f'🖼 ᴜᴘᴅᴀᴛᴇ! ᴀ ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀꜱ ɢᴏᴛ ᴀ ɴᴇᴡ ʟᴏᴏᴋ! 🖼\n'
                                 f'🆔 <b>ID:</b> {waifu_id}\n'
                                 f'👤 <b>Name:</b> {waifu["name"]}\n'
                                 f'🎌 <b>Anime:</b> {waifu["anime"]}',
@@ -410,13 +410,13 @@ async def search_anime(client, inline_query):
         for anime in anime_results:
             title = anime["_id"]
             waifu_count = anime["waifu_count"]
-            description = f"Waifus Count: {waifu_count}"
+            description = f"Characters Count: {waifu_count}"
             message_text = f"✏ Title: {title}\n🏷 Waifus Count: {waifu_count}"
             
             # Ensure callback data is within the 64-byte limit
             title_encoded = title[:30]  # truncate title to ensure total length < 64 bytes
             inline_buttons = [
-                [InlineKeyboardButton("Add Waifu", callback_data=f"add_waifu_{title_encoded}")],
+                [InlineKeyboardButton("Add Character", callback_data=f"add_waifu_{title_encoded}")],
                 [InlineKeyboardButton("Rename Anime", callback_data=f"rename_anime_{title_encoded}")],
                 [InlineKeyboardButton("Remove Anime", callback_data=f"remove_anime_{title_encoded}")],
                 [InlineKeyboardButton("View Characters", callback_data=f"view_characters_{title_encoded}")],  # New button
@@ -470,7 +470,7 @@ async def receive_text_message(client, message):
             user_states[message.from_user.id]["name"] = waifu_name
             user_states[message.from_user.id]["state"] = "awaiting_waifu_rarity"
             await message.reply_text(
-                "Now, choose the waifu's rarity:",
+                "Now, choose the character's rarity:",
                 reply_markup=InlineKeyboardMarkup(
                     [
                         [InlineKeyboardButton(rarity, callback_data=f"select_rarity_{rarity}")] 
@@ -507,7 +507,7 @@ async def receive_text_message(client, message):
                     {"id": waifu_id},
                     {"$set": {"name": new_waifu_name}}
                 )
-                await message.reply_text(f"The waifu has been renamed to '{new_waifu_name}' successfully.")
+                await message.reply_text(f"The character has been renamed to '{new_waifu_name}' successfully.")
                 await app.send_photo(
                     chat_id=CHARA_CHANNEL_ID,
                     photo=waifu["img_url"],
@@ -534,7 +534,7 @@ async def choose_anime_callback(client, callback_query):
     user_states[callback_query.from_user.id] = {"state": "awaiting_waifu_name", "anime": selected_anime, "name": None, "rarity": None}
     await app.send_message(
         chat_id=callback_query.from_user.id,
-        text=f"You've selected {selected_anime}. Now, please enter the new waifu's name:",
+        text=f"You've selected {selected_anime}. Now, please enter the new character's name:",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("Cancel", callback_data="cancel_add_waifu")]]
         )
@@ -602,7 +602,7 @@ async def rename_waifu_callback(client, callback_query):
     waifu_id = callback_query.data.split('_', 2)[-1]
     user_states[callback_query.from_user.id] = {"state": "renaming_waifu", "waifu_id": waifu_id}
     await callback_query.message.edit_text(
-        f"You've selected waifu ID: '{waifu_id}'. Please enter the new name for this waifu:"
+        f"You've selected waifu ID: '{waifu_id}'. Please enter the new name for this character:"
     )
 
 
@@ -611,7 +611,7 @@ async def change_image_callback(client, callback_query):
     waifu_id = callback_query.data.split('_', 2)[-1]
     user_states[callback_query.from_user.id] = {"state": "changing_image", "waifu_id": waifu_id}
     await callback_query.message.edit_text(
-        f"You've selected waifu ID: '{waifu_id}'. Please send the new image for this waifu:",
+        f"You've selected waifu ID: '{waifu_id}'. Please send the new image for this character:",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("Cancel", callback_data="cancel_change_image")]]
         )
@@ -652,7 +652,7 @@ async def set_rarity_callback(client, callback_query):
         waifu = await collection.find_one({"id": waifu_id})
         
         if not waifu:
-            await callback_query.answer("Waifu not found.", show_alert=True)
+            await callback_query.answer("Character not found.", show_alert=True)
             return
 
         old_rarity = waifu["rarity"]
@@ -685,7 +685,7 @@ async def reset_waifu_callback(client, callback_query):
     waifu_id = callback_query.data.split('_', 2)[-1]
     user_states[callback_query.from_user.id] = {"state": "confirming_reset", "waifu_id": waifu_id}
     await callback_query.message.edit_text(
-        f"Are you sure you want to reset the waifu ID '{waifu_id}' to global grabbed 0?",
+        f"Are you sure you want to reset the character ID '{waifu_id}' to global grabbed 0?",
         reply_markup=InlineKeyboardMarkup(
             [
                 [InlineKeyboardButton("Yes", callback_data=f"confirm_reset_waifu_{waifu_id}")],
@@ -707,7 +707,7 @@ async def confirm_reset_waifu_callback(client, callback_query):
         if waifu:
             # Remove from everyone's harem
             await collection.update_many({}, {"$pull": {"harem": waifu_id}})
-            await callback_query.message.edit_text(f"The waifu ID '{waifu_id}' has been reset successfully.")
+            await callback_query.message.edit_text(f"The character ID '{waifu_id}' has been reset successfully.")
             await app.send_photo(
                 chat_id=CHARA_CHANNEL_ID,
                 photo=waifu["img_url"],
