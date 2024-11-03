@@ -46,12 +46,12 @@ async def alive(update: Update, context: CallbackContext) -> None:
 
     # Alive message with unique text, emojis, bot mention, and interactive elements
     alive_message = (
-        f"👋 **Hello, Master! I'm @{context.bot.username}** 🌸\n\n"
-        "❄️ **Status:** `Fully Operational`\n"
-        f"🌋 **Uptime:** `{uptime}`\n"
-        f"🥂 **Bot Name:** `@{context.bot.username}`\n"
-        "📊 **Version:** `1.0.0`\n\n"
-        f"Thanks for keeping me alive, {update.effective_user.mention_html()} 😊💕"
+        f"👋 ʜєʟʟσ, sєηᴘᴧɪ! I'ᴍ @{context.bot.username} 🌸\n\n"
+        "❄️ sᴛᴧᴛᴜs: ғᴜʟʟʏ σᴘєʀᴧᴛɪσηᴧʟ\n"
+        f"🌋 ᴜᴘᴛɪᴍє: {uptime}\n"
+        f"🥂 ʙσᴛ ɴᴧᴍє: @{context.bot.username}\n"
+        "📊 ᴠєʀsɪση: 1.0.0\n\n"
+        f"ᴛʜᴧηᴋs ғσʀ ᴋєєᴘɪηɢ ᴍє ᴧʟɪᴠє, {update.effective_user.mention_html()} 😊💕"
     )
 
     # Sending the video with the styled alive message
