@@ -17,8 +17,7 @@ async def ping(update: Update, context: CallbackContext) -> None:
     
     # Sending an initial response with a cute waifu sticker
     await update.message.reply_sticker("CAACAgQAAxkBAAOxZydY5130mqDr6GKX6kucio9IHRQAAlgRAAKLAdBR7L2HepOERFIeBA")  # Replace with your preferred sticker ID
-    message = await update.message.reply_text('⏳ Seize is calculating...')
-
+    
     # End time for latency calculation
     end_time = time.time()
     elapsed_time = round((end_time - start_time) * 1000, 3)
@@ -47,10 +46,10 @@ async def alive(update: Update, context: CallbackContext) -> None:
     # Alive message with unique text, emojis, bot mention, and interactive elements
     alive_message = (
         f"👋 ʜєʟʟσ, sєηᴘᴧɪ! I'ᴍ @{context.bot.username} 🌸\n\n"
-        "❄️ sᴛᴧᴛᴜs: ғᴜʟʟʏ σᴘєʀᴧᴛɪσηᴧʟ\n"
-        f"🌋 ᴜᴘᴛɪᴍє: {uptime}\n"
-        f"🥂 ʙσᴛ ɴᴧᴍє: @{context.bot.username}\n"
-        "📊 ᴠєʀsɪση: 1.0.0\n\n"
+        "❄️ **Sᴛᴧᴛᴜs:** `Fully Operational`\n"
+        f"🌋 **Uᴘᴛɪмє:** `{uptime}`\n"
+        f"🥂 **Bσт Nαмє:** `@{context.bot.username}`\n"
+        "📊 **Vєʀsɪσn:** `1.0.0`\n\n"
         f"ᴛʜᴧηᴋs ғσʀ ᴋєєᴘɪηɢ ᴍє ᴧʟɪᴠє, {update.effective_user.mention_html()} 😊💕"
     )
 
