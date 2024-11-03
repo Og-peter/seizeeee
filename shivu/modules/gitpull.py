@@ -1,12 +1,28 @@
 import os
 import subprocess
 import sys
+import json
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from shivu import shivuu as app, SPECIALGRADE
 
-# Add SUDO list to manage sudo users
-SUDO = set(SPECIALGRADE)  # Initialize SUDO list with initial SPECIALGRADE
+# Path for SUDO users file
+SUDO_FILE_PATH = "sudo_users.json"
+
+# Load SUDO users from file or initialize with SPECIALGRADE
+def load_sudo_users():
+    if os.path.exists(SUDO_FILE_PATH):
+        with open(SUDO_FILE_PATH, "r") as f:
+            return set(json.load(f))
+    return set(SPECIALGRADE)
+
+# Save SUDO users to file
+def save_sudo_users(sudo_users):
+    with open(SUDO_FILE_PATH, "w") as f:
+        json.dump(list(sudo_users), f)
+
+# Initialize SUDO list
+SUDO = load_sudo_users()
 
 @app.on_message(filters.command("gitpull"))
 async def git_pull_command(client, message):
@@ -77,6 +93,7 @@ async def add_sudo_user(client, message):
 
     user_id = str(message.reply_to_message.from_user.id)
     SUDO.add(user_id)
+    save_sudo_users(SUDO)  # Save updated SUDO list
 
     # Display a confirmation message with a Restart button
     restart_button = InlineKeyboardMarkup(
@@ -97,6 +114,7 @@ async def remove_sudo_user(client, message):
     user_id = str(message.reply_to_message.from_user.id)
     if user_id in SUDO:
         SUDO.remove(user_id)
+        save_sudo_users(SUDO)  # Save updated SUDO list
         await message.reply(f"✅ Removed {message.reply_to_message.from_user.mention} from Sudo users!")
     else:
         await message.reply("User is not a Sudo user.")
