@@ -12,12 +12,14 @@ import random
 PAGE_SIZE = 10  # Number of names per page
 
 # Command to check character by ID with animated emojis and fun messages
+@app.on_message(filters.command("check"))
 async def check_character(update: Update, context: CallbackContext) -> None:
     try:
         args = context.args
         if len(args) != 1:
             await update.message.reply_text('Usage: /check <character_id> 🎯')
             return
+
         character_id = args[0]
         character = await collection.find_one({'id': character_id})
 
@@ -27,7 +29,7 @@ async def check_character(update: Update, context: CallbackContext) -> None:
             # Create animated loading message
             loading_message = await update.message.reply_text("🔍 Searching for the character...")
             
-            # Update message with the character info and emojis
+            # Construct message with character info
             response_message = (
                 f"<b>✨ Meet this Special Character ✨</b>\n\n"
                 f"<b>ID:</b> {character['id']}\n"
@@ -36,7 +38,7 @@ async def check_character(update: Update, context: CallbackContext) -> None:
                 f"<b>Rarity:</b> {character['rarity']} 🌟"
             )
 
-            # Add animated emoji labels for special cases
+            # Add special case labels
             if '🐇' in character['name']:
                 response_message += "\n\n🐇 Special: Bunny 🐇"
             elif '👩‍🏫' in character['name']:
@@ -65,7 +67,7 @@ async def check_character(update: Update, context: CallbackContext) -> None:
                 [InlineKeyboardButton("❤️ Favorite", callback_data=f"favorite_{character['id']}")]
             ])
 
-            # Simulate a delay for effect
+            # Send character photo and info
             await context.bot.send_photo(
                 chat_id=update.effective_chat.id,
                 photo=character['img_url'],
@@ -81,6 +83,7 @@ async def check_character(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(f'Error: {str(e)}')
 
 # Callback query handler for showing owners with pagination
+@app.on_callback_query()
 async def list_character_owners(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     await query.answer()
