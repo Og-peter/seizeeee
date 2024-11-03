@@ -12,7 +12,6 @@ import random
 PAGE_SIZE = 10  # Number of names per page
 
 # Command to check character by ID with animated emojis and fun messages
-@app.on_message(filters.command("check"))
 async def check_character(update: Update, context: CallbackContext) -> None:
     try:
         args = context.args
