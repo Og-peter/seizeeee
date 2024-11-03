@@ -2,7 +2,7 @@ import urllib.request
 import os
 from pymongo import ReturnDocument
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
+from pyrogram.types import CommandHandler, CallbackContext, CallbackQueryHandler
 from shivu import application, sudo_users, collection, db, CHARA_CHANNEL_ID, user_collection
 from shivu import shivuu as bot
 from pyrogram import Client, filters, types as t
