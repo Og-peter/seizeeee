@@ -55,7 +55,7 @@ async def process_claim(user_id, chat_id, user_first_name, message_id):
         # Prepare image URLs and captions with additional text and user mention
         img_urls = [character['img_url'] for character in unique_characters]
         captions = [
-            f"❄️ **ᴏᴡᴏ, {user_first_name} (@{user_id})! ʜᴇʀᴇ ɪs ᴀ sᴘᴇᴄɪᴀʟ ᴄʟᴀɪᴍ ғᴏʀ ʏᴏᴜ!** 🏮\n\n"
+            f"❄️ **ᴏᴡᴏ, {user_first_name}! ʜᴇʀᴇ ɪs ᴀ sᴘᴇᴄɪᴀʟ ᴄʟᴀɪᴍ ғᴏʀ ʏᴏᴜ!** 🏮\n\n"
             f"🥂 **ɴᴀᴍᴇ:** {character['name']}\n"
             f"☃️ **ʀᴀʀɪᴛʏ:** {character['rarity']}\n"
             f"⛩️ **ᴀɴɪᴍᴇ:** {character['anime']}\n\n"
