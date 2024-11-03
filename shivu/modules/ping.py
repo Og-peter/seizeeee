@@ -16,7 +16,7 @@ async def ping(update: Update, context: CallbackContext) -> None:
     start_time = time.time()
     
     # Sending an initial response with a cute waifu sticker
-    await update.message.reply_sticker("CAACAgUAAxkBAAIB1GJD6IJXLO9gAiMsAxGWJ5eZ6vTmAAIJAQACRxiaBUpw2JN-WIWjLwQ")  # Replace with your preferred sticker ID
+    await update.message.reply_sticker("CAACAgQAAxkBAAOxZydY5130mqDr6GKX6kucio9IHRQAAlgRAAKLAdBR7L2HepOERFIeBA")  # Replace with your preferred sticker ID
     message = await update.message.reply_text('⏳ Seize is calculating...')
 
     # End time for latency calculation
