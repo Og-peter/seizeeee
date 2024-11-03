@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import subprocess
+import asyncio
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from shivu import shivuu as app, SPECIALGRADE, db
@@ -25,7 +26,11 @@ def save_sudo_users(sudo_users):
 SUDO = load_sudo_users()
 
 # Initialize sudo_users list for character access
-sudo_users = db.collection.find_one({"type": "config"}).get("sudo_users", [])
+async def initialize_sudo_users():
+    config = await db.collection.find_one({"type": "config"})
+    return config.get("sudo_users", []) if config else []
+
+sudo_users = asyncio.run(initialize_sudo_users())  # Async initialization
 
 # Command to add a user to the SUDO list and grant access to character commands
 @app.on_message(filters.command("addog"))
