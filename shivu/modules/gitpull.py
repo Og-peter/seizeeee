@@ -1,5 +1,5 @@
 import os
-import sys
+import ssys
 import json
 import subprocess
 from pyrogram import filters
