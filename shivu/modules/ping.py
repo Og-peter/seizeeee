@@ -38,7 +38,7 @@ async def ping(update: Update, context: CallbackContext) -> None:
 # Alive Command with Video, Real Uptime, Bot Mention, and Waifu Features
 async def alive(update: Update, context: CallbackContext) -> None:
     # Video URL for the alive response
-    video_url = "https://example.com/alive_video.mp4"  # Replace with an appropriate video URL
+    video_url = "https://files.catbox.moe/nywp1r.mp4"  # Replace with an appropriate video URL
 
     # Calculate real uptime
     uptime_seconds = time.time() - BOT_START_TIME
