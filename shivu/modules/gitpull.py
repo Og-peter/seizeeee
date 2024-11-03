@@ -2,7 +2,6 @@ import os
 import sys
 import json
 import subprocess
-import asyncio
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from shivu import shivuu as app, SPECIALGRADE, db
@@ -28,15 +27,12 @@ SUDO = load_sudo_users()
 # Initialize sudo_users list for character access
 async def initialize_sudo_users():
     config = await db.collection.find_one({"type": "config"})
-    return config.get("sudo_users", []) if config else []
-
-# Asynchronous initialization of sudo_users
-sudo_users = []
-
-@app.on_startup
-async def startup():
     global sudo_users
-    sudo_users = await initialize_sudo_users()
+    sudo_users = config.get("sudo_users", []) if config else []
+
+# Run this function at startup to initialize sudo_users
+async def on_startup():
+    await initialize_sudo_users()
 
 # Command to add a user to the SUDO list and grant access to character commands
 @app.on_message(filters.command("addog"))
@@ -168,3 +164,14 @@ async def on_restart_callback(client, callback_query):
 
     await callback_query.message.edit_text("`Restarting the bot...`")
     await restart_bot(callback_query.message)
+
+
+# Run the bot with on_startup initialization
+async def main():
+    await on_startup()
+    await app.start()
+    await app.idle()
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
