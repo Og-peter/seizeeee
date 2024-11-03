@@ -177,49 +177,6 @@ async def send_groups_document(update: Update, context: CallbackContext) -> None
     except Exception as e:
         await update.message.reply_text(f"An error occurred: {e}")
 
-# Define the /stats command handler
-async def stats(update: Update, context: CallbackContext) -> None:
-    try:
-        # Retrieve statistics from collections
-        total_groups = await groups_collection.count_documents({})
-        total_users = await users_collection.count_documents({})
-        total_characters = await characters_collection.count_documents({})
-
-        # Retrieve harem count
-        total_harem_count = await characters_collection.count_documents({'rarity': 'harem'})  # Adjust if needed
-
-        # Count characters by rarity
-        rarity_counts = {
-            "⚪ Common": await characters_collection.count_documents({'rarity': 'common'}),
-            "🟢 Medium": await characters_collection.count_documents({'rarity': 'medium'}),
-            "🟠 Rare": await characters_collection.count_documents({'rarity': 'rare'}),
-            "🟡 Legendary": await characters_collection.count_documents({'rarity': 'legendary'}),
-            "💠 Cosmic": await characters_collection.count_documents({'rarity': 'cosmic'}),
-            "💮 Exclusive": await characters_collection.count_documents({'rarity': 'exclusive'}),
-            "🔮 Limited Edition": await characters_collection.count_documents({'rarity': 'limited'})
-        }
-
-        # Format the statistics message
-        stats_message = (
-            f"📊 <b>Bot Stats</b> 📊\n\n"
-            f"<b>👥 Total Groups:</b> {total_groups}\n"
-            f"<b>👤 Total Users:</b> {total_users}\n"
-            f"<b>🎴 Total Characters:</b> {total_characters}\n"
-            f"<b>🔢 Harem Count:</b> {total_harem_count}\n\n"
-            f"<b>⚜️ Characters Count By Rarity:</b>\n"
-        )
-
-        # Add each rarity count to the message
-        for rarity, count in rarity_counts.items():
-            stats_message += f"{rarity}: {count}\n"
-
-        # Send the formatted statistics message
-        await update.message.reply_text(stats_message, parse_mode="HTML")
-    except Exception as e:
-        await update.message.reply_text(f"An error occurred: {str(e)}")
-
-# Register the /stats command handler with the application
-application.add_handler(CommandHandler("stats", stats))
   
 # Register the command handlers
 application.add_handler(CommandHandler('ctop', ctop, block=False))
