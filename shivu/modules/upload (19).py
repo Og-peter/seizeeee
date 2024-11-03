@@ -457,7 +457,7 @@ async def back_to_anime_list(client, callback_query):
     await callback_query.message.edit_text(
         "Returning to the anime list.",
         reply_markup=None
-        )
+    )
 
 @app.on_message(filters.private & filters.text)
 async def receive_text_message(client, message):
