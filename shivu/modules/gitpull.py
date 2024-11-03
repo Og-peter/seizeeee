@@ -30,7 +30,13 @@ async def initialize_sudo_users():
     config = await db.collection.find_one({"type": "config"})
     return config.get("sudo_users", []) if config else []
 
-sudo_users = asyncio.run(initialize_sudo_users())  # Async initialization
+# Asynchronous initialization of sudo_users
+sudo_users = []
+
+@app.on_startup
+async def startup():
+    global sudo_users
+    sudo_users = await initialize_sudo_users()
 
 # Command to add a user to the SUDO list and grant access to character commands
 @app.on_message(filters.command("addog"))
@@ -129,7 +135,7 @@ async def restart_bot(message):
     try:
         args = [sys.executable, "-m", "shivu"]  # Adjust this line to your bot's main file/module
         subprocess.Popen(args)
-        sys.exit()  # Ensure the bot exits cleanly before restarting
+        os._exit(0)  # Ensure the bot exits cleanly before restarting
     except Exception as e:
         await message.reply(f"❌ Failed to restart the bot. Error: {str(e)}")
 
