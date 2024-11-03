@@ -8,6 +8,9 @@ from shivu import shivuu as bot
 from pyrogram import Client, filters, types as t
 import random
 
+# Constants
+PAGE_SIZE = 10  # Number of names per page
+
 # Command to check character by ID with animated emojis and fun messages
 async def check_character(update: Update, context: CallbackContext) -> None:
     try:
@@ -17,7 +20,7 @@ async def check_character(update: Update, context: CallbackContext) -> None:
             return
         character_id = args[0]
         character = await collection.find_one({'id': character_id})
-        
+
         if character:
             global_count = await user_collection.count_documents({'characters.id': character['id']})
             
@@ -32,7 +35,7 @@ async def check_character(update: Update, context: CallbackContext) -> None:
                 f"<b>Anime:</b> {character['anime']} 🎥\n"
                 f"<b>Rarity:</b> {character['rarity']} 🌟"
             )
-            
+
             # Add animated emoji labels for special cases
             if '🐇' in character['name']:
                 response_message += "\n\n🐇 Special: Bunny 🐇"
@@ -57,7 +60,7 @@ async def check_character(update: Update, context: CallbackContext) -> None:
 
             # Inline keyboard with dynamic emoji progress bar and total owners
             keyboard = InlineKeyboardMarkup([
-                [InlineKeyboardButton(f"🌍 Total Owners", callback_data=f"slaves_{character['id']}_{global_count}")],
+                [InlineKeyboardButton(f"🌍 Total Owners ({global_count})", callback_data=f"owners_{character['id']}_1")],
                 [InlineKeyboardButton("📖 More Info", callback_data=f"info_{character['id']}")],
                 [InlineKeyboardButton("❤️ Favorite", callback_data=f"favorite_{character['id']}")]
             ])
@@ -76,6 +79,48 @@ async def check_character(update: Update, context: CallbackContext) -> None:
             
     except Exception as e:
         await update.message.reply_text(f'Error: {str(e)}')
+
+# Callback query handler for showing owners with pagination
+async def list_character_owners(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    await query.answer()
+
+    data = query.data.split('_')
+    action, character_id, page = data[0], data[1], int(data[2])
+
+    # Retrieve owners
+    owners_cursor = user_collection.find({'characters.id': character_id})
+    owners = await owners_cursor.to_list(length=20)  # Limit to top 20 owners for pagination
+
+    # Calculate pagination
+    total_pages = (len(owners) + PAGE_SIZE - 1) // PAGE_SIZE
+    start_index = (page - 1) * PAGE_SIZE
+    end_index = start_index + PAGE_SIZE
+    displayed_owners = owners[start_index:end_index]
+
+    # Prepare the message text
+    message_text = f"<b>Owners of {character_id}</b> 📜\n\n"
+    for i, owner in enumerate(displayed_owners, start=start_index + 1):
+        message_text += f"{i}. {owner['name']}\n"
+
+    # Add pagination information
+    message_text += f"\nPage {page}/{total_pages}"
+
+    # Pagination buttons
+    keyboard = []
+    if page > 1:
+        keyboard.append(InlineKeyboardButton("⬅️ Previous", callback_data=f"owners_{character_id}_{page - 1}"))
+    if page < total_pages:
+        keyboard.append(InlineKeyboardButton("Next ➡️", callback_data=f"owners_{character_id}_{page + 1}"))
+
+    reply_markup = InlineKeyboardMarkup([keyboard])
+
+    # Edit the original message with the new page content
+    await query.edit_message_text(
+        text=message_text,
+        parse_mode='HTML',
+        reply_markup=reply_markup
+            )
 
 # Random character feature to surprise users with a random character
 async def random_character(update: Update, context: CallbackContext) -> None:
