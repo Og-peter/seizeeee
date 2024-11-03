@@ -81,7 +81,7 @@ async def status_check_command(client, message):
 
     await message.reply("✅ Bot is up and running!")
 
-# Command to add a user to the SUDO list
+# Command to add a user to the SUDO list and grant access to character commands
 @app.on_message(filters.command("addog"))
 async def add_sudo_user(client, message):
     if str(message.from_user.id) not in SPECIALGRADE:
@@ -92,16 +92,26 @@ async def add_sudo_user(client, message):
         return await message.reply("Please reply to a user's message to add them as Sudo.")
 
     user_id = str(message.reply_to_message.from_user.id)
-    SUDO.add(user_id)
+    SUDO.add(user_id)  # Add user to SUDO set
     save_sudo_users(SUDO)  # Save updated SUDO list
+
+    # Add user to the bot's `sudo_users` list for character access
+    if user_id not in sudo_users:
+        sudo_users.append(user_id)
+        await db.collection.update_one(
+            {"type": "config"},
+            {"$set": {"sudo_users": sudo_users}},  # Ensure it persists in the database if needed
+            upsert=True
+        )
 
     # Display a confirmation message with a Restart button
     restart_button = InlineKeyboardMarkup(
         [[InlineKeyboardButton("🔄 Restart Bot", callback_data="restart_bot")]]
     )
-    await message.reply(f"✅ Added {message.reply_to_message.from_user.mention} to Sudo users!", reply_markup=restart_button)
+    await message.reply(f"✅ Added {message.reply_to_message.from_user.mention} to Sudo users with character access!", reply_markup=restart_button)
 
-# Command to remove a user from the SUDO list
+
+# Command to remove a user from the SUDO list and revoke character access
 @app.on_message(filters.command("rmog"))
 async def remove_sudo_user(client, message):
     if str(message.from_user.id) not in SPECIALGRADE:
@@ -115,6 +125,16 @@ async def remove_sudo_user(client, message):
     if user_id in SUDO:
         SUDO.remove(user_id)
         save_sudo_users(SUDO)  # Save updated SUDO list
+
+        # Remove user from the bot's `sudo_users` list for character access
+        if user_id in sudo_users:
+            sudo_users.remove(user_id)
+            await db.collection.update_one(
+                {"type": "config"},
+                {"$set": {"sudo_users": sudo_users}},  # Ensure it persists in the database if needed
+                upsert=True
+            )
+
         await message.reply(f"✅ Removed {message.reply_to_message.from_user.mention} from Sudo users!")
     else:
         await message.reply("User is not a Sudo user.")
