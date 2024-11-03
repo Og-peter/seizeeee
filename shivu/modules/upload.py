@@ -751,7 +751,7 @@ async def confirm_remove_waifu_callback(client, callback_query):
             await app.send_photo(
                 chat_id=CHARA_CHANNEL_ID,
                 photo=waifu["img_url"],
-                caption=f'🗑️ ᴡᴀɪꜰᴜ ʀᴇᴍᴏᴠᴀʟ 🗑️\n'
+                caption=f'🗑️ ᴄʜᴀʀᴀᴄᴛᴇʀ ʀᴇᴍᴏᴠᴀʟ 🗑️\n'
                         f'👤 <b>Name:</b> {waifu["name"]}\n'
                         f'🎌 <b>Anime:</b> {waifu["anime"]}\n\n'
                         f'❌ <i>Tʜɪꜱ ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀꜱ ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ ꜰʀᴏᴍ ᴛʜᴇ ʟɪꜱᴛ!</i>',
@@ -759,7 +759,7 @@ async def confirm_remove_waifu_callback(client, callback_query):
             await app.send_photo(
                 chat_id=SUPPORT_CHAT,
                 photo=waifu["img_url"],
-                caption=f'🗑️ ᴡᴀɪꜰᴜ ʀᴇᴍᴏᴠᴀʟ 🗑️\n'
+                caption=f'🗑️ ᴄʜᴀʀᴀᴄᴛᴇʀ ʀᴇᴍᴏᴠᴀʟ 🗑️\n'
                         f'👤 <b>Name:</b> {waifu["name"]}\n'
                         f'🎌 <b>Anime:</b> {waifu["anime"]}\n\n'
                         f'❌ <i>Tʜɪꜱ ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀꜱ ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ ꜰʀᴏᴍ ᴛʜᴇ ʟɪꜱᴛ!</i>',
