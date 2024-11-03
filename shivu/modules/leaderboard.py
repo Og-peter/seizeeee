@@ -31,7 +31,17 @@ async def global_leaderboard(update: Update, context: CallbackContext) -> None:
             {"$sort": {"count": -1}},
             {"$limit": 10}
         ])
+        
+        # Load leaderboard data
         leaderboard_data = await cursor.to_list(length=10)
+
+        # Debugging: Log fetched data
+        logging.info("Fetched leaderboard data: %s", leaderboard_data)
+
+        # Check if leaderboard data is empty
+        if not leaderboard_data:
+            await update.message.reply_text("🚫 No data available for the top groups leaderboard.", parse_mode='HTML')
+            return
 
         # Prepare the leaderboard message
         leaderboard_message = "<b>🌟 𝚃𝙾𝙿 10 𝙶𝚁𝙾𝚄𝙿𝚂 🌟</b>\n"
@@ -41,7 +51,7 @@ async def global_leaderboard(update: Update, context: CallbackContext) -> None:
             group_name = escape(group.get('group_name', 'Unknown'))
             if len(group_name) > 15:
                 group_name = group_name[:15] + '...'
-            count = group['count']
+            count = group.get('count', 0)
             leaderboard_message += f"{i}. <b>{group_name}</b> - <b>{count}</b> 🏆\n"
 
         leaderboard_message += "─────────────────────\n"
@@ -52,6 +62,7 @@ async def global_leaderboard(update: Update, context: CallbackContext) -> None:
         await update.message.reply_video(video=video_url, caption=leaderboard_message, parse_mode='HTML')
 
     except Exception as e:
+        logging.error("Error in global_leaderboard: %s", e)
         await update.message.reply_text(f"⚠️ 𝔸𝕟 𝕖𝕣𝕣𝕠𝕣 𝕠𝕔𝕔𝕦𝕣𝕖𝕕: {e}", parse_mode='HTML')
 
 # Function to display the top users in the current chat
