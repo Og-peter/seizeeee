@@ -114,7 +114,7 @@ async def start(client, message):
             resize_keyboard=True
         ))
 
-
+@app.on_message(filters.text & filters.private & filters.regex("^⚙ Admin panel ⚙$"))
 async def admin_panel(client, message):
     if str(message.from_user.id) in sudo_users:
         total_waifus = await collection.count_documents({})
