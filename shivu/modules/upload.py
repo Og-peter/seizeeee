@@ -115,7 +115,6 @@ async def start(client, message):
         ))
 
 
-@app.on_message(filters.text & filters.private & filters.regex("^⚙ Admin panel ⚙$"))
 async def admin_panel(client, message):
     if str(message.from_user.id) in sudo_users:
         total_waifus = await collection.count_documents({})
@@ -134,13 +133,39 @@ async def admin_panel(client, message):
                     InlineKeyboardButton("Add Anime 🆕", callback_data="add_anime")
                 ],
                 [
-                    InlineKeyboardButton("👾 Anime List", switch_inline_query_current_chat="choose_anime ")
+                    InlineKeyboardButton("👾 Anime List", switch_inline_query_current_chat="choose_anime "),
+                    InlineKeyboardButton("🔍 Search Anime", switch_inline_query_current_chat="search_anime ")
                 ]
             ]
         )
         await app.send_message(message.chat.id, admin_panel_message, reply_markup=keyboard)
     else:
         await message.reply_text("You are not authorized to use this command.")
+
+# Handle the inline query for anime search
+@app.on_inline_query()
+async def handle_inline_query(client, inline_query):
+    query = inline_query.query.lower().strip()
+    
+    if query.startswith("choose_anime") or query.startswith("search_anime"):
+        anime_titles = await collection.distinct("anime")
+        
+        # Filter the anime titles based on the search query (if provided)
+        if " " in query:
+            search_term = query.split(" ", 1)[1]
+            filtered_titles = [anime for anime in anime_titles if search_term.lower() in anime.lower()]
+        else:
+            filtered_titles = anime_titles
+
+        results = [
+            InlineQueryResultArticle(
+                title=anime,
+                input_message_content=InputTextMessageContent(f"Anime: {anime}")
+            ) for anime in filtered_titles
+        ]
+        
+        # Answer the inline query with the filtered results
+        await client.answer_inline_query(inline_query.id, results, cache_time=0)
 
 # Edit command to include "Edit Event"
 @app.on_message(filters.command("edit") & filters.private)
