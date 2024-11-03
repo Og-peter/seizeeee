@@ -10,7 +10,7 @@ BOT_START_TIME = time.time()
 # Ping Command with Image and Bot Mention
 async def ping(update: Update, context: CallbackContext) -> None:
     # Image URL for the ping response
-    image_url = "https://example.com/ping_image.jpg"  # Replace with an appropriate image URL
+    image_url = "https://files.catbox.moe/7jvh55.jpg"  # Replace with an appropriate image URL
     
     # Start time for latency calculation
     start_time = time.time()
