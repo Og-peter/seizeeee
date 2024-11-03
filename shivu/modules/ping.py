@@ -28,9 +28,9 @@ async def ping(update: Update, context: CallbackContext) -> None:
         chat_id=update.effective_chat.id,
         photo=image_url,
         caption=(
-            f'🌸 **@{context.bot.username} Pong!**\n\n'
-            f'⏱️ Latency: `{elapsed_time}ms`\n\n'
-            f'✨ Fast as ever, just for you, {update.effective_user.mention_html()} 💖'
+            f'🌸 **@{context.bot.username} ᴘσηɢ!**\n\n'
+            f'⏱️ ʟᴧᴛєηᴄʏ: `{elapsed_time}ms`\n\n'
+            f'✨ ғᴧsᴛ ᴧs єᴠєʀ, ᴊᴜsᴛ ғσʀ ʏσᴜ, {update.effective_user.mention_html()} 💖'
         ),
         parse_mode="HTML"
     )
