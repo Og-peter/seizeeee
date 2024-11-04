@@ -22,7 +22,10 @@ async def get_random_character():
 
 # Start the anime guess game in each group every 5 minutes
 async def periodic_character_guess(context: CallbackContext):
-    for chat_id in context.bot.chat_ids:
+    # Here you need to implement logic to fetch the chat IDs where the bot is active
+    # For example: chat_ids = [chat.id for chat in context.bot.chats]
+    chat_ids = context.bot.chat_ids  # Replace with your actual logic to get chat IDs
+    for chat_id in chat_ids:
         await start_anime_guess_in_group(context, chat_id)
 
 # Start a character guessing game in a specific group
@@ -86,6 +89,7 @@ async def guess_text_handler(update: Update, context: CallbackContext):
     attempts = active_guesses[chat_id]['attempts']
 
     if user_answer in correct_answer.split():
+        # User guessed correctly
         streak = user_streaks.get(user_id, 0) + 1
         user_streaks[user_id] = streak
         tokens_earned = 10 + (streak * 5)  # Bonus for streaks
@@ -102,9 +106,10 @@ async def guess_text_handler(update: Update, context: CallbackContext):
             parse_mode=ParseMode.HTML
         )
 
-        del active_guesses[chat_id]
+        del active_guesses[chat_id]  # Remove the game after a correct guess
 
     else:
+        # User guessed incorrectly
         message_link = character_message_links.get(chat_id, "#")
         feedback = "💪 Keep trying!" if attempts < 3 else "🙌 Almost there!"
         keyboard = [[InlineKeyboardButton("🔍 See Character", url=message_link)]]
@@ -131,9 +136,17 @@ async def periodic_character_guess_job(context: CallbackContext):
         await asyncio.sleep(300)  # Send every 5 minutes
 
 # Start periodic job when the bot starts
-async def on_startup():
-    asyncio.create_task(periodic_character_guess_job(application))
+async def on_startup(context: CallbackContext):
+    asyncio.create_task(periodic_character_guess_job(context))
 
 # Add handlers
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, guess_text_handler))
-application.add_handler(on_startup)
+
+# Initialize the bot and start the periodic task
+async def main():
+    async with application:
+        await on_startup(application)
+        await application.run_polling()
+
+if __name__ == "__main__":
+    asyncio.run(main())
