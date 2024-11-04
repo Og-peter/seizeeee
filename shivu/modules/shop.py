@@ -61,15 +61,10 @@ async def generate_waifu_message(waifus, page):
     media.append(InputMediaPhoto(media=img_url, caption="Loading..."))
 
     # Pagination buttons
-    if page == 0:
-        buttons.append([InlineKeyboardButton("Next ➡️", callback_data=f"nav_next_{page}")])
-    elif page == len(waifus) - 1:
+    if page > 0:
         buttons.append([InlineKeyboardButton("⬅️ Prev", callback_data=f"nav_prev_{page}")])
-    else:
-        buttons.append([
-            InlineKeyboardButton("⬅️ Prev", callback_data=f"nav_prev_{page}"),
-            InlineKeyboardButton("Next ➡️", callback_data=f"nav_next_{page}")
-        ])
+    if page < len(waifus) - 1:
+        buttons[-1].append(InlineKeyboardButton("Next ➡️", callback_data=f"nav_next_{page}"))
 
     # Add refresh button
     buttons.append([InlineKeyboardButton("Refresh 🔄 (100 tokens)", callback_data="nav_refresh")])
@@ -143,6 +138,7 @@ async def callback_query_handler(_, query: CallbackQuery):
         await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': -REFRESH_COST}})
         waifus = await get_waifus_with_different_rarities()
         sessions[user_id] = {"waifus": waifus, "page": 0}
+        page = 0
         text, media, buttons = await generate_waifu_message(waifus, page)
         await query.message.edit_media(media=media[0])
         await query.message.edit_caption(caption=text, reply_markup=InlineKeyboardMarkup(buttons))
