@@ -7,7 +7,7 @@ from shivu import user_collection, collection
 from shivu import shivuu as app
 
 WAIFU_PER_PAGE = 3
-RARITIES = ['🔮 Limited Edition', '🟡 Legendary']
+RARITIES = ['🔮 Limited Edition', '🟡 Legendary', '🫧 Premium']
 ALLOWED_GROUP_ID = -1002104939708
 
 sessions = {}
@@ -34,6 +34,8 @@ def generate_waifu_price(rarity):
         return 50000
     elif rarity == '🟡 Legendary':
         return 30000
+    elif rarity == '💎 Premium':
+        return 70000  # Price for Premium rarity
     else:
         return 5000
 
