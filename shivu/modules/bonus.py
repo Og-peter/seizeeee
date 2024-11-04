@@ -75,7 +75,7 @@ async def claim_reward(update: Update, context: CallbackContext):
     )
 
     # Send an animated sticker to celebrate the reward
-    await message.reply_sticker("CAACAgUAAx0CaYJXkAACDfhjPVg7KWbBT2g44lRtiN24JpzNaQACcwcAAiRO8VXjkW9AnnwsLSoE")  # Replace with the actual sticker ID
+    await message.reply_sticker("CAACAgIAAxkBAAIBIGco7pa-tLx0N3s5S-7QxNPrFtl6AALlKwACYwr5Sc3JkOBizG1-HgQ")  # Replace with the actual sticker ID
     await message.reply_html(
         "🎉 <b>Welcome Again, Champion! 😎</b>\n\n"
         "🙌 <b>Sorry for being inactive for soooo long, but here's a special bonus for you! 😪</b>\n\n"
