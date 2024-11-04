@@ -1,5 +1,5 @@
 from datetime import datetime
-import randoms
+import random
 import asyncio
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ParseMode
