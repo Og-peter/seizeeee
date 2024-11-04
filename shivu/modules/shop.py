@@ -61,10 +61,14 @@ async def generate_waifu_message(waifus, page):
     media.append(InputMediaPhoto(media=img_url, caption="Loading..."))
 
     # Pagination buttons
+    pagination_buttons = []
     if page > 0:
-        buttons.append([InlineKeyboardButton("⬅️ Prev", callback_data=f"nav_prev_{page}")])
+        pagination_buttons.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"nav_prev_{page - 1}"))
     if page < len(waifus) - 1:
-        buttons[-1].append(InlineKeyboardButton("Next ➡️", callback_data=f"nav_next_{page}"))
+        pagination_buttons.append(InlineKeyboardButton("Next ➡️", callback_data=f"nav_next_{page + 1}"))
+
+    if pagination_buttons:
+        buttons.append(pagination_buttons)
 
     # Add refresh button
     buttons.append([InlineKeyboardButton("Refresh 🔄 (100 tokens)", callback_data="nav_refresh")])
