@@ -55,6 +55,7 @@ async def sell(update, context):
 
     rarity = character.get('rarity', 'Unknown Rarity')
     coin_value = rarity_coin_mapping.get(rarity, 0)
+    image_url = character.get('image_url', '')
 
     if coin_value == 0:
         await update.message.reply_text('❌ Invalid rarity. Cannot determine the coin value.')
@@ -75,7 +76,7 @@ async def sell(update, context):
 
     # Ask for confirmation to sell the character
     confirmation_text = (
-        "╭─── Sell Confirmation ───\n"
+        f"╭─── Sell Confirmation ───\n"
         f"| Character Name: {character['name']}\n"
         f"| Rarity: {rarity}\n"
         f"| Coin Value: {coin_value} 💰\n"
@@ -88,7 +89,10 @@ async def sell(update, context):
     ]
 
     await update.message.reply_text(animation_message)
-    await update.message.reply_text(confirmation_text, reply_markup=InlineKeyboardMarkup(buttons))
+    if image_url:
+        await update.message.reply_photo(photo=image_url, caption=confirmation_text, reply_markup=InlineKeyboardMarkup(buttons))
+    else:
+        await update.message.reply_text(confirmation_text, reply_markup=InlineKeyboardMarkup(buttons))
 
 async def handle_callback_query(update, context):
     query = update.callback_query
@@ -121,6 +125,7 @@ async def handle_callback_query(update, context):
         
     elif data == "cancel_sell":
         await query.message.reply_text("❌ Sell canceled.")
+        await query.answer()  # Close the popup
 
 sell_handler = CommandHandler("sell", sell, block=False)
 application.add_handler(sell_handler)
