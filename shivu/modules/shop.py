@@ -103,18 +103,40 @@ async def callback_query_handler(_, query: CallbackQuery):
     elif data.startswith("buy_"):
         _, waifu_id, price = data.split("_")
         price = int(price)
+        
+        # Show confirm and cancel options
+        confirm_buttons = [
+            [InlineKeyboardButton("Confirm ✅", callback_data=f"confirm_{waifu_id}_{price}")],
+            [InlineKeyboardButton("Cancel ❌", callback_data="cancel")]
+        ]
+        await query.message.edit_caption(
+            caption=f"Are you sure you want to buy this character for {price} tokens?",
+            reply_markup=InlineKeyboardMarkup(confirm_buttons)
+        )
+        return
+    elif data.startswith("confirm_"):
+        _, waifu_id, price = data.split("_")
+        price = int(price)
+
         if user['tokens'] < price:
             await query.message.edit_caption("Insufficient tokens.")
             return
         if any(char['id'] == waifu_id for char in user['characters']):
             await query.message.edit_caption("Character already owned.")
             return
+        
         waifu = next((w for w in waifus if w['id'] == waifu_id), None)
-        await user_collection.update_one({'id': user_id}, {'$push': {'characters': waifu}, '$inc': {'tokens': -price}})
+        await user_collection.update_one(
+            {'id': user_id},
+            {'$push': {'characters': waifu}, '$inc': {'tokens': -price}}
+        )
         await query.message.edit_caption("Purchase confirmed ✅")
         return
-    elif data.startswith("cancel"):
-        page = user.get("page", 0)
+    elif data == "cancel":
+        # Return to waifu list if the purchase is canceled
+        text, media, buttons = await generate_waifu_message(waifus, page)
+        await query.message.edit_media(media=media[0])
+        await query.message.edit_caption(caption=text, reply_markup=InlineKeyboardMarkup(buttons))
     
     text, media, buttons = await generate_waifu_message(waifus, page)
     await query.message.edit_media(media=media[0])
