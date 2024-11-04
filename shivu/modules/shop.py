@@ -9,6 +9,7 @@ from shivu import shivuu as app
 WAIFU_PER_PAGE = 3
 RARITIES = ['🔮 Limited Edition', '🟡 Legendary', '🫧 Premium']
 ALLOWED_GROUP_ID = -1002104939708
+REFRESH_COST = 100
 
 sessions = {}
 
@@ -34,7 +35,7 @@ def generate_waifu_price(rarity):
         return 50000
     elif rarity == '🟡 Legendary':
         return 30000
-    elif rarity == '💎 Premium':
+    elif rarity == '🫧 Premium':
         return 70000  # Price for Premium rarity
     else:
         return 5000
@@ -69,6 +70,11 @@ async def generate_waifu_message(waifus, page):
             InlineKeyboardButton("⬅️ Prev", callback_data=f"prev_{page}"),
             InlineKeyboardButton("Next ➡️", callback_data=f"next_{page}")
         ])
+
+    # Add a Refresh button
+    buttons.append([
+        InlineKeyboardButton("Refresh 🔄 (100 tokens)", callback_data="refresh")
+    ])
 
     return text, media, buttons
 
@@ -141,6 +147,25 @@ async def callback_query_handler(_, query: CallbackQuery):
         if page < 0:
             page = 0
         sessions[user_id]["page"] = page
+    elif data == "refresh":
+        # Handle refresh functionality
+        user = await user_collection.find_one({'id': user_id})
+        if user['tokens'] < REFRESH_COST:
+            await query.answer("Insufficient tokens for refresh.", show_alert=True)
+            return
+
+        # Deduct tokens and refresh waifus
+        await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': -REFRESH_COST}})
+        waifus = await get_waifus_with_different_rarities()
+        sessions[user_id] = {"waifus": waifus, "page": 0}
+
+        # Generate refreshed message
+        page = 0
+        text, media, buttons = await generate_waifu_message(waifus, page)
+        await query.message.edit_media(media=media[0])
+        await query.message.edit_caption(caption=text, reply_markup=InlineKeyboardMarkup(buttons))
+        await query.answer("Waifus refreshed!")
+        return
     elif data.startswith("buy_"):
         _, waifu_id, price = data.split("_")
         buttons = [
