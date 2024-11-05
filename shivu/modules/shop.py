@@ -130,9 +130,9 @@ async def callback_query_handler(_, query: CallbackQuery):
         await query.answer("Characters refreshed!")
 
     elif "buy_" in data or "sell_" in data:
-    action_type, character_id, price = data.split("_")
-    price = int(price)
-    user = await user_collection.find_one({'id': user_id})
+        action_type, character_id, price = data.split("_")
+        price = int(price)
+        user = await user_collection.find_one({'id': user_id})
 
     # Get the username from the user data
     username = user.get('username', 'User')
