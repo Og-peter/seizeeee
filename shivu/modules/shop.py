@@ -93,6 +93,7 @@ async def callback_query_handler(_, query: CallbackQuery):
     data = query.data
 
     if "next_" in data or "prev_" in data:
+        # Handle pagination
         action_type = "buy" if "buy" in data else "sell"
         page = int(data.split("_")[1]) + (1 if "next_" in data else -1)
         
@@ -108,6 +109,7 @@ async def callback_query_handler(_, query: CallbackQuery):
         await query.message.edit_caption(caption=text, reply_markup=InlineKeyboardMarkup(buttons))
 
     elif "refresh" in data:
+        # Handle refresh
         action_type = "buy" if "buy" in data else "sell"
         user = await user_collection.find_one({'id': user_id})
         
@@ -143,6 +145,20 @@ async def callback_query_handler(_, query: CallbackQuery):
             await query.answer("Character purchased successfully!")
             await query.message.delete()
 
+            # Send DM with character details
+            character = next((char for char in await get_random_characters(collection, {'id': character_id}) if char['id'] == character_id), None)
+            if character:
+                dm_text = (
+                    f"You have successfully purchased:\n\n"
+                    f"╭──\n"
+                    f"| ➩ Name: {character['name']}\n"
+                    f"| ➩ ID: {character['id']}\n"
+                    f"| ➩ Anime: {character['anime']}\n"
+                    f"▰▱▰▱▰▱▰▱▰▱\n"
+                    f"| Price: {price} tokens\n"
+                )
+                await app.send_photo(user_id, photo=character['img_url'], caption=dm_text)
+
         elif action_type == "sell":
             # Check if character exists in user's collection
             if any(char['id'] == character_id for char in user['characters']):
@@ -150,6 +166,20 @@ async def callback_query_handler(_, query: CallbackQuery):
                 await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': price}, '$pull': {'characters': {'id': character_id}}})
                 await query.answer("Character sold successfully!")
                 await query.message.delete()
+
+                # Send DM with character details
+                character = next((char for char in user['characters'] if char['id'] == character_id), None)
+                if character:
+                    dm_text = (
+                        f"You have successfully sold:\n\n"
+                        f"╭──\n"
+                        f"| ➩ Name: {character['name']}\n"
+                        f"| ➩ ID: {character['id']}\n"
+                        f"| ➩ Anime: {character['anime']}\n"
+                        f"▰▱▰▱▰▱▰▱▰▱\n"
+                        f"| Price: {price} tokens\n"
+                    )
+                    await app.send_photo(user_id, photo=character['img_url'], caption=dm_text)
             else:
                 await query.answer("Character not found in your collection.", show_alert=True)
 
