@@ -151,7 +151,11 @@ def calculate_sale_value(rarity: str) -> int:
     }
     # Normalize the input to ensure it matches the dictionary keys
     rarity = character.get('rarity', 'Unknown Rarity')
-    coin_value = rarity_coin_mapping.get(rarity, 0)
+    sale_value = calculate_sale_value(rarity)
 
-    if coin_value == 0:
-    await update.message.reply_text('❌ Invalid rarity. Cannot determine the coin value.')
+    if sale_value == 0:
+        await message.reply_text('❌ Invalid rarity. Cannot determine the coin value.')
+    else:
+    # Proceed with the logic when the rarity is valid
+    # For example, update user balance or send a success message
+        pass
