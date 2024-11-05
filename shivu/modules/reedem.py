@@ -28,14 +28,14 @@ def format_amount(amount):
 async def gen(client, message):
     sudo_user_id = 6402009857  # Example sudo user
     if message.from_user.id != sudo_user_id:
-        await message.reply_text("🚫 Sumimasen, but only the chosen ones can use this power.")
+        await message.reply_text("🚫 sᴜᴍɪᴍᴀsᴇɴ, ʙᴜᴛ ᴏɴʟʏ ᴛʜᴇ ᴄʜᴏsᴇɴ ᴏɴᴇs ᴄᴀɴ ᴜsᴇ ᴛʜɪs ᴘᴏᴡᴇʀ.")
         return
     
     try:
         amount = float(message.command[1])  # Get the amount from the command
         quantity = int(message.command[2])  # Get the quantity from the command
     except (IndexError, ValueError):
-        await message.reply_text("😅 Gomenasai! Invalid input. Try `/gen 10000000 5`")
+        await message.reply_text("😅 ɢᴏᴍsɴᴀsᴀɪ! ɪɴᴠᴀʟɪᴅ ɪɴᴘᴜᴛ. ᴛʀʏ `/gen 10000000 5`")
         return
     
     # Generate a random code
@@ -47,7 +47,7 @@ async def gen(client, message):
     formatted_amount = format_amount(amount)
     
     await message.reply_text(
-        f"✨ Konnichiwa! 🌸 Your special code is here:\n`{code}`\n💰 Amount: Ŧ `{formatted_amount}`\n📦 Quantity: `{quantity}`\nGood luck, and may your journey bring many rewards!"
+        f"✨ ᴋᴏɴɴɪᴄʜɪᴡᴀ! 🌸 ʏᴏᴜʀ sᴘᴇᴄɪᴀʟ ᴄᴏᴅᴇ ɪs ʜᴇʀᴇ:\n`{code}`\n💰 ᴀᴍᴏᴜɴᴛ: Ŧ `{formatted_amount}`\n📦 ǫʏᴀɴᴛɪᴛʏ: `{quantity}`\n ᴜsᴇ /redeem {code} \n ɢᴏᴏᴅ ʟᴜᴄᴋ, ᴀɴᴅ ᴍᴀʏ ʏᴏᴜʀ ᴊᴏᴜʀɴᴇʏ ʙʀɪɴɢ ᴍᴀɴʏ ʀᴇᴡᴀʀᴅs!"
     )
 
 # Redeem generated codes and update tokens
@@ -61,12 +61,12 @@ async def redeem(client, message):
         
         # Check if the user has already claimed this code
         if user_id in code_info['claimed_by']:
-            await message.reply_text("😅 Ah, you’ve already claimed this gift. No need to be greedy!")
+            await message.reply_text("😅 ᴀʜ, ʏᴏᴜ’ᴠᴇ ᴀʟʀᴇᴀᴅʏ ᴄʟᴀɪᴍᴇᴅ ᴛʜɪs. ɴᴏ ɴᴇᴇᴅ ᴛᴏ ʙᴇ ɢʀᴇᴇᴅʏ!")
             return
         
         # Check if there are claims remaining for the code
         if len(code_info['claimed_by']) >= code_info['quantity']:
-            await message.reply_text("😮 Omoshiroi! This code has been fully claimed by others.")
+            await message.reply_text("😮 ᴏᴍᴏsʜɪʀᴏɪ! ᴛʜɪs ᴄᴏᴅᴇ ʜᴀs ʙᴇᴇɴ ғᴜʟʟʏ ᴄʟᴀɪᴍᴇᴅ ʙʏ ᴏᴛʜᴇʀs.")
             return
         
         # Update the user's tokens
@@ -81,7 +81,7 @@ async def redeem(client, message):
         formatted_amount = format_amount(code_info['amount'])
         
         await message.reply_text(
-            f"🎉 Arigato! Successfully redeemed! Ŧ `{formatted_amount}` tokens have been added to your balance. Keep going, hero! 💪"
+            f"🎉 ʜᴇʏʏᴀ! sᴜᴄᴄᴇssғᴜʟʟʏ ʀᴇᴅᴇᴇᴍᴇᴅ! Ŧ `{formatted_amount}` ᴛᴏᴋᴇɴs ʜᴀᴠᴇ ʙᴇᴇɴ ᴀᴅᴅᴇᴅ ʏᴏᴜʀ ʙᴀʟᴀɴᴄᴇ ᴜsᴇ /tokens ᴛᴏ ᴄʜᴇᴄᴋ ʏᴏᴜʀ ʙᴀʟᴀɴᴄᴇ. ᴋᴇᴇᴘ ɢᴏɪɴɢ, sᴀɴ! 💪"
         )
     else:
         await message.reply_text("💔 Oh no, that code doesn’t exist in this realm. Try again!")
@@ -112,8 +112,8 @@ async def waifugen(client, message):
     generated_waifus[code] = {'waifu': waifu, 'quantity': quantity}
     
     response_text = (
-        f"🌸 Your Waifu Code has arrived!\n`{code}`\n"
-        f"💖 Name: {waifu['name']}\n🌟 Rarity: {waifu['rarity']}\n📦 Quantity: {quantity}\nSummon her with honor! 🥀"
+        f"🌋 ʏᴏᴜʀ ᴡᴀɪғᴜ ᴄᴏᴅᴇ ʜᴀs ᴀʀʀɪᴠᴇᴅ!\n`{code}`\n\n"
+        f"✨ ɴᴀᴍᴇ: {waifu['name']}\n\n🥂 ʀᴀʀɪᴛʏ: {waifu['rarity']}\n\n☃️ ǫᴜᴀɴᴛɪᴛʏ: {quantity}\n\nsᴜᴍᴍᴏɴ ʜᴇʀ ᴡɪᴛʜ /wredeem {code}! 🥀"
     )
     
     await message.reply_text(response_text)
@@ -145,11 +145,11 @@ async def claimwaifu(client, message):
                 del generated_waifus[code]
             
             response_text = (
-                f"🎊 Yatta! {user_mention}, you have received a new companion! 🌸\n"
-                f"💖 Name: {waifu['name']}\n"
-                f"🌟 Rarity: {waifu['rarity']}\n"
-                f"📺 Anime: {waifu['anime']}\n"
-                "May she bring you strength and fortune! 💫"
+                f"⚜️ ᴏᴡᴏ! {user_mention}, ʏᴏᴜ ʜᴀᴠᴇ ʀᴇᴄᴇɪᴠᴇᴅ ᴀ ɴᴇᴡ ᴄᴏᴍᴘᴀɴɪᴏɴ! 🌸\n\n"
+                f"🥂 ɴᴀᴍᴇ: {waifu['name']}\n\n"
+                f"❄️ ʀᴀʀɪᴛʏ: {waifu['rarity']}\n\n"
+                f"⛩️ ᴀɴɪᴍᴇ: {waifu['anime']}\n\n"
+                "ᴍᴀʏ sʜᴇ ʙʀɪɴɢ ʏᴏᴜ sᴛʀᴇɴɢᴛʜ ᴀɴᴅ ғᴏʀᴛᴜɴᴇ! 💫"
             )
             await message.reply_photo(photo=waifu['img_url'], caption=response_text)
         else:
