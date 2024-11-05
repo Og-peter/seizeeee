@@ -60,17 +60,17 @@ async def sell(client: Client, message):
     confirmation_message = await message.reply_photo(
         photo=character['img_url'],
         caption=(
-            f"💸 **ᴀʀᴇ ʏᴏᴜ sᴜʀᴇ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ sᴇʟʟ ᴛʜɪs ᴄʜᴀʀᴀᴄᴛᴇʀ?** 💸\n\n"
-            f"🫧 **ɴᴀᴍᴇ:** `{character.get('name', 'Unknown Name')}`\n"
-            f"⛩️ **ᴀɴɪᴍᴇ:** `{character.get('anime', 'Unknown Anime')}`\n"
-            f"🥂 **ʀᴀʀɪᴛʏ:** {rarity_emoji} `{rarity_display}`\n"
-            f"💰 **ᴄᴏɪɴ ᴠᴀʟᴜᴇ:** `{sale_value} coins`\n\n"
-            "⚜️ **ᴄʜᴏᴏsᴇ ᴀɴ ᴏᴘᴛɪᴏɴ:**"
+            f"💸 **Are you sure you want to sell this character?** 💸\n\n"
+            f"🫧 **Name:** `{character.get('name', 'Unknown Name')}`\n"
+            f"⛩️ **Anime:** `{character.get('anime', 'Unknown Anime')}`\n"
+            f"🥂 **Rarity:** {rarity_emoji} `{rarity_display}`\n"
+            f"💰 **Coin Value:** `{sale_value} coins`\n\n"
+            "⚜️ **Choose an option:**"
         ),
         reply_markup=InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("🟢 ᴄᴏɴғɪʀᴍ", callback_data=f"sell_yes_{character_id}_{sale_value}"),
-                InlineKeyboardButton("🔴 ᴄᴀɴᴄᴇʟ", callback_data=f"sell_no_{character_id}")
+                InlineKeyboardButton("🟢 Confirm", callback_data=f"sell_yes_{character_id}_{sale_value}"),
+                InlineKeyboardButton("🔴 Cancel", callback_data=f"sell_no_{character_id}")
             ]
         ])
     )
@@ -111,7 +111,7 @@ async def handle_sell_confirmation(client: Client, callback_query):
         await user_collection.update_one(
             {'id': user_id},
             {
-                '$pull': {'characters': {'id': character_id}}, 
+                '$pull': {'characters': {'id': int(character_id)}}, 
                 '$inc': {'balance': sale_value, 'tokens': sale_value}  # Add tokens equal to sale value
             }
         )
@@ -119,16 +119,16 @@ async def handle_sell_confirmation(client: Client, callback_query):
         # Notify user of successful sale
         await callback_query.message.edit_caption(
             caption=(
-                f"{random.choice(SUCCESS_EMOJIS)} **ᴄᴏɴɢʀᴀᴛs!** "
-                f"ʏᴏᴜ'ᴠᴇ sᴏʟᴅ `{character.get('name', 'Unknown Name')}` ғᴏʀ `{sale_value}` ᴄᴏɪɴs "
-                f"ᴀɴᴅ ʀᴇᴄᴇɪᴠᴇᴅ `{sale_value}` ᴛᴏᴋᴇɴs!"
+                f"{random.choice(SUCCESS_EMOJIS)} **Congrats!** "
+                f"You've sold `{character.get('name', 'Unknown Name')}` for `{sale_value}` coins "
+                f"and received `{sale_value}` tokens!"
             ),
             reply_markup=None  # Disable buttons after confirmation
         )
 
     elif action == "no":
         await callback_query.message.edit_caption(
-            caption=f"{random.choice(CANCEL_EMOJIS)} **ᴏᴘᴇʀᴀᴛɪᴏɴ ᴄᴀɴᴄᴇʟʟᴇᴅ.**",
+            caption=f"{random.choice(CANCEL_EMOJIS)} **Operation cancelled.**",
             reply_markup=None  # Disable buttons after cancellation
         )
 
@@ -149,8 +149,4 @@ def calculate_sale_value(rarity: str) -> int:
         '𝘼𝙎𝙏𝙍𝘼𝙇': 50000,
         '𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀': 60000
     }
-    # Normalize the input to ensure it matches the dictionary keys
-    rarity = character.get('rarity', 'Unknown Rarity')
-    sale_value = calculate_sale_value(rarity)
-
-    if sale_value == 0:
+    return rarity_coin_mapping.get(rarity, 0)
