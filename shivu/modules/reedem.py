@@ -47,7 +47,7 @@ async def gen(client, message):
     formatted_amount = format_amount(amount)
     
     await message.reply_text(
-        f"✨ ᴋᴏɴɴɪᴄʜɪᴡᴀ! 🌸 ʏᴏᴜʀ sᴘᴇᴄɪᴀʟ ᴄᴏᴅᴇ ɪs ʜᴇʀᴇ:\n`{code}`\n💰 ᴀᴍᴏᴜɴᴛ: Ŧ `{formatted_amount}`\n📦 ǫʏᴀɴᴛɪᴛʏ: `{quantity}`\n ᴜsᴇ /redeem {code} \n ɢᴏᴏᴅ ʟᴜᴄᴋ, ᴀɴᴅ ᴍᴀʏ ʏᴏᴜʀ ᴊᴏᴜʀɴᴇʏ ʙʀɪɴɢ ᴍᴀɴʏ ʀᴇᴡᴀʀᴅs!"
+        f"✨ ᴋᴏɴɴɪᴄʜɪᴡᴀ! 🌸 ʏᴏᴜʀ sᴘᴇᴄɪᴀʟ ᴄᴏᴅᴇ ɪs ʜᴇʀᴇ:\n`{code}`\n💰 ᴀᴍᴏᴜɴᴛ: Ŧ `{formatted_amount}`\n📦 ǫʏᴀɴᴛɪᴛʏ: `{quantity}`\n ᴜsᴇ `/redeem {code}`\n ɢᴏᴏᴅ ʟᴜᴄᴋ, ᴀɴᴅ ᴍᴀʏ ʏᴏᴜʀ ᴊᴏᴜʀɴᴇʏ ʙʀɪɴɢ ᴍᴀɴʏ ʀᴇᴡᴀʀᴅs!"
     )
 
 # Redeem generated codes and update tokens
@@ -81,7 +81,7 @@ async def redeem(client, message):
         formatted_amount = format_amount(code_info['amount'])
         
         await message.reply_text(
-            f"🎉 ʜᴇʏʏᴀ! sᴜᴄᴄᴇssғᴜʟʟʏ ʀᴇᴅᴇᴇᴍᴇᴅ! Ŧ `{formatted_amount}` ᴛᴏᴋᴇɴs ʜᴀᴠᴇ ʙᴇᴇɴ ᴀᴅᴅᴇᴅ ʏᴏᴜʀ ʙᴀʟᴀɴᴄᴇ ᴜsᴇ /tokens ᴛᴏ ᴄʜᴇᴄᴋ ʏᴏᴜʀ ʙᴀʟᴀɴᴄᴇ. ᴋᴇᴇᴘ ɢᴏɪɴɢ, sᴀɴ! 💪"
+            f"🎉 ʜᴇʏʏᴀ! sᴜᴄᴄᴇssғᴜʟʟʏ ʀᴇᴅᴇᴇᴍᴇᴅ! Ŧ `{formatted_amount}`\nᴛᴏᴋᴇɴs ʜᴀᴠᴇ ʙᴇᴇɴ ᴀᴅᴅᴇᴅ ʏᴏᴜʀ ʙᴀʟᴀɴᴄᴇ ᴜsᴇ /tokens ᴛᴏ ᴄʜᴇᴄᴋ ʏᴏᴜʀ ʙᴀʟᴀɴᴄᴇ. ᴋᴇᴇᴘ ɢᴏɪɴɢ, sᴀɴ! 💪"
         )
     else:
         await message.reply_text("💔 Oh no, that code doesn’t exist in this realm. Try again!")
@@ -113,7 +113,7 @@ async def waifugen(client, message):
     
     response_text = (
         f"🌋 ʏᴏᴜʀ ᴡᴀɪғᴜ ᴄᴏᴅᴇ ʜᴀs ᴀʀʀɪᴠᴇᴅ!\n`{code}`\n\n"
-        f"✨ ɴᴀᴍᴇ: {waifu['name']}\n\n🥂 ʀᴀʀɪᴛʏ: {waifu['rarity']}\n\n☃️ ǫᴜᴀɴᴛɪᴛʏ: {quantity}\n\nsᴜᴍᴍᴏɴ ʜᴇʀ ᴡɪᴛʜ /wredeem {code}! 🥀"
+        f"✨ ɴᴀᴍᴇ: {waifu['name']}\n\n🥂 ʀᴀʀɪᴛʏ: {waifu['rarity']}\n\n☃️ ǫᴜᴀɴᴛɪᴛʏ: {quantity}\n\nsᴜᴍᴍᴏɴ ʜᴇʀ ᴡɪᴛʜ `/wredeem {code}`! 🥀"
     )
     
     await message.reply_text(response_text)
@@ -146,9 +146,9 @@ async def claimwaifu(client, message):
             
             response_text = (
                 f"⚜️ ᴏᴡᴏ! {user_mention}, ʏᴏᴜ ʜᴀᴠᴇ ʀᴇᴄᴇɪᴠᴇᴅ ᴀ ɴᴇᴡ ᴄᴏᴍᴘᴀɴɪᴏɴ! 🌸\n\n"
-                f"🥂 ɴᴀᴍᴇ: {waifu['name']}\n\n"
-                f"❄️ ʀᴀʀɪᴛʏ: {waifu['rarity']}\n\n"
-                f"⛩️ ᴀɴɪᴍᴇ: {waifu['anime']}\n\n"
+                f"🥂 ɴᴀᴍᴇ: {waifu['name']}\n"
+                f"❄️ ʀᴀʀɪᴛʏ: {waifu['rarity']}\n"
+                f"⛩️ ᴀɴɪᴍᴇ: {waifu['anime']}\n"
                 "ᴍᴀʏ sʜᴇ ʙʀɪɴɢ ʏᴏᴜ sᴛʀᴇɴɢᴛʜ ᴀɴᴅ ғᴏʀᴛᴜɴᴇ! 💫"
             )
             await message.reply_photo(photo=waifu['img_url'], caption=response_text)
