@@ -107,17 +107,21 @@ async def handle_sell_confirmation(client: Client, callback_query):
 
     # Handle "yes" or "no" action
     if action == "yes":
-        # Remove character from user's collection and add coins
+        # Remove character from user's collection and add tokens to balance
         await user_collection.update_one(
             {'id': user_id},
-            {'$pull': {'characters': {'id': character_id}}, '$inc': {'balance': sale_value}}
+            {
+                '$pull': {'characters': {'id': character_id}}, 
+                '$inc': {'balance': sale_value, 'tokens': sale_value}  # Add tokens equal to sale value
+            }
         )
 
         # Notify user of successful sale
         await callback_query.message.edit_caption(
             caption=(
                 f"{random.choice(SUCCESS_EMOJIS)} **ᴄᴏɴɢʀᴀᴛs!** "
-                f"ʏᴏᴜ'ᴠᴇ sᴏʟᴅ `{character.get('name', 'Unknown Name')}` ғᴏʀ `{sale_value}` ᴄᴏɪɴs!"
+                f"ʏᴏᴜ'ᴠᴇ sᴏʟᴅ `{character.get('name', 'Unknown Name')}` ғᴏʀ `{sale_value}` ᴄᴏɪɴs "
+                f"ᴀɴᴅ ʀᴇᴄᴇɪᴠᴇᴅ `{sale_value}` ᴛᴏᴋᴇɴs!"
             ),
             reply_markup=None  # Disable buttons after confirmation
         )
