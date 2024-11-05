@@ -154,4 +154,3 @@ def calculate_sale_value(rarity: str) -> int:
     sale_value = calculate_sale_value(rarity)
 
     if sale_value == 0:
-       
