@@ -131,6 +131,14 @@ async def claimwaifu(client, message):
     if code in generated_waifus:
         details = generated_waifus[code]
         
+        # Initialize or check the user's claim count for the waifu code
+        user_claim_count = details.get('claimed_by', {}).get(user_id, 0)
+        
+        # Limit to 2 redemptions per user
+        if user_claim_count >= 2:
+            await message.reply_text("😅 You've already claimed this waifu code twice. No more waifu for you!")
+            return
+        
         if details['quantity'] > 0:
             waifu = details['waifu']
             
@@ -142,6 +150,9 @@ async def claimwaifu(client, message):
             
             # Decrement the remaining quantity
             details['quantity'] -= 1
+            
+            # Increment the user's claim count and track in claimed_by dictionary
+            details.setdefault('claimed_by', {})[user_id] = user_claim_count + 1
             
             # Remove the code if its quantity is 0
             if details['quantity'] == 0:
