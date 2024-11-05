@@ -1,15 +1,13 @@
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from shivu import shivuu as app, user_collection
-import logging
 import random
 
-# Emoji animations for a more engaging user experience
+# Emoji animations for added engagement
 ANIMATED_EMOJIS = ['✨', '🎉', '💫', '🌟', '🔥', '🌀', '🎇', '💖', '🎆', '💥', '🌈']
 SUCCESS_EMOJIS = ['✅', '✔️', '🆗', '🎯', '🏅']
 CANCEL_EMOJIS = ['❌', '🚫', '⚠️', '🔴', '🚷']
 
-# Dictionary for rarity emojis and colors
 RARITY_EMOJIS = {
     '𝘾𝙊𝙈𝙈𝙊𝙉': ('⚪️', 'Common'),
     '𝙈𝙀𝘿𝙄𝙐𝙈': ('🔵', 'Medium'),
@@ -24,16 +22,16 @@ RARITY_EMOJIS = {
     '𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀': ('💞', 'Valentine')
 }
 
-@app.on_message(filters.command("sell"))
-async def sell(client: Client, message):
+@app.on_message(filters.command("buy"))
+async def buy(client: Client, message):
     user_id = message.from_user.id
 
     # Check if command has a character ID
     if len(message.command) < 2:
         await message.reply_text(
             f'{random.choice(CANCEL_EMOJIS)} **Invalid usage!**\n'
-            f'Use `/sell (waifu_id)` to sell a waifu.\n'
-            f'**Example:** `/sell 32`.'
+            f'Use `/buy (waifu_id)` to buy a waifu.\n'
+            f'**Example:** `/buy 15`.'
         )
         return
 
@@ -41,119 +39,117 @@ async def sell(client: Client, message):
 
     # Fetch user data from database
     user = await user_collection.find_one({'id': user_id})
-    if not user or 'characters' not in user:
-        await message.reply_text('😔 **You haven\'t seized any characters yet!**')
+    if not user:
+        await message.reply_text('😔 **You need to start your collection first!**')
         return
 
-    # Find the character in user's collection
-    character = next((c for c in user['characters'] if str(c.get('id')) == character_id), None)
+    # Check if user already owns the character
+    if any(str(c.get('id')) == character_id for c in user.get('characters', [])):
+        await message.reply_text('🤔 **You already own this character!**')
+        return
+
+    # Fetch character details from some external data source (example dictionary here)
+    character = await fetch_character_data(character_id)
     if not character:
-        await message.reply_text('🙄 **This character is not in your harem!**')
+        await message.reply_text('😞 **Character not found.**')
         return
 
-    # Calculate sale value based on rarity
+    # Calculate cost based on rarity
     rarity = character.get('rarity', 'Common')
     rarity_emoji, rarity_display = RARITY_EMOJIS.get(rarity, ('', rarity))
-    sale_value = calculate_sale_value(rarity)
+    cost = calculate_buy_cost(rarity)
 
-    # Send character photo with confirmation message and inline buttons
+    # Send confirmation message with inline buttons
     confirmation_message = await message.reply_photo(
         photo=character['img_url'],
         caption=(
-            f"💸 **ᴀʀᴇ ʏᴏᴜ sᴜʀᴇ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ sᴇʟʟ ᴛʜɪs ᴄʜᴀʀᴀᴄᴛᴇʀ?** 💸\n\n"
+            f"🛍️ **ᴄᴏɴғɪʀᴍ ʏᴏᴜʀ ᴘᴜʀᴄʜᴀsᴇ** 🛍️\n\n"
             f"🫧 **ɴᴀᴍᴇ:** `{character.get('name', 'Unknown Name')}`\n"
             f"⛩️ **ᴀɴɪᴍᴇ:** `{character.get('anime', 'Unknown Anime')}`\n"
             f"🥂 **ʀᴀʀɪᴛʏ:** {rarity_emoji} `{rarity_display}`\n"
-            f"💰 **ᴄᴏɪɴ ᴠᴀʟᴜᴇ:** `{sale_value} coins`\n\n"
+            f"💰 **ᴄᴏsᴛ:** `{cost} tokens`\n\n"
             "⚜️ **ᴄʜᴏᴏsᴇ ᴀɴ ᴏᴘᴛɪᴏɴ:**"
         ),
         reply_markup=InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("🟢 ᴄᴏɴғɪʀᴍ", callback_data=f"sell_yes_{character_id}_{sale_value}"),
-                InlineKeyboardButton("🔴 ᴄᴀɴᴄᴇʟ", callback_data=f"sell_no_{character_id}")
+                InlineKeyboardButton("🟢 ᴄᴏɴғɪʀᴍ", callback_data=f"buy_yes_{character_id}_{cost}"),
+                InlineKeyboardButton("🔴 ᴄᴀɴᴄᴇʟ", callback_data=f"buy_no_{character_id}")
             ]
         ])
     )
 
     # Store confirmation details for callback
-    app.user_data.setdefault("sell_confirmations", {})
-    app.user_data["sell_confirmations"][confirmation_message.message_id] = character_id
+    app.user_data.setdefault("buy_confirmations", {})
+    app.user_data["buy_confirmations"][confirmation_message.message_id] = character_id
 
-@app.on_callback_query(filters.regex(r"^sell_(yes|no)_.+"))
-async def handle_sell_confirmation(client: Client, callback_query):
+@app.on_callback_query(filters.regex(r"^buy_(yes|no)_.+"))
+async def handle_buy_confirmation(client: Client, callback_query):
     data_parts = callback_query.data.split("_")
 
     # Validate data format
     if len(data_parts) < 3:
-        logging.error("Invalid callback data format")
         await callback_query.answer("Invalid data received.")
         return
     
     action = data_parts[1]
     character_id = data_parts[2]
-    sale_value = int(data_parts[3]) if action == "yes" else 0  # Sale value only needed if confirmed
+    cost = int(data_parts[3]) if action == "yes" else 0  # Cost only relevant if confirmed
 
     user_id = callback_query.from_user.id
     user = await user_collection.find_one({'id': user_id})
-    if not user or 'characters' not in user:
-        await callback_query.answer("😔 **You haven't seized any characters yet.**")
-        return
-
-    character = next((c for c in user['characters'] if str(c.get('id')) == character_id), None)
-    if not character:
-        logging.error(f"Character ID {character_id} not found in user's collection.")
-        await callback_query.answer("🙄 **This character is not in your collection.**")
+    if not user:
+        await callback_query.answer("😔 **Start your collection first!**")
         return
 
     # Handle "yes" or "no" action
     if action == "yes":
-        # Remove character from user's collection and add coins
+        # Check if user has enough tokens
+        if user.get('tokens', 0) < cost:
+            await callback_query.answer("❌ **Not enough tokens!**")
+            return
+
+        # Fetch character details again for consistency
+        character = await fetch_character_data(character_id)
+        if not character:
+            await callback_query.answer("😞 **Character not found.**")
+            return
+
+        # Add character to user's collection and deduct tokens
         await user_collection.update_one(
             {'id': user_id},
-            {'$pull': {'characters': {'id': character_id}}, '$inc': {'balance': sale_value}}
+            {'$push': {'characters': character}, '$inc': {'tokens': -cost}}
         )
 
-        # Notify user of successful sale
+        # Notify user of successful purchase
         await callback_query.message.edit_caption(
             caption=(
-                f"{random.choice(SUCCESS_EMOJIS)} **ᴄᴏɴɢʀᴀᴛs!** "
-                f"ʏᴏᴜ'ᴠᴇ sᴏʟᴅ `{character.get('name', 'Unknown Name')}` ғᴏʀ `{sale_value}` ᴄᴏɪɴs!"
+                f"{random.choice(SUCCESS_EMOJIS)} **Congratulations!** "
+                f"You have successfully bought `{character.get('name', 'Unknown Name')}` "
+                f"for `{cost}` tokens."
             ),
             reply_markup=None  # Disable buttons after confirmation
         )
 
     elif action == "no":
         await callback_query.message.edit_caption(
-            caption=f"{random.choice(CANCEL_EMOJIS)} **ᴏᴘᴇʀᴀᴛɪᴏɴ ᴄᴀɴᴄᴇʟʟᴇᴅ.**",
+            caption=f"{random.choice(CANCEL_EMOJIS)} **Purchase cancelled.**",
             reply_markup=None  # Disable buttons after cancellation
         )
 
-    logging.info(f"User {user_id} handled sell confirmation successfully.")
-
-# Function to calculate sale value based on rarity
-def calculate_sale_value(rarity: str) -> int:
-    # Sale values based on rarity levels
-    sale_values = {
-        '𝘾𝙊𝙈𝙈𝙊𝙉': 2000,
-        '𝙈𝙀𝘿𝙄𝙐𝙈': 4000,
-        '𝘾𝙃𝙄𝘽𝙄': 10000,
-        '𝙍𝘼𝙍𝙀': 5000,
-        '𝙇𝙀𝙂𝙀𝙉𝘿𝘼𝙍𝙔': 30000,
-        '𝙀𝙓𝘾𝙇𝙐𝙎𝙄𝙑𝙀': 20000,
-        '𝙋𝙍𝙀𝙈𝙄𝙐𝙈': 25000,
-        '𝙇𝙄𝙈𝙄𝙏𝙀𝘿 𝙀𝘿𝙄𝙏𝙄𝙊𝙉': 40000,
-        '𝙀𝙓𝙊𝙏𝙄𝘾': 45000,
-        '𝘼𝙎𝙏𝙍𝘼𝙇': 50000,
-        '𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀': 60000
-    }
-
-    # Standardize the rarity format to match keys in sale_values
-    rarity = rarity.strip().upper()
-
-    # Get the sale value for the rarity or log if not found
-    sale_value = sale_values.get(rarity)
-    if sale_value is None:
-        logging.warning(f"Unknown rarity '{rarity}', defaulting to 1000 coins.")
-        sale_value = 1000  # Default to base value if rarity isn't recognized
-
-    return sale_value
+# Function to calculate buy cost based on rarity
+def calculate_buy_cost(rarity: str) -> int:
+    # Cost values based on rarity levels
+    cost_values = {
+        '𝘾𝙊𝙈𝙈𝙊𝙉': 1000,
+        '𝙈𝙀𝘿𝙄𝙐𝙈': 2000,
+        '𝘾𝙃𝙄𝘽𝙄': 5000,
+        '𝙍𝘼𝙍𝙀': 2500,
+        '𝙇𝙀𝙂𝙀𝙉𝘿𝘼𝙍𝙔': 15000,
+        '𝙀𝙓𝘾𝙇𝙐𝙎𝙄𝙑𝙀': 10000,
+        '𝙋𝙍𝙀𝙈𝙄𝙐𝙈': 12500,
+        '𝙇𝙄𝙈𝙄𝙏𝙀𝘿 𝙀𝘿𝙄𝙏𝙄𝙊𝙉': 20000,
+    '𝙀𝙓𝙊𝙏𝙄𝘾': 15000,
+    '𝘼𝙎𝙏𝙍𝘼𝙇': 25000,
+    '𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀': 30000
+}
+    return cost_values.get(rarity, 1000)  # Default cost for unknown rarity
