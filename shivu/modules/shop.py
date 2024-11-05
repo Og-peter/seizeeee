@@ -20,18 +20,18 @@ def calculate_price(rarity, sell=False):
     }.get(rarity, 5000)
     return int(base_price * 0.5) if sell else base_price
 
-# Shop Function: Get Random Characters
+# Generate Random Characters for Shop
 async def get_random_characters():
     characters = []
     for rarity in RARITIES:
-        pipeline = [
-            {'$match': {'rarity': rarity}},
-            {'$sample': {'size': 1}}
-        ]
-        cursor = item_collection.aggregate(pipeline)
-        fetched_chars = await cursor.to_list(length=None)
-        if fetched_chars:
-            characters.append(fetched_chars[0])
+        # Generate random character data instead of querying `item_collection`
+        character = {
+            'id': random.randint(1000, 9999),
+            'name': f"Random Character {random.randint(1, 100)}",
+            'rarity': rarity,
+            'img_url': f"https://dummyimage.com/300x300/000/fff&text={rarity.replace(' ', '+')}"
+        }
+        characters.append(character)
     return characters
 
 # Sell Function: Get User's Characters
