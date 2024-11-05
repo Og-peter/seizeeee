@@ -168,8 +168,8 @@ async def callback_query_handler(_, query: CallbackQuery):
                         f"| ➩ ⛩️ ᴀɴɪᴍᴇ: {character['anime']}\n"
                         f"▰▱▱▱▱▱▱▱▱▱▰\n"
                         f"| 🍃 sᴏʟᴅ ғᴏʀ: {price} ᴛᴏᴋᴇɴs\n"
-                   )
-                   await app.send_photo(user_id, photo=character['img_url'], caption=dm_text)
+                    )
+                    await app.send_photo(user_id, photo=character['img_url'], caption=dm_text)
             else:
                 await query.answer("Character not found in your collection.", show_alert=True)
 
