@@ -150,5 +150,8 @@ def calculate_sale_value(rarity: str) -> int:
         '𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀': 60000
     }
     # Normalize the input to ensure it matches the dictionary keys
-    rarity = rarity.strip()  # Remove any leading/trailing spaces
-    return sale_values.get(rarity, 0)
+    rarity = character.get('rarity', 'Unknown Rarity')
+    coin_value = rarity_coin_mapping.get(rarity, 0)
+
+    if coin_value == 0:
+        await update.message.reply_text('❌ Invalid rarity. Cannot determine the coin value.')
