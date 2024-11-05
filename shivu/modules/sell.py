@@ -1,17 +1,34 @@
-from telegram.ext import CommandHandler, CallbackQueryHandler
-from shivu import collection, user_collection, application
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from shivu import shivuu as app, user_collection
+import logging
 import random
-import time
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-# Cooldown dictionary to track user cooldowns
-cooldowns = {}
+# Emoji animations for a more engaging user experience
+ANIMATED_EMOJIS = ['✨', '🎉', '💫', '🌟', '🔥', '🌀', '🎇', '💖', '🎆', '💥', '🌈']
+SUCCESS_EMOJIS = ['✅', '✔️', '🆗', '🎯', '🏅']
+CANCEL_EMOJIS = ['❌', '🚫', '⚠️', '🔴', '🚷']
+
+# Dictionary for rarity emojis and colors
+RARITY_EMOJIS = {
+    '𝘾𝙊𝙈𝙈𝙊𝙉': ('⚪️', 'Common'),
+    '𝙈𝙀𝘿𝙄𝙐𝙈': ('🔵', 'Medium'),
+    '𝘾𝙃𝙄𝘽𝙄': ('👶', 'Chibi'),
+    '𝙍𝘼𝙍𝙀': ('🟠', 'Rare'),
+    '𝙇𝙀𝙂𝙀𝙉𝘿𝘼𝙍𝙔': ('🟡', 'Legendary'),
+    '𝙀𝙓𝘾𝙇𝙐𝙎𝙄𝙑𝙀': ('💮', 'Exclusive'),
+    '𝙋𝙍𝙀𝙈𝙄𝙐𝙈': ('🫧', 'Premium'),
+    '𝙇𝙄𝙈𝙄𝙏𝙀𝘿 𝙀𝘿𝙄𝙏𝙄𝙊𝙉': ('🔮', 'Limited Edition'),
+    '𝙀𝙓𝙊𝙏𝙄𝘾': ('🌸', 'Exotic'),
+    '𝘼𝙎𝙏𝙍𝘼𝙇': ('🎐', 'Astral'),
+    '𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀': ('💞', 'Valentine')
+}
 
 @app.on_message(filters.command("sell"))
 async def sell(client: Client, message):
     user_id = message.from_user.id
 
-    # Check if the command has enough arguments
+    # Check if command has a character ID
     if len(message.command) < 2:
         await message.reply_text(
             f'{random.choice(CANCEL_EMOJIS)} **Invalid usage!**\n'
@@ -22,13 +39,13 @@ async def sell(client: Client, message):
 
     character_id = message.command[1]
 
-    # Fetch user from database
+    # Fetch user data from database
     user = await user_collection.find_one({'id': user_id})
     if not user or 'characters' not in user:
         await message.reply_text('😔 **You haven\'t seized any characters yet!**')
         return
 
-    # Find the character in the user's collection
+    # Find the character in user's collection
     character = next((c for c in user['characters'] if str(c.get('id')) == character_id), None)
     if not character:
         await message.reply_text('🙄 **This character is not in your harem!**')
@@ -115,7 +132,7 @@ async def handle_sell_confirmation(client: Client, callback_query):
 
 # Function to calculate sale value based on rarity
 def calculate_sale_value(rarity: str) -> int:
-    # Sale values can be adjusted as desired
+    # Sale values based on rarity levels
     sale_values = {
         '𝘾𝙊𝙈𝙈𝙊𝙉': 2000,
         '𝙈𝙀𝘿𝙄𝙐𝙈': 4000,
@@ -123,10 +140,11 @@ def calculate_sale_value(rarity: str) -> int:
         '𝙍𝘼𝙍𝙀': 5000,
         '𝙇𝙀𝙂𝙀𝙉𝘿𝘼𝙍𝙔': 30000,
         '𝙀𝙓𝘾𝙇𝙐𝙎𝙄𝙑𝙀': 20000,
+        '𝙋𝙍𝙀𝙈𝙄𝙐𝙈': 25000,
         '𝙇𝙄𝙈𝙄𝙏𝙀𝘿 𝙀𝘿𝙄𝙏𝙄𝙊𝙉': 40000,
-        '𝙋𝙍𝙀𝙈𝙄𝙐𝙈': 50000,
-        '𝙀𝙓𝙊𝙏𝙄𝘾': 60000,
-        '𝘼𝙎𝙏𝙍𝘼𝙇': 70000,
-        '𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀': 80000
+        '𝙀𝙓𝙊𝙏𝙄𝘾': 45000,
+        '𝘼𝙎𝙏𝙍𝘼𝙇': 50000,
+        '𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀': 60000
     }
-    return sale_values.get(rarity, 2000)
+    # Default to a base value if the rarity isn't recognized
+    return sale_values.get(rarity, 1000)
