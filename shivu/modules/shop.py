@@ -4,7 +4,6 @@ from pymongo import MongoClient
 import random
 from shivu import user_collection, collection
 from shivu import shivuu as app
-from pyrogram.utils import mention_html
 
 CHARACTERS_PER_PAGE = 3
 REFRESH_COST = 100
@@ -143,6 +142,8 @@ async def callback_query_handler(_, query: CallbackQuery):
         price = int(price)
         user = await user_collection.find_one({'id': user_id})
 
+        user_mention = f"<a href='tg://user?id={user_id}'>{query.from_user.first_name}</a>"
+        
         if action_type == "buy":
             if user['tokens'] < price:
                 await query.answer("Insufficient tokens to buy this character.", show_alert=True)
