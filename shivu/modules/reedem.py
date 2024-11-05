@@ -55,10 +55,10 @@ async def gen(client, message):
     formatted_amount = format_amount(amount)
     
     await message.reply_text(
-        f"{get_emoji('gen')} Generated code: `{code}`\nAmount: ₩`{formatted_amount}`\nQuantity: `{quantity}`"
+        f"{get_emoji('gen')} Generated code: `{code}`\nAmount: Ŧ `{formatted_amount}`\nQuantity: `{quantity}`"
     )
 
-# Redeem generated codes and update balance
+# Redeem generated codes and update tokens
 @app.on_message(filters.command(["redeem"]))
 async def redeem(client, message):
     code = " ".join(message.command[1:])  # Get the code from the command
@@ -77,10 +77,10 @@ async def redeem(client, message):
             await message.reply_text(f"{get_emoji('error')} This code has been fully claimed.")
             return
         
-        # Update the user's balance
+        # Update the user's tokens
         await user_collection.update_one(
             {'id': user_id},
-            {'$inc': {'balance': float(code_info['amount'])}}  # Convert amount to float before updating
+            {'$inc': {'tokens': float(code_info['amount'])}}  # Update tokens instead of balance
         )
         
         # Add user to the claimed_by list
@@ -89,11 +89,11 @@ async def redeem(client, message):
         formatted_amount = format_amount(code_info['amount'])
         
         await message.reply_text(
-            f"{get_emoji('success')} Redeemed successfully. ₩`{formatted_amount}` Cash added to your Wealth."
+            f"{get_emoji('success')} Redeemed successfully. Ŧ `{formatted_amount}` tokens added to your balance."
         )
     else:
         await message.reply_text(f"{get_emoji('error')} Invalid code.")
-
+        
 # Waifu Generation (only for sudo users)
 @app.on_message(filters.command(["wgen"]))
 async def waifugen(client, message):
