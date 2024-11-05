@@ -154,8 +154,4 @@ def calculate_sale_value(rarity: str) -> int:
     sale_value = calculate_sale_value(rarity)
 
     if sale_value == 0:
-        await message.reply_text('❌ Invalid rarity. Cannot determine the coin value.')
-    else:
-    # Proceed with the logic when the rarity is valid
-    # For example, update user balance or send a success message
-        pass
+       
