@@ -146,5 +146,14 @@ def calculate_sale_value(rarity: str) -> int:
         '𝘼𝙎𝙏𝙍𝘼𝙇': 50000,
         '𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀': 60000
     }
-    # Default to a base value if the rarity isn't recognized
-    return sale_values.get(rarity, 1000)
+
+    # Standardize the rarity format to match keys in sale_values
+    rarity = rarity.strip().upper()
+
+    # Get the sale value for the rarity or log if not found
+    sale_value = sale_values.get(rarity)
+    if sale_value is None:
+        logging.warning(f"Unknown rarity '{rarity}', defaulting to 1000 coins.")
+        sale_value = 1000  # Default to base value if rarity isn't recognized
+
+    return sale_value
