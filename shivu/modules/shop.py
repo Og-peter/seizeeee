@@ -134,8 +134,8 @@ async def callback_query_handler(_, query: CallbackQuery):
         price = int(price)
         user = await user_collection.find_one({'id': user_id})
 
-    # Get the username from the user data
-    username = user.get('username', 'User')
+    # Get the user mention from the user data
+    user_mention = f"<a href='tg://user?id={user_id}'>{user.get('username', 'User')}</a>"
 
     if action_type == "buy":
         if user['tokens'] < price:
@@ -146,14 +146,14 @@ async def callback_query_handler(_, query: CallbackQuery):
         await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': -price}, '$push': {'characters': {'id': character_id}}})
 
         # Confirmation message for buying
-        buy_confirmation_text = f"{username}, character purchased successfully!"
-        await query.answer(buy_confirmation_text)  # Just inform that the action was successful
+        buy_confirmation_text = f"{user_mention}, character purchased successfully!"
+        await query.answer(buy_confirmation_text)  # Inform that the action was successful
 
         # Fetch the character details to send as a confirmation message
         character = await collection.find_one({'id': character_id})
         if character:
             dm_text = (
-                f"{username}, you have successfully purchased:\n\n"
+                f"{user_mention}, you have successfully purchased:\n\n"
                 f"╭──\n"
                 f"| ➩ 🥂 ɴᴀᴍᴇ: {character['name']}\n"
                 f"| ➩ ✨ ɪᴅ: {character['id']}\n"
@@ -170,14 +170,14 @@ async def callback_query_handler(_, query: CallbackQuery):
             await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': price}, '$pull': {'characters': {'id': character_id}}})
 
             # Confirmation message for selling
-            sell_confirmation_text = f"{username}, character sold successfully!"
-            await query.answer(sell_confirmation_text)  # Just inform that the action was successful
+            sell_confirmation_text = f"{user_mention}, character sold successfully!"
+            await query.answer(sell_confirmation_text)  # Inform that the action was successful
 
             # Fetch the character details to send as a confirmation message
             character = next((char for char in user['characters'] if char['id'] == character_id), None)
             if character:
                 dm_text = (
-                    f"{username}, you have successfully sold:\n\n"
+                    f"{user_mention}, you have successfully sold:\n\n"
                     f"╭──\n"
                     f"| ➩ 🥂 ɴᴀᴍᴇ: {character['name']}\n"
                     f"| ➩ ✨ ɪᴅ: {character['id']}\n"
