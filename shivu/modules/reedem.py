@@ -23,27 +23,19 @@ def generate_random_code():
 def format_amount(amount):
     return f"{amount:,.0f}" if amount.is_integer() else f"{amount:,.2f}"
 
-# Helper function to add emojis
-def get_emoji(action):
-    emojis = {
-        'gen': "🎁", 'redeem': "💰", 'waifugen': "🧚‍♀️", 'wredeem': "🌸",
-        'success': "✅", 'error': "❌", 'info': "ℹ️", 'trade': "💱", 'gift': "🎁"
-    }
-    return emojis.get(action, "✨")
-
 # Generate random codes with custom amounts and quantity
 @app.on_message(filters.command(["gen"]))
 async def gen(client, message):
     sudo_user_id = 6402009857  # Example sudo user
     if message.from_user.id != sudo_user_id:
-        await message.reply_text(f"{get_emoji('error')} Only authorized users can use this command.")
+        await message.reply_text("Only authorized users can use this command.")
         return
     
     try:
         amount = float(message.command[1])  # Get the amount from the command
         quantity = int(message.command[2])  # Get the quantity from the command
     except (IndexError, ValueError):
-        await message.reply_text(f"{get_emoji('error')} Invalid amount or quantity. Usage: `/gen 10000000 5`")
+        await message.reply_text("Invalid amount or quantity. Usage: `/gen 10000000 5`")
         return
     
     # Generate a random code
@@ -55,7 +47,7 @@ async def gen(client, message):
     formatted_amount = format_amount(amount)
     
     await message.reply_text(
-        f"{get_emoji('gen')} Generated code: `{code}`\nAmount: Ŧ `{formatted_amount}`\nQuantity: `{quantity}`"
+        f"Generated code: `{code}`\nAmount: Ŧ `{formatted_amount}`\nQuantity: `{quantity}`"
     )
 
 # Redeem generated codes and update tokens
@@ -69,12 +61,12 @@ async def redeem(client, message):
         
         # Check if the user has already claimed this code
         if user_id in code_info['claimed_by']:
-            await message.reply_text(f"{get_emoji('error')} You have already claimed this code.")
+            await message.reply_text("You have already claimed this code.")
             return
         
         # Check if there are claims remaining for the code
         if len(code_info['claimed_by']) >= code_info['quantity']:
-            await message.reply_text(f"{get_emoji('error')} This code has been fully claimed.")
+            await message.reply_text("This code has been fully claimed.")
             return
         
         # Update the user's tokens
@@ -89,29 +81,29 @@ async def redeem(client, message):
         formatted_amount = format_amount(code_info['amount'])
         
         await message.reply_text(
-            f"{get_emoji('success')} Redeemed successfully. Ŧ `{formatted_amount}` tokens added to your balance."
+            f"Redeemed successfully. Ŧ `{formatted_amount}` tokens added to your balance."
         )
     else:
-        await message.reply_text(f"{get_emoji('error')} Invalid code.")
+        await message.reply_text("Invalid code.")
         
 # Waifu Generation (only for sudo users)
 @app.on_message(filters.command(["wgen"]))
 async def waifugen(client, message):
     if str(message.from_user.id) not in sudo_user_ids:
-        await message.reply_text(f"{get_emoji('error')} You are not authorized to generate waifus.")
+        await message.reply_text("You are not authorized to generate waifus.")
         return
     
     try:
         character_id = message.command[1]  # Get the character_id from the command
         quantity = int(message.command[2])  # Get the quantity from the command
     except (IndexError, ValueError):
-        await message.reply_text(f"{get_emoji('error')} Invalid usage. Usage: `/wgen 56 1`")
+        await message.reply_text("Invalid usage. Usage: `/wgen 56 1`")
         return
 
     # Retrieve the waifu with the given character_id
     waifu = await collection.find_one({'id': character_id})
     if not waifu:
-        await message.reply_text(f"{get_emoji('error')} Invalid character ID. Waifu not found.")
+        await message.reply_text("Invalid character ID. Waifu not found.")
         return
 
     code = generate_random_code()
@@ -120,7 +112,7 @@ async def waifugen(client, message):
     generated_waifus[code] = {'waifu': waifu, 'quantity': quantity}
     
     response_text = (
-        f"{get_emoji('waifugen')} Generated code: `{code}`\n"
+        f"Generated code: `{code}`\n"
         f"Name: {waifu['name']}\nRarity: {waifu['rarity']}\nQuantity: {quantity}"
     )
     
@@ -153,13 +145,13 @@ async def claimwaifu(client, message):
                 del generated_waifus[code]
             
             response_text = (
-                f"{get_emoji('success')} Congratulations {user_mention}! You Have Received a New Character!\n"
+                f"Congratulations {user_mention}! You have received a new character!\n"
                 f"Name: {waifu['name']}\n"
                 f"Rarity: {waifu['rarity']}\n"
                 f"Anime: {waifu['anime']}\n"
             )
             await message.reply_photo(photo=waifu['img_url'], caption=response_text)
         else:
-            await message.reply_text(f"{get_emoji('error')} This code has already been claimed the maximum number of times.")
+            await message.reply_text("This code has already been claimed the maximum number of times.")
     else:
-        await message.reply_text(f"{get_emoji('error')} Invalid code.")
+        await message.reply_text("Invalid code.")
