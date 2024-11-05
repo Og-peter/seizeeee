@@ -133,8 +133,8 @@ async def handle_callback_query(update, context):
         await query.answer()  # Acknowledge callback to close popup
 
     elif data == "cancel_sell":
+        await query.answer("Sell canceled.", show_alert=True)
         await query.message.reply_text("❌ Sell canceled.")
-        await query.answer()  # Close the popup
 
 # Define handlers
 sell_handler = CommandHandler("sell", sell)
