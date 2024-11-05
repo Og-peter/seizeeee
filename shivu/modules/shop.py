@@ -86,7 +86,7 @@ async def sell(_, message: Message):
     text, media, buttons = await generate_character_message(characters, 0, "sell")
     await message.reply_photo(photo=media[0].media, caption=text, reply_markup=InlineKeyboardMarkup(buttons))
 
-# Callback query handler for pagination and refresh
+# Callback query handler for pagination, refresh, buy, and sell actions
 @app.on_callback_query()
 async def callback_query_handler(_, query: CallbackQuery):
     user_id = query.from_user.id
@@ -128,7 +128,30 @@ async def callback_query_handler(_, query: CallbackQuery):
         await query.answer("Characters refreshed!")
 
     elif "buy_" in data or "sell_" in data:
-        # Handle buy/sell transaction logic here
-        pass
+        action_type, character_id, price = data.split("_")
+        price = int(price)
+        user = await user_collection.find_one({'id': user_id})
+
+        if action_type == "buy":
+            # Check if user has enough tokens to buy
+            if user['tokens'] < price:
+                await query.answer("Insufficient tokens to buy this character.", show_alert=True)
+                return
+
+            # Deduct tokens and add character to user collection
+            await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': -price}, '$push': {'characters': {'id': character_id}}})
+            await query.answer("Character purchased successfully!")
+            await query.message.delete()
+
+        elif action_type == "sell":
+            # Check if character exists in user's collection
+            if any(char['id'] == character_id for char in user['characters']):
+                # Add tokens and remove character from user collection
+                await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': price}, '$pull': {'characters': {'id': character_id}}})
+                await query.answer("Character sold successfully!")
+                await query.message.delete()
+            else:
+                await query.answer("Character not found in your collection.", show_alert=True)
+
     elif "cancel" in data:
         await query.message.delete()
