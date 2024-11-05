@@ -65,8 +65,15 @@ def generate_character_price(action_type):
 @app.on_message(filters.command(["cshop"]))
 async def shop(_, message: Message):
     waifus = await get_random_characters(collection)
+    if not waifus:
+        return await message.reply_text("No characters currently available in the shop.")
+    
     text, media, buttons = await generate_character_message(waifus, 0, "buy")
-    await message.reply_photo(photo=media[0].media, caption=text, reply_markup=InlineKeyboardMarkup(buttons))
+    # Check if media has elements to avoid IndexError
+    if media:
+        await message.reply_photo(photo=media[0].media, caption=text, reply_markup=InlineKeyboardMarkup(buttons))
+    else:
+        await message.reply_text(text)
 
 # Command for selling characters
 @app.on_message(filters.command(["sell"]))
@@ -79,7 +86,11 @@ async def sell(_, message: Message):
     
     characters = random.sample(user['characters'], min(CHARACTERS_PER_PAGE, len(user['characters'])))
     text, media, buttons = await generate_character_message(characters, 0, "sell")
-    await message.reply_photo(photo=media[0].media, caption=text, reply_markup=InlineKeyboardMarkup(buttons))
+    # Check if media has elements to avoid IndexError
+    if media:
+        await message.reply_photo(photo=media[0].media, caption=text, reply_markup=InlineKeyboardMarkup(buttons))
+    else:
+        await message.reply_text(text)
 
 # Callback query handler for pagination and refresh
 @app.on_callback_query()
