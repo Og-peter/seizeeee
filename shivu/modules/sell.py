@@ -150,4 +150,5 @@ def calculate_sale_value(rarity: str) -> int:
         '𝘼𝙎𝙏𝙍𝘼𝙇': 50000,
         '𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀': 60000
     }
- 
+    # Default to a base value if the rarity isn't recognized
+    return sale_values.get(rarity, 1000)
