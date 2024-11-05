@@ -105,9 +105,41 @@ async def callback_query_handler(_, query: CallbackQuery):
         await query.message.edit_caption(caption=text, reply_markup=InlineKeyboardMarkup(buttons))
 
     elif action == "refresh":
-        # Refresh logic here, similar to above
-        pass
+        if await user_collection.find_one({'id': user_id})['tokens'] < REFRESH_COST:
+            await query.answer("Insufficient tokens for refresh.", show_alert=True)
+            return
+
+        await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': -REFRESH_COST}})
+        characters = await get_random_characters(collection) if action_type == "buy" else await user_collection.find_one({'id': user_id}).get('characters', [])
+        
+        text, media, buttons = await generate_character_message(characters, 0, action_type, user_mention)
+        await query.message.edit_media(media=media[0])
+        await query.message.edit_caption(caption=text, reply_markup=InlineKeyboardMarkup(buttons))
+        await query.answer("Characters refreshed!")
 
     elif action == "char":
-        # Handle buy/sell character actions here
-        pass
+        character_id, price = data[2], int(data[3])
+        user = await user_collection.find_one({'id': user_id})
+
+        if action_type == "buy":
+            if user['tokens'] < price:
+                await query.answer("Insufficient tokens to buy this character.", show_alert=True)
+                return
+
+            await user_collection.update_one(
+                {'id': user_id},
+                {'$inc': {'tokens': -price}, '$push': {'characters': {'id': character_id}}}
+            )
+            await query.answer(f"{user_mention}, character purchased successfully!")
+            await query.message.reply_text(f"{user_mention}, character purchased successfully!")
+
+        elif action_type == "sell":
+            if any(char['id'] == character_id for char in user.get('characters', [])):
+                await user_collection.update_one(
+                    {'id': user_id},
+                    {'$inc': {'tokens': price}, '$pull': {'characters': {'id': character_id}}}
+                )
+                await query.answer(f"{user_mention}, character sold successfully!")
+                await query.message.reply_text(f"{user_mention}, character sold successfully!")
+            else:
+                await query.answer("Character not found in your collection.", show_alert=True)
