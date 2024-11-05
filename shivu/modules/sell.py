@@ -52,9 +52,9 @@ async def sell(client: Client, message):
         return
 
     # Calculate sale value based on rarity
-    rarity = character.get('rarity', 'Common')
+    rarity = character.get('rarity', '𝘾𝙊𝙈𝙈𝙊𝙉')  # Default to 'Common' if not found
     rarity_emoji, rarity_display = RARITY_EMOJIS.get(rarity, ('', rarity))
-    sale_value = calculate_sale_value(rarity)
+    sale_value = calculate_sale_value(rarity)  # Calculate based on rarity
 
     # Send character photo with confirmation message and inline buttons
     confirmation_message = await message.reply_photo(
@@ -150,5 +150,4 @@ def calculate_sale_value(rarity: str) -> int:
         '𝘼𝙎𝙏𝙍𝘼𝙇': 50000,
         '𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀': 60000
     }
-    # Default to a base value if the rarity isn't recognized
-    return sale_values.get(rarity, 1000)
+ 
