@@ -55,6 +55,8 @@ def generate_character_price(action_type):
 async def shop(_, message: Message):
     user_id = message.from_user.id
     waifus = await get_random_characters(collection)
+    if not waifus:
+        return await message.reply_text("No characters available for purchase.")
     text, media, buttons = await generate_character_message(waifus, 0, "buy")
     await message.reply_photo(photo=media[0].media, caption=text, reply_markup=InlineKeyboardMarkup(buttons))
 
@@ -75,26 +77,32 @@ async def callback_query_handler(_, query: CallbackQuery):
     user_id = query.from_user.id
     data = query.data
 
-    action_type = "buy" if "buy" in data else "sell"
-    characters = await get_random_characters(collection if action_type == "buy" else user_collection, {'id': user_id})
-
     if data.startswith("next_") or data.startswith("prev_"):
+        action_type = "buy" if "buy" in data else "sell"
         page = int(data.split("_")[1]) + (1 if data.startswith("next_") else -1)
+        characters = await get_random_characters(collection if action_type == "buy" else user_collection, {'id': user_id})
+        
+        text, media, buttons = await generate_character_message(characters, page, action_type)
+        await query.message.edit_media(media=media[0])
+        await query.message.edit_caption(caption=text, reply_markup=InlineKeyboardMarkup(buttons))
+
     elif data.startswith("refresh"):
+        action_type = "buy" if "buy" in data else "sell"
         user = await user_collection.find_one({'id': user_id})
+        
         if user['tokens'] < REFRESH_COST:
             await query.answer("Insufficient tokens for refresh.", show_alert=True)
             return
         await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': -REFRESH_COST}})
         characters = await get_random_characters(collection if action_type == "buy" else user_collection, {'id': user_id})
-        page = 0
+        
+        text, media, buttons = await generate_character_message(characters, 0, action_type)
+        await query.message.edit_media(media=media[0])
+        await query.message.edit_caption(caption=text, reply_markup=InlineKeyboardMarkup(buttons))
         await query.answer("Characters refreshed!")
+
     elif data.startswith("buy_") or data.startswith("sell_"):
         # Handle buy/sell transaction logic here
-        return
+        pass
     elif data.startswith("cancel"):
-        page = 0
-
-    text, media, buttons = await generate_character_message(characters, page, action_type)
-    await query.message.edit_media(media=media[0])
-    await query.message.edit_caption(caption=text, reply_markup=InlineKeyboardMarkup(buttons))
+        await query.message.delete()
