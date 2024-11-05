@@ -19,7 +19,7 @@ async def sell(update, context):
 
     # Check if the command includes a waifu ID
     if not context.args or len(context.args) != 1:
-        await update.message.reply_text('❌ Please provide a valid Waifu ID to sell.')
+        await update.message.reply_text('❌ Please provide a valid Waifu ID to sell.\n**Usage:** /sell <waifu_id>')
         return
     
     waifu_id = context.args[0]
@@ -36,9 +36,9 @@ async def sell(update, context):
         await update.message.reply_text('❌ You do not own this waifu in your harem.')
         return
 
-    # Check if the waifu is present in the user's harem and get its count
-    waifu_count = sum(1 for char in user.get('characters', []) if char['id'] == waifu_id)
-    if waifu_count == 0:
+    # Check if the waifu is present in the user's harem
+    character = next((char for char in user['characters'] if char['id'] == waifu_id), None)
+    if not character:
         await update.message.reply_text('❌ You do not own this waifu in your harem.')
         return
 
@@ -65,41 +65,33 @@ async def sell(update, context):
     if rarity in ["🟡 Legendary", "🔮 Limited Edition"]:
         coin_value += random.randint(5000, 10000)  # Random bonus between 5000 and 10000 tokens
 
-    # Random animation messages
-    animations = [
-        "🌟 Whoooosh! 🌟 Your waifu is flying away into the marketplace! 🚀",
-        "✨ A magical transaction is happening! ✨ Your coins are being counted... 💰",
-        "💫 Selling in progress... Hang tight! 💫",
-        "⚡️ Zzzzap! ⚡️ Your waifu is being teleported for sale! ✨",
-    ]
-    animation_message = random.choice(animations)
-
     # Ask for confirmation to sell the waifu
     confirmation_text = (
-        f"╭─── Sell Confirmation ───\n"
-        f"| Waifu Name: {waifu['name']}\n"
-        f"| Rarity: {rarity}\n"
-        f"| Coin Value: {coin_value} 💰\n"
-        "╰───────────────────────"
+        f"❄️ **Are you sure you want to sell this waifu?** ❄️\n\n"
+        f"🫧 **Name:** `{waifu['name']}`\n"
+        f"⛩️ **Rarity:** {rarity}\n"
+        f"💰 **Coin Value:** `{coin_value}`\n\n"
+        "⚜️ **Choose an option:**"
     )
 
-    buttons = [
-        [InlineKeyboardButton("Accept ✅", callback_data=f"confirm_sell_{waifu_id}_{coin_value}")],
-        [InlineKeyboardButton("Decline ❌", callback_data="cancel_sell")]
-    ]
-
-    await update.message.reply_text(animation_message)
-    if image_url:
-        await update.message.reply_photo(photo=image_url, caption=confirmation_text, reply_markup=InlineKeyboardMarkup(buttons))
-    else:
-        await update.message.reply_text(confirmation_text, reply_markup=InlineKeyboardMarkup(buttons))
+    # Send character photo with confirmation message and inline buttons
+    confirmation_message = await update.message.reply_photo(
+        photo=image_url,
+        caption=confirmation_text,
+        reply_markup=InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("🟢 Confirm", callback_data=f"sell_confirm_{waifu_id}_{coin_value}"),
+                InlineKeyboardButton("🔴 Cancel", callback_data="sell_cancel")
+            ]
+        ])
+    )
 
 async def handle_callback_query(update, context):
     query = update.callback_query
     user_id = query.from_user.id
     data = query.data
 
-    if data.startswith("confirm_sell_"):
+    if data.startswith("sell_confirm_"):
         _, waifu_id, coin_value = data.split("_")
         coin_value = int(coin_value)
 
@@ -122,19 +114,11 @@ async def handle_callback_query(update, context):
 
         # Notify success in the current chat
         await query.message.reply_text(f"✅ Successfully Sold Waifu 🌸\nWaifu ID: {waifu_id}\nSold For: {coin_value} 💸 Tokens.")
-
-        # Send a DM to the user about the sold waifu
-        await context.bot.send_message(
-            chat_id=user_id,
-            text=f"🔔 You have successfully sold your waifu! 🌟\n\n"
-                 f"Waifu ID: {waifu_id}\n"
-                 f"Coin Value: {coin_value} 💰 Tokens."
-        )
         await query.answer()  # Acknowledge callback to close popup
 
-    elif data == "cancel_sell":
-        await query.answer("Sell canceled.", show_alert=True)
+    elif data == "sell_cancel":
         await query.message.reply_text("❌ Sell canceled.")
+        await query.answer("Sell canceled.", show_alert=True)
 
 # Define handlers
 sell_handler = CommandHandler("sell", sell)
