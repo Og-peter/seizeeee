@@ -106,10 +106,18 @@ async def handle_callback_query(update, context):
         # Perform the sale
         user = await user_collection.find_one({'id': user_id})
 
-        # Remove the sold waifu from the user's harem
+        # Ensure character exists in user's harem
+        if not any(char['id'] == waifu_id for char in user.get('characters', [])):
+            await query.answer("You don't own this waifu!", show_alert=True)
+            return
+
+        # Remove the sold waifu from the user's harem and update balance
         await user_collection.update_one(
             {'id': user_id},
-            {'$pull': {'characters': {'id': waifu_id}}, '$inc': {'balance': coin_value}}
+            {
+                '$pull': {'characters': {'id': waifu_id}},
+                '$inc': {'balance': coin_value}
+            }
         )
 
         # Notify success in the current chat
@@ -122,11 +130,16 @@ async def handle_callback_query(update, context):
                  f"Waifu ID: {waifu_id}\n"
                  f"Coin Value: {coin_value} 💰 Tokens."
         )
-        
+        await query.answer()  # Acknowledge callback to close popup
+
     elif data == "cancel_sell":
         await query.message.reply_text("❌ Sell canceled.")
         await query.answer()  # Close the popup
 
-sell_handler = CommandHandler("sell", sell, block=False)
+# Define handlers
+sell_handler = CommandHandler("sell", sell)
+callback_query_handler = CallbackQueryHandler(handle_callback_query)
+
+# Add handlers to the application
 application.add_handler(sell_handler)
-application.add_handler(CallbackQueryHandler(handle_callback_query))
+application.add_handler(callback_query_handler)
