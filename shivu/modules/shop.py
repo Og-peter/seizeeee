@@ -130,48 +130,55 @@ async def callback_query_handler(_, query: CallbackQuery):
         await query.answer("Characters refreshed!")
 
     elif "buy_" in data or "sell_" in data:
-        action_type, character_id, price = data.split("_")
-        price = int(price)
-        user = await user_collection.find_one({'id': user_id})
+    action_type, character_id, price = data.split("_")
+    price = int(price)
+    user = await user_collection.find_one({'id': user_id})
 
-        if action_type == "buy":
-            if user['tokens'] < price:
-                await query.answer("Insufficient tokens to buy this character.", show_alert=True)
-                return
+    if action_type == "buy":
+        if user['tokens'] < price:
+            await query.answer("Insufficient tokens to buy this character.", show_alert=True)
+            return
 
-            await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': -price}, '$push': {'characters': {'id': character_id}}})
-            await query.answer(f"{user_mention}, character purchased successfully!")
-            character = next((char for char in await get_random_characters(collection, {'id': character_id}) if char['id'] == character_id), None)
+        # Deduct tokens and add character to user's collection
+        await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': -price}, '$push': {'characters': {'id': character_id}}})
+        await query.answer(f"{user_mention}, character purchased successfully!")
+
+        # Fetch the character details to send as a confirmation message
+        character = await collection.find_one({'id': character_id})
+        if character:
+            dm_text = (
+                f"{user_mention}, you have successfully purchased:\n\n"
+                f"╭──\n"
+                f"| ➩ 🥂 ɴᴀᴍᴇ: {character['name']}\n"
+                f"| ➩ ✨ ɪᴅ: {character['id']}\n"
+                f"| ➩ ⛩️ ᴀɴɪᴍᴇ: {character['anime']}\n"
+                f"▰▱▱▱▱▱▱▱▱▱▰\n"
+                f"| 🍃 ᴘʀɪᴄᴇ: {price} ᴛᴏᴋᴇɴs\n"
+            )
+            await app.send_photo(user_id, photo=character['img_url'], caption=dm_text)
+
+    elif action_type == "sell":
+        # Check if the character exists in the user's collection
+        if any(char['id'] == character_id for char in user['characters']):
+            # Increase tokens and remove character from user's collection
+            await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': price}, '$pull': {'characters': {'id': character_id}}})
+            await query.answer(f"{user_mention}, character sold successfully!")
+
+            # Fetch the character details to send as a confirmation message
+            character = next((char for char in user['characters'] if char['id'] == character_id), None)
             if character:
                 dm_text = (
-                    f"{user_mention}, you have successfully purchased:\n\n"
+                    f"{user_mention}, you have successfully sold:\n\n"
                     f"╭──\n"
                     f"| ➩ 🥂 ɴᴀᴍᴇ: {character['name']}\n"
                     f"| ➩ ✨ ɪᴅ: {character['id']}\n"
                     f"| ➩ ⛩️ ᴀɴɪᴍᴇ: {character['anime']}\n"
                     f"▰▱▱▱▱▱▱▱▱▱▰\n"
-                    f"| 🍃 ᴘʀɪᴄᴇ: {price} ᴛᴏᴋᴇɴs\n"
+                    f"| 🍃 sᴏʟᴅ ғᴏʀ: {price} ᴛᴏᴋᴇɴs\n"
                 )
                 await app.send_photo(user_id, photo=character['img_url'], caption=dm_text)
+        else:
+            await query.answer("Character not found in your collection.", show_alert=True)
 
-        elif action_type == "sell":
-            if any(char['id'] == character_id for char in user['characters']):
-                await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': price}, '$pull': {'characters': {'id': character_id}}})
-                await query.answer(f"{user_mention}, character sold successfully!")
-                character = next((char for char in user['characters'] if char['id'] == character_id), None)
-                if character:
-                    dm_text = (
-                        f"{user_mention}, you have successfully sold:\n\n"
-                        f"╭──\n"
-                        f"| ➩ 🥂 ɴᴀᴍᴇ: {character['name']}\n"
-                        f"| ➩ ✨ ɪᴅ: {character['id']}\n"
-                        f"| ➩ ⛩️ ᴀɴɪᴍᴇ: {character['anime']}\n"
-                        f"▰▱▱▱▱▱▱▱▱▱▰\n"
-                        f"| 🍃 sᴏʟᴅ ғᴏʀ: {price} ᴛᴏᴋᴇɴs\n"
-                    )
-                    await app.send_photo(user_id, photo=character['img_url'], caption=dm_text)
-            else:
-                await query.answer("Character not found in your collection.", show_alert=True)
-
-    elif "cancel" in data:
-        await query.message.delete()
+elif "cancel" in data:
+    await query.message.delete()
