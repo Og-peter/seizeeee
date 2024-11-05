@@ -144,16 +144,16 @@ async def callback_query_handler(_, query: CallbackQuery):
 
         # Deduct tokens and add character to user's collection
         await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': -price}, '$push': {'characters': {'id': character_id}}})
-        
+
         # Confirmation message for buying
-        buy_confirmation_text = f"[{username}](tg://user?id={user_id}), character purchased successfully!"
-        await query.answer(buy_confirmation_text, parse_mode='MarkdownV2')
+        buy_confirmation_text = f"{username}, character purchased successfully!"
+        await query.answer(buy_confirmation_text)  # Just inform that the action was successful
 
         # Fetch the character details to send as a confirmation message
         character = await collection.find_one({'id': character_id})
         if character:
             dm_text = (
-                f"[{username}](tg://user?id={user_id}), you have successfully purchased:\n\n"
+                f"{username}, you have successfully purchased:\n\n"
                 f"╭──\n"
                 f"| ➩ 🥂 ɴᴀᴍᴇ: {character['name']}\n"
                 f"| ➩ ✨ ɪᴅ: {character['id']}\n"
@@ -161,7 +161,7 @@ async def callback_query_handler(_, query: CallbackQuery):
                 f"▰▱▱▱▱▱▱▱▱▱▰\n"
                 f"| 🍃 ᴘʀɪᴄᴇ: {price} ᴛᴏᴋᴇɴs\n"
             )
-            await app.send_photo(user_id, photo=character['img_url'], caption=dm_text, parse_mode='MarkdownV2')
+            await app.send_photo(user_id, photo=character['img_url'], caption=dm_text)
 
     elif action_type == "sell":
         # Check if the character exists in the user's collection
@@ -170,14 +170,14 @@ async def callback_query_handler(_, query: CallbackQuery):
             await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': price}, '$pull': {'characters': {'id': character_id}}})
 
             # Confirmation message for selling
-            sell_confirmation_text = f"[{username}](tg://user?id={user_id}), character sold successfully!"
-            await query.answer(sell_confirmation_text, parse_mode='MarkdownV2')
+            sell_confirmation_text = f"{username}, character sold successfully!"
+            await query.answer(sell_confirmation_text)  # Just inform that the action was successful
 
             # Fetch the character details to send as a confirmation message
             character = next((char for char in user['characters'] if char['id'] == character_id), None)
             if character:
                 dm_text = (
-                    f"[{username}](tg://user?id={user_id}), you have successfully sold:\n\n"
+                    f"{username}, you have successfully sold:\n\n"
                     f"╭──\n"
                     f"| ➩ 🥂 ɴᴀᴍᴇ: {character['name']}\n"
                     f"| ➩ ✨ ɪᴅ: {character['id']}\n"
@@ -185,6 +185,6 @@ async def callback_query_handler(_, query: CallbackQuery):
                     f"▰▱▱▱▱▱▱▱▱▱▰\n"
                     f"| 🍃 sᴏʟᴅ ғᴏʀ: {price} ᴛᴏᴋᴇɴs\n"
                 )
-                await app.send_photo(user_id, photo=character['img_url'], caption=dm_text, parse_mode='MarkdownV2')
+                await app.send_photo(user_id, photo=character['img_url'], caption=dm_text)
         else:
             await query.answer("Character not found in your collection.", show_alert=True)
