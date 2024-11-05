@@ -65,7 +65,7 @@ def generate_character_price(action_type):
 # Command for shop (buying characters)
 @app.on_message(filters.command(["cshop"]))
 async def shop(_, message: Message):
-    user_id = message.from_user.id
+    user_id = query.from_user.id
     user_mention = f"<a href='tg://user?id={user_id}'>{query.from_user.first_name}</a>"
     waifus = await get_random_characters(collection)
     if not waifus:
@@ -78,7 +78,7 @@ async def shop(_, message: Message):
 # Command for selling characters
 @app.on_message(filters.command(["sell"]))
 async def sell(_, message: Message):
-    user_id = message.from_user.id
+    user_id = query.from_user.id
     user_mention = f"<a href='tg://user?id={user_id}'>{query.from_user.first_name}</a>"
     user = await user_collection.find_one({'id': user_id})
 
