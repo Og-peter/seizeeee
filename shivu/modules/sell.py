@@ -136,7 +136,7 @@ async def handle_sell_confirmation(client: Client, callback_query):
 
 def calculate_sale_value(rarity: str) -> int:
     # Sale values based on rarity levels
-    sale_values = {
+    rarity_coin_mapping = {
         '𝘾𝙊𝙈𝙈𝙊𝙉': 2000,
         '𝙈𝙀𝘿𝙄𝙐𝙈': 4000,
         '𝘾𝙃𝙄𝘽𝙄': 10000,
