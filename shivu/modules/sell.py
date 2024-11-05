@@ -154,4 +154,4 @@ def calculate_sale_value(rarity: str) -> int:
     coin_value = rarity_coin_mapping.get(rarity, 0)
 
     if coin_value == 0:
-        await update.message.reply_text('❌ Invalid rarity. Cannot determine the coin value.')
+    await update.message.reply_text('❌ Invalid rarity. Cannot determine the coin value.')
