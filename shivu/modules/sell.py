@@ -7,123 +7,126 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 # Cooldown dictionary to track user cooldowns
 cooldowns = {}
 
-async def sell(update, context):
-    user_id = update.effective_user.id
+@app.on_message(filters.command("sell"))
+async def sell(client: Client, message):
+    user_id = message.from_user.id
 
-    # Cooldown check (5 seconds cooldown)
-    current_time = time.time()
-    if user_id in cooldowns and current_time - cooldowns[user_id] < 5:
-        await update.message.reply_text('Cooldown in effect! Please wait before selling another waifu. ⏳')
+    # Check if the command has enough arguments
+    if len(message.command) < 2:
+        await message.reply_text(
+            f'{random.choice(CANCEL_EMOJIS)} **Invalid usage!**\n'
+            f'Use `/sell (waifu_id)` to sell a waifu.\n'
+            f'**Example:** `/sell 32`.'
+        )
         return
-    cooldowns[user_id] = current_time
 
-    # Check if the command includes a waifu ID
-    if not context.args or len(context.args) != 1:
-        await update.message.reply_text('❌ Please provide a valid Waifu ID to sell.\n**Usage:** /sell <waifu_id>')
-        return
-    
-    waifu_id = context.args[0]
-    
-    # Retrieve the waifu from the harem based on the provided ID
-    waifu = await collection.find_one({'id': waifu_id})
-    if not waifu:
-        await update.message.reply_text('❌ Waifu Not Found. Please try again. 🚫')
-        return
-    
-    # Check if the user has the waifu in their harem
+    character_id = message.command[1]
+
+    # Fetch user from database
     user = await user_collection.find_one({'id': user_id})
     if not user or 'characters' not in user:
-        await update.message.reply_text('❌ You do not own this waifu in your harem.')
+        await message.reply_text('😔 **You haven\'t seized any characters yet!**')
         return
 
-    # Check if the waifu is present in the user's harem
-    character = next((char for char in user['characters'] if char['id'] == waifu_id), None)
+    # Find the character in the user's collection
+    character = next((c for c in user['characters'] if str(c.get('id')) == character_id), None)
     if not character:
-        await update.message.reply_text('❌ You do not own this waifu in your harem.')
+        await message.reply_text('🙄 **This character is not in your harem!**')
         return
 
-    # Determine the coin value based on the rarity of the waifu
-    rarity_coin_mapping = {
-        "⚪ Common": 2000,
-        "🔵 Medium": 4000,
-        "🟠 Rare": 5000,
-        "👶 Chibi": 10000,
-        "🟡 Legendary": 30000,
-        "💮 Exclusive": 20000,
-        "🔮 Limited Edition": 40000,
-    }
-
-    rarity = waifu.get('rarity', 'Unknown Rarity')
-    coin_value = rarity_coin_mapping.get(rarity, 0)
-    image_url = waifu.get('image_url', '')
-
-    if coin_value == 0:
-        await update.message.reply_text('❌ Invalid rarity. Cannot determine the coin value.')
-        return
-
-    # Add bonus for selling Legendary or Limited Edition waifus
-    if rarity in ["🟡 Legendary", "🔮 Limited Edition"]:
-        coin_value += random.randint(5000, 10000)  # Random bonus between 5000 and 10000 tokens
-
-    # Ask for confirmation to sell the waifu
-    confirmation_text = (
-        f"❄️ **Are you sure you want to sell this waifu?** ❄️\n\n"
-        f"🫧 **Name:** `{waifu['name']}`\n"
-        f"⛩️ **Rarity:** {rarity}\n"
-        f"💰 **Coin Value:** `{coin_value}`\n\n"
-        "⚜️ **Choose an option:**"
-    )
+    # Calculate sale value based on rarity
+    rarity = character.get('rarity', 'Common')
+    rarity_emoji, rarity_display = RARITY_EMOJIS.get(rarity, ('', rarity))
+    sale_value = calculate_sale_value(rarity)
 
     # Send character photo with confirmation message and inline buttons
-    confirmation_message = await update.message.reply_photo(
-        photo=image_url,
-        caption=confirmation_text,
+    confirmation_message = await message.reply_photo(
+        photo=character['img_url'],
+        caption=(
+            f"💸 **ᴀʀᴇ ʏᴏᴜ sᴜʀᴇ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ sᴇʟʟ ᴛʜɪs ᴄʜᴀʀᴀᴄᴛᴇʀ?** 💸\n\n"
+            f"🫧 **ɴᴀᴍᴇ:** `{character.get('name', 'Unknown Name')}`\n"
+            f"⛩️ **ᴀɴɪᴍᴇ:** `{character.get('anime', 'Unknown Anime')}`\n"
+            f"🥂 **ʀᴀʀɪᴛʏ:** {rarity_emoji} `{rarity_display}`\n"
+            f"💰 **ᴄᴏɪɴ ᴠᴀʟᴜᴇ:** `{sale_value} coins`\n\n"
+            "⚜️ **ᴄʜᴏᴏsᴇ ᴀɴ ᴏᴘᴛɪᴏɴ:**"
+        ),
         reply_markup=InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("🟢 Confirm", callback_data=f"sell_confirm_{waifu_id}_{coin_value}"),
-                InlineKeyboardButton("🔴 Cancel", callback_data="sell_cancel")
+                InlineKeyboardButton("🟢 ᴄᴏɴғɪʀᴍ", callback_data=f"sell_yes_{character_id}_{sale_value}"),
+                InlineKeyboardButton("🔴 ᴄᴀɴᴄᴇʟ", callback_data=f"sell_no_{character_id}")
             ]
         ])
     )
 
-async def handle_callback_query(update, context):
-    query = update.callback_query
-    user_id = query.from_user.id
-    data = query.data
+    # Store confirmation details for callback
+    app.user_data.setdefault("sell_confirmations", {})
+    app.user_data["sell_confirmations"][confirmation_message.message_id] = character_id
 
-    if data.startswith("sell_confirm_"):
-        _, waifu_id, coin_value = data.split("_")
-        coin_value = int(coin_value)
+@app.on_callback_query(filters.regex(r"^sell_(yes|no)_.+"))
+async def handle_sell_confirmation(client: Client, callback_query):
+    data_parts = callback_query.data.split("_")
 
-        # Perform the sale
-        user = await user_collection.find_one({'id': user_id})
+    # Validate data format
+    if len(data_parts) < 3:
+        logging.error("Invalid callback data format")
+        await callback_query.answer("Invalid data received.")
+        return
+    
+    action = data_parts[1]
+    character_id = data_parts[2]
+    sale_value = int(data_parts[3]) if action == "yes" else 0  # Sale value only needed if confirmed
 
-        # Ensure character exists in user's harem
-        if not any(char['id'] == waifu_id for char in user.get('characters', [])):
-            await query.answer("You don't own this waifu!", show_alert=True)
-            return
+    user_id = callback_query.from_user.id
+    user = await user_collection.find_one({'id': user_id})
+    if not user or 'characters' not in user:
+        await callback_query.answer("😔 **You haven't seized any characters yet.**")
+        return
 
-        # Remove the sold waifu from the user's harem and update balance
+    character = next((c for c in user['characters'] if str(c.get('id')) == character_id), None)
+    if not character:
+        logging.error(f"Character ID {character_id} not found in user's collection.")
+        await callback_query.answer("🙄 **This character is not in your collection.**")
+        return
+
+    # Handle "yes" or "no" action
+    if action == "yes":
+        # Remove character from user's collection and add coins
         await user_collection.update_one(
             {'id': user_id},
-            {
-                '$pull': {'characters': {'id': waifu_id}},
-                '$inc': {'balance': coin_value}
-            }
+            {'$pull': {'characters': {'id': character_id}}, '$inc': {'balance': sale_value}}
         )
 
-        # Notify success in the current chat
-        await query.message.reply_text(f"✅ Successfully Sold Waifu 🌸\nWaifu ID: {waifu_id}\nSold For: {coin_value} 💸 Tokens.")
-        await query.answer()  # Acknowledge callback to close popup
+        # Notify user of successful sale
+        await callback_query.message.edit_caption(
+            caption=(
+                f"{random.choice(SUCCESS_EMOJIS)} **ᴄᴏɴɢʀᴀᴛs!** "
+                f"ʏᴏᴜ'ᴠᴇ sᴏʟᴅ `{character.get('name', 'Unknown Name')}` ғᴏʀ `{sale_value}` ᴄᴏɪɴs!"
+            ),
+            reply_markup=None  # Disable buttons after confirmation
+        )
 
-    elif data == "sell_cancel":
-        await query.message.reply_text("❌ Sell canceled.")
-        await query.answer("Sell canceled.", show_alert=True)
+    elif action == "no":
+        await callback_query.message.edit_caption(
+            caption=f"{random.choice(CANCEL_EMOJIS)} **ᴏᴘᴇʀᴀᴛɪᴏɴ ᴄᴀɴᴄᴇʟʟᴇᴅ.**",
+            reply_markup=None  # Disable buttons after cancellation
+        )
 
-# Define handlers
-sell_handler = CommandHandler("sell", sell)
-callback_query_handler = CallbackQueryHandler(handle_callback_query)
+    logging.info(f"User {user_id} handled sell confirmation successfully.")
 
-# Add handlers to the application
-application.add_handler(sell_handler)
-application.add_handler(callback_query_handler)
+# Function to calculate sale value based on rarity
+def calculate_sale_value(rarity: str) -> int:
+    # Sale values can be adjusted as desired
+    sale_values = {
+        '𝘾𝙊𝙈𝙈𝙊𝙉': 2000,
+        '𝙈𝙀𝘿𝙄𝙐𝙈': 4000,
+        '𝘾𝙃𝙄𝘽𝙄': 10000,
+        '𝙍𝘼𝙍𝙀': 5000,
+        '𝙇𝙀𝙂𝙀𝙉𝘿𝘼𝙍𝙔': 30000,
+        '𝙀𝙓𝘾𝙇𝙐𝙎𝙄𝙑𝙀': 20000,
+        '𝙇𝙄𝙈𝙄𝙏𝙀𝘿 𝙀𝘿𝙄𝙏𝙄𝙊𝙉': 40000,
+        '𝙋𝙍𝙀𝙈𝙄𝙐𝙈': 50000,
+        '𝙀𝙓𝙊𝙏𝙄𝘾': 60000,
+        '𝘼𝙎𝙏𝙍𝘼𝙇': 70000,
+        '𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀': 80000
+    }
+    return sale_values.get(rarity, 2000)
