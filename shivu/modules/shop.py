@@ -3,7 +3,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQ
 from pymongo import MongoClient
 from datetime import datetime
 import random
-from shivu import user_collection, item_collection
+from shivu import user_collection
 from shivu import shivuu as app
 
 # Constants
