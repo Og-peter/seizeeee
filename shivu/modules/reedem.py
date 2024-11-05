@@ -113,7 +113,7 @@ async def waifugen(client, message):
     
     response_text = (
         f"🌋 ʏᴏᴜʀ ᴡᴀɪғᴜ ᴄᴏᴅᴇ ʜᴀs ᴀʀʀɪᴠᴇᴅ!\n`{code}`\n\n"
-        f"✨ ɴᴀᴍᴇ: {waifu['name']}\n\n🥂 ʀᴀʀɪᴛʏ: {waifu['rarity']}\n\n☃️ ǫᴜᴀɴᴛɪᴛʏ: {quantity}\n\nsᴜᴍᴍᴏɴ ʜᴇʀ ᴡɪᴛʜ `/wredeem {code}`! 🥀"
+        f"✨ ɴᴀᴍᴇ: {waifu['name']}\n🥂 ʀᴀʀɪᴛʏ: {waifu['rarity']}\n☃️ ǫᴜᴀɴᴛɪᴛʏ: {quantity}\n\nsᴜᴍᴍᴏɴ ʜᴇʀ ᴡɪᴛʜ `/wredeem {code}`! 🥀"
     )
     
     await message.reply_text(response_text)
@@ -148,7 +148,7 @@ async def claimwaifu(client, message):
                 f"⚜️ ᴏᴡᴏ! {user_mention}, ʏᴏᴜ ʜᴀᴠᴇ ʀᴇᴄᴇɪᴠᴇᴅ ᴀ ɴᴇᴡ ᴄᴏᴍᴘᴀɴɪᴏɴ! 🌸\n\n"
                 f"🥂 ɴᴀᴍᴇ: {waifu['name']}\n"
                 f"❄️ ʀᴀʀɪᴛʏ: {waifu['rarity']}\n"
-                f"⛩️ ᴀɴɪᴍᴇ: {waifu['anime']}\n"
+                f"⛩️ ᴀɴɪᴍᴇ: {waifu['anime']}\n\n"
                 "ᴍᴀʏ sʜᴇ ʙʀɪɴɢ ʏᴏᴜ sᴛʀᴇɴɢᴛʜ ᴀɴᴅ ғᴏʀᴛᴜɴᴇ! 💫"
             )
             await message.reply_photo(photo=waifu['img_url'], caption=response_text)
