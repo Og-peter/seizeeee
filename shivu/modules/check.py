@@ -3,174 +3,117 @@ import os
 from pymongo import ReturnDocument
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
-from shivu import application, sudo_users, collection, db, CHARA_CHANNEL_ID, user_collection
-from shivu import shivuu as bot
-from pyrogram import Client, filters, types as t
-import random
+from shivu import application, collection, db, user_collection
+from html import escape
 
-# Command to check character by ID with animated emojis and fun messages
 async def check_character(update: Update, context: CallbackContext) -> None:
     try:
         args = context.args
         if len(args) != 1:
-            await update.message.reply_text('Usage: /check <character_id> 🎯')
+            await update.message.reply_text('Incorrect format. Please use: /check character_id')
             return
         character_id = args[0]
-        character = await collection.find_one({'id': character_id})
         
-        if character:
-            global_count = await user_collection.count_documents({'characters.id': character['id']})
-            
-            # Create animated loading message
-            loading_message = await update.message.reply_text("🔍 Searching for the character...")
-            
-            # Update message with the character info and emojis
-            response_message = (
-                f"<b>✨ Meet this Special Character ✨</b>\n\n"
-                f"<b>ID:</b> {character['id']}\n"
-                f"<b>Name:</b> {character['name']} 💫\n"
-                f"<b>Anime:</b> {character['anime']} 🎥\n"
-                f"<b>Rarity:</b> {character['rarity']} 🌟"
-            )
-            
-            # Add animated emoji labels for special cases
-            if '🐇' in character['name']:
-                response_message += "\n\n🐇 Special: Bunny 🐇"
-            elif '👩‍🏫' in character['name']:
-                response_message += "\n\n📚 Role: Teacher 📚"
-            elif '🎒' in character['name']:
-                response_message += "\n\n🎒 Role: Student 🎒"
-            elif '👘' in character['name']:
-                response_message += "\n\n👘 Outfit: Kimono 👘"
-            elif '🏖' in character['name']:
-                response_message += "\n\n🏖 Event: Summer 🏖"
-            elif '🎄' in character['name']:
-                response_message += "\n\n🎄 Event: Christmas 🎄"
-            elif '🧹' in character['name']:
-                response_message += "\n\n🧹 Role: Maid 🧹"
-            elif '🥻' in character['name']:
-                response_message += "\n\n🥻 Outfit: Saree 🥻"
-            elif '🩺' in character['name']:
-                response_message += "\n\n🩺 Role: Nurse 🩺"
-            elif '❄️' in character['name']:
-                response_message += "\n\n❄️ Event: Winter ❄️"
+        # Fetch character details
+        character = await collection.find_one({'id': character_id})
+        if not character:
+            await update.message.reply_text('Wrong id.')
+            return
+        
+        # Count globally seized times for the character
+        global_count = await user_collection.count_documents({'characters.id': character['id']})
+        
+        # Original response message retained
+        response_message = (
+            f"<b>🧋 ᴏᴡᴏ! ᴄʜᴇᴄᴋ ᴏᴜᴛ ᴛʜɪs ᴄʜᴀʀᴀᴄᴛᴇʀ !!</b>\n\n"
+            f"{character['id']}: <b>{character['name']}</b>\n"
+            f"<b>{character['anime']}</b>\n"
+            f"(𝙍𝘼𝙍𝙄𝙏𝙔: {character['rarity']})\n\n"
+            f"🌐 <b>Globally Seized:</b> {global_count}x"
+        )
+        
+        # Fetch top 10 users with this character
+        cursor = user_collection.find(
+            {'characters.id': character_id},
+            {'_id': 1, 'id': 1, 'first_name': 1, 'last_name': 1, 'username': 1, 'profile_name': 1, 'characters.$': 1}
+        ).sort([('characters.count', -1)]).limit(10)
 
-            # Inline keyboard with dynamic emoji progress bar and total owners
-            keyboard = InlineKeyboardMarkup([
-                [InlineKeyboardButton(f"🌍 Total Owners", callback_data=f"slaves_{character['id']}_{global_count}")],
-                [InlineKeyboardButton("📖 More Info", callback_data=f"info_{character['id']}")],
-                [InlineKeyboardButton("❤️ Favorite", callback_data=f"favorite_{character['id']}")]
-            ])
+        users = await cursor.to_list(length=10)
 
-            # Simulate a delay for effect
-            await context.bot.send_photo(
-                chat_id=update.effective_chat.id,
-                photo=character['img_url'],
-                caption=response_message,
-                parse_mode='HTML',
-                reply_markup=keyboard
-            )
-            await loading_message.delete()
+        # Debug: Print each user's full data to understand the structure
+        for user in users:
+            print("User Data:", user)  # Print the full user data to the console
+
+        if users:
+            response_message += "\n\n🌐 <b>Top 10 Grabbers of This Waifu:</b>\n\n"
+            for i, user in enumerate(users, start=1):
+                # Build the user's name (try multiple fields)
+                full_name = user.get('profile_name') or f"{user.get('first_name', '')} {user.get('last_name', '')}".strip() or user.get('username', 'Unknown User')
+                seized_count = user['characters'][0].get('count', 1)
+                
+                # Create mention link for the user
+                mention = f"<a href='tg://user?id={user['id']}'>{escape(full_name)}</a>"
+                response_message += f"├ {i:02d}. ➔ {mention} ✨ ➔ {seized_count}x\n"
         else:
-            await update.message.reply_text('❌ Invalid character ID.')
-            
-    except Exception as e:
-        await update.message.reply_text(f'Error: {str(e)}')
+            response_message += "\n\nNo users found with this character."
+        
+        # Create buttons for enhanced user interaction
+        keyboard = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("🌐 View Global Seize Count", callback_data=f"slaves_{character['id']}_{global_count}"),
+                InlineKeyboardButton("💎 Character Details", callback_data=f"details_{character['id']}")
+            ]
+        ])
 
-# Random character feature to surprise users with a random character
-async def random_character(update: Update, context: CallbackContext) -> None:
-    try:
-        # Get a random character from the collection
-        characters_count = await collection.count_documents({})
-        random_skip = random.randint(0, characters_count - 1)
-        random_character = await collection.find_one(skip=random_skip)
-
-        if random_character:
-            global_count = await user_collection.count_documents({'characters.id': random_character['id']})
-            response_message = (
-                f"<b>🎲 Random Character 🎲</b>\n\n"
-                f"<b>ID:</b> {random_character['id']}\n"
-                f"<b>Name:</b> {random_character['name']} 💫\n"
-                f"<b>Anime:</b> {random_character['anime']} 🎥\n"
-                f"<b>Rarity:</b> {random_character['rarity']} 🌟"
-            )
-            
-            keyboard = InlineKeyboardMarkup([
-                [InlineKeyboardButton(f"🌍 Total Owners", callback_data=f"slaves_{random_character['id']}_{global_count}")],
-                [InlineKeyboardButton("📖 More Info", callback_data=f"info_{random_character['id']}")]
-            ])
-
-            await context.bot.send_photo(
-                chat_id=update.effective_chat.id,
-                photo=random_character['img_url'],
-                caption=response_message,
-                parse_mode='HTML',
-                reply_markup=keyboard
-            )
-        else:
-            await update.message.reply_text('❌ Could not retrieve a random character.')
+        # Send the message with the image and buttons
+        await context.bot.send_photo(
+            chat_id=update.effective_chat.id,
+            photo=character['img_url'],
+            caption=response_message,
+            parse_mode='HTML',
+            reply_markup=keyboard
+        )
 
     except Exception as e:
+        # Log error for debugging
+        print(f"Error in check_character: {e}")
         await update.message.reply_text(f'Error: {str(e)}')
 
-# Handle callback queries for favorites, info, and owners
 async def handle_callback_query(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
-    data = query.data.split('_')
+    data = query.data
 
-    if data[0] == 'slaves':
-        character_id = data[1]
-        global_count = data[2]
-        await query.answer(f"🌍 Total Characters Owned: {global_count}.", show_alert=True)
-
-    elif data[0] == 'info':
-        character_id = data[1]
-        character = await collection.find_one({'id': character_id})
-
-        if character:
-            detailed_info = (
-                f"<b>Name:</b> {character['name']} 💫\n"
-                f"<b>Anime:</b> {character['anime']} 🎥\n"
-                f"<b>Rarity:</b> {character['rarity']} 🌟\n"
-                f"<b>Description:</b> {character.get('description', 'Description unavailable.')}\n"
-                f"<b>Global Seizure Count:</b> {await user_collection.count_documents({'characters.id': character_id})} 🌍"
-            )
-            await query.edit_message_caption(
-                caption=detailed_info,
-                parse_mode='HTML'
-            )
-        else:
-            await query.answer("Character information not available.", show_alert=True)
-
-    elif data[0] == 'favorite':
-        character_id = data[1]
-        user_id = query.from_user.id
-        
-        # Add favorite functionality
-        user_favorites = await user_collection.find_one({'user_id': user_id})
-        if user_favorites and 'favorites' in user_favorites:
-            if character_id in user_favorites['favorites']:
-                await query.answer("❤️ Already in your favorites!", show_alert=True)
+    try:
+        if data.startswith("slaves_"):
+            parts = data.split('_')
+            if len(parts) == 3:
+                _, char_id, global_count = parts
+                await query.answer(f"🌐 This character has been globally seized {global_count} times!", show_alert=True)
             else:
-                await user_collection.update_one(
-                    {'user_id': user_id},
-                    {'$push': {'favorites': character_id}},
-                    upsert=True
+                await query.answer("Invalid data format.", show_alert=True)
+        elif data.startswith("details_"):
+            char_id = data.split('_')[1]
+            # Fetch and display additional character details if needed
+            character = await collection.find_one({'id': char_id})
+            if character:
+                detail_message = (
+                    f"💎 <b>Character Details:</b>\n\n"
+                    f"<b>Name:</b> {character['name']}\n"
+                    f"<b>Anime:</b> {character['anime']}\n"
+                    f"<b>Rarity:</b> {character['rarity']} 🌟\n"
+                    f"<b>Description:</b> {character.get('description', 'No description available.')}\n"
                 )
-                await query.answer("❤️ Character added to favorites!", show_alert=True)
+                await query.message.reply_text(detail_message, parse_mode='HTML')
+            else:
+                await query.answer("Character details not found.", show_alert=True)
         else:
-            await user_collection.update_one(
-                {'user_id': user_id},
-                {'$set': {'favorites': [character_id]}},
-                upsert=True
-            )
-            await query.answer("❤️ Character added to favorites!", show_alert=True)
+            await query.answer("Unknown action.", show_alert=True)
 
-# Register the handlers
+    except Exception as e:
+        print(f"Error in handle_callback_query: {e}")
+        await query.answer(f"Error: {str(e)}", show_alert=True)
+
+# Command handler for /check command
 CHECK_HANDLER = CommandHandler('check', check_character, block=False)
-RANDOM_HANDLER = CommandHandler('random', random_character, block=False)
-
-# Add the handlers to the bot
+application.add_handler(CallbackQueryHandler(handle_callback_query, pattern='^(slaves_|details_)', block=False))
 application.add_handler(CHECK_HANDLER)
-application.add_handler(RANDOM_HANDLER)
-application.add_handler(CallbackQueryHandler(handle_callback_query, pattern='(slaves_|info_|favorite_)', block=False))
