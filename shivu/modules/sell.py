@@ -28,7 +28,6 @@ RARITY_EMOJIS = {
 async def sell(client: Client, message):
     user_id = message.from_user.id
 
-    # Check if command has a character ID
     if len(message.command) < 2:
         await message.reply_text(
             f'{random.choice(CANCEL_EMOJIS)} **Invalid usage!**\n'
@@ -52,9 +51,13 @@ async def sell(client: Client, message):
         return
 
     # Calculate sale value based on rarity
-    rarity = character.get('rarity', '𝘾𝙊𝙈𝙈𝙊𝙉')  # Default to 'Common' if not found
+    rarity = character.get('rarity', '𝘾𝙊𝙈𝙈𝙊𝙉')
     rarity_emoji, rarity_display = RARITY_EMOJIS.get(rarity, ('', rarity))
-    sale_value = calculate_sale_value(rarity)  # Calculate based on rarity
+    sale_value = calculate_sale_value(rarity)
+
+    if sale_value == 0:
+        await message.reply_text(f'⚠️ **Sale value not found for rarity `{rarity}`.**')
+        return
 
     # Send character photo with confirmation message and inline buttons
     confirmation_message = await message.reply_photo(
@@ -75,7 +78,6 @@ async def sell(client: Client, message):
         ])
     )
 
-    # Store confirmation details for callback
     app.user_data.setdefault("sell_confirmations", {})
     app.user_data["sell_confirmations"][confirmation_message.message_id] = character_id
 
@@ -83,15 +85,14 @@ async def sell(client: Client, message):
 async def handle_sell_confirmation(client: Client, callback_query):
     data_parts = callback_query.data.split("_")
 
-    # Validate data format
-    if len(data_parts) < 3:
+    if len(data_parts) < 4:
         logging.error("Invalid callback data format")
         await callback_query.answer("Invalid data received.")
         return
-    
+
     action = data_parts[1]
     character_id = data_parts[2]
-    sale_value = int(data_parts[3]) if action == "yes" else 0  # Sale value only needed if confirmed
+    sale_value = int(data_parts[3]) if action == "yes" else 0
 
     user_id = callback_query.from_user.id
     user = await user_collection.find_one({'id': user_id})
@@ -101,41 +102,36 @@ async def handle_sell_confirmation(client: Client, callback_query):
 
     character = next((c for c in user['characters'] if str(c.get('id')) == character_id), None)
     if not character:
-        logging.error(f"Character ID {character_id} not found in user's collection.")
         await callback_query.answer("🙄 **This character is not in your collection.**")
         return
 
-    # Handle "yes" or "no" action
     if action == "yes":
-        # Remove character from user's collection and add tokens to balance
         await user_collection.update_one(
             {'id': user_id},
             {
-                '$pull': {'characters': {'id': int(character_id)}}, 
-                '$inc': {'balance': sale_value, 'tokens': sale_value}  # Add tokens equal to sale value
+                '$pull': {'characters': {'id': int(character_id)}},
+                '$inc': {'balance': sale_value, 'tokens': sale_value}
             }
         )
 
-        # Notify user of successful sale
         await callback_query.message.edit_caption(
             caption=(
                 f"{random.choice(SUCCESS_EMOJIS)} **Congrats!** "
                 f"You've sold `{character.get('name', 'Unknown Name')}` for `{sale_value}` coins "
                 f"and received `{sale_value}` tokens!"
             ),
-            reply_markup=None  # Disable buttons after confirmation
+            reply_markup=None
         )
 
     elif action == "no":
         await callback_query.message.edit_caption(
             caption=f"{random.choice(CANCEL_EMOJIS)} **Operation cancelled.**",
-            reply_markup=None  # Disable buttons after cancellation
+            reply_markup=None
         )
 
     logging.info(f"User {user_id} handled sell confirmation successfully.")
 
 def calculate_sale_value(rarity: str) -> int:
-    # Sale values based on rarity levels
     rarity_coin_mapping = {
         '𝘾𝙊𝙈𝙈𝙊𝙉': 2000,
         '𝙈𝙀𝘿𝙄𝙐𝙈': 4000,
