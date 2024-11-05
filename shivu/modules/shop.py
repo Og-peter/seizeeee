@@ -134,7 +134,7 @@ async def callback_query_handler(_, query: CallbackQuery):
         price = int(price)
         user = await user_collection.find_one({'id': user_id})
 
-    # Get the user mention from the user data
+    # Get the user mention
     user_mention = f"<a href='tg://user?id={user_id}'>{user.get('username', 'User')}</a>"
 
     if action_type == "buy":
