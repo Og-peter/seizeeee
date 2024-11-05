@@ -166,7 +166,7 @@ async def callback_query_handler(_, query: CallbackQuery):
                     f"| ➩ 🥂 ɴᴀᴍᴇ: {character['name']}\n"
                     f"| ➩ ✨ ɪᴅ: {character['id']}\n"
                     f"| ➩ ⛩️ ᴀɴɪᴍᴇ: {character['anime']}\n"
-                    f"▰▱▱▱▱▱▱▱▱▱▰\n"
+                    f"▰▱▱▱▱▱▱▱▱▱▱▰\n"
                     f"| 🍃 ᴘʀɪᴄᴇ: {price} ᴛᴏᴋᴇɴs\n"
                 )
                 await app.send_photo(user_id, photo=character['img_url'], caption=dm_text, parse_mode="html")
