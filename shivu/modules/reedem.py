@@ -114,12 +114,15 @@ async def waifugen(client, message):
     # Store the generated waifu and its details
     generated_waifus[code] = {'waifu': waifu, 'quantity': quantity}
     
+    # Prepare the response text with waifu details and code
     response_text = (
         f"🌋 ʏᴏᴜʀ ᴡᴀɪғᴜ ᴄᴏᴅᴇ ʜᴀs ᴀʀʀɪᴠᴇᴅ!\n`{code}`\n\n"
-        f"✨ ɴᴀᴍᴇ: {waifu['name']}\n🥂 ʀᴀʀɪᴛʏ: {waifu['rarity']}\n☃️ ǫᴜᴀɴᴛɪᴛʏ: {quantity}\n\nsᴜᴍᴍᴏɴ ʜᴇʀ ᴡɪᴛʜ `/wredeem {code}`! 🥀"
+        f"✨ ɴᴀᴍᴇ: {waifu['name']}\n🥂 ʀᴀʀɪᴛʏ: {waifu['rarity']}\n"
+        f"☃️ ǫᴜᴀɴᴛɪᴛʏ: {quantity}\n\nsᴜᴍᴍᴏɴ ʜᴇʀ ᴡɪᴛʜ `/wredeem {code}`! 🥀"
     )
     
-    await message.reply_text(response_text)
+    # Send the message with the waifu image and text
+    await message.reply_photo(photo=waifu['img_url'], caption=response_text)
 
 # Waifu Redeem (users can claim waifus using codes)
 @app.on_message(filters.command(["wredeem"]))
