@@ -134,7 +134,6 @@ async def handle_sell_confirmation(client: Client, callback_query):
 
     logging.info(f"User {user_id} handled sell confirmation successfully.")
 
-# Function to calculate sale value based on rarity
 def calculate_sale_value(rarity: str) -> int:
     # Sale values based on rarity levels
     sale_values = {
@@ -150,5 +149,6 @@ def calculate_sale_value(rarity: str) -> int:
         '𝘼𝙎𝙏𝙍𝘼𝙇': 50000,
         '𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀': 60000
     }
-    # Default to a base value if the rarity isn't recognized
+    # Normalize the input to ensure it matches the dictionary keys
+    rarity = rarity.strip()  # Remove any leading/trailing spaces
     return sale_values.get(rarity, 1000)
