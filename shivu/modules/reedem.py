@@ -59,9 +59,12 @@ async def redeem(client, message):
     if code in generated_codes:
         code_info = generated_codes[code]
         
-        # Check if the user has already claimed this code
-        if user_id in code_info['claimed_by']:
-            await message.reply_text("😅 ᴀʜ, ʏᴏᴜ’ᴠᴇ ᴀʟʀᴇᴀᴅʏ ᴄʟᴀɪᴍᴇᴅ ᴛʜɪs. ɴᴏ ɴᴇᴇᴅ ᴛᴏ ʙᴇ ɢʀᴇᴇᴅʏ!")
+        # Initialize or check the user's claim count for the code
+        user_claim_count = code_info['claimed_by'].get(user_id, 0)
+        
+        # Limit to 2 redemptions per user
+        if user_claim_count >= 2:
+            await message.reply_text("😅 ᴀʜ, ʏᴏᴜ'ᴠᴇ ᴀʟʀᴇᴀᴅʏ ʀᴇᴅᴇᴇᴍᴇᴅ ᴛʜɪs ᴄᴏᴅᴇ ᴛᴡɪᴄᴇ. ɴᴏ ᴍᴏʀᴇ ʀᴇᴅᴇᴍᴘᴛɪᴏɴs ᴀʟʟᴏᴡᴇᴅ!")
             return
         
         # Check if there are claims remaining for the code
@@ -75,8 +78,8 @@ async def redeem(client, message):
             {'$inc': {'tokens': float(code_info['amount'])}}  # Update tokens instead of balance
         )
         
-        # Add user to the claimed_by list
-        code_info['claimed_by'].append(user_id)
+        # Increment the user's claim count and add user to the claimed_by list
+        code_info['claimed_by'][user_id] = user_claim_count + 1
         
         formatted_amount = format_amount(code_info['amount'])
         
