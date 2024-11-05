@@ -66,7 +66,7 @@ def generate_character_price(action_type):
 @app.on_message(filters.command(["cshop"]))
 async def shop(_, message: Message):
     user_id = message.from_user.id
-    user_mention = mention_html(user_id, message.from_user.first_name)
+    user_mention = f"<a href='tg://user?id={user_id}'>{query.from_user.first_name}</a>"
     waifus = await get_random_characters(collection)
     if not waifus:
         return await message.reply_text(f"{user_mention}, no characters available for purchase.", parse_mode="html")
@@ -79,7 +79,7 @@ async def shop(_, message: Message):
 @app.on_message(filters.command(["sell"]))
 async def sell(_, message: Message):
     user_id = message.from_user.id
-    user_mention = mention_html(user_id, message.from_user.first_name)
+    user_mention = f"<a href='tg://user?id={user_id}'>{query.from_user.first_name}</a>"
     user = await user_collection.find_one({'id': user_id})
 
     if not user or 'characters' not in user or not user['characters']:
@@ -94,7 +94,7 @@ async def sell(_, message: Message):
 @app.on_callback_query()
 async def callback_query_handler(_, query: CallbackQuery):
     user_id = query.from_user.id
-    user_mention = mention_html(user_id, query.from_user.first_name)
+    user_mention = f"<a href='tg://user?id={user_id}'>{query.from_user.first_name}</a>"
     data = query.data
     command_user_id = query.message.reply_to_message.command_user_id if query.message.reply_to_message else None
     
