@@ -151,4 +151,4 @@ def calculate_sale_value(rarity: str) -> int:
     }
     # Normalize the input to ensure it matches the dictionary keys
     rarity = rarity.strip()  # Remove any leading/trailing spaces
-    return sale_values.get(rarity, 1000)
+    return sale_values.get(rarity, 0)
