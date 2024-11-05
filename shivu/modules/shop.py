@@ -69,10 +69,10 @@ async def shop(_, message: Message):
     user_mention = f"<a href='tg://user?id={user_id}'>{message.from_user.first_name}</a>"
     waifus = await get_random_characters(collection)
     if not waifus:
-        return await message.reply_text(f"{user_mention}, no characters available for purchase.", parse_mode="html")
+        return await message.reply_text(f"{user_mention}, no characters available for purchase.")
     
     text, media, buttons = await generate_character_message(waifus, 0, "buy", user_mention)
-    await message.reply_photo(photo=media[0].media, caption=text, reply_markup=InlineKeyboardMarkup(buttons), parse_mode="html")
+    await message.reply_photo(photo=media[0].media, caption=text, reply_markup=InlineKeyboardMarkup(buttons))
     message.command_user_id = user_id  # Store the user ID for comparison in callbacks
 
 # Command for selling characters
@@ -83,11 +83,11 @@ async def sell(_, message: Message):
     user = await user_collection.find_one({'id': user_id})
 
     if not user or 'characters' not in user or not user['characters']:
-        return await message.reply_text(f"{user_mention}, you don't have any characters available for sale.", parse_mode="html")
+        return await message.reply_text(f"{user_mention}, you don't have any characters available for sale.")
     
     characters = random.sample(user['characters'], min(CHARACTERS_PER_PAGE, len(user['characters'])))
     text, media, buttons = await generate_character_message(characters, 0, "sell", user_mention)
-    await message.reply_photo(photo=media[0].media, caption=text, reply_markup=InlineKeyboardMarkup(buttons), parse_mode="html")
+    await message.reply_photo(photo=media[0].media, caption=text, reply_markup=InlineKeyboardMarkup(buttons))
     message.command_user_id = user_id  # Store the user ID for comparison in callbacks
 
 # Callback query handler for pagination, refresh, buy, and sell actions
@@ -115,7 +115,7 @@ async def callback_query_handler(_, query: CallbackQuery):
 
         text, media, buttons = await generate_character_message(characters, page, action_type, user_mention)
         await query.message.edit_media(media=media[0])
-        await query.message.edit_caption(caption=text, reply_markup=InlineKeyboardMarkup(buttons), parse_mode="html")
+        await query.message.edit_caption(caption=text, reply_markup=InlineKeyboardMarkup(buttons))
 
     elif "refresh" in data:
         action_type = "buy" if "buy" in data else "sell"
@@ -134,7 +134,7 @@ async def callback_query_handler(_, query: CallbackQuery):
         
         text, media, buttons = await generate_character_message(characters, 0, action_type, user_mention)
         await query.message.edit_media(media=media[0])
-        await query.message.edit_caption(caption=text, reply_markup=InlineKeyboardMarkup(buttons), parse_mode="html")
+        await query.message.edit_caption(caption=text, reply_markup=InlineKeyboardMarkup(buttons))
         await query.answer("Characters refreshed!")
 
     elif "buy_" in data or "sell_" in data:
@@ -155,7 +155,7 @@ async def callback_query_handler(_, query: CallbackQuery):
 
             buy_confirmation_text = f"{user_mention}, character purchased successfully!"
             await query.answer(buy_confirmation_text)  
-            await query.message.reply_text(buy_confirmation_text, parse_mode="html")
+            await query.message.reply_text(buy_confirmation_text)
 
             # Send DM confirmation
             character = await collection.find_one({'id': character_id})
@@ -169,7 +169,7 @@ async def callback_query_handler(_, query: CallbackQuery):
                     f"▰▱▱▱▱▱▱▱▱▱▱▰\n"
                     f"| 🍃 ᴘʀɪᴄᴇ: {price} ᴛᴏᴋᴇɴs\n"
                 )
-                await app.send_photo(user_id, photo=character['img_url'], caption=dm_text, parse_mode="html")
+                await app.send_photo(user_id, photo=character['img_url'], caption=dm_text)
 
         elif action_type == "sell":
             # Check if the character exists in the user's collection
@@ -182,7 +182,7 @@ async def callback_query_handler(_, query: CallbackQuery):
 
                 sell_confirmation_text = f"{user_mention}, character sold successfully!"
                 await query.answer(sell_confirmation_text)
-                await query.message.reply_text(sell_confirmation_text, parse_mode="html")
+                await query.message.reply_text(sell_confirmation_text)
 
                 # Send DM confirmation
                 character = next((char for char in user['characters'] if char['id'] == character_id), None)
@@ -196,6 +196,6 @@ async def callback_query_handler(_, query: CallbackQuery):
                         f"▰▱▱▱▱▱▱▱▱▱▰\n"
                         f"| 🍃 sᴏʟᴅ ғᴏʀ: {price} ᴛᴏᴋᴇɴs\n"
                     )
-                    await app.send_photo(user_id, photo=character['img_url'], caption=dm_text, parse_mode="html")
+                    await app.send_photo(user_id, photo=character['img_url'], caption=dm_text)
             else:
                 await query.answer("Character not found in your collection.", show_alert=True)
