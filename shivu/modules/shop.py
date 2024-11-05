@@ -33,29 +33,29 @@ async def generate_character_message(characters, page, action_type):
     price = generate_character_price(action_type)
     text = (
         f"╭──\n"
-        f"| ➩ Name: {current_character['name']}\n"
-        f"| ➩ ID: {current_character['id']}\n"
-        f"| ➩ Anime: {current_character['anime']}\n"
-        f"▰▱▰▱▰▱▰▱▰▱\n"
-        f"| Price: {price}\n"
+        f"| ➩ 🥂 ɴᴀᴍᴇ: {current_character['name']}\n"
+        f"| ➩ ✨ ɪᴅ: {current_character['id']}\n"
+        f"| ➩ ⛩️ ᴀɴɪᴍᴇ: {current_character['anime']}\n"
+        f"▰▱▱▱▱▱▱▱▱▱▰\n"
+        f"| 🍃 ᴘʀɪᴄᴇ: {price} ᴛᴏᴋᴇɴs\n"
     )
     img_url = current_character['img_url']
     media = [InputMediaPhoto(media=img_url, caption="Loading...")]
 
-    action_button = InlineKeyboardButton("Sell 🛒" if action_type == "sell" else "Buy 🛒", callback_data=f"{action_type}_{current_character['id']}_{price}")
+    action_button = InlineKeyboardButton("sᴇʟʟ 🛒" if action_type == "sell" else "Buy 🛒", callback_data=f"{action_type}_{current_character['id']}_{price}")
     buttons = [[action_button]]
 
     if page == 0:
-        buttons.append([InlineKeyboardButton("Next ➡️", callback_data=f"next_{page}_{action_type}")])
+        buttons.append([InlineKeyboardButton("ɴᴇxᴛ ➡️", callback_data=f"next_{page}_{action_type}")])
     elif page == len(characters) - 1:
-        buttons.append([InlineKeyboardButton("⬅️ Prev", callback_data=f"prev_{page}_{action_type}")])
+        buttons.append([InlineKeyboardButton("⬅️ ᴘʀᴇᴠ", callback_data=f"prev_{page}_{action_type}")])
     else:
         buttons.append([
-            InlineKeyboardButton("⬅️ Prev", callback_data=f"prev_{page}_{action_type}"),
-            InlineKeyboardButton("Next ➡️", callback_data=f"next_{page}_{action_type}")
+            InlineKeyboardButton("⬅️ ᴘʀᴇᴠ", callback_data=f"prev_{page}_{action_type}"),
+            InlineKeyboardButton("ɴᴇxᴛ ➡️", callback_data=f"next_{page}_{action_type}")
         ])
 
-    buttons.append([InlineKeyboardButton("Refresh 🔄 (100 tokens)", callback_data=f"refresh_{action_type}")])
+    buttons.append([InlineKeyboardButton("ʀᴇғʀᴇsʜ 🔄 (100 ᴛᴏᴋᴇɴs)", callback_data=f"refresh_{action_type}")])
 
     return text, media, buttons
 
@@ -149,13 +149,13 @@ async def callback_query_handler(_, query: CallbackQuery):
             character = next((char for char in await get_random_characters(collection, {'id': character_id}) if char['id'] == character_id), None)
             if character:
                 dm_text = (
-                    f"You have successfully purchased:\n\n"
+                    f"ʏᴏᴜ ʜᴀᴠᴇ sᴜᴄᴄᴇssғᴜʟʟʏ ᴘᴜʀᴄʜᴀsᴇᴅ:\n\n"
                     f"╭──\n"
-                    f"| ➩ Name: {character['name']}\n"
-                    f"| ➩ ID: {character['id']}\n"
-                    f"| ➩ Anime: {character['anime']}\n"
-                    f"▰▱▰▱▰▱▰▱▰▱\n"
-                    f"| Price: {price} tokens\n"
+                    f"| ➩ 🥂 ɴᴀᴍᴇ: {character['name']}\n"
+                    f"| ➩ ✨ ɪᴅ: {character['id']}\n"
+                    f"| ➩ ⛩️ ᴀɴɪᴍᴇ: {character['anime']}\n"
+                    f"▰▱▱▱▱▱▱▱▱▱▰\n"
+                    f"| 🍃 ᴘʀɪᴄᴇ: {price} ᴛᴏᴋᴇɴs\n"
                 )
                 await app.send_photo(user_id, photo=character['img_url'], caption=dm_text)
 
@@ -171,13 +171,13 @@ async def callback_query_handler(_, query: CallbackQuery):
                 character = next((char for char in user['characters'] if char['id'] == character_id), None)
                 if character:
                     dm_text = (
-                        f"You have successfully sold:\n\n"
+                        f"ʏᴏᴜ ʜᴀᴠᴇ sᴜᴄᴄᴇssғᴜʟʟʏ sᴏʟᴅ:\n\n"
                         f"╭──\n"
-                        f"| ➩ Name: {character['name']}\n"
-                        f"| ➩ ID: {character['id']}\n"
-                        f"| ➩ Anime: {character['anime']}\n"
+                        f"| ➩ 🥂 ɴᴀᴍᴇ: {character['name']}\n"
+                        f"| ➩ ✨ ɪᴅ: {character['id']}\n"
+                        f"| ➩ ⛩️ ᴀɴɪᴍᴇ: {character['anime']}\n"
                         f"▰▱▰▱▰▱▰▱▰▱\n"
-                        f"| Price: {price} tokens\n"
+                        f"| 🍃 ᴘʀɪᴄᴇ: {price} ᴛᴏᴋᴇɴs\n"
                     )
                     await app.send_photo(user_id, photo=character['img_url'], caption=dm_text)
             else:
