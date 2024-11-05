@@ -11,7 +11,12 @@ REFRESH_COST = 100
 # Helper function to fetch random characters from the collection
 async def get_random_characters(source_collection, filter_query=None):
     try:
-        pipeline = [{'$match': filter_query} if filter_query else {}, {'$sample': {'size': CHARACTERS_PER_PAGE}}]
+        # Build the pipeline correctly to avoid an empty stage
+        pipeline = []
+        if filter_query:
+            pipeline.append({'$match': filter_query})
+        pipeline.append({'$sample': {'size': CHARACTERS_PER_PAGE}})
+
         cursor = source_collection.aggregate(pipeline)
         characters = await cursor.to_list(length=None)
         return characters if characters else []
@@ -22,10 +27,7 @@ async def get_random_characters(source_collection, filter_query=None):
 # Helper function to generate message content for characters
 async def generate_character_message(characters, page, action_type):
     if not characters or page >= len(characters):
-        if action_type == "sell":
-            return "You don't have any characters available for sale.", [], []
-        else:
-            return "No characters currently available in the shop.", [], []
+        return "No characters available.", [], []
 
     current_character = characters[page]
     price = generate_character_price(action_type)
@@ -66,14 +68,10 @@ def generate_character_price(action_type):
 async def shop(_, message: Message):
     waifus = await get_random_characters(collection)
     if not waifus:
-        return await message.reply_text("No characters currently available in the shop.")
+        return await message.reply_text("No characters available for purchase.")
     
     text, media, buttons = await generate_character_message(waifus, 0, "buy")
-    # Check if media has elements to avoid IndexError
-    if media:
-        await message.reply_photo(photo=media[0].media, caption=text, reply_markup=InlineKeyboardMarkup(buttons))
-    else:
-        await message.reply_text(text)
+    await message.reply_photo(photo=media[0].media, caption=text, reply_markup=InlineKeyboardMarkup(buttons))
 
 # Command for selling characters
 @app.on_message(filters.command(["sell"]))
@@ -86,11 +84,7 @@ async def sell(_, message: Message):
     
     characters = random.sample(user['characters'], min(CHARACTERS_PER_PAGE, len(user['characters'])))
     text, media, buttons = await generate_character_message(characters, 0, "sell")
-    # Check if media has elements to avoid IndexError
-    if media:
-        await message.reply_photo(photo=media[0].media, caption=text, reply_markup=InlineKeyboardMarkup(buttons))
-    else:
-        await message.reply_text(text)
+    await message.reply_photo(photo=media[0].media, caption=text, reply_markup=InlineKeyboardMarkup(buttons))
 
 # Callback query handler for pagination and refresh
 @app.on_callback_query()
