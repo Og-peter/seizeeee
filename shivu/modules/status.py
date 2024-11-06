@@ -35,6 +35,7 @@ async def get_global_rank(user_id):
     for idx, user in enumerate(all_users):
         if user["id"] == user_id:
             return idx + 1  # Rank is index + 1 in the sorted list
+    return None
 
 # Calculate chat rank based on waifu count within the current chat
 async def get_chat_rank(user_id, chat_id):
@@ -42,6 +43,7 @@ async def get_chat_rank(user_id, chat_id):
     for idx, user in enumerate(chat_users):
         if user["id"] == user_id:
             return idx + 1  # Rank is index + 1 in the sorted list
+    return None
 
 async def get_user_info(user, chat_id, already=False):
     try:
@@ -92,8 +94,8 @@ async def get_user_info(user, chat_id, already=False):
 │    🔵 Medium: {rarities['Medium']}
 │    ⚪ Common: {rarities['Common']}
 │
-│ 🌍 **Position Globally:** {global_rank}
-│ 🍃 **Chat Position:** {chat_rank}
+│ 🌍 **Position Globally:** {global_rank or 'N/A'}
+│ 🍃 **Chat Position:** {chat_rank or 'N/A'}
 └─────────────────────────────┘
 """
 
