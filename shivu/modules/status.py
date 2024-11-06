@@ -20,13 +20,22 @@ def generate_character_progress_bar(total_waifus, total_characters):
     empty_bars = 10 - filled_bars
     return "▰" * filled_bars + "▱" * empty_bars
 
-# Count rarities in user's collection
+# Count rarities in user's collection and include emojis
 async def count_rarities(characters):
-    rarities = {"Legendary": 0, "Rare": 0, "Medium": 0, "Common": 0}
+    # Define rarities with default values
+    rarities = {
+        "Legendary": {"count": 0, "emoji": "🟡"},
+        "Rare": {"count": 0, "emoji": "🟠"},
+        "Medium": {"count": 0, "emoji": "🔵"},
+        "Common": {"count": 0, "emoji": "⚪"}
+    }
+    
+    # Count each character's rarity in the user's collection
     for character in characters:
         rarity = character.get("rarity", "Common")  # Default to "Common" if not specified
         if rarity in rarities:
-            rarities[rarity] += 1
+            rarities[rarity]["count"] += 1
+
     return rarities
 
 # Calculate global rank based on waifu count
@@ -89,10 +98,10 @@ async def get_user_info(user, chat_id, already=False):
 │ 📊 **Progress Bar:** `{progress_bar}`
 │
 │ 🌟 **Rarity:** 
-│    🟡 Legendary: {rarities['Legendary']}
-│    🟠 Rare: {rarities['Rare']}
-│    🔵 Medium: {rarities['Medium']}
-│    ⚪ Common: {rarities['Common']}
+│    {rarities['Legendary']['emoji']} Legendary: {rarities['Legendary']['count']}
+│    {rarities['Rare']['emoji']} Rare: {rarities['Rare']['count']}
+│    {rarities['Medium']['emoji']} Medium: {rarities['Medium']['count']}
+│    {rarities['Common']['emoji']} Common: {rarities['Common']['count']}
 │
 │ 🌍 **Position Globally:** {global_rank or 'N/A'}
 │ 🍃 **Chat Position:** {chat_rank or 'N/A'}
