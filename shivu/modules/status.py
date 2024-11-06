@@ -22,7 +22,6 @@ def generate_character_progress_bar(total_waifus, total_characters):
 
 # Count rarities in user's collection and filter out those with zero count
 async def count_rarities(characters):
-    # Define rarities with default values
     rarities = {
         "Common": {"count": 0, "emoji": "⚪️"},
         "Limited Edition": {"count": 0, "emoji": "🔮"},
@@ -36,24 +35,20 @@ async def count_rarities(characters):
         "Astral": {"count": 0, "emoji": "🎐"},
         "Valentine": {"count": 0, "emoji": "💞"}
     }
-    
-    # Count each character's rarity in the user's collection
+
     for character in characters:
-        rarity = character.get("rarity", "Common")  # Default to "Common" if not specified
+        rarity = character.get("rarity", "Common")
         if rarity in rarities:
             rarities[rarity]["count"] += 1
 
-    # Filter out rarities that have a count of zero
-    filtered_rarities = {rarity: data for rarity, data in rarities.items() if data["count"] > 0}
-
-    return filtered_rarities
+    return {rarity: data for rarity, data in rarities.items() if data["count"] > 0}
 
 # Calculate global rank based on waifu count
 async def get_global_rank(user_id):
     all_users = await user_collection.find({}).sort("total_waifus", -1).to_list(None)
     for idx, user in enumerate(all_users):
         if user["id"] == user_id:
-            return idx + 1  # Rank is index + 1 in the sorted list
+            return idx + 1
     return None
 
 # Calculate chat rank based on waifu count within the current chat
@@ -61,7 +56,7 @@ async def get_chat_rank(user_id, chat_id):
     chat_users = await user_collection.find({"chat_id": chat_id}).sort("total_waifus", -1).to_list(None)
     for idx, user in enumerate(chat_users):
         if user["id"] == user_id:
-            return idx + 1  # Rank is index + 1 in the sorted list
+            return idx + 1
     return None
 
 async def get_user_info(user, chat_id, already=False):
