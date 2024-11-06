@@ -44,7 +44,7 @@ async def count_rarities(characters):
             rarities[rarity]["count"] += 1
 
     # Filter out rarities that have a count of zero
-    filtered_rarities = {k: v for k, v in rarities.items() if v["count"] > 0}
+    filtered_rarities = {rarity: data for rarity, data in rarities.items() if data["count"] > 0}
 
     return filtered_rarities
 
