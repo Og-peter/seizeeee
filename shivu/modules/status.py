@@ -1,151 +1,149 @@
+import os
+import random
+import html
+
 import asyncio
-from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
-from shivu import shivuu, SUPPORT_CHAT, user_collection, collection
-from datetime import datetime
+from datetime import datetime, timedelta
 
-# Retrieve or initialize user balance
-async def get_user_balance(user_id):
-    user = await user_collection.find_one({"id": user_id})
-    return user.get("balance", 0) if user else 0
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
 
-# XP and Level Calculator
-def calculate_level(xp):
-    return xp // 120
+from shivu import application, OWNER_ID, user_collection, top_global_groups_collection, group_user_totals_collection
+from shivu import sudo_users as SUDO_USERS 
+from shivu import collection
 
-# Progress bar generator for collection tracking
-def progress_bar(current, total, length=10):
-    filled_length = int((current / total) * length) if total > 0 else 0
-    return "⬜" * filled_length + "⬛" * (length - filled_length)
+async def get_global_rank(username: str) -> int:
+    pipeline = [
+        {"$match": {"characters": {"$exists": True, "$ne": []}}},
+        {"$project": {"username": 1, "first_name": 1, "character_count": {"$size": "$characters"}}},
+        {"$sort": {"character_count": -1}}
+    ]
+    cursor = user_collection.aggregate(pipeline)
+    leaderboard_data = await cursor.to_list(length=None)
+    total_users = await user_collection.count_documents({})  # Total number of users in the database
+    for i, user in enumerate(leaderboard_data, start=1):
+        if user.get('username') == username:
+            return i, total_users
+    return 0, total_users
 
-# Rarity Counter for user's character collection (display all rarities)
-async def rarity_summary(characters):
-    rarity_icons = {
-        "Common": "⚪️", "Limited": "🔮", "Premium": "🫧", "Exotic": "🌸",
-        "Exclusive": "💮", "Chibi": "👶", "Legendary": "🟡", "Rare": "🟠",
-        "Medium": "🔵", "Astral": "🎐", "Valentine": "💞"
-    }
-    rarity_count = {rarity: 0 for rarity in rarity_icons}
+async def my_profile(update: Update, context: CallbackContext):
+    if update.message:
+        loading_message = await context.bot.send_message(chat_id=update.message.chat_id, text="Loading user data...")
 
-    for char in characters:
-        rarity = char.get("rarity", "Common")
-        if rarity in rarity_count:
-            rarity_count[rarity] += 1
+        user_id = update.effective_user.id
 
-    return "\n".join(f"{emoji} {rarity}: {count}" for rarity, count in rarity_count.items())
+        await asyncio.sleep(2)
 
-# Fetch global rank based on waifu count
-async def global_rank(user_id):
-    users = await user_collection.find({"total_waifus": {"$exists": True}}).sort("total_waifus", -1).to_list(None)
-    return next((rank + 1 for rank, user in enumerate(users) if user["id"] == user_id), "N/A")
+        user_data = await user_collection.find_one({'id': user_id})
 
-# Fetch chat-specific rank
-async def chat_rank(user_id, chat_id):
-    chat_users = await user_collection.find({"chat_id": chat_id, "total_waifus": {"$exists": True}}).sort("total_waifus", -1).to_list(None)
-    return next((rank + 1 for rank, user in enumerate(chat_users) if user["id"] == user_id), "N/A")
+        if user_data:
+            user_first_name = user_data.get('first_name', 'Unknown')
+            user_id = user_data.get('id', 'Unknown')
+            user_balance = user_data.get('balance', 0)
+            total_characters = await collection.count_documents({})
+            characters_count = len(user_data.get('characters', []))
+            character_percentage = (characters_count / total_characters) * 100
 
-# Retrieve and display profile info
-async def profile_info(user_id, chat_id):
-    user = await shivuu.get_users(user_id)
-    if not user or not user.first_name:
-        return "⚠️ User not found.", None, None
+            username = user_data.get('username', None)
+            global_rank, total_users = await get_global_rank(username)
 
-    user_data = await user_collection.find_one({"id": user_id})
-    if not user_data:
-        return "⚠️ User not found in the database.", None, None
+            progress_bar_length = 10
+            filled_blocks = int((character_percentage / 100) * progress_bar_length)
+            progress_bar = "▰" * filled_blocks + "▱" * (progress_bar_length - filled_blocks)
 
-    waifu_count = len(user_data.get("characters", []))
-    total_characters = await collection.count_documents({})
-    progress = progress_bar(waifu_count, total_characters)
-    rarity_stats = await rarity_summary(user_data.get("characters", []))
+            user_tag = f"<a href='tg://user?id={user_id}'>{html.escape(user_first_name)}</a>"
 
-    rank_global = await global_rank(user_id)
-    rank_chat = await chat_rank(user_id, chat_id)
-    balance = await get_user_balance(user_id)
-    xp = user_data.get("xp", 0)
-    level = calculate_level(xp)
+            rarity_counts = {
+                "⚪️ Common": 0,
+                "🔮 Limited Edition": 0,
+                "🫧 Premium": 0,
+                "🌸 Exotic": 0,
+                "💮 Exclusive": 0,
+                "👶 Chibi": 0,
+                "🟡 Legendary": 0,
+                "🟠 Rare": 0,
+                "🔵 Medium": 0,
+                "🎐 Astral": 0,
+                "💞 Valentine": 0
+            }
 
-    last_login = user_data.get("last_login")
-    streak = user_data.get("login_streak", 0) + 1 if last_login else 1
-    await user_collection.update_one({'id': user_id}, {'$set': {'last_login': datetime.now(), 'login_streak': streak}})
+            for char in user_data.get('characters', []):
+                rarity = char.get('rarity', '⚪️ Common')
+                if rarity in rarity_counts:
+                    rarity_counts[rarity] += 1
 
-    profile_text = f"""
-**User Profile**
-👤 **Name:** [{user.first_name}](tg://user?id={user_id})
-🆔 **ID:** `{user_id}`
-💰 **Balance:** {balance}
-🕹 **Waifus:** {waifu_count}/{total_characters}
-📊 **Progress:** `{progress}`
-🌟 **Level:** {level}
-📈 **Rarities:**
-{rarity_stats}
+            rarity_message = "\n".join([
+                f"├─➩ {rarity}: {count}"
+                for rarity, count in rarity_counts.items()
+            ])
 
-🌍 **Global Rank:** {rank_global}
-🌿 **Chat Rank:** {rank_chat}
-"""
+            profile_message = (
+                f"╒═══「  Looter Details 」\n"
+                f"╰─➩ Name: {user_tag}\n"
+                f"╰─➩ Coins: `{user_balance}` \n"
+                f"╰─➩ Total Waifus In Bot: {total_characters}\n"
+                f"╰─➩ User Characters : {characters_count} ({character_percentage:.2f}%)\n"
+                f"╰─➩ Development Bar: {progress_bar}\n\n"
+                f"╰─➩ Global Rank: `{global_rank}`\n"
+                f"╰──────────────────\n"
+                f"{rarity_message}\n"
+                f"╰───────────────────"
+            )
 
-    media_id = user_data.get("custom_photo")
-    media_type = user_data.get("custom_media_type", "photo")
+            if user_data.get('warned_until') and user_data.get('warned_until') > datetime.now():
+                remaining_time = user_data.get('warned_until') - datetime.now()
+                profile_message += f"\n⚠️ Warned: {remaining_time.seconds // 60} minutes remaining before release."
 
-    return profile_text.strip(), media_id, media_type
+            close_button = InlineKeyboardButton("ᴄʟᴏsᴇ 🔖", callback_data="close")
+            keyboard = InlineKeyboardMarkup([[close_button]])
 
-# Display user profile with media and buttons
-@shivuu.on_message(filters.command("status"))
-async def show_profile(client, message: Message):
-    user_id = message.reply_to_message.from_user.id if message.reply_to_message else message.from_user.id
-    chat_id = message.chat.id
-    loading_msg = await message.reply_text("🔍 Loading profile...")
-
-    profile_text, media_id, media_type = await profile_info(user_id, chat_id)
-    buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("💬 Support", url=f"https://t.me/{SUPPORT_CHAT}")]
-    ])
-
-    # Add a small delay before deleting the loading message
-    await asyncio.sleep(1)  # Adjust the sleep time if necessary
-    
-    await loading_msg.delete()
-
-    try:
-        if media_id:
-            if media_type == "photo":
-                await message.reply_photo(media_id, caption=profile_text, reply_markup=buttons)
-            elif media_type == "video":
-                await message.reply_video(media_id, caption=profile_text, reply_markup=buttons)
-            elif media_type == "animation":
-                await message.reply_animation(media_id, caption=profile_text, reply_markup=buttons)
-            elif media_type == "sticker":
-                await message.reply_sticker(media_id)
-                await message.reply_text(profile_text, reply_markup=buttons)
+            try:
+                await context.bot.send_message(chat_id=update.message.chat_id, text=profile_message, reply_markup=keyboard, parse_mode='HTML')
+                await loading_message.delete()
+            except Exception as e:
+                print(f"Error in sending message: {e}")
         else:
-            await message.reply_text(profile_text, disable_web_page_preview=True, reply_markup=buttons)
-    except Exception as e:
-        print(f"Error displaying media: {e}")
-        await message.reply_text(profile_text, disable_web_page_preview=True, reply_markup=buttons)
+            profile_message = "Unable to retrieve user information."
+            try:
+                await context.bot.send_message(chat_id=update.message.chat_id, text=profile_message)
+            except Exception as e:
+                print(f"Error in sending message: {e}")
+    else:
+        print("No message to reply to.")
 
-# Command to set user profile picture with supported media
-@shivuu.on_message(filters.command("setpic") & filters.reply)
-async def set_profile_pic(client, message: Message):
-    reply = message.reply_to_message
-    user_id = message.from_user.id
+async def set_profile_pic(update: Update, context: CallbackContext):
+    reply = update.message.reply_to_message
+    user_id = update.effective_user.id
 
-    media = None
-    media_type = None
-    if reply.photo:
-        media, media_type = reply.photo.file_id, "photo"
-    elif reply.video:
-        media, media_type = reply.video.file_id, "video"
-    elif reply.animation:
-        media, media_type = reply.animation.file_id, "animation"
-    elif reply.sticker:
-        media, media_type = reply.sticker.file_id, "sticker"
+    if reply and (reply.photo or reply.video or reply.animation or reply.sticker):
+        if reply.photo:
+            media_id, media_type = reply.photo[-1].file_id, "photo"
+        elif reply.video:
+            media_id, media_type = reply.video.file_id, "video"
+        elif reply.animation:
+            media_id, media_type = reply.animation.file_id, "animation"
+        elif reply.sticker:
+            media_id, media_type = reply.sticker.file_id, "sticker"
 
-    if not media:
-        return await message.reply_text("⚠️ Reply with an image, video, GIF, or sticker.")
+        await user_collection.update_one(
+            {'id': user_id},
+            {'$set': {'custom_photo': media_id, 'custom_media_type': media_type}},
+            upsert=True
+        )
+        await context.bot.send_message(chat_id=update.message.chat_id, text="✅ Profile picture updated successfully!")
+    else:
+        await context.bot.send_message(chat_id=update.message.chat_id, text="⚠️ Reply with an image, video, GIF, or sticker.")
 
-    await user_collection.update_one(
-        {'id': user_id},
-        {'$set': {'custom_photo': media, 'custom_media_type': media_type}},
-        upsert=True
-    )
-    await message.reply_text("✅ Profile picture updated successfully!")
+application.add_handler(CommandHandler("status", my_profile))
+application.add_handler(CommandHandler("setpic", set_profile_pic))
+
+async def button(update: Update, context: CallbackContext):
+    query = update.callback_query
+    if query.data == "close":
+        try:
+            await query.message.delete()
+        except Exception as e:
+            print(f"Error in deleting message: {e}")
+    await query.answer()
+
+application.add_handler(CallbackQueryHandler(button))
