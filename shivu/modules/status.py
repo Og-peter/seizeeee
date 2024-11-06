@@ -1,15 +1,13 @@
 import os
 import random
 import html
-
 import asyncio
 from datetime import datetime, timedelta
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
-
 from shivu import application, OWNER_ID, user_collection, top_global_groups_collection, group_user_totals_collection
-from shivu import sudo_users as SUDO_USERS 
+from shivu import sudo_users as SUDO_USERS
 from shivu import collection
 
 async def get_global_rank(username: str) -> int:
@@ -20,7 +18,7 @@ async def get_global_rank(username: str) -> int:
     ]
     cursor = user_collection.aggregate(pipeline)
     leaderboard_data = await cursor.to_list(length=None)
-    total_users = await user_collection.count_documents({})  # Total number of users in the database
+    total_users = await user_collection.count_documents({})
     for i, user in enumerate(leaderboard_data, start=1):
         if user.get('username') == username:
             return i, total_users
@@ -37,7 +35,6 @@ async def my_profile(update: Update, context: CallbackContext):
 
         if user_data:
             user_first_name = user_data.get('first_name', 'Unknown')
-            user_id = user_data.get('id', 'Unknown')
             user_balance = user_data.get('balance', 0)
             total_characters = await collection.count_documents({})
             characters_count = len(user_data.get('characters', []))
@@ -93,11 +90,27 @@ async def my_profile(update: Update, context: CallbackContext):
                 remaining_time = user_data.get('warned_until') - datetime.now()
                 profile_message += f"\n⚠️ Warning: {remaining_time.seconds // 60} mins left."
 
+            # Retrieve custom profile picture if set
+            media_id = user_data.get("custom_photo")
+            media_type = user_data.get("custom_media_type", "photo")
+
             close_button = InlineKeyboardButton("🔒 Close", callback_data="close")
             keyboard = InlineKeyboardMarkup([[close_button]])
 
             try:
-                await update.message.reply_text(profile_message, reply_markup=keyboard, parse_mode='HTML')
+                # Send the custom profile picture or text message
+                if media_id:
+                    if media_type == "photo":
+                        await update.message.reply_photo(media_id, caption=profile_message, reply_markup=keyboard, parse_mode='HTML')
+                    elif media_type == "video":
+                        await update.message.reply_video(media_id, caption=profile_message, reply_markup=keyboard, parse_mode='HTML')
+                    elif media_type == "animation":
+                        await update.message.reply_animation(media_id, caption=profile_message, reply_markup=keyboard, parse_mode='HTML')
+                    elif media_type == "sticker":
+                        await update.message.reply_sticker(media_id)
+                        await update.message.reply_text(profile_message, reply_markup=keyboard, parse_mode='HTML')
+                else:
+                    await update.message.reply_text(profile_message, reply_markup=keyboard, parse_mode='HTML')
                 await loading_message.delete()
             except Exception as e:
                 print(f"Error in sending message: {e}")
