@@ -1,7 +1,6 @@
 import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
-from shivu import shivuu
 from shivu import shivuu, SUPPORT_CHAT, user_collection, collection
 from datetime import datetime
 
@@ -49,11 +48,11 @@ async def chat_rank(user_id, chat_id):
 async def profile_info(user_id, chat_id):
     user = await shivuu.get_users(user_id)
     if not user or not user.first_name:
-        return "⚠️ User not found.", None
+        return "⚠️ User not found.", None, None
 
     user_data = await user_collection.find_one({"id": user_id})
     if not user_data:
-        return "⚠️ User not found in the database.", None
+        return "⚠️ User not found in the database.", None, None
 
     waifu_count = len(user_data.get("characters", []))
     total_characters = await collection.count_documents({})
@@ -131,6 +130,7 @@ async def set_profile_pic(client, message: Message):
     user_id = message.from_user.id
 
     media = None
+    media_type = None
     if reply.photo:
         media, media_type = reply.photo.file_id, "photo"
     elif reply.video:
