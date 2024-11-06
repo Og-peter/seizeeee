@@ -29,7 +29,7 @@ async def my_profile(update: Update, context: CallbackContext):
         loading_message = await update.message.reply_text("🔄 Loading your profile...")
 
         user_id = update.effective_user.id
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
 
         user_data = await user_collection.find_one({'id': user_id})
 
