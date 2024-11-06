@@ -165,3 +165,28 @@ async def profile(client, message: Message):
     except Exception as e:
         print(f"⚠️ Error displaying custom media: {e}")
         await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
+
+@shivuu.on_message(filters.command("setpic") & filters.reply)
+async def set_profile_pic(client, message: Message):
+    if message.reply_to_message.photo:
+        custom_media_id = message.reply_to_message.photo.file_id
+        media_type = "photo"
+    elif message.reply_to_message.video:
+        custom_media_id = message.reply_to_message.video.file_id
+        media_type = "video"
+    elif message.reply_to_message.sticker:
+        custom_media_id = message.reply_to_message.sticker.file_id
+        media_type = "sticker"
+    elif message.reply_to_message.animation:
+        custom_media_id = message.reply_to_message.animation.file_id
+        media_type = "animation"
+    else:
+        return await message.reply_text("⚠️ Please reply with a photo, video, sticker, or GIF to set it as your profile picture.")
+    
+    user_id = message.from_user.id
+    await user_collection.update_one(
+        {'id': user_id},
+        {'$set': {'custom_photo': custom_media_id, 'custom_media_type': media_type}},
+        upsert=True
+    )
+    await message.reply_text("✅ Profile picture has been set successfully!")
