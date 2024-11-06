@@ -28,10 +28,9 @@ async def get_global_rank(username: str) -> int:
 
 async def my_profile(update: Update, context: CallbackContext):
     if update.message:
-        loading_message = await context.bot.send_message(chat_id=update.message.chat_id, text="Loading user data...")
+        loading_message = await update.message.reply_text("🔄 Loading your profile...")
 
         user_id = update.effective_user.id
-
         await asyncio.sleep(2)
 
         user_data = await user_collection.find_one({'id': user_id})
@@ -78,36 +77,32 @@ async def my_profile(update: Update, context: CallbackContext):
             ])
 
             profile_message = (
-                f"╒═══「  Looter Details 」\n"
-                f"╰─➩ Name: {user_tag}\n"
-                f"╰─➩ Coins: `{user_balance}` \n"
-                f"╰─➩ Total Waifus In Bot: {total_characters}\n"
-                f"╰─➩ User Characters : {characters_count} ({character_percentage:.2f}%)\n"
-                f"╰─➩ Development Bar: {progress_bar}\n\n"
-                f"╰─➩ Global Rank: `{global_rank}`\n"
-                f"╰──────────────────\n"
+                f"╒═══「  🌟 User Profile 」\n"
+                f"╰─➩ 👤 Name: {user_tag}\n"
+                f"╰─➩ 💰 Coins: `{user_balance}`\n"
+                f"╰─➩ 🌐 Total Waifus In Bot: {total_characters}\n"
+                f"╰─➩ 📜 Your Characters: {characters_count} ({character_percentage:.2f}%)\n"
+                f"╰─➩ 📊 Progress: {progress_bar}\n\n"
+                f"╰─➩ 🌍 Global Rank: `{global_rank}/{total_users}`\n"
+                f"╰─────────────────────\n"
                 f"{rarity_message}\n"
-                f"╰───────────────────"
+                f"╰─────────────────────"
             )
 
             if user_data.get('warned_until') and user_data.get('warned_until') > datetime.now():
                 remaining_time = user_data.get('warned_until') - datetime.now()
-                profile_message += f"\n⚠️ Warned: {remaining_time.seconds // 60} minutes remaining before release."
+                profile_message += f"\n⚠️ Warning: {remaining_time.seconds // 60} mins left."
 
-            close_button = InlineKeyboardButton("ᴄʟᴏsᴇ 🔖", callback_data="close")
+            close_button = InlineKeyboardButton("🔒 Close", callback_data="close")
             keyboard = InlineKeyboardMarkup([[close_button]])
 
             try:
-                await context.bot.send_message(chat_id=update.message.chat_id, text=profile_message, reply_markup=keyboard, parse_mode='HTML')
+                await update.message.reply_text(profile_message, reply_markup=keyboard, parse_mode='HTML')
                 await loading_message.delete()
             except Exception as e:
                 print(f"Error in sending message: {e}")
         else:
-            profile_message = "Unable to retrieve user information."
-            try:
-                await context.bot.send_message(chat_id=update.message.chat_id, text=profile_message)
-            except Exception as e:
-                print(f"Error in sending message: {e}")
+            await update.message.reply_text("⚠️ Unable to retrieve your profile data.")
     else:
         print("No message to reply to.")
 
@@ -130,9 +125,9 @@ async def set_profile_pic(update: Update, context: CallbackContext):
             {'$set': {'custom_photo': media_id, 'custom_media_type': media_type}},
             upsert=True
         )
-        await context.bot.send_message(chat_id=update.message.chat_id, text="✅ Profile picture updated successfully!")
+        await update.message.reply_text("✅ Profile picture updated successfully!")
     else:
-        await context.bot.send_message(chat_id=update.message.chat_id, text="⚠️ Reply with an image, video, GIF, or sticker.")
+        await update.message.reply_text("⚠️ Please reply with an image, video, GIF, or sticker.")
 
 application.add_handler(CommandHandler("status", my_profile))
 application.add_handler(CommandHandler("setpic", set_profile_pic))
