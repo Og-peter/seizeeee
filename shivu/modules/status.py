@@ -163,6 +163,7 @@ async def profile(client, message: Message):
 
 @shivuu.on_message(filters.command("setpic") & filters.reply)
 async def set_profile_pic(client, message: Message):
+    # Check if the reply message contains a media type we support
     if message.reply_to_message.photo:
         custom_media_id = message.reply_to_message.photo.file_id
         media_type = "photo"
@@ -176,12 +177,17 @@ async def set_profile_pic(client, message: Message):
         custom_media_id = message.reply_to_message.animation.file_id
         media_type = "animation"
     else:
+        # If no valid media type is found, prompt the user to reply with supported media
         return await message.reply_text("⚠️ Please reply with a photo, video, sticker, or GIF to set it as your profile picture.")
-    
+
     user_id = message.from_user.id
+
+    # Update the user's custom profile picture and media type in the database
     await user_collection.update_one(
         {'id': user_id},
         {'$set': {'custom_photo': custom_media_id, 'custom_media_type': media_type}},
         upsert=True
     )
-    await message.reply_text("✅ Profile picture has been set successfully!")
+    
+    # Confirm to the user that the profile picture has been updated
+    await message.reply_text("✅ Your profile picture has been set successfully!")
