@@ -4,20 +4,6 @@ from shivu import shivuu
 from shivu import SUPPORT_CHAT, user_collection, collection
 from datetime import datetime
 
-# Global rank based on user balance
-async def get_global_rank(user_id):
-    user_balance = await get_user_balance(user_id)
-    higher_balance_count = await user_collection.count_documents({'balance': {'$gt': user_balance}})
-    return higher_balance_count + 1
-
-# Chat-specific rank
-async def get_chat_rank(chat_id, user_id):
-    user_balance = await get_user_balance(user_id)
-    higher_balance_count = await user_collection.count_documents(
-        {'balance': {'$gt': user_balance}, 'chat_id': chat_id}
-    )
-    return higher_balance_count + 1
-
 # Fetch user balance from the database
 async def get_user_balance(user_id):
     user = await user_collection.find_one({"id": user_id})
@@ -34,7 +20,30 @@ def generate_character_progress_bar(total_waifus, total_characters):
     empty_bars = 10 - filled_bars
     return "▰" * filled_bars + "▱" * empty_bars
 
-async def get_user_info(user, chat_id=None, already=False):
+# Count rarities in user's collection
+async def count_rarities(characters):
+    rarities = {"Legendary": 0, "Rare": 0, "Medium": 0, "Common": 0}
+    for character in characters:
+        rarity = character.get("rarity", "Common")  # Default to "Common" if not specified
+        if rarity in rarities:
+            rarities[rarity] += 1
+    return rarities
+
+# Calculate global rank based on waifu count
+async def get_global_rank(user_id):
+    all_users = await user_collection.find({}).sort("total_waifus", -1).to_list(None)
+    for idx, user in enumerate(all_users):
+        if user["id"] == user_id:
+            return idx + 1  # Rank is index + 1 in the sorted list
+
+# Calculate chat rank based on waifu count within the current chat
+async def get_chat_rank(user_id, chat_id):
+    chat_users = await user_collection.find({"chat_id": chat_id}).sort("total_waifus", -1).to_list(None)
+    for idx, user in enumerate(chat_users):
+        if user["id"] == user_id:
+            return idx + 1  # Rank is index + 1 in the sorted list
+
+async def get_user_info(user, chat_id, already=False):
     try:
         if not already:
             user = await shivuu.get_users(user)
@@ -48,7 +57,7 @@ async def get_user_info(user, chat_id=None, already=False):
 
         first_name = user.first_name
         global_rank = await get_global_rank(user_id)
-        chat_rank = await get_chat_rank(chat_id, user_id) if chat_id else "N/A"
+        chat_rank = await get_chat_rank(user_id, chat_id)
         total_waifus = len(existing_user.get('characters', []))
         total_characters = await collection.count_documents({})
         custom_photo = existing_user.get('custom_photo')
@@ -57,11 +66,11 @@ async def get_user_info(user, chat_id=None, already=False):
         xp = existing_user.get('xp', 0)
         level = calculate_user_level(xp)
         progress_bar = generate_character_progress_bar(total_waifus, total_characters)
-        rarity_counts = existing_user.get('rarity_counts', {"legendary": 0, "rare": 0, "medium": 0, "common": 0})
-        
         current_login = datetime.now()
         last_login_date = existing_user.get('last_login')
         streak = existing_user.get('login_streak', 0) + 1 if last_login_date else 1
+
+        rarities = await count_rarities(existing_user.get('characters', []))
 
         await user_collection.update_one(
             {'id': user_id},
@@ -69,23 +78,23 @@ async def get_user_info(user, chat_id=None, already=False):
         )
 
         info_text = f"""
-╭─❒ 🌟 **Grabber Status** 🌟
-│ **User:** {first_name.upper()}
-│ **User ID:** `{user_id}`
-│ **Total Waifus:** {total_waifus}/{total_characters}
-│ **Harem:** {total_waifus}/{total_characters} ({round((total_waifus / total_characters) * 100, 2)}%)
-│ **Experience Level:** `{level}`
-│ **Progress Bar:** {progress_bar}
-├──
-│ **Rarity:**
-│ ➣ Legendary: {rarity_counts.get("legendary", 0)}
-│ ➣ Rare: {rarity_counts.get("rare", 0)}
-│ ➣ Medium: {rarity_counts.get("medium", 0)}
-│ ➣ Common: {rarity_counts.get("common", 0)}
-├──
-│ **Position Globally:** `{global_rank}`
-│ **Chat Position:** `{chat_rank}`
-╰───────────────❒
+┌───⦿ **Grabber Status** ⦿───┐
+│ 🧑‍💼 **User:** [{first_name}](tg://user?id={user_id})
+│ 🆔 **User ID:** `{user_id}`
+│ 🍀 **Total Waifus:** {total_waifus}/{total_characters}
+│ 🏆 **Harem:** {total_waifus}/{total_characters} ({round((total_waifus / total_characters) * 100, 2)}%)
+│ 📚 **Experience Level:** {level}
+│ 📊 **Progress Bar:** `{progress_bar}`
+│
+│ 🌟 **Rarity:** 
+│    🟡 Legendary: {rarities['Legendary']}
+│    🟠 Rare: {rarities['Rare']}
+│    🔵 Medium: {rarities['Medium']}
+│    ⚪ Common: {rarities['Common']}
+│
+│ 🌍 **Position Globally:** {global_rank}
+│ 🍃 **Chat Position:** {chat_rank}
+└─────────────────────────────┘
 """
 
         return info_text.strip(), custom_photo, media_type
@@ -104,10 +113,10 @@ async def profile(client, message: Message):
     else:
         user = message.text.split(None, 1)[1]
 
-    m = await message.reply_text("✨ Fetching Your Hunter License...")
+    m = await message.reply_text("✨ Fetching Your Grabber Status...")
 
     try:
-        info_text, custom_photo, media_type = await get_user_info(user, chat_id=chat_id)
+        info_text, custom_photo, media_type = await get_user_info(user, chat_id)
     except Exception as e:
         import traceback
         print(f"❌ Something went wrong: {e}\n{traceback.format_exc()}")
