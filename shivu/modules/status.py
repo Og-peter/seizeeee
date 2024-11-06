@@ -76,11 +76,11 @@ async def my_profile(update: Update, context: CallbackContext):
             profile_message = (
                 f"╒═══「  🌟 User Profile 」\n"
                 f"╰─➩ 👤 Name: {user_tag}\n"
-                f"╰─➩ 💰 Coins: `{user_balance}`\n"
+                f"╰─➩ 💰 Coins: `{user_balance}` \n"
                 f"╰─➩ 🌐 Total Waifus In Bot: {total_characters}\n"
                 f"╰─➩ 📜 Your Characters: {characters_count} ({character_percentage:.2f}%)\n"
                 f"╰─➩ 📊 Progress: {progress_bar}\n\n"
-                f"╰─➩ 🌍 Global Rank: `{global_rank}/{total_users}`\n"
+                f"╰─➩ 🌍 Global Rank: `{global_rank}/{total_users}` \n"
                 f"╰─────────────────────\n"
                 f"{rarity_message}\n"
                 f"╰─────────────────────"
