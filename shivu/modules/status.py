@@ -1,195 +1,160 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
-from shivu import shivuu
-from shivu import SUPPORT_CHAT, user_collection, collection
+from shivu import shivuu, SUPPORT_CHAT, user_collection, collection
 from datetime import datetime
 
-# Fetch user balance from the database
-async def get_user_balance(user_id):
-    user = await user_collection.find_one({"id": user_id})
-    return user.get("balance", 0) if user else 0
+# Fetch user's balance from the database
+async def fetch_user_balance(user_id):
+    user_data = await user_collection.find_one({"id": user_id})
+    return user_data.get("balance", 0) if user_data else 0
 
-# Calculate user level based on XP
-def calculate_user_level(xp):
+# Calculate user level from XP
+def calculate_level(xp):
     return xp // 100
 
-# Generate a progress bar based on characters collected
-def generate_character_progress_bar(total_waifus, total_characters):
-    progress_percentage = (total_waifus / total_characters) * 100 if total_characters > 0 else 0
-    filled_bars = int(progress_percentage // 10)
-    empty_bars = 10 - filled_bars
-    return "▰" * filled_bars + "▱" * empty_bars
+# Generate a visual progress bar for character collection
+def create_progress_bar(current, total):
+    percentage = (current / total) * 100 if total > 0 else 0
+    filled = int(percentage // 10)
+    return "▰" * filled + "▱" * (10 - filled)
 
-# Count rarities in user's collection
-async def count_rarities(characters):
-    rarities = {
-        "Common": {"count": 0, "emoji": "⚪️"},
-        "Limited Edition": {"count": 0, "emoji": "🔮"},
-        "Premium": {"count": 0, "emoji": "🫧"},
-        "Exotic": {"count": 0, "emoji": "🌸"},
-        "Exclusive": {"count": 0, "emoji": "💮"},
-        "Chibi": {"count": 0, "emoji": "👶"},
-        "Legendary": {"count": 0, "emoji": "🟡"},
-        "Rare": {"count": 0, "emoji": "🟠"},
-        "Medium": {"count": 0, "emoji": "🔵"},
-        "Astral": {"count": 0, "emoji": "🎐"},
-        "Valentine": {"count": 0, "emoji": "💞"}
+# Count character rarities in user collection
+async def rarity_counter(character_list):
+    rarity_map = {
+        "Common": "⚪️", "Limited Edition": "🔮", "Premium": "🫧", "Exotic": "🌸",
+        "Exclusive": "💮", "Chibi": "👶", "Legendary": "🟡", "Rare": "🟠",
+        "Medium": "🔵", "Astral": "🎐", "Valentine": "💞"
     }
+    rarity_counts = {rarity: 0 for rarity in rarity_map}
 
-    for character in characters:
-        rarity = character.get("rarity", "Common")  # Default to "Common" if not specified
-        if rarity in rarities:
-            rarities[rarity]["count"] += 1
+    for char in character_list:
+        rarity = char.get("rarity", "Common")
+        if rarity in rarity_counts:
+            rarity_counts[rarity] += 1
 
-    # Filter out rarities with a count of 0
-    return {rarity: data for rarity, data in rarities.items() if data["count"] > 0}
+    return {rarity: f"{emoji} {rarity}: {count}" for rarity, count in rarity_counts.items() if count > 0}
 
-# Calculate global rank based on waifu count
-async def get_global_rank(user_id):
-    all_users = await user_collection.find({"total_waifus": {"$exists": True}}).sort("total_waifus", -1).to_list(None)
-    for idx, user in enumerate(all_users):
+# Get global ranking for the user based on waifu count
+async def fetch_global_rank(user_id):
+    users = await user_collection.find({"total_waifus": {"$exists": True}}).sort("total_waifus", -1).to_list(None)
+    for rank, user in enumerate(users):
         if user["id"] == user_id:
-            return idx + 1
+            return rank + 1
     return None
 
-# Calculate chat rank based on waifu count within the current chat
-async def get_chat_rank(user_id, chat_id):
+# Get rank within a specific chat
+async def fetch_chat_rank(user_id, chat_id):
     chat_users = await user_collection.find({"chat_id": chat_id, "total_waifus": {"$exists": True}}).sort("total_waifus", -1).to_list(None)
-    for idx, user in enumerate(chat_users):
+    for rank, user in enumerate(chat_users):
         if user["id"] == user_id:
-            return idx + 1
+            return rank + 1
     return None
 
-async def get_user_info(user, chat_id, already=False):
-    try:
-        if not already:
-            user = await shivuu.get_users(user)
-        if not user or not user.first_name:
-            return ["⚠️ Deleted account", None]
+# Retrieve detailed user information for display
+async def retrieve_user_info(user_id, chat_id, user_obj=None):
+    user_data = await shivuu.get_users(user_id) if not user_obj else user_obj
 
-        user_id = user.id
-        existing_user = await user_collection.find_one({'id': user_id})
-        if not existing_user:
-            return ["⚠️ User not found in the database.", None]
+    if not user_data or not user_data.first_name:
+        return "⚠️ Deleted or Unknown User", None
 
-        first_name = user.first_name
-        global_rank = await get_global_rank(user_id)
-        chat_rank = await get_chat_rank(user_id, chat_id)
-        total_waifus = len(existing_user.get('characters', []))
-        total_characters = await collection.count_documents({})
-        custom_photo = existing_user.get('custom_photo')
-        media_type = existing_user.get('custom_media_type', 'photo')
-        balance = await get_user_balance(user_id)
-        xp = existing_user.get('xp', 0)
-        level = calculate_user_level(xp)
-        progress_bar = generate_character_progress_bar(total_waifus, total_characters)
-        current_login = datetime.now()
-        last_login_date = existing_user.get('last_login')
-        streak = existing_user.get('login_streak', 0) + 1 if last_login_date else 1
+    user_id = user_data.id
+    stored_data = await user_collection.find_one({'id': user_id})
+    if not stored_data:
+        return "⚠️ User not found in the database.", None
 
-        rarities = await count_rarities(existing_user.get('characters', []))
+    total_characters = await collection.count_documents({})
+    waifu_count = len(stored_data.get("characters", []))
+    progress_bar = create_progress_bar(waifu_count, total_characters)
+    rarity_summary = await rarity_counter(stored_data.get("characters", []))
+    
+    rank_global = await fetch_global_rank(user_id)
+    rank_chat = await fetch_chat_rank(user_id, chat_id)
+    balance = await fetch_user_balance(user_id)
+    xp = stored_data.get("xp", 0)
+    level = calculate_level(xp)
 
-        await user_collection.update_one(
-            {'id': user_id},
-            {'$set': {'last_login': current_login.strftime('%Y-%m-%d'), 'login_streak': streak}}
-        )
+    last_login = stored_data.get("last_login")
+    current_login = datetime.now()
+    streak = stored_data.get("login_streak", 0) + 1 if last_login else 1
 
-        # Generate rarity text based on filtered rarities
-        rarity_text = "\n".join(
-           [f"{data['emoji']} {rarity}: {data['count']}" for rarity, data in rarities.items() if data["count"] > 0]
-        )
+    await user_collection.update_one(
+        {'id': user_id},
+        {'$set': {'last_login': current_login.strftime('%Y-%m-%d'), 'login_streak': streak}}
+    )
 
-        info_text = f"""
-┌───⦿ **Grabber Status** ⦿───┐
-│ 🧑‍💼 **User:** [{first_name}](tg://user?id={user_id})
+    rarity_text = "\n".join(rarity_summary.values())
+    profile_info = f"""
+┌───⦿ **User Profile** ⦿───┐
+│ 👤 **Name:** [{user_data.first_name}](tg://user?id={user_id})
 │ 🆔 **User ID:** `{user_id}`
-│ 🍀 **Total Waifus:** {total_waifus}/{total_characters}
-│ 🏆 **Harem:** {total_waifus}/{total_characters} ({round((total_waifus / total_characters) * 100, 2)}%)
-│ 📚 **Experience Level:** {level}
+│ 🍀 **Waifus Collected:** {waifu_count}/{total_characters}
 │ 📊 **Progress Bar:** `{progress_bar}`
+│ 🎖 **Level:** {level}
 │
-│ 🌟 **Rarity:** 
+│ 🌟 **Rarities:**
 {rarity_text}
 │
-│ 🌍 **Position Globally:** {global_rank or 'N/A'}
-│ 🍃 **Chat Position:** {chat_rank or 'N/A'}
+│ 🌍 **Global Rank:** {rank_global or 'N/A'}
+│ 🍃 **Chat Rank:** {rank_chat or 'N/A'}
 └─────────────────────────────┘
 """
 
-        return info_text.strip(), custom_photo, media_type
-    except Exception as e:
-        print(f"⚠️ Error in get_user_info: {e}")
-        return ["⚠️ Error fetching user information.", None, 'photo']
+    return profile_info.strip(), stored_data.get("custom_photo"), stored_data.get("custom_media_type", "photo")
 
+# Command handler to show user profile
 @shivuu.on_message(filters.command("status"))
-async def profile(client, message: Message):
-    user = None
+async def show_profile(client, message: Message):
     chat_id = message.chat.id
-    if message.reply_to_message:
-        user = message.reply_to_message.from_user.id
-    elif len(message.command) == 1:
-        user = message.from_user.id
-    else:
-        user = message.text.split(None, 1)[1]
+    user_id = message.reply_to_message.from_user.id if message.reply_to_message else message.from_user.id
 
-    m = await message.reply_text("✨ Fetching Your Grabber Status...")
+    loading_msg = await message.reply_text("Fetching profile information...")
 
-    try:
-        info_text, custom_photo, media_type = await get_user_info(user, chat_id)
-    except Exception as e:
-        import traceback
-        print(f"❌ Something went wrong: {e}\n{traceback.format_exc()}")
-        return await m.edit(f"⚠️ Sorry, something went wrong. Please report at @{SUPPORT_CHAT}.")
+    profile_text, media_id, media_type = await retrieve_user_info(user_id, chat_id)
 
-    keyboard = InlineKeyboardMarkup([
+    buttons = InlineKeyboardMarkup([
         [InlineKeyboardButton("💬 Support", url=f"https://t.me/{SUPPORT_CHAT}")]
     ])
-    
-    if custom_photo is None:
-        return await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
-    
+
+    await loading_msg.delete()
+
     try:
-        await m.delete()
-        if media_type == "photo":
-            await message.reply_photo(custom_photo, caption=info_text, reply_markup=keyboard)
-        elif media_type == "video":
-            await message.reply_video(custom_photo, caption=info_text, reply_markup=keyboard)
-        elif media_type == "animation":
-            await message.reply_animation(custom_photo, caption=info_text, reply_markup=keyboard)
-        elif media_type == "sticker":
-            await message.reply_sticker(custom_photo)
-            await message.reply_text(info_text, reply_markup=keyboard)
+        if media_id:
+            if media_type == "photo":
+                await message.reply_photo(media_id, caption=profile_text, reply_markup=buttons)
+            elif media_type == "video":
+                await message.reply_video(media_id, caption=profile_text, reply_markup=buttons)
+            elif media_type == "animation":
+                await message.reply_animation(media_id, caption=profile_text, reply_markup=buttons)
+            elif media_type == "sticker":
+                await message.reply_sticker(media_id)
+                await message.reply_text(profile_text, reply_markup=buttons)
+        else:
+            await message.reply_text(profile_text, disable_web_page_preview=True, reply_markup=buttons)
     except Exception as e:
-        print(f"⚠️ Error displaying custom media: {e}")
-        await m.edit(info_text, disable_web_page_preview=True, reply_markup=keyboard)
+        print(f"Error displaying media: {e}")
+        await message.reply_text(profile_text, disable_web_page_preview=True, reply_markup=buttons)
 
+# Command handler to set profile picture
 @shivuu.on_message(filters.command("setpic") & filters.reply)
-async def set_profile_pic(client, message: Message):
-    # Check if the reply message contains a media type we support
-    if message.reply_to_message.photo:
-        custom_media_id = message.reply_to_message.photo.file_id
-        media_type = "photo"
-    elif message.reply_to_message.video:
-        custom_media_id = message.reply_to_message.video.file_id
-        media_type = "video"
-    elif message.reply_to_message.sticker:
-        custom_media_id = message.reply_to_message.sticker.file_id
-        media_type = "sticker"
-    elif message.reply_to_message.animation:
-        custom_media_id = message.reply_to_message.animation.file_id
-        media_type = "animation"
-    else:
-        # If no valid media type is found, prompt the user to reply with supported media
-        return await message.reply_text("⚠️ Please reply with a photo, video, sticker, or GIF to set it as your profile picture.")
-
+async def update_profile_picture(client, message: Message):
+    reply = message.reply_to_message
     user_id = message.from_user.id
 
-    # Update the user's custom profile picture and media type in the database
+    if reply.photo:
+        media_id, media_type = reply.photo.file_id, "photo"
+    elif reply.video:
+        media_id, media_type = reply.video.file_id, "video"
+    elif reply.sticker:
+        media_id, media_type = reply.sticker.file_id, "sticker"
+    elif reply.animation:
+        media_id, media_type = reply.animation.file_id, "animation"
+    else:
+        return await message.reply_text("⚠️ Please reply with a supported media (photo, video, sticker, or GIF).")
+
     await user_collection.update_one(
         {'id': user_id},
-        {'$set': {'custom_photo': custom_media_id, 'custom_media_type': media_type}},
+        {'$set': {'custom_photo': media_id, 'custom_media_type': media_type}},
         upsert=True
     )
-    
-    # Confirm to the user that the profile picture has been updated
-    await message.reply_text("✅ Your profile picture has been set successfully!")
+
+    await message.reply_text("✅ Profile picture updated successfully!")
