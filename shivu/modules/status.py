@@ -1,3 +1,4 @@
+import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 from shivu import shivuu
@@ -101,6 +102,9 @@ async def show_profile(client, message: Message):
         [InlineKeyboardButton("💬 Support", url=f"https://t.me/{SUPPORT_CHAT}")]
     ])
 
+    # Add a small delay before deleting the loading message
+    await asyncio.sleep(1)  # Adjust the sleep time if necessary
+    
     await loading_msg.delete()
 
     try:
