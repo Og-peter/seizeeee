@@ -10,6 +10,14 @@ async def get_global_rank(user_id):
     higher_balance_count = await user_collection.count_documents({'balance': {'$gt': user_balance}})
     return higher_balance_count + 1
 
+# Chat-specific rank
+async def get_chat_rank(chat_id, user_id):
+    user_balance = await get_user_balance(user_id)
+    higher_balance_count = await user_collection.count_documents(
+        {'balance': {'$gt': user_balance}, 'chat_id': chat_id}
+    )
+    return higher_balance_count + 1
+
 # Fetch user balance from the database
 async def get_user_balance(user_id):
     user = await user_collection.find_one({"id": user_id})
@@ -26,7 +34,7 @@ def generate_character_progress_bar(total_waifus, total_characters):
     empty_bars = 10 - filled_bars
     return "▰" * filled_bars + "▱" * empty_bars
 
-async def get_user_info(user, already=False):
+async def get_user_info(user, chat_id=None, already=False):
     try:
         if not already:
             user = await shivuu.get_users(user)
@@ -40,6 +48,7 @@ async def get_user_info(user, already=False):
 
         first_name = user.first_name
         global_rank = await get_global_rank(user_id)
+        chat_rank = await get_chat_rank(chat_id, user_id) if chat_id else "N/A"
         total_waifus = len(existing_user.get('characters', []))
         total_characters = await collection.count_documents({})
         custom_photo = existing_user.get('custom_photo')
@@ -48,6 +57,8 @@ async def get_user_info(user, already=False):
         xp = existing_user.get('xp', 0)
         level = calculate_user_level(xp)
         progress_bar = generate_character_progress_bar(total_waifus, total_characters)
+        rarity_counts = existing_user.get('rarity_counts', {"legendary": 0, "rare": 0, "medium": 0, "common": 0})
+        
         current_login = datetime.now()
         last_login_date = existing_user.get('last_login')
         streak = existing_user.get('login_streak', 0) + 1 if last_login_date else 1
@@ -58,19 +69,23 @@ async def get_user_info(user, already=False):
         )
 
         info_text = f"""
-┌───⦿ **Hunter License** ⦿───┐
-│ **Name:** [{first_name}](tg://user?id={user_id})
+╭─❒ 🌟 **Grabber Status** 🌟
+│ **User:** {first_name.upper()}
 │ **User ID:** `{user_id}`
 │ **Total Waifus:** {total_waifus}/{total_characters}
-│ **Waifu Percentage:** `{round((total_waifus / total_characters) * 100, 2)}%`
-│ **Progress:** `{progress_bar}` ({total_waifus}/{total_characters})
-│ **Level:** `{level}`
-│ **XP:** `{xp}`
-│ **Global Position:** `{global_rank}`
-│ **Login Streak:** `{streak} days`
-│
-│ You can set your favorite profile picture using /setpic by replying to an image.
-└─────────────────────────────┘
+│ **Harem:** {total_waifus}/{total_characters} ({round((total_waifus / total_characters) * 100, 2)}%)
+│ **Experience Level:** `{level}`
+│ **Progress Bar:** {progress_bar}
+├──
+│ **Rarity:**
+│ ➣ Legendary: {rarity_counts.get("legendary", 0)}
+│ ➣ Rare: {rarity_counts.get("rare", 0)}
+│ ➣ Medium: {rarity_counts.get("medium", 0)}
+│ ➣ Common: {rarity_counts.get("common", 0)}
+├──
+│ **Position Globally:** `{global_rank}`
+│ **Chat Position:** `{chat_rank}`
+╰───────────────❒
 """
 
         return info_text.strip(), custom_photo, media_type
@@ -81,6 +96,7 @@ async def get_user_info(user, already=False):
 @shivuu.on_message(filters.command("status"))
 async def profile(client, message: Message):
     user = None
+    chat_id = message.chat.id
     if message.reply_to_message:
         user = message.reply_to_message.from_user.id
     elif len(message.command) == 1:
@@ -91,7 +107,7 @@ async def profile(client, message: Message):
     m = await message.reply_text("✨ Fetching Your Hunter License...")
 
     try:
-        info_text, custom_photo, media_type = await get_user_info(user)
+        info_text, custom_photo, media_type = await get_user_info(user, chat_id=chat_id)
     except Exception as e:
         import traceback
         print(f"❌ Something went wrong: {e}\n{traceback.format_exc()}")
