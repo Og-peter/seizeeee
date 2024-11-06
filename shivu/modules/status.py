@@ -41,6 +41,7 @@ async def count_rarities(characters):
         if rarity in rarities:
             rarities[rarity]["count"] += 1
 
+    # Filter out rarities with a count of 0
     return {rarity: data for rarity, data in rarities.items() if data["count"] > 0}
 
 # Calculate global rank based on waifu count
@@ -93,8 +94,9 @@ async def get_user_info(user, chat_id, already=False):
             {'$set': {'last_login': current_login.strftime('%Y-%m-%d'), 'login_streak': streak}}
         )
 
+        # Generate rarity text based on filtered rarities
         rarity_text = "\n".join(
-            [f"{data['emoji']} {rarity}: {data['count']}" for rarity, data in rarities.items()]
+           [f"{data['emoji']} {rarity}: {data['count']}" for rarity, data in rarities.items() if data["count"] > 0]
         )
 
         info_text = f"""
