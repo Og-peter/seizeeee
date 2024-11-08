@@ -10,8 +10,6 @@ DEVS = [6402009857]
 
 GROUP_ID = -1002104939708
 LOG_CHANNEL_ID = -1002446048543  # Replace with your actual log channel ID
-SUPPORT_GROUP_URL = "https://t.me/dynamic_gangs"  # Your support group URL
-SUPPORT_CHANNEL_URL = "https://t.me/Seizer_updates"  # Your support channel URL
 
 async def send_error_to_devs(error_message):
     for dev_id in DEVS:
@@ -25,16 +23,6 @@ async def send_log_message(log_message):
         await bot.send_message(LOG_CHANNEL_ID, log_message)
     except Exception as e:
         print(f"Error sending log message: {e}")
-
-async def is_user_in_group_and_channel(user_id):
-    try:
-        # Check if the user is in the support group
-        in_group = await bot.get_chat_member(GROUP_ID, user_id)
-        # Check if the user is in the support channel
-        in_channel = await bot.get_chat_member(LOG_CHANNEL_ID, user_id)
-        return in_group.status != "left" and in_channel.status != "left"
-    except Exception as e:
-        return False
 
 async def get_unique_characters(receiver_id, target_rarities=None):
     if target_rarities is None:
@@ -93,17 +81,13 @@ async def claim_waifu(_, message: t.Message):
     user_first_name = message.from_user.first_name
     message_id = message.id  # Corrected line to get the message ID
 
-    # Check if user is in both support group and support channel
-    if not await is_user_in_group_and_channel(user_id):
+    if chat_id != GROUP_ID:
         keyboard = InlineKeyboardMarkup([
-            [
-                InlineKeyboardButton("ᴊᴏɪɴ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ", url=SUPPORT_GROUP_URL),
-                InlineKeyboardButton("ᴊᴏɪɴ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ", url=SUPPORT_CHANNEL_URL)
-            ]
+            [InlineKeyboardButton("ᴊᴏɪɴ ɢʀᴏᴜᴘ ᴛᴏ ᴄʟᴀɪᴍ", url="https://t.me/dynamic_gangs")]
         ])
         return await message.reply_text(
-            "🚫 **ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ, ʏᴏᴜ ᴍᴜsᴛ ᴊᴏɪɴ ʙᴏᴛʜ ᴛʜᴇ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ ᴀɴᴅ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ.**\n\n"
-            "ᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴛʜᴇᴍ ʙᴇʟᴏᴡ ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ!",
+            "🚫 **ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ᴄᴀɴ ᴏɴʟʏ ʙᴇ ᴜsᴇᴅ ɪɴ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ.**\n\n"
+            "ᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴛʜᴇ ɢʀᴏᴜᴘ ᴜsɪɴɢ ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ᴄʟᴀɪᴍ ʏᴏᴜʀ ᴄʜᴀʀᴀᴄᴛᴇʀ!",
             reply_markup=keyboard,
             quote=True
         )
