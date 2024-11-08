@@ -34,59 +34,52 @@ async def check_character(update: Update, context: CallbackContext) -> None:
             f"🌐 <b>Globally Seized:</b> {global_count}x"
         )
 
-        # Fetch users who seized this character
+        # Fetch top 20 users with this character
         cursor = user_collection.find(
             {'characters.id': character_id},
             {'_id': 1, 'id': 1, 'first_name': 1, 'last_name': 1, 'username': 1, 'profile_name': 1, 'characters.$': 1}
-        ).sort([('characters.count', -1)])
+        ).sort([('characters.count', -1)]).limit(20)
 
-        users = await cursor.to_list(length=20)  # Adjust limit based on your requirements
+        users = await cursor.to_list(length=20)
 
         # Prepare page content (10 users per page)
         per_page = 10
-        total_pages = (len(users) + per_page - 1) // per_page
         start_index = (page - 1) * per_page
         end_index = start_index + per_page
         users_page = users[start_index:end_index]
 
         if users_page:
-            response_message += f"\n\n🌐 <b>Top Grabbers (Page {page}/{total_pages}):</b>\n\n"
+            response_message += f"\n\n🌐 <b>Top Grabbers (Page {page}):</b>\n\n"
             for i, user in enumerate(users_page, start=start_index + 1):
                 full_name = user.get('profile_name') or f"{user.get('first_name', '')} {user.get('last_name', '')}".strip() or user.get('username', 'Unknown User')
                 seized_count = user['characters'][0].get('count', 1)
 
                 # Create mention link for the user
                 mention = f"<a href='tg://user?id={user['id']}'>{escape(full_name)}</a>"
-                response_message += f"├ {i:02d}. {mention} ⌠{seized_count}⌡x\n"
+                response_message += f"├ {i:02d}. ➔ {mention} ✨ ➔ {seized_count}x\n"
         else:
             response_message += "\n\nNo users found with this character."
         
         # Create pagination buttons
         keyboard_buttons = []
-        if page > 1:
+        if start_index > 0:
             keyboard_buttons.append(InlineKeyboardButton("⬅️ Previous", callback_data=f"page_{character_id}_{page - 1}"))
-        if page < total_pages:
+        if end_index < len(users):
             keyboard_buttons.append(InlineKeyboardButton("➡️ Next", callback_data=f"page_{character_id}_{page + 1}"))
 
         keyboard = InlineKeyboardMarkup([keyboard_buttons] if keyboard_buttons else [])
 
-        # Edit the existing message or send a new one
-        if update.callback_query:
-            await update.callback_query.edit_message_caption(
-                caption=response_message,
-                parse_mode='HTML',
-                reply_markup=keyboard
-            )
-        else:
-            await context.bot.send_photo(
-                chat_id=update.effective_chat.id,
-                photo=character['img_url'],
-                caption=response_message,
-                parse_mode='HTML',
-                reply_markup=keyboard
-            )
+        # Send the message with the image and buttons
+        await context.bot.send_photo(
+            chat_id=update.effective_chat.id,
+            photo=character['img_url'],
+            caption=response_message,
+            parse_mode='HTML',
+            reply_markup=keyboard
+        )
 
     except Exception as e:
+        # Log error for debugging
         print(f"Error in check_character: {e}")
         await update.message.reply_text(f'Error: {str(e)}')
 
@@ -100,7 +93,14 @@ async def handle_callback_query(update: Update, context: CallbackContext) -> Non
             page = int(page)  # Ensure page is an integer
             context.args = [char_id, str(page)]  # Pass page number as argument as a string
             await check_character(update, context)
-            await query.answer()
+            await query.answer()  # Acknowledge the callback query without alert
+        elif data.startswith("slaves_"):
+            parts = data.split('_')
+            if len(parts) == 3:
+                _, char_id, global_count = parts
+                await query.answer(f"🌐 This character has been globally seized {global_count} times!", show_alert=True)
+            else:
+                await query.answer("Invalid data format.", show_alert=True)
         else:
             await query.answer("Unknown action.", show_alert=True)
 
@@ -110,5 +110,5 @@ async def handle_callback_query(update: Update, context: CallbackContext) -> Non
 
 # Command handler for /check command
 CHECK_HANDLER = CommandHandler('check', check_character, block=False)
-application.add_handler(CallbackQueryHandler(handle_callback_query, pattern='^page_', block=False))
+application.add_handler(CallbackQueryHandler(handle_callback_query, pattern='^(page_|slaves_)', block=False))
 application.add_handler(CHECK_HANDLER)
