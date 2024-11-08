@@ -141,17 +141,64 @@ async def callback_query(update: Update, context: CallbackContext) -> None:
         if message_id:
             await query.message.delete()
             del context.chat_data['leaderboard_message_id']
-    elif data == "global":
-        await global_leaderboard(update, context, query=query)
-    elif data == "global_users":
-        await global_users_leaderboard(update, context, query=query)
     elif data == "ctop":
-        await ctop(update, context, query=query)
+        await ctop(update, context, query)
+    elif data == "global":
+        await global_leaderboard(update, context, query)
+    elif data == "global_users":
+        await global_users_leaderboard(update, context, query)
 
-# <======================================= HANDLERS ==================================================>
-application.add_handler(CommandHandler("global", global_leaderboard))
-application.add_handler(CommandHandler("global_users", global_users_leaderboard))
-application.add_handler(CommandHandler("ctop", ctop))
+
 application.add_handler(CallbackQueryHandler(callback_query))
 
-#▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+# <======================================= FOR CHANNEL STATS ==================================================>
+async def stats(update: Update, context: CallbackContext) -> None:
+    if update.effective_user.id != 6558846590:
+        await update.message.reply_text("You are not authorized to use this command.")
+        return
+
+    user_count = await user_collection.count_documents({})
+    group_count = await group_user_totals_collection.distinct('group_id')
+    await update.message.reply_text(f'💮 Total Users: {user_count}\n💮 Total groups: {len(group_count)}')
+
+# <======================================= TO GET USERS ==================================================>
+async def send_users_document(update: Update, context: CallbackContext) -> None:
+    if str(update.effective_user.id) not in SUDO_USERS:
+        await update.message.reply_text('Only For Sudo users...')
+        return
+    cursor = user_collection.find({})
+    users = []
+    async for document in cursor:
+        users.append(document)
+    user_list = "\n".join([user['first_name'] for user in users])
+    with open('users.txt', 'w', encoding='utf-8') as f:
+        f.write(user_list)
+    with open('users.txt', 'rb') as f:
+        await context.bot.send_document(chat_id=update.effective_chat.id, document=f)
+    os.remove('users.txt')
+
+# <======================================= TO GET GROUPS ==================================================>
+async def send_groups_document(update: Update, context: CallbackContext) -> None:
+    if str(update.effective_user.id) not in SUDO_USERS:
+        await update.message.reply_text('Only For Sudo users...')
+        return
+    cursor = top_global_groups_collection.find({})
+    groups = []
+    async for document in cursor:
+        groups.append(document)
+    group_list = "\n".join([group['group_name'] for group in groups])
+    with open('groups.txt', 'w', encoding='utf-8') as f:
+        f.write(group_list)
+    with open('groups.txt', 'rb') as f:
+        await context.bot.send_document(chat_id=update.effective_chat.id, document=f)
+    os.remove('groups.txt')
+
+
+application.add_handler(CommandHandler('ctop', ctop, block=False))
+application.add_handler(CommandHandler('stats', stats, block=False))
+application.add_handler(CommandHandler('topgroups', global_leaderboard, block=False))
+application.add_handler(CommandHandler('list', send_users_document, block=False))
+application.add_handler(CommandHandler('groups', send_groups_document, block=False))
+application.add_handler(CommandHandler('gtop', global_users_leaderboard, block=False))
+
+# by https://github.com/lovetheticx
