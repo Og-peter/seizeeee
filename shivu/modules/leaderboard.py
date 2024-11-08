@@ -15,9 +15,9 @@ from shivu import (application, OWNER_ID,
 
 # Replace PHOTO_URL with a list of video URLs
 VIDEO_URL = [
-    "https://example.com/video1.mp4",
-    "https://example.com/video2.mp4",
-    "https://example.com/video3.mp4"
+    "https://files.catbox.moe/sab0z3.mp4",
+    "https://files.catbox.moe/erfe6v.mp4",
+    "https://files.catbox.moe/sab0z3.mp4"
 ]
 
 # <======================================= GLOBAL TOP GROUPS ==================================================>
