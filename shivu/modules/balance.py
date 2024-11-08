@@ -9,7 +9,7 @@ import html
 from datetime import datetime, timedelta
 from shivu import shivuu as bot
 from shivu import shivuu as app
-from pyrogram.types import Message
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from pyrogram import filters, types as t
 from html import escape
 from shivu import application, user_collection
