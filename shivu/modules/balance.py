@@ -23,8 +23,14 @@ ban_user_ids = {5553813115}
 logs_group_id = -1001992198513
 logs = {logs_group_id}
 async def send_start_button(chat_id):
-    await app.send_message(chat_id, "🚀 You need to register first by starting the bot in DM. Type `/start` to begin your journey!")
-
+    start_button = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("🚀 Start Now", url="https://t.me/Character_seize_bot?start=1")]]
+    )
+    await app.send_message(
+        chat_id,
+        "🌟 Welcome! To get started, please register by pressing the button below and starting the bot in a private chat.",
+        reply_markup=start_button
+    )
 
 @app.on_message(filters.command(["sinv", "balance", "bal", "wealth"]))
 async def check_balance(_, message: Message):
