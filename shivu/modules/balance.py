@@ -68,31 +68,36 @@ async def check_balance(_, message: Message):
     # Enhanced message with balance and user rank
     custom_message = f"""
 ┬── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┬
- **{user_mention}'s ᴡᴀᴇʟᴛʜ ᴏᴠᴇʀᴠɪᴇᴡ** 🏵️
-🫧 **ᴄᴜʀʀᴇɴᴛ ʙᴀʟᴀɴᴄᴇ:** ₩ `{formatted_balance}`
+ **{user_mention}'s Wealth Overview** 🏵️
+🫧 **Current Balance:** ₩ `{formatted_balance}`
 ┴── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┴
 ╭── ⋅ ⋅ ─── ✩ ─── ⋅ ⋅ ──╮
- **sᴛᴀʏ ᴀᴄᴛɪᴠᴇ ғᴏʀ ᴍᴏʀᴇ ʀᴇᴡᴀʀᴅs!**
+ **Stay active for more rewards!**
 ╰── ⋅ ⋅ ─── ✩ ─── ⋅ ⋅ ──╯
 """
 
-    await message.reply_photo(photo=image_url, caption=custom_message)
+    # Add rank button
+    rank_button = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("📊 Your Rank", callback_data=f"view_rank_{user_id}")]]
+    )
 
-def get_rank_description(rank_value):
-    """
-    Returns a string description of the rank based on the given rank value.
-    Adjust the ranges and descriptions as necessary.
-    """
-    if rank_value >= 1000:
-        return "Legendary"
-    elif rank_value >= 500:
-        return "Elite"
-    elif rank_value >= 100:
-        return "Pro"
-    elif rank_value >= 10:
-        return "Intermediate"
-    else:
-        return "Novice"
+    await message.reply_photo(photo=image_url, caption=custom_message, reply_markup=rank_button)
+
+# Callback handler to display rank details
+@app.on_callback_query(filters.regex(r"view_rank_\d+"))
+async def show_rank_details(client, callback_query):
+    user_id = int(callback_query.data.split("_")[2])
+
+    # Fetch user data and rank description
+    user_data = await user_collection.find_one({'id': user_id})
+    rank_value = user_data.get('user_rank', 0)
+    rank_description = get_rank_description(rank_value)
+
+    # Send rank details as a response to the button click
+    await callback_query.answer(
+        f"Your Rank: {rank_description}\nKeep up the great work to improve!",
+        show_alert=True
+    )
     
 async def pay(update, context):
     sender_id = update.effective_user.id
