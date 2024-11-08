@@ -2,7 +2,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, InputMe
 from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
 from pyrogram import Client, filters
 from shivu import user_collection, collection, application
-import asyncio
+import asyncios
 import random
 from datetime import datetime, timedelta
 
