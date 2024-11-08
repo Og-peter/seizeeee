@@ -29,7 +29,7 @@ async def global_leaderboard(update: Update, context: CallbackContext, query=Non
     ])
     leaderboard_data = await cursor.to_list(length=10)
 
-    leaderboard_message = "<b>🎑𝗧𝗢𝗣 𝟭𝟬 𝗚𝗟𝗢𝗕𝗔𝗟 𝗚𝗥𝗢𝗨𝗣𝗦:</b>\n\n"
+    leaderboard_message = "<b>🥂 𝗧𝗢𝗣 𝟭𝟬 𝗚𝗟𝗢𝗕𝗔𝗟 𝗚𝗥𝗢𝗨𝗣𝗦:</b>\n\n"
     leaderboard_message += "┏━┅┅┄┄⟞⟦🌐⟧⟝┄┄┉┉━┓\n"
 
     for i, group in enumerate(leaderboard_data, start=1):
@@ -67,7 +67,7 @@ async def ctop(update: Update, context: CallbackContext, query=None) -> None:
     ])
     leaderboard_data = await cursor.to_list(length=10)
 
-    leaderboard_message = "<b>🎑𝗧𝗢𝗣 𝟭𝟬 𝗨𝗦𝗘𝗥𝗦 𝗜𝗡 𝗧𝗛𝗜𝗦 𝗖𝗛𝗔𝗧:</b>\n\n"
+    leaderboard_message = "<b>🍁 𝗧𝗢𝗣 𝟭𝟬 𝗨𝗦𝗘𝗥𝗦 𝗜𝗡 𝗧𝗛𝗜𝗦 𝗖𝗛𝗔𝗧:</b>\n\n"
     leaderboard_message += "┏━┅┅┄┄⟞⟦🌐⟧⟝┄┄┉┉━┓\n"
 
     for i, user in enumerate(leaderboard_data, start=1):
@@ -103,7 +103,7 @@ async def global_users_leaderboard(update: Update, context: CallbackContext, que
     ])
     leaderboard_data = await cursor.to_list(length=10)
 
-    leaderboard_message = "<b>🌐𝗚𝗟𝗢𝗕𝗔𝗟 𝗧𝗢𝗣 𝟭𝟬 𝗨𝗦𝗘𝗥𝗦:</b>\n\n"
+    leaderboard_message = "<b>❄️ 𝗚𝗟𝗢𝗕𝗔𝗟 𝗧𝗢𝗣 𝟭𝟬 𝗨𝗦𝗘𝗥𝗦:</b>\n\n"
     leaderboard_message += "┏━┅┅┄┄⟞⟦🌐⟧⟝┄┄┉┉━┓\n"
 
     for i, user in enumerate(leaderboard_data, start=1):
