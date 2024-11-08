@@ -63,8 +63,7 @@ async def check_balance(_, message: Message):
     custom_message = f"""
 ┬── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┬
  **{user_mention}'s ᴡᴀᴇʟᴛʜ ᴏᴠᴇʀᴠɪᴇᴡ** 🏵️
-🫧 **ᴄᴜʀʀᴇɴᴛ ʙᴀʟᴀɴᴄᴇ:** ₩ `{formatted_balance}` 
-🏅 **ᴜsєʀ ʀᴀɴк:** `{user_rank}`
+🫧 **ᴄᴜʀʀᴇɴᴛ ʙᴀʟᴀɴᴄᴇ:** ₩ `{formatted_balance}`
 ┴── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┴
 ╭── ⋅ ⋅ ─── ✩ ─── ⋅ ⋅ ──╮
  **sᴛᴀʏ ᴀᴄᴛɪᴠᴇ ғᴏʀ ᴍᴏʀᴇ ʀᴇᴡᴀʀᴅs!**
@@ -137,7 +136,7 @@ async def pay(update, context):
 
     # Send a success message with enhanced formatting
     success_message = (
-        f"✅ <b>₩ Payment Successful!</b> 🎉\n"
+        f"✅ <b>₩ Payment Successful!</b> \n"
         f"You paid <b>₩{amount}</b> to <b>{update.message.reply_to_message.from_user.first_name}</b>.\n"
         f"💰 Your new balance: <code>₩{sender_balance['balance'] - amount}</code>"
     )
@@ -163,7 +162,7 @@ async def pay(update, context):
 async def mtop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     top_users = await user_collection.find({}, projection={'id': 1, 'first_name': 1, 'last_name': 1, 'balance': 1}).sort('balance', -1).limit(10).to_list(10)
     
-    top_users_message = "✨ **Top 10 Wealthy Users** ✨\n"
+    top_users_message = " **Top 10 Wealthy Users** \n"
     top_users_message += "───────────────────\n"
 
     for i, user in enumerate(top_users, start=1):
@@ -173,10 +172,10 @@ async def mtop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         full_name = f"{first_name} {last_name}" if last_name else first_name
         user_link = f"<a href='tg://user?id={user_id}'>{html.escape(first_name)}</a>"
         balance = user.get('balance', 0)
-        top_users_message += f"🪙 **{i}. {user_link}** - ₩{balance:,.0f}\n"
+        top_users_message += f" **{i}. {user_link}** - ₩{balance:,.0f}\n"
 
     top_users_message += "────────────────────\n"
-    top_users_message += "🏆 **Top 10 Wealthy Users via @Character_seize_bot**"
+    top_users_message += "**Top 10 Wealthy Users via @Character_seize_bot**"
 
     photo_path = 'https://telegra.ph/file/5ccbb080aa1761a5c2a49.jpg'
     await update.message.reply_photo(photo=photo_path, caption=top_users_message, parse_mode='HTML')
@@ -202,9 +201,9 @@ async def daily_reward(_, message):
     )
 
     await message.reply_text(
-        "🎉 **❰ 𝗥 𝗘 𝗪 𝗔 𝗥 𝗗 𝗦 🧧 ❱** 🎉\n\n"
-        "🌟 **Daily reward claimed successfully!**\n"
-        "💰 You gained <code>₩50,000</code>! 🎊"
+        "🌋 **❰ 𝗥 𝗘 𝗪 𝗔 𝗥 𝗗 𝗦 🧧 ❱**\n\n"
+        "✨ **Daily reward claimed successfully!**\n"
+        "🥂 You gained <code>₩50,000</code>!"
         )
     
 @bot.on_message(filters.command("weekly"))
@@ -231,10 +230,10 @@ async def weekly_reward(_, message: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     # Send success message
     await message.reply_text(
-        "🎉 **❰ 𝗥 𝗘 𝗪 𝗔 𝗥 𝗗 𝗦 🧧 ❱** 🎉\n\n"
-        "🌟 **Weekly reward claimed successfully!**\n"
-        "💰 You gained <code>₩250,000</code>! 🎊\n"
-        "🚀 Enjoy your wealth and keep thriving!"
+        "🌸 **❰ 𝗥 𝗘 𝗪 𝗔 𝗥 𝗗 𝗦 🧧 ❱**\n\n"
+        "🍁 **Weekly reward claimed successfully!**\n"
+        "🍃 You gained <code>₩250,000</code>!\n"
+        "⚡ Enjoy your wealth and keep thriving!"
     )
     
 user_last_command_times = {}
@@ -293,10 +292,10 @@ async def tesure(_, message: Message):
 
     # Send a success message
     await message.reply_text(
-        "🎉 **❰ 𝗧 𝗥 𝗘 𝗔 𝗦 𝗨 𝗥 𝗘 🧧 ❱** 🎉\n\n"
-        "🌟 **Treasure claimed successfully!**\n"
-        f"💰 You gained <code>₩{reward:,}</code>! 🎊\n"
-        "📸 ![Your reward](https://telegra.ph/file/1725558c206507d3e36ee.jpg)"
+        "🏮 **❰ 𝗧 𝗥 𝗘 𝗔 𝗦 𝗨 𝗥 𝗘 🧧 ❱**\n\n"
+        "🌸 **Treasure claimed successfully!**\n"
+        f"🥂 You gained <code>₩{reward:,}</code>!\n"
+        "![Your reward](https://telegra.ph/file/1725558c206507d3e36ee.jpg)"
     )
     
 application.add_handler(CommandHandler("tops", mtop, block=False))
@@ -332,7 +331,7 @@ async def add_tokens(update: Update, context: CallbackContext) -> None:
     # Update the balance by adding tokens
     new_balance = target_user.get('balance', 0) + amount
     await user_collection.update_one({'id': target_user_id}, {'$set': {'balance': new_balance}})
-    await update.message.reply_text(f"✅ **Added** `{amount}` **wealth to user** `{target_user_id}`. \n💰 **New balance:** `{new_balance}` wealth.")
+    await update.message.reply_text(f"✅ Added `{amount}` wealth to user `{target_user_id}`. \nNew balance: `{new_balance}` wealth.")
 
 async def delete_tokens(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
