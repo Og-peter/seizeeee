@@ -15,14 +15,14 @@ roll_streaks = {}
 # Target Rarities
 target_rarities = ['⚪️ Common', '🔵 Medium', '🟠 Rare', '🟡 Legendary', '👶 Chibi', '💮 Exclusive']
 
-# Log Channel ID (Replace with your own)
-LOGS_CHANNEL_ID = -1002446048543  # Your Logs Channel ID
-
-# Function to Fetch Unique Characters
+# Function to Fetch Unique Characters from Target Rarities Only
 async def get_unique_characters(receiver_id, target_rarities=target_rarities):
     try:
         pipeline = [
-            {'$match': {'rarity': {'$in': target_rarities}, 'id': {'$nin': [char['id'] for char in (await user_collection.find_one({'id': receiver_id}, {'characters': 1}))['characters']]}}},
+            {'$match': {
+                'rarity': {'$in': target_rarities},
+                'id': {'$nin': [char['id'] for char in (await user_collection.find_one({'id': receiver_id}, {'characters': 1}))['characters']]}
+            }},
             {'$sample': {'size': 1}}
         ]
         cursor = collection.aggregate(pipeline)
@@ -32,82 +32,77 @@ async def get_unique_characters(receiver_id, target_rarities=target_rarities):
         print(f"Error in fetching characters: {e}")
         return []
 
-# Fun Congratulatory Message with Styled Fonts
-def get_congratulatory_message(mention, character):
-    messages = [
-        f"💥 ᴄᴏɴɢᴇᴀᴛᴜʟᴀᴛɪᴏɴs {mention}! ʏᴏᴜ'ᴠᴇ ᴊᴜsᴛ ᴍᴀʀʀɪᴇᴅ {character['name']} ғʀᴏᴍ {character['anime']} 💍!",
-        f"🌿 ʜᴀɪ {mention}! {character['name']} ғʀᴏᴍ {character['anime']} 🏵️ ɪs ᴡᴀɪᴛɪɴɢ ɪɴ ʏᴏᴜʀ ʜᴀʀᴇᴍ!"
-    ]
-    return random.choice(messages)
+# Function to handle button callback
+@bot.on_callback_query(filters.regex(r"^marry:(yes|no):(\d+)$"))
+async def marry_callback(_, callback_query: t.CallbackQuery):
+    choice, user_id = callback_query.data.split(":")[1:]
+    user_id = int(user_id)
 
-# Failure Message with Styled Fonts
-def get_rejection_message(mention):
-    messages = [
-        f"💔 ʜᴀʀs ʟᴜᴄᴋ, {mention}! sʜᴇ sʟɪᴘᴘᴇᴅ ᴀᴡᴀʏ ᴀɴᴅ ʟᴇғᴛ ʏᴏᴜ",
-        f"💀 ʙᴇᴛᴛᴇʀ ʟᴜᴄᴋ ɴᴇxᴛ ᴛɪᴍᴇ, {mention}. sʜᴇ ʀᴇғᴜsᴇᴅ ᴀɴᴅ ᴠᴀɴɪsʜᴇᴅ! 👻",
-    ]
-    return random.choice(messages)
+    if callback_query.from_user.id != user_id:
+        await callback_query.answer("This action is not for you!", show_alert=True)
+        return
 
-# Cooldown Message with Emoji Countdown
-def get_cooldown_message(cooldown_time):
-    countdown_emojis = ['⏳', '⌛', '🕒']
-    return f"{random.choice(countdown_emojis)} 𝑷𝒍𝒆𝒂𝒔𝒆 𝒘𝒂𝒊𝒕 {cooldown_time} 𝒔𝒆𝒄𝒐𝒏𝒅𝒔 𝒃𝒆𝒇𝒐𝒓𝒆 𝒂𝒏𝒐𝒕𝒉𝒆𝒓 𝒕𝒓𝒚!"
+    if choice == "yes":
+        # User chose "Yes" - chance-based reward
+        if random.random() < 0.5:  # 50% chance to win
+            receiver_id = callback_query.from_user.id
+            unique_characters = await get_unique_characters(receiver_id)
 
-# Streak Bonus Message
-def get_streak_bonus_message(mention, streak):
-    return f"🫧 ᴡᴏᴡ {mention}, ʏᴏᴜ'ᴠᴇ ʀᴇᴀᴄʜᴇᴅ ᴀ sᴛʀᴇᴀᴋ ᴏғ {streak}! 🔥"
+            for character in unique_characters:
+                try:
+                    await user_collection.update_one({'id': receiver_id}, {'$push': {'characters': character}})
+                except Exception as e:
+                    print(e)
+                await callback_query.message.reply_photo(
+                    photo=character['img_url'],
+                    caption=f"🎉 {callback_query.from_user.mention}, ʏᴏᴜ'ᴠᴇ sᴇᴄᴜʀᴇᴅ {character['name']} ғʀᴏᴍ {character['anime']} 💍!"
+                )
+            await callback_query.answer("Congratulations! You've won the waifu!", show_alert=True)
+        else:
+            await callback_query.message.reply_text(f"💔 {callback_query.from_user.mention}, sʜᴇ ʀᴇᴊᴇᴄᴛᴇᴅ ʏᴏᴜʀ ᴘʀᴏᴘᴏsᴀʟ... ʙᴇᴛᴛᴇʀ ʟᴜᴄᴋ ɴᴇxᴛ ᴛɪᴍᴇ.")
+            await callback_query.answer("Better luck next time!", show_alert=True)
+    else:
+        # Improved message for "No" choice
+        await callback_query.message.reply_text(f"😔 {callback_query.from_user.mention}, ʏᴏᴜ ᴅᴇᴄɪᴅᴇᴅ ᴛᴏ ʟᴇᴛ ɢᴏ. ᴍᴀʏʙᴇ sᴏᴍᴇᴏɴᴇ ᴇʟsᴇ ᴡɪʟʟ ғɪʟʟ ʏᴏᴜʀ ʜᴇᴀʀᴛ.")
+        await callback_query.answer("You chose to decline.", show_alert=True)
 
-# Marry Command with Advanced Features
+# Marry Command with Button Options
 @bot.on_message(filters.command(["dice", "marry"]))
 async def dice(_: bot, message: t.Message):
     chat_id = message.chat.id
     mention = message.from_user.mention
     user_id = message.from_user.id
 
-    # Logging Command Usage
-    log_message = f"🎲 <b>Marry Command Activated</b>\n\n👤 User: {mention} (ID: <code>{user_id}</code>)\n💬 Chat ID: <code>{chat_id}</code>"
-    await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message)
-
     # Cooldown Check
     if user_id in cooldowns and time.time() - cooldowns[user_id] < 60:
         cooldown_time = int(60 - (time.time() - cooldowns[user_id]))
-        return await message.reply_text(get_cooldown_message(cooldown_time), quote=True)
+        await message.reply_text(f"⏳ 𝑷𝒍𝒆𝒂𝒔𝒆 𝒘𝒂𝒊𝒕 {cooldown_time} 𝒔𝒆𝒄𝒐𝒏𝒅𝒔 𝒃𝒆𝒇𝒐𝒓𝒆 𝒂𝒏𝒐𝒕𝒉𝒆𝒓 𝒕𝒓𝒚!", quote=True)
+        return
 
-    # Updating Last Roll Time
+    # Update Cooldown
     cooldowns[user_id] = time.time()
 
-    # Rolling Dice with Styled Message
-    await message.reply_text("🎲 ʀᴏʟʟɪɴɢ 🎲")
-    dice_msg = await bot.send_dice(chat_id=chat_id)
-    value = int(dice_msg.dice.value)
+    # Fetch a random waifu for proposal from target rarities
+    receiver_id = user_id
+    unique_characters = await get_unique_characters(receiver_id)
 
-    # Success Values (1, 6)
-    if value in [1, 6]:
-        receiver_id = user_id
-        unique_characters = await get_unique_characters(receiver_id)
+    if unique_characters:
+        character = unique_characters[0]
+        img_url = character['img_url']
+        caption = (
+            f"💖 {mention}, ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴘʀᴏᴘᴏsᴇ ᴛᴏ {character['name']} ғʀᴏᴍ {character['anime']}?\n\n"
+            "ᴄʜᴏᴏsᴇ ᴏɴᴇ!"
+        )
+        
+        # Send waifu image with "Yes" and "No" buttons
+        buttons = [
+            [
+                t.InlineKeyboardButton("Yes 💍", callback_data=f"marry:yes:{user_id}"),
+                t.InlineKeyboardButton("No 💔", callback_data=f"marry:no:{user_id}")
+            ]
+        ]
+        reply_markup = t.InlineKeyboardMarkup(buttons)
 
-        for character in unique_characters:
-            try:
-                await user_collection.update_one({'id': receiver_id}, {'$push': {'characters': character}})
-                leaderboard[mention] = leaderboard.get(mention, 0) + 1
-                roll_streaks[mention] = roll_streaks.get(mention, 0) + 1
-            except Exception as e:
-                print(e)
-
-        for character in unique_characters:
-            img_url = character['img_url']
-            caption = get_congratulatory_message(mention, character)
-            await message.reply_photo(photo=img_url, caption=caption)
-
-        # Success Message with Emojis
-        success_emojis = ['🎉', '💍', '💖', '🥳']
-        await message.reply_text(f"{random.choice(success_emojis)} ʟᴜᴄᴋʏ ʀᴏʟʟ! 💍 ʏᴏᴜʀ ᴘʀᴏᴘᴏsᴀʟ ᴡᴀs ᴀᴄᴄᴇᴘᴛᴇᴅ!")
-
-        # Bonus for Streaks
-        if roll_streaks[mention] > 1:
-            await message.reply_text(get_streak_bonus_message(mention, roll_streaks[mention]))
-
+        await message.reply_photo(photo=img_url, caption=caption, reply_markup=reply_markup)
     else:
-        # Failure Message
-        await message.reply_text(get_rejection_message(mention), quote=True)
-        roll_streaks[mention] = 0  # Reset Streak
+        await message.reply_text(f"💔 Sorry {mention}, no unique waifus are available right now.")
