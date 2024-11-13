@@ -512,12 +512,7 @@ async def receive_text_message(client, message):
             
             # Clear the user state after completion
             user_states.pop(user_id, None)
-        
-        # Handle other states as necessary...
-    else:
-        # If there's no relevant user state, we ignore the message or can send a generic response
-        await message.reply_text("Please use the appropriate command to add or edit anime information.")
-        
+
         # Check for waifu name input in the anime context
         elif user_data["state"] == "awaiting_waifu_name" and user_data["anime"]:
             waifu_name = message.text.strip()
@@ -532,18 +527,8 @@ async def receive_text_message(client, message):
                     ]
                 )
             )
-        
-        # Handle other conditions as needed...
-        elif user_data["state"] == "adding_anime":
-            anime_name = message.text.strip()
-            existing_anime = await collection.find_one({"anime": anime_name})
-            if existing_anime:
-                await message.reply_text(f"The anime '{anime_name}' already exists.")
-            else:
-                anime_document = {"anime": anime_name}
-                await collection.insert_one(anime_document)
-                await message.reply_text(f"The anime '{anime_name}' has been added successfully.")
-            user_states.pop(message.from_user.id, None)
+
+        # Handle renaming anime state
         elif user_data["state"] == "renaming_anime" and user_data["anime"]:
             old_anime_name = user_data["anime"]
             new_anime_name = message.text.strip()
@@ -552,8 +537,9 @@ async def receive_text_message(client, message):
             await app.send_message(CHARA_CHANNEL_ID, f"📢 The sudo user renamed the anime from '{old_anime_name}' to '{new_anime_name}'.")
             await app.send_message(SUPPORT_CHAT, f"📢 The sudo user renamed the anime from '{old_anime_name}' to '{new_anime_name}'.")
             user_states.pop(message.from_user.id, None)
+        
+        # Handle renaming waifu state
         elif user_data["state"] == "renaming_waifu" and user_data["waifu_id"]:
-            # Handling the case of renaming a waifu
             waifu_id = user_data["waifu_id"]
             new_waifu_name = message.text.strip()
             waifu = await collection.find_one({"id": waifu_id})
@@ -583,6 +569,9 @@ async def receive_text_message(client, message):
             else:
                 await message.reply_text("Failed to rename the waifu.")
             user_states.pop(message.from_user.id, None)
+    else:
+        # If there's no relevant user state, send a generic response
+        await message.reply_text("Please use the appropriate command to add or edit anime information.")
 
 @app.on_callback_query(filters.regex('^add_waifu_'))
 async def choose_anime_callback(client, callback_query):
