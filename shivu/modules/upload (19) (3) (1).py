@@ -1,3 +1,4 @@
+import logging
 import asyncio
 from datetime import datetime, time
 from pyrogram import Client, filters
@@ -6,6 +7,9 @@ from pymongo import ReturnDocument
 from shivu import user_collection, collection, CHARA_CHANNEL_ID, SUPPORT_CHAT, shivuu as app, sudo_users, db
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.errors import BadRequest
+
+# Set up basic logging
+logging.basicConfig(level=logging.INFO)
 
 # Define the scheduled message times (in 24-hour format)
 GOOD_MORNING_TIME = time(8, 0)  # 8:00 AM
@@ -464,10 +468,14 @@ async def back_to_anime_list(client, callback_query):
 
 @app.on_callback_query(filters.regex('^add_anime$'))
 async def add_anime_callback(client, callback_query):
+    user_id = callback_query.from_user.id
     # Set user state to "adding_anime" before prompting
-    user_states[callback_query.from_user.id] = {"state": "adding_anime"}
+    user_states[user_id] = {"state": "adding_anime"}
     
-    # Confirm to the user that the bot is ready for their input
+    # Confirm that state is set correctly
+    logging.info(f"Set state for user {user_id} to adding_anime")
+    
+    # Prompt the user to enter the anime name
     await callback_query.message.edit_text(
         "Please enter the name of the anime you want to add:"
     )
@@ -475,11 +483,14 @@ async def add_anime_callback(client, callback_query):
 
 @app.on_message(filters.private & filters.text)
 async def receive_text_message(client, message):
-    # Check if there's an active state for the user
-    user_data = user_states.get(message.from_user.id)
+    user_id = message.from_user.id
+    user_data = user_states.get(user_id)
+    
+    # Debug log to confirm if user data is being retrieved
+    logging.info(f"User data for {user_id}: {user_data}")
     
     if user_data:
-        # Check for the anime addition state
+        # Check if the user is in the process of adding an anime
         if user_data["state"] == "adding_anime":
             anime_name = message.text.strip()
             
@@ -495,13 +506,17 @@ async def receive_text_message(client, message):
                 # Confirm success to the user if insertion was successful
                 if result.inserted_id:
                     await message.reply_text(f"The anime '{anime_name}' has been added successfully.")
+                    logging.info(f"Anime '{anime_name}' added successfully for user {user_id}")
                 else:
                     await message.reply_text("Failed to add the anime due to a database error.")
             
             # Clear the user state after completion
-            user_states.pop(message.from_user.id, None)
+            user_states.pop(user_id, None)
         
         # Handle other states as necessary...
+    else:
+        # If there's no relevant user state, we ignore the message or can send a generic response
+        await message.reply_text("Please use the appropriate command to add or edit anime information.")
         
         # Check for waifu name input in the anime context
         elif user_data["state"] == "awaiting_waifu_name" and user_data["anime"]:
