@@ -464,7 +464,10 @@ async def back_to_anime_list(client, callback_query):
 
 @app.on_callback_query(filters.regex('^add_anime$'))
 async def add_anime_callback(client, callback_query):
+    # Set user state to "adding_anime" before prompting
     user_states[callback_query.from_user.id] = {"state": "adding_anime"}
+    
+    # Confirm to the user that the bot is ready for their input
     await callback_query.message.edit_text(
         "Please enter the name of the anime you want to add:"
     )
@@ -472,24 +475,33 @@ async def add_anime_callback(client, callback_query):
 
 @app.on_message(filters.private & filters.text)
 async def receive_text_message(client, message):
+    # Check if there's an active state for the user
     user_data = user_states.get(message.from_user.id)
     
     if user_data:
-        # Check for adding an anime
+        # Check for the anime addition state
         if user_data["state"] == "adding_anime":
             anime_name = message.text.strip()
             
-            # Check if anime already exists
+            # Check if the anime already exists in the database
             existing_anime = await collection.find_one({"anime": anime_name})
             if existing_anime:
                 await message.reply_text(f"The anime '{anime_name}' already exists.")
             else:
+                # Insert new anime
                 anime_document = {"anime": anime_name}
-                await collection.insert_one(anime_document)
-                await message.reply_text(f"The anime '{anime_name}' has been added successfully.")
+                result = await collection.insert_one(anime_document)
+                
+                # Confirm success to the user if insertion was successful
+                if result.inserted_id:
+                    await message.reply_text(f"The anime '{anime_name}' has been added successfully.")
+                else:
+                    await message.reply_text("Failed to add the anime due to a database error.")
             
-            # Clear state after action
+            # Clear the user state after completion
             user_states.pop(message.from_user.id, None)
+        
+        # Handle other states as necessary...
         
         # Check for waifu name input in the anime context
         elif user_data["state"] == "awaiting_waifu_name" and user_data["anime"]:
