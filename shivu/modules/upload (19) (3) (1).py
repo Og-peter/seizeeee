@@ -104,7 +104,7 @@ event_emojis = {
     '🏀 Basketball': '🏀',
     '⚽ Soccer': '⚽'
 }
-# Dictionary to store the selected anime for each user
+# Dictionary to keep track of user states
 user_states = {}
 
 
@@ -466,12 +466,16 @@ async def back_to_anime_list(client, callback_query):
         reply_markup=None
     )
 
+import logging
+from pyrogram import Client, filters
+from pymongo import MongoClient
+
 @app.on_callback_query(filters.regex('^add_anime$'))
 async def add_anime_callback(client, callback_query):
     user_id = callback_query.from_user.id
     user_states[user_id] = {"state": "adding_anime"}
     logging.info(f"Set state for user {user_id} to adding_anime")
-    
+
     # Prompt user for anime name
     await callback_query.message.edit_text(
         "Please enter the name of the anime you want to add:"
@@ -483,23 +487,35 @@ async def receive_text_message(client, message):
     user_data = user_states.get(user_id)
     logging.info(f"Received message from {user_id}: '{message.text}', user_data: {user_data}")
 
-    if user_data:
-        if user_data["state"] == "adding_anime":
-            anime_name = message.text.strip()
-            logging.info(f"User {user_id} is adding anime: '{anime_name}'")
-            
+    # Check if user is in the 'adding_anime' state
+    if user_data and user_data.get("state") == "adding_anime":
+        anime_name = message.text.strip()
+        logging.info(f"User {user_id} is adding anime: '{anime_name}'")
+        
+        try:
+            # Check if the anime already exists in the database
             existing_anime = await collection.find_one({"anime": anime_name})
             if existing_anime:
                 await message.reply_text(f"The anime '{anime_name}' already exists.")
+                logging.info(f"Anime '{anime_name}' already exists for user {user_id}")
             else:
+                # Insert the new anime into the collection
                 anime_document = {"anime": anime_name}
                 result = await collection.insert_one(anime_document)
+                
                 if result.inserted_id:
                     await message.reply_text(f"The anime '{anime_name}' has been added successfully.")
                     logging.info(f"Anime '{anime_name}' added successfully for user {user_id}")
                 else:
                     await message.reply_text("Failed to add the anime due to a database error.")
-            user_states.pop(user_id, None)
+                    logging.error(f"Failed to add anime '{anime_name}' for user {user_id}")
+
+        except Exception as e:
+            logging.error(f"Database error for user {user_id} while adding anime: {e}")
+            await message.reply_text("An error occurred while adding the anime. Please try again later.")
+
+        # Clean up user state regardless of outcome
+        user_states.pop(user_id, None)
           
         # Check for waifu name input in the anime context
         elif user_data["state"] == "awaiting_waifu_name" and user_data["anime"]:
