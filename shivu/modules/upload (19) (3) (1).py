@@ -466,10 +466,6 @@ async def back_to_anime_list(client, callback_query):
         reply_markup=None
     )
 
-import logging
-from pyrogram import Client, filters
-from pymongo import MongoClient
-
 @app.on_callback_query(filters.regex('^add_anime$'))
 async def add_anime_callback(client, callback_query):
     user_id = callback_query.from_user.id
