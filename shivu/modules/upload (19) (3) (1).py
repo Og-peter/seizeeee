@@ -469,46 +469,40 @@ async def back_to_anime_list(client, callback_query):
 @app.on_callback_query(filters.regex('^add_anime$'))
 async def add_anime_callback(client, callback_query):
     user_id = callback_query.from_user.id
-    # Set user state to "adding_anime" before prompting
     user_states[user_id] = {"state": "adding_anime"}
-    
-    # Confirm that state is set correctly
     logging.info(f"Set state for user {user_id} to adding_anime")
     
-    # Prompt the user to enter the anime name
+    # Prompt user for anime name
     await callback_query.message.edit_text(
         "Please enter the name of the anime you want to add:"
     )
-
 
 @app.on_message(filters.private & filters.text)
 async def receive_text_message(client, message):
     user_id = message.from_user.id
     user_data = user_states.get(user_id)
-    
-    # Debug log to confirm if user data is being retrieved
-    logging.info(f"User data for {user_id}: {user_data}")
-    
+    logging.info(f"Received message from {user_id}: '{message.text}', user_data: {user_data}")
+
     if user_data:
-        # Check if the user is in the process of adding an anime
         if user_data["state"] == "adding_anime":
             anime_name = message.text.strip()
+            logging.info(f"User {user_id} is adding anime: '{anime_name}'")
             
-            # Check if the anime already exists in the database
             existing_anime = await collection.find_one({"anime": anime_name})
             if existing_anime:
                 await message.reply_text(f"The anime '{anime_name}' already exists.")
             else:
-                # Insert new anime
                 anime_document = {"anime": anime_name}
                 result = await collection.insert_one(anime_document)
-                
-                # Confirm success to the user if insertion was successful
                 if result.inserted_id:
                     await message.reply_text(f"The anime '{anime_name}' has been added successfully.")
                     logging.info(f"Anime '{anime_name}' added successfully for user {user_id}")
                 else:
                     await message.reply_text("Failed to add the anime due to a database error.")
+            user_states.pop(user_id, None)
+        else:
+            logging.info(f"No active 'adding_anime' state for user {user_id}")
+            await message.reply_text("Please use the appropriate command to add or edit anime information.")
             
             # Clear the user state after completion
             user_states.pop(user_id, None)
