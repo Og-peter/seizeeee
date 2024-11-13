@@ -466,11 +466,14 @@ async def back_to_anime_list(client, callback_query):
         reply_markup=None
     )
 
+# Dictionary to keep track of user states
+user_states = {}
+
 @app.on_callback_query(filters.regex('^add_anime$'))
 async def add_anime_callback(client, callback_query):
     user_id = callback_query.from_user.id
     user_states[user_id] = {"state": "adding_anime"}
-    logging.info(f"Set state for user {user_id} to adding_anime")
+    logging.info(f"User states: {user_states}")  # Log the entire user_states dictionary
 
     # Prompt user for anime name
     await callback_query.message.edit_text(
