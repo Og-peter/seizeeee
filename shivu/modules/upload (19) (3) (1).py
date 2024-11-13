@@ -512,63 +512,63 @@ async def receive_text_message(client, message):
 
         # Clean up user state regardless of outcome
         user_states.pop(user_id, None)
-          
-        # Check for waifu name input in the anime context
-        elif user_data["state"] == "awaiting_waifu_name" and user_data["anime"]:
-            waifu_name = message.text.strip()
-            user_states[message.from_user.id]["name"] = waifu_name
-            user_states[message.from_user.id]["state"] = "awaiting_waifu_rarity"
-            await message.reply_text(
-                "Now, choose the character's rarity:",
-                reply_markup=InlineKeyboardMarkup(
-                    [
-                        [InlineKeyboardButton(rarity, callback_data=f"select_rarity_{rarity}")] 
-                        for rarity in rarity_emojis.keys()
-                    ]
-                )
-            )
 
-        # Handle renaming anime state
-        elif user_data["state"] == "renaming_anime" and user_data["anime"]:
-            old_anime_name = user_data["anime"]
-            new_anime_name = message.text.strip()
-            await collection.update_many({"anime": old_anime_name}, {"$set": {"anime": new_anime_name}})
-            await message.reply_text(f"The anime '{old_anime_name}' has been renamed to '{new_anime_name}' successfully.")
-            await app.send_message(CHARA_CHANNEL_ID, f"📢 The sudo user renamed the anime from '{old_anime_name}' to '{new_anime_name}'.")
-            await app.send_message(SUPPORT_CHAT, f"📢 The sudo user renamed the anime from '{old_anime_name}' to '{new_anime_name}'.")
-            user_states.pop(message.from_user.id, None)
+    # Check for waifu name input in the anime context
+    elif user_data and user_data["state"] == "awaiting_waifu_name" and user_data.get("anime"):
+        waifu_name = message.text.strip()
+        user_states[user_id]["name"] = waifu_name
+        user_states[user_id]["state"] = "awaiting_waifu_rarity"
+        await message.reply_text(
+            "Now, choose the character's rarity:",
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [InlineKeyboardButton(rarity, callback_data=f"select_rarity_{rarity}")]
+                    for rarity in rarity_emojis.keys()
+                ]
+            )
+        )
+
+    # Handle renaming anime state
+    elif user_data and user_data["state"] == "renaming_anime" and user_data.get("anime"):
+        old_anime_name = user_data["anime"]
+        new_anime_name = message.text.strip()
+        await collection.update_many({"anime": old_anime_name}, {"$set": {"anime": new_anime_name}})
+        await message.reply_text(f"The anime '{old_anime_name}' has been renamed to '{new_anime_name}' successfully.")
+        await app.send_message(CHARA_CHANNEL_ID, f"📢 The sudo user renamed the anime from '{old_anime_name}' to '{new_anime_name}'.")
+        await app.send_message(SUPPORT_CHAT, f"📢 The sudo user renamed the anime from '{old_anime_name}' to '{new_anime_name}'.")
+        user_states.pop(user_id, None)
         
-        # Handle renaming waifu state
-        elif user_data["state"] == "renaming_waifu" and user_data["waifu_id"]:
-            waifu_id = user_data["waifu_id"]
-            new_waifu_name = message.text.strip()
-            waifu = await collection.find_one({"id": waifu_id})
-            if waifu:
-                old_name = waifu["name"]
-                await collection.update_one(
-                    {"id": waifu_id},
-                    {"$set": {"name": new_waifu_name}}
-                )
-                await message.reply_text(f"The character has been renamed to '{new_waifu_name}' successfully.")
-                await app.send_photo(
-                    chat_id=CHARA_CHANNEL_ID,
-                    photo=waifu["img_url"],
-                    caption=f'💫 <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> ʜᴀꜱ ʀᴇɴᴀᴍᴇᴅ ᴛʜᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ 💫\n'
-                            f'🆔 <b>Waifu ID:</b> {waifu_id}\n'
-                            f'👤 <b>New Name:</b> {new_waifu_name}\n'
-                            f'🎌 <b>Anime:</b> {waifu["anime"]}',
-                )
-                await app.send_photo(
-                    chat_id=SUPPORT_CHAT,
-                    photo=waifu["img_url"],
-                    caption=f'💫 <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> ʜᴀꜱ ʀᴇɴᴀᴍᴇᴅ ᴛʜᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ 💫\n'
-                            f'🆔 <b>Waifu ID:</b> {waifu_id}\n'
-                            f'👤 <b>New Name:</b> {new_waifu_name}\n'
-                            f'🎌 <b>Anime:</b> {waifu["anime"]}',
-                )
-            else:
-                await message.reply_text("Failed to rename the waifu.")
-            user_states.pop(message.from_user.id, None)
+    # Handle renaming waifu state
+    elif user_data and user_data["state"] == "renaming_waifu" and user_data.get("waifu_id"):
+        waifu_id = user_data["waifu_id"]
+        new_waifu_name = message.text.strip()
+        waifu = await collection.find_one({"id": waifu_id})
+        if waifu:
+            old_name = waifu["name"]
+            await collection.update_one(
+                {"id": waifu_id},
+                {"$set": {"name": new_waifu_name}}
+            )
+            await message.reply_text(f"The character has been renamed to '{new_waifu_name}' successfully.")
+            await app.send_photo(
+                chat_id=CHARA_CHANNEL_ID,
+                photo=waifu["img_url"],
+                caption=f'💫 <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> has renamed the character\n'
+                        f'🆔 <b>Waifu ID:</b> {waifu_id}\n'
+                        f'👤 <b>New Name:</b> {new_waifu_name}\n'
+                        f'🎌 <b>Anime:</b> {waifu["anime"]}',
+            )
+            await app.send_photo(
+                chat_id=SUPPORT_CHAT,
+                photo=waifu["img_url"],
+                caption=f'💫 <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> has renamed the character\n'
+                        f'🆔 <b>Waifu ID:</b> {waifu_id}\n'
+                        f'👤 <b>New Name:</b> {new_waifu_name}\n'
+                        f'🎌 <b>Anime:</b> {waifu["anime"]}',
+            )
+        else:
+            await message.reply_text("Failed to rename the waifu.")
+        user_states.pop(user_id, None)
     else:
         # If there's no relevant user state, send a generic response
         await message.reply_text("Please use the appropriate command to add or edit anime information.")
