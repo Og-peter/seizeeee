@@ -7,61 +7,7 @@ from pymongo import ReturnDocument
 from shivu import user_collection, collection, CHARA_CHANNEL_ID, SUPPORT_CHAT, shivuu as app, sudo_users, db
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.errors import BadRequest
-
-# Set up basic logging
-logging.basicConfig(level=logging.INFO)
-
-# Define the scheduled message times (in 24-hour format)
-GOOD_MORNING_TIME = time(8, 0)  # 8:00 AM
-GOOD_NIGHT_TIME = time(22, 0)   # 10:00 PM
-NEW_CHARACTER_TIME = time(18, 0)  # 6:00 PM
-
-# Define specific sudo user IDs and channel ID
-SUDO_USER_IDS = (6402009857, 7004889403, 1135445089, 5158013355, 5630057244, 
-                 1374057577, 6305653111, 5421067814, 7497950160, 7334126640, 
-                 6835013483, 1993290981, 1742711103, 6180567980)  # Actual sudo user IDs as integers
-CHANNEL_ID = -1002049694247  # Actual channel ID as integer
-
-# Function to send a message to all sudo users
-async def send_message_to_sudo_users(app, text):
-    for user_id in SUDO_USER_IDS:
-        try:
-            await app.send_message(user_id, text)
-        except Exception as e:
-            print(f"Failed to send message to sudo user {user_id}: {e}")
-
-# Function to send a message to a specific channel
-async def send_message_to_channel(app, channel_id, text):
-    try:
-        await app.send_message(channel_id, text)
-    except Exception as e:
-        print(f"Failed to send message to channel {channel_id}: {e}")
-
-# Notify bot restart to the sudo users
-async def notify_restart(app):
-    message_text = "🚨 Bot has restarted!"
-    await send_message_to_sudo_users(app, message_text)
-
-# Scheduled messaging function
-async def scheduled_messages(app):
-    while True:
-        now = datetime.now().time()
-        
-        # Good Morning Message
-        if now == GOOD_MORNING_TIME:
-            await send_message_to_sudo_users(app, "Good morning! ☀️ Have a great day!")
-
-        # Good Night Message
-        elif now == GOOD_NIGHT_TIME:
-            await send_message_to_sudo_users(app, "Good night! 🌙 Sweet dreams!")
-
-        # New Character Notification
-        elif now == NEW_CHARACTER_TIME:
-            await send_message_to_channel(app, CHANNEL_ID, "📢 New character coming soon! Please wait a bit longer.")
-
-        # Check every 30 seconds to increase reliability
-        await asyncio.sleep(30)
-        
+      
 # Function to get the next sequence number for unique IDs
 async def get_next_sequence_number(sequence_name):
     sequence_collection = db.sequences
@@ -465,116 +411,71 @@ async def back_to_anime_list(client, callback_query):
         "Returning to the anime list.",
         reply_markup=None
     )
-
-# Dictionary to keep track of user states
-user_states = {}
-
-@app.on_callback_query(filters.regex('^add_anime$'))
-async def add_anime_callback(client, callback_query):
-    user_id = callback_query.from_user.id
-    user_states[user_id] = {"state": "adding_anime"}
-    logging.info(f"User states: {user_states}")  # Log the entire user_states dictionary
-
-    # Prompt user for anime name
-    await callback_query.message.edit_text(
-        "Please enter the name of the anime you want to add:"
-    )
-
 @app.on_message(filters.private & filters.text)
 async def receive_text_message(client, message):
-    user_id = message.from_user.id
-    user_data = user_states.get(user_id)
-    logging.info(f"Received message from {user_id}: '{message.text}', user_data: {user_data}")
-
-    # Check if user is in the 'adding_anime' state
-    if user_data and user_data.get("state") == "adding_anime":
-        anime_name = message.text.strip()
-        logging.info(f"User {user_id} is adding anime: '{anime_name}'")
-        
-        try:
-            # Check if the anime already exists in the database
+    user_data = user_states.get(message.from_user.id)
+    if user_data:
+        if user_data["state"] == "awaiting_waifu_name" and user_data["anime"]:
+            # This condition ensures that the function only triggers when adding a new waifu,
+            # not when editing an existing one.
+            waifu_name = message.text.strip()
+            user_states[message.from_user.id]["name"] = waifu_name
+            user_states[message.from_user.id]["state"] = "awaiting_waifu_rarity"
+            await message.reply_text(
+                "Now, choose the waifu's rarity:",
+                reply_markup=InlineKeyboardMarkup(
+                    [
+                        [InlineKeyboardButton(rarity, callback_data=f"select_rarity_{rarity}")] 
+                        for rarity in rarity_emojis.keys()
+                    ]
+                )
+            )
+        elif user_data["state"] == "adding_anime":
+            anime_name = message.text.strip()
             existing_anime = await collection.find_one({"anime": anime_name})
             if existing_anime:
                 await message.reply_text(f"The anime '{anime_name}' already exists.")
-                logging.info(f"Anime '{anime_name}' already exists for user {user_id}")
             else:
-                # Insert the new anime into the collection
                 anime_document = {"anime": anime_name}
-                result = await collection.insert_one(anime_document)
-                
-                if result.inserted_id:
-                    await message.reply_text(f"The anime '{anime_name}' has been added successfully.")
-                    logging.info(f"Anime '{anime_name}' added successfully for user {user_id}")
-                else:
-                    await message.reply_text("Failed to add the anime due to a database error.")
-                    logging.error(f"Failed to add anime '{anime_name}' for user {user_id}")
-
-        except Exception as e:
-            logging.error(f"Database error for user {user_id} while adding anime: {e}")
-            await message.reply_text("An error occurred while adding the anime. Please try again later.")
-
-        # Clean up user state regardless of outcome
-        user_states.pop(user_id, None)
-
-    # Check for waifu name input in the anime context
-    elif user_data and user_data["state"] == "awaiting_waifu_name" and user_data.get("anime"):
-        waifu_name = message.text.strip()
-        user_states[user_id]["name"] = waifu_name
-        user_states[user_id]["state"] = "awaiting_waifu_rarity"
-        await message.reply_text(
-            "Now, choose the character's rarity:",
-            reply_markup=InlineKeyboardMarkup(
-                [
-                    [InlineKeyboardButton(rarity, callback_data=f"select_rarity_{rarity}")]
-                    for rarity in rarity_emojis.keys()
-                ]
-            )
-        )
-
-    # Handle renaming anime state
-    elif user_data and user_data["state"] == "renaming_anime" and user_data.get("anime"):
-        old_anime_name = user_data["anime"]
-        new_anime_name = message.text.strip()
-        await collection.update_many({"anime": old_anime_name}, {"$set": {"anime": new_anime_name}})
-        await message.reply_text(f"The anime '{old_anime_name}' has been renamed to '{new_anime_name}' successfully.")
-        await app.send_message(CHARA_CHANNEL_ID, f"📢 The sudo user renamed the anime from '{old_anime_name}' to '{new_anime_name}'.")
-        await app.send_message(SUPPORT_CHAT, f"📢 The sudo user renamed the anime from '{old_anime_name}' to '{new_anime_name}'.")
-        user_states.pop(user_id, None)
-        
-    # Handle renaming waifu state
-    elif user_data and user_data["state"] == "renaming_waifu" and user_data.get("waifu_id"):
-        waifu_id = user_data["waifu_id"]
-        new_waifu_name = message.text.strip()
-        waifu = await collection.find_one({"id": waifu_id})
-        if waifu:
-            old_name = waifu["name"]
-            await collection.update_one(
-                {"id": waifu_id},
-                {"$set": {"name": new_waifu_name}}
-            )
-            await message.reply_text(f"The character has been renamed to '{new_waifu_name}' successfully.")
-            await app.send_photo(
-                chat_id=CHARA_CHANNEL_ID,
-                photo=waifu["img_url"],
-                caption=f'💫 <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> has renamed the character\n'
-                        f'🆔 <b>Waifu ID:</b> {waifu_id}\n'
-                        f'👤 <b>New Name:</b> {new_waifu_name}\n'
-                        f'🎌 <b>Anime:</b> {waifu["anime"]}',
-            )
-            await app.send_photo(
-                chat_id=SUPPORT_CHAT,
-                photo=waifu["img_url"],
-                caption=f'💫 <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> has renamed the character\n'
-                        f'🆔 <b>Waifu ID:</b> {waifu_id}\n'
-                        f'👤 <b>New Name:</b> {new_waifu_name}\n'
-                        f'🎌 <b>Anime:</b> {waifu["anime"]}',
-            )
-        else:
-            await message.reply_text("Failed to rename the waifu.")
-        user_states.pop(user_id, None)
-    else:
-        # If there's no relevant user state, send a generic response
-        await message.reply_text("Please use the appropriate command to add or edit anime information.")
+                await collection.insert_one(anime_document)
+                await message.reply_text(f"The anime '{anime_name}' has been added successfully.")
+            user_states.pop(message.from_user.id, None)
+        elif user_data["state"] == "renaming_anime" and user_data["anime"]:
+            old_anime_name = user_data["anime"]
+            new_anime_name = message.text.strip()
+            await collection.update_many({"anime": old_anime_name}, {"$set": {"anime": new_anime_name}})
+            await message.reply_text(f"The anime '{old_anime_name}' has been renamed to '{new_anime_name}' successfully.")
+            await app.send_message(CHARA_CHANNEL_ID, f"#𝗥𝗘𝗡𝗔𝗠𝗘𝗔𝗡𝗜𝗠𝗘\n\nThe sudo user renamed the anime from '{old_anime_name}' to '{new_anime_name}'.")
+            await app.send_message(SUPPORT_CHAT, f"#𝗥𝗘𝗡𝗔𝗠𝗘𝗔𝗡𝗜𝗠𝗘\n\nThe sudo user renamed the anime from '{old_anime_name}' to '{new_anime_name}'.")
+            user_states.pop(message.from_user.id, None)
+        elif user_data["state"] == "renaming_waifu" and user_data["waifu_id"]:
+            # Handling the case of renaming a waifu
+            waifu_id = user_data["waifu_id"]
+            new_waifu_name = message.text.strip()
+            waifu = await collection.find_one({"id": waifu_id})
+            if waifu:
+                old_name = waifu["name"]
+                await collection.update_one(
+                    {"id": waifu_id},
+                    {"$set": {"name": new_waifu_name}}
+                )
+                await message.reply_text(f"The waifu has been renamed to '{new_waifu_name}' successfully.")
+                await app.send_photo(
+                    chat_id=CHARA_CHANNEL_ID,
+                    photo=waifu["img_url"],
+                    caption=f"#𝗖𝗛𝗔𝗡𝗚𝗘𝗗𝗡𝗔𝗠𝗘\n\n» User: <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a> Renamed The Character From '{old_name}' To '{new_waifu_name}',"
+                )
+                await app.send_photo
+                    
+                await app.send_photo(
+                    chat_id=SUPPORT_CHAT,
+                    photo=waifu["img_url"],
+                    caption=f"#𝗖𝗛𝗔𝗡𝗚𝗘𝗗𝗡𝗔𝗠𝗘\n\n» User: <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a> Renamed The Character From '{old_name}' To '{new_waifu_name}',"
+                )
+                await app.send_photo
+            else:
+                await message.reply_text("Failed to rename the Character.")
+            user_states.pop(message.from_user.id, None)
 
 @app.on_callback_query(filters.regex('^add_waifu_'))
 async def choose_anime_callback(client, callback_query):
@@ -582,7 +483,7 @@ async def choose_anime_callback(client, callback_query):
     user_states[callback_query.from_user.id] = {"state": "awaiting_waifu_name", "anime": selected_anime, "name": None, "rarity": None}
     await app.send_message(
         chat_id=callback_query.from_user.id,
-        text=f"You've selected {selected_anime}. Now, please enter the new character's name:",
+        text=f"You've selected {selected_anime}. Now, please enter the new Character's name:",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("Cancel", callback_data="cancel_add_waifu")]]
         )
