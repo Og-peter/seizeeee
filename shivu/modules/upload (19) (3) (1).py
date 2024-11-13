@@ -500,13 +500,7 @@ async def receive_text_message(client, message):
                 else:
                     await message.reply_text("Failed to add the anime due to a database error.")
             user_states.pop(user_id, None)
-        else:
-            logging.info(f"No active 'adding_anime' state for user {user_id}")
-            await message.reply_text("Please use the appropriate command to add or edit anime information.")
-            
-            # Clear the user state after completion
-            user_states.pop(user_id, None)
-
+          
         # Check for waifu name input in the anime context
         elif user_data["state"] == "awaiting_waifu_name" and user_data["anime"]:
             waifu_name = message.text.strip()
