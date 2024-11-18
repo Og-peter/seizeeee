@@ -1,7 +1,7 @@
 import asyncio
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Application, CallbackContext, CommandHandler
+from telegram.ext import Application, CallbackContext, CommandHandler, CallbackQueryHandler
 from shivu import application, GROUP_ID, user_collection
 
 # Define your sudo users' IDs here
@@ -49,6 +49,18 @@ async def start(update: Update, context: CallbackContext) -> None:
         print(f"Error checking user membership in support group: {e}")
         await update.message.reply_text("An error occurred. Please try again later.")
         return
+
+    # Animated emojis
+    emojis = ["✨", "🚀", "🎉"]
+    for emoji in emojis:
+        emoji_message = await update.message.reply_text(emoji)
+        await asyncio.sleep(1.0)  # Wait for 1.5 seconds between emojis
+        await emoji_message.delete()
+
+    # "Starting..." animation message
+    starting_message = await update.message.reply_text("Starting...")
+    await asyncio.sleep(1.0)  # Wait for 2 seconds before deleting
+    await starting_message.delete()
 
     # Handle referral if present
     if args and args[0].startswith('r_'):
@@ -115,8 +127,8 @@ async def start(update: Update, context: CallbackContext) -> None:
             [InlineKeyboardButton("✜ ᴧᴅᴅ ϻє ɪη ʏσυʀ ɢʀσυᴘ ✜", url=f'https://t.me/{context.bot.username}?startgroup=new')],
             [InlineKeyboardButton("˹ sυᴘᴘσʀᴛ ˼", url=f'https://t.me/{SUPPORT_GROUP_ID.lstrip("@")}'),
              InlineKeyboardButton("˹ ᴜᴘᴅᴧᴛєs ˼", url='https://t.me/Seizer_updates')],
-            [InlineKeyboardButton("˹ ʜєʟᴘ ғᴧǫ ˼", url='https://telegra.ph/Seizer-Faq-Menu-09-05')],
-        ]
+            [InlineKeyboardButton("✧ʜᴇʟᴘ✧", callback_data='help')],
+      ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         video_url = "https://telegra.ph/file/40254b3883dfcaec52120.mp4"
         sticker_url = "CAACAgUAAxkBAAEBeVpm-jtB-lkO8Oixy5SZHTAy1Ymp4QACEgwAAv75EFbYc5vQ3hQ1Ph4E"
@@ -133,6 +145,51 @@ async def start(update: Update, context: CallbackContext) -> None:
         video_url = "https://telegra.ph/file/0b2e8e33d07a0d0e5914f.mp4"
         await context.bot.send_video(chat_id=update.effective_chat.id, video=video_url, caption=f"👋 Hi there, <a href='tg://user?id={user_id}'>{first_name}</a>!\n\n✨ I'm online and ready to assist!", reply_markup=reply_markup, parse_mode='HTML')
         
+async def button(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    await query.answer()
+
+    if query.data == 'help':
+        help_text = """
+    ***Help Section:***
+    
+/take - ᴛᴏ ᴛᴀᴋᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ (ᴏɴʟʏ ᴡᴏʀᴋꜱ ɪɴ ɢʀᴏᴜᴘ)
+/hfav - ᴀᴅᴅ ʏᴏᴜʀ ꜰᴀᴠ
+/htrade - ᴛᴏ ᴛʀᴀᴅᴇ ᴄʜᴀʀᴀᴄᴛᴇʀꜱ
+/hharem - ᴛᴏ ꜱᴇᴇ ʏᴏᴜʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ
+/hgift - ɢɪᴠᴇ ᴀɴʏ ᴄʜᴀʀᴀᴄᴛᴇʀ ꜰʀᴏᴍ ʏᴏᴜʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ ᴛᴏ ᴀɴᴏᴛʜᴇʀ ᴜꜱᴇʀ.. (ᴏɴʟʏ ᴡᴏʀᴋꜱ ɪɴ ɢʀᴏᴜᴘꜱ)
+/hclaim - ʜᴄʟᴀɪᴍ ᴅᴀɪʟʏ ᴄʜᴇᴄᴋ-ɪɴ ʜᴜꜱʙᴀɴᴅᴏ
+/hhmode - ᴄʜᴀɴɢᴇ ʜʜᴀʀᴇᴍ ᴍᴏᴅᴇ
+/hroll - ᴄʟᴀɪᴍ ʀᴏʟʟ ᴄʜᴀʀᴍꜱ 1 x 24 ʜᴏᴜʀ
+/hspin - ʜꜱᴘɪɴ ʜᴜꜱʙᴀɴᴅᴏ
+/hshop - ʜꜱʜᴏᴘ ᴛᴏ ʙᴜʏ ᴄʜᴀʀᴀᴄᴛᴇʀ
+/hsell - ʜꜱᴇʟʟ ᴛᴏ ꜱᴇʟʟ ᴄʜᴀʀᴀᴄᴛᴇʀ
+/htransfer - ᴛʀᴀɴꜱꜰᴇʀ ᴄʜᴀʀᴍꜱ
+/htop - ꜱᴇᴇ ᴛᴏᴘ ɢʀᴏᴜᴘꜱ, ᴛᴏᴘ ᴜꜱᴇʀꜱ, ᴄʜᴀᴛᴛᴏᴘ
+/hprofile - ʏᴏᴜʀ ᴘʀᴏꜰɪʟᴇ 
+/hmcharms - ᴛʀᴀɴꜱꜰᴇʀ ᴄʜᴀʀᴍꜱ ᴛᴏ ᴡᴀɪꜰᴜhredeem - ʜʀᴇᴅᴇᴇᴍ ʏᴏᴜʀ ᴄᴏᴅᴇ
+/hfind - ʜꜰɪɴᴅ ʏᴏᴜʀ ᴄʜᴀʀᴀᴄᴛᴇʀ
+/hbcharms - ꜱᴀᴠᴇ ʏᴏᴜʀ ᴄʜᴀʀᴍꜱ ɪɴ ꜱᴛᴏʀᴀɢᴇ
+/hwithdraw - ʜᴡɪᴛʜᴅʀᴀᴡ ʏᴏᴜʀ ᴄʜᴀʀᴍꜱ ꜰʀᴏᴍ ꜱᴛᴏʀᴀɢᴇ
+/hdeposit - ʜᴅᴇᴘᴏꜱɪᴛ ʏᴏᴜʀ ᴄʜᴀʀᴍꜱ ᴛᴏ ꜱᴛᴏʀᴀɢᴇ
+/changetime - ᴄʜᴀɴɢᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴀᴘᴘᴇᴀʀ ᴛɪᴍᴇ (ᴏɴʟʏ ᴡᴏʀᴋꜱ ɪɴ ɢʀᴏᴜᴘꜱ)
+   """
+        help_keyboard = [[InlineKeyboardButton("⤾ Bᴀᴄᴋ", callback_data='back')]]
+        reply_markup = InlineKeyboardMarkup(help_keyboard)
+        
+        await context.bot.edit_message_caption(chat_id=update.effective_chat.id, message_id=query.message.message_id, caption=help_text, reply_markup=reply_markup, parse_mode='markdown')
+
+    elif query.data == 'back':
+        # Placeholder for 'back' action
+        await context.bot.edit_message_caption(
+            chat_id=update.effective_chat.id, 
+            message_id=query.message.message_id, 
+            caption="Welcome back to the main menu!", 
+            reply_markup=None,  # Remove the keyboard or set another one
+            parse_mode='markdown'
+        )
+        
+application.add_handler(CallbackQueryHandler(button, pattern='^help$|^back$', block=False))
 start_handler = CommandHandler('start', start, block=False)
 application.add_handler(start_handler)
 
