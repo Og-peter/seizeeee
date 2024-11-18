@@ -177,10 +177,23 @@ Use the buttons below to navigate."""
         basic_text = """
 ***Basic Commands:***
 
-/start - Start the bot
-/help - Show help section
-/profile - View your profile
-/settings - Configure your preferences
+/seize - Start the seize event  
+/hmode - Change harem mode  
+/post - Post an update  
+/placebid - Place a bid on an auction  
+/bonus - Collect your bonus rewards  
+/wclaim - Claim a waifu  
+/claim - Claim your rewards  
+/check - Check stats or availability  
+/fav - Mark your favorite  
+/gift - Gift an item or character  
+/trade - Trade with another user  
+/harem - View your collection  
+/gtop - View group top rankings  
+/ctop - View character top rankings  
+/status - Check your status  
+/store - Open your storage  
+/changetime - Change spawn times  
 """
         help_keyboard = [[InlineKeyboardButton("⤾ Back", callback_data='help')]]
         reply_markup = InlineKeyboardMarkup(help_keyboard)
@@ -196,15 +209,22 @@ Use the buttons below to navigate."""
         game_text = """
 ***Game Commands:***
 
-/take - Take a character (group only)
-/hfav - Add your favorite
-/htrade - Trade characters
-/hharem - See your collection
-/hgift - Gift characters to another user (group only)
-/hclaim - Daily check-in for a character
-/hspin - Spin for a new character
-/hshop - Buy characters
-/hsell - Sell characters
+/propose - Propose to a character  
+/fight - Engage in a fight  
+/marry - Marry a character  
+/roll - Roll for a random character  
+/crime - Commit a crime  
+/explore - Explore new options  
+/pass - Pass your turn  
+/hunt - Go on a hunt  
+/bal - Check your balance  
+/pay - Pay another user  
+/football - Play a football match  
+/basketball - Play a basketball game  
+/guess - Guess the answer  
+/quiz - Participate in a quiz  
+/tokens - View your tokens  
+/beastshop - Shop for beasts  
 """
         help_keyboard = [[InlineKeyboardButton("⤾ Back", callback_data='help')]]
         reply_markup = InlineKeyboardMarkup(help_keyboard)
