@@ -149,47 +149,88 @@ async def button(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     await query.answer()
 
-    if query.data == 'help':
-        help_text = """
-    ***Help Section:***
-    
-/take - ᴛᴏ ᴛᴀᴋᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ (ᴏɴʟʏ ᴡᴏʀᴋꜱ ɪɴ ɢʀᴏᴜᴘ)
-/hfav - ᴀᴅᴅ ʏᴏᴜʀ ꜰᴀᴠ
-/htrade - ᴛᴏ ᴛʀᴀᴅᴇ ᴄʜᴀʀᴀᴄᴛᴇʀꜱ
-/hharem - ᴛᴏ ꜱᴇᴇ ʏᴏᴜʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ
-/hgift - ɢɪᴠᴇ ᴀɴʏ ᴄʜᴀʀᴀᴄᴛᴇʀ ꜰʀᴏᴍ ʏᴏᴜʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ ᴛᴏ ᴀɴᴏᴛʜᴇʀ ᴜꜱᴇʀ.. (ᴏɴʟʏ ᴡᴏʀᴋꜱ ɪɴ ɢʀᴏᴜᴘꜱ)
-/hclaim - ʜᴄʟᴀɪᴍ ᴅᴀɪʟʏ ᴄʜᴇᴄᴋ-ɪɴ ʜᴜꜱʙᴀɴᴅᴏ
-/hhmode - ᴄʜᴀɴɢᴇ ʜʜᴀʀᴇᴍ ᴍᴏᴅᴇ
-/hroll - ᴄʟᴀɪᴍ ʀᴏʟʟ ᴄʜᴀʀᴍꜱ 1 x 24 ʜᴏᴜʀ
-/hspin - ʜꜱᴘɪɴ ʜᴜꜱʙᴀɴᴅᴏ
-/hshop - ʜꜱʜᴏᴘ ᴛᴏ ʙᴜʏ ᴄʜᴀʀᴀᴄᴛᴇʀ
-/hsell - ʜꜱᴇʟʟ ᴛᴏ ꜱᴇʟʟ ᴄʜᴀʀᴀᴄᴛᴇʀ
-/htransfer - ᴛʀᴀɴꜱꜰᴇʀ ᴄʜᴀʀᴍꜱ
-/htop - ꜱᴇᴇ ᴛᴏᴘ ɢʀᴏᴜᴘꜱ, ᴛᴏᴘ ᴜꜱᴇʀꜱ, ᴄʜᴀᴛᴛᴏᴘ
-/hprofile - ʏᴏᴜʀ ᴘʀᴏꜰɪʟᴇ 
-/hmcharms - ᴛʀᴀɴꜱꜰᴇʀ ᴄʜᴀʀᴍꜱ ᴛᴏ ᴡᴀɪꜰᴜhredeem - ʜʀᴇᴅᴇᴇᴍ ʏᴏᴜʀ ᴄᴏᴅᴇ
-/hfind - ʜꜰɪɴᴅ ʏᴏᴜʀ ᴄʜᴀʀᴀᴄᴛᴇʀ
-/hbcharms - ꜱᴀᴠᴇ ʏᴏᴜʀ ᴄʜᴀʀᴍꜱ ɪɴ ꜱᴛᴏʀᴀɢᴇ
-/hwithdraw - ʜᴡɪᴛʜᴅʀᴀᴡ ʏᴏᴜʀ ᴄʜᴀʀᴍꜱ ꜰʀᴏᴍ ꜱᴛᴏʀᴀɢᴇ
-/hdeposit - ʜᴅᴇᴘᴏꜱɪᴛ ʏᴏᴜʀ ᴄʜᴀʀᴍꜱ ᴛᴏ ꜱᴛᴏʀᴀɢᴇ
-/changetime - ᴄʜᴀɴɢᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴀᴘᴘᴇᴀʀ ᴛɪᴍᴇ (ᴏɴʟʏ ᴡᴏʀᴋꜱ ɪɴ ɢʀᴏᴜᴘꜱ)
-   """
-        help_keyboard = [[InlineKeyboardButton("⤾ Bᴀᴄᴋ", callback_data='back')]]
-        reply_markup = InlineKeyboardMarkup(help_keyboard)
-        
-        await context.bot.edit_message_caption(chat_id=update.effective_chat.id, message_id=query.message.message_id, caption=help_text, reply_markup=reply_markup, parse_mode='markdown')
+    # Define the initial caption
+    initial_caption = """Welcome to the Bot!
 
-    elif query.data == 'back':
-        # Placeholder for 'back' action
+Choose an option:
+- Help for commands
+- Enjoy exploring features!
+
+Use the buttons below to navigate."""
+    
+    if query.data == 'help':
+        help_keyboard = [
+            [InlineKeyboardButton("Basic Commands", callback_data='basic')],
+            [InlineKeyboardButton("Game Commands", callback_data='game')],
+            [InlineKeyboardButton("⤾ Back", callback_data='back')]
+        ]
+        reply_markup = InlineKeyboardMarkup(help_keyboard)
         await context.bot.edit_message_caption(
-            chat_id=update.effective_chat.id, 
-            message_id=query.message.message_id, 
-            caption="Welcome back to the main menu!", 
-            reply_markup=None,  # Remove the keyboard or set another one
+            chat_id=update.effective_chat.id,
+            message_id=query.message.message_id,
+            caption="Choose a category to explore the commands.",
+            reply_markup=reply_markup,
             parse_mode='markdown'
         )
-        
-application.add_handler(CallbackQueryHandler(button, pattern='^help$|^back$', block=False))
+
+    elif query.data == 'basic':
+        basic_text = """
+***Basic Commands:***
+
+/start - Start the bot
+/help - Show help section
+/profile - View your profile
+/settings - Configure your preferences
+"""
+        help_keyboard = [[InlineKeyboardButton("⤾ Back", callback_data='help')]]
+        reply_markup = InlineKeyboardMarkup(help_keyboard)
+        await context.bot.edit_message_caption(
+            chat_id=update.effective_chat.id,
+            message_id=query.message.message_id,
+            caption=basic_text,
+            reply_markup=reply_markup,
+            parse_mode='markdown'
+        )
+
+    elif query.data == 'game':
+        game_text = """
+***Game Commands:***
+
+/take - Take a character (group only)
+/hfav - Add your favorite
+/htrade - Trade characters
+/hharem - See your collection
+/hgift - Gift characters to another user (group only)
+/hclaim - Daily check-in for a character
+/hspin - Spin for a new character
+/hshop - Buy characters
+/hsell - Sell characters
+"""
+        help_keyboard = [[InlineKeyboardButton("⤾ Back", callback_data='help')]]
+        reply_markup = InlineKeyboardMarkup(help_keyboard)
+        await context.bot.edit_message_caption(
+            chat_id=update.effective_chat.id,
+            message_id=query.message.message_id,
+            caption=game_text,
+            reply_markup=reply_markup,
+            parse_mode='markdown'
+        )
+
+    elif query.data == 'back':
+        # Back to the main menu
+        start_keyboard = [
+            [InlineKeyboardButton("Help", callback_data='help')],
+        ]
+        reply_markup = InlineKeyboardMarkup(start_keyboard)
+        await context.bot.edit_message_caption(
+            chat_id=update.effective_chat.id,
+            message_id=query.message.message_id,
+            caption=initial_caption,
+            reply_markup=reply_markup,
+            parse_mode='markdown'
+        )
+
+application.add_handler(CallbackQueryHandler(button, pattern='^help$|^basic$|^game$|^back$', block=False))
 start_handler = CommandHandler('start', start, block=False)
 application.add_handler(start_handler)
 
@@ -202,4 +243,3 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
-    
