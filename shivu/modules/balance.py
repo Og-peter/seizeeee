@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import asyncio
 import time
 import random
-import htmls
+import html
 from datetime import datetime, timedelta
 from shivu import shivuu as bot
 from shivu import shivuu as app
