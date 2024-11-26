@@ -26,11 +26,12 @@ async def get_global_rank(username: str) -> int:
 
 async def my_profile(update: Update, context: CallbackContext):
     if update.message:
-        loading_message = await update.message.reply_text("🔄 Loading your profile...")
+        loading_message = await update.message.reply_animation(
+            animation="https://files.catbox.moe/gujd6o.mp4",  # Replace with an appropriate GIF URL
+            caption="🌟 Loading your profile, please wait..."
+        )
 
         user_id = update.effective_user.id
-        await asyncio.sleep(1)
-
         user_data = await user_collection.find_one({'id': user_id})
 
         if user_data:
@@ -38,9 +39,9 @@ async def my_profile(update: Update, context: CallbackContext):
             user_balance = user_data.get('balance', 0)
             total_characters = await collection.count_documents({})
             characters_count = len(user_data.get('characters', []))
-            character_percentage = (characters_count / total_characters) * 100
+            character_percentage = (characters_count / total_characters) * 100 if total_characters else 0
 
-            username = user_data.get('username', None)
+            username = user_data.get('username', 'Not set')
             global_rank, total_users = await get_global_rank(username)
 
             progress_bar_length = 10
@@ -48,6 +49,7 @@ async def my_profile(update: Update, context: CallbackContext):
             progress_bar = "▰" * filled_blocks + "▱" * (progress_bar_length - filled_blocks)
 
             user_tag = f"<a href='tg://user?id={user_id}'>{html.escape(user_first_name)}</a>"
+            user_bio = user_data.get('bio', "Bio not set")
 
             rarity_counts = {
                 "⚪️ Common": 0,
@@ -69,28 +71,26 @@ async def my_profile(update: Update, context: CallbackContext):
                     rarity_counts[rarity] += 1
 
             rarity_message = "\n".join([
-                f"├─➩ {rarity}: {count}"
-                for rarity, count in rarity_counts.items()
+                f"  ❍ {rarity} ▷ {count}" for rarity, count in rarity_counts.items()
             ])
 
             profile_message = (
-                f"╒═══「  🌟 User Profile 」\n"
-                f"╰─➩ 👤 Name: {user_tag}\n"
-                f"╰─➩ 💰 Coins: `{user_balance}` \n"
-                f"╰─➩ 🌐 Total Waifus In Bot: {total_characters}\n"
-                f"╰─➩ 📜 Your Characters: {characters_count} ({character_percentage:.2f}%)\n"
-                f"╰─➩ 📊 Progress: {progress_bar}\n\n"
-                f"╰─➩ 🌍 Global Rank: `{global_rank}/{total_users}` \n"
-                f"╰─────────────────────\n"
-                f"{rarity_message}\n"
-                f"╰─────────────────────"
+                f"ㅤ◦•●◉✿ ᴜsᴇʀ ɪɴғᴏʀᴍᴀᴛɪᴏɴ ✿◉●•◦\n"
+                f"▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭\n"
+                f"❍ ᴜsᴇʀ ɪᴅ ɴᴏ. ▷ {user_id}\n"
+                f"❍ ᴜsᴇʀɴᴀᴍᴇ ▷ {username}\n"
+                f"❍ ᴍᴇɴᴛɪᴏɴ ▷ {user_tag}\n"
+                f"❍ ʙɪᴏ ▷ {user_bio}\n"
+                f"━─━────༺༻────━─━\n"
+                f"❍ ᴄᴏɪɴ ▷ {user_balance}\n"
+                f"❍ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ ▷ {characters_count}/{total_characters} ({character_percentage:.2f}%)\n"
+                f"❍ ᴘʀᴏɢʀᴇss ʙᴀʀ ▷ {progress_bar}\n"
+                f"❍ ɢʟᴏʙᴀʟ ʀᴀɴᴋ ▷ {global_rank}/{total_users}\n"
+                f"❍ ʀᴀʀɪᴛʏ ᴄᴏᴜɴᴛ:\n{rarity_message}\n"
+                f"❖ ᴍᴀᴅᴇ ʙʏ ➛ [DYNAMIC NETWORK](https://t.me/the_dynamic_network)\n"
+                f"▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭"
             )
 
-            if user_data.get('warned_until') and user_data.get('warned_until') > datetime.now():
-                remaining_time = user_data.get('warned_until') - datetime.now()
-                profile_message += f"\n⚠️ Warning: {remaining_time.seconds // 60} mins left."
-
-            # Retrieve custom profile picture if set
             media_id = user_data.get("custom_photo")
             media_type = user_data.get("custom_media_type", "photo")
 
@@ -98,7 +98,6 @@ async def my_profile(update: Update, context: CallbackContext):
             keyboard = InlineKeyboardMarkup([[close_button]])
 
             try:
-                # Send the custom profile picture or text message
                 if media_id:
                     if media_type == "photo":
                         await update.message.reply_photo(media_id, caption=profile_message, reply_markup=keyboard, parse_mode='HTML')
