@@ -513,4 +513,22 @@ async def delete_tokens(update: Update, context: CallbackContext) -> None:
 
     # Update the balance by deleting tokens
     new_balance = current_balance - amount
-    await user_collection.update_one({'id': target_us
+    await user_collection.update_one({'id': target_user_id}, {'$set': {'balance': new_balance}})
+    await update.message.reply_text(f"✅ **Deleted** `{amount}` **tokens from user** `{target_user_id}`. \n💰 **New balance:** `{new_balance}` tokens.")
+
+async def reset_tokens(update: Update, context: CallbackContext) -> None:
+    owner_id = 6402009857  # Replace with the actual owner's user ID
+    # Check if the user invoking the command is the owner
+    if update.effective_user.id != owner_id:
+        await update.message.reply_text("🚫 **You don't have permission to perform this action.**")
+        return
+
+    # Reset tokens for all users
+    await user_collection.update_many({}, {'$set': {'balance': 10000}})
+    
+    await update.message.reply_text("🔄 **All user wealth have been reset to** `10,000` **wealth.**")
+
+# Add handlers for the commands
+application.add_handler(CommandHandler("addt", add_tokens, block=False))
+application.add_handler(CommandHandler("delt", delete_tokens, block=False))
+application.add_handler(CommandHandler("reset", reset_tokens, block=False))
