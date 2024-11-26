@@ -278,7 +278,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
             parse_mode='HTML'
         )
         return
-        
+
     # Retrieve the user's guess
     guess = ' '.join(context.args).lower() if context.args else ''
 
@@ -298,21 +298,33 @@ async def guess(update: Update, context: CallbackContext) -> None:
     # Check if the guess is correct
     if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
         # Record the correct guess time
-        time_sent = sent_characters[chat_id].get(character['id'], time.time())
+        time_sent = None
+
+        if isinstance(sent_characters.get(chat_id), dict):
+            time_sent = sent_characters[chat_id].get(character['id'], time.time())
+        elif isinstance(sent_characters.get(chat_id), list):
+            for entry in sent_characters[chat_id]:
+                if entry.get('id') == character['id']:
+                    time_sent = entry.get('time', time.time())
+                    break
+
+        if time_sent is None:
+            time_sent = time.time()
+
         time_taken = time.time() - time_sent
         minutes, seconds = divmod(int(time_taken), 60)
 
         # Add the character to both correct guessers
         if chat_id not in first_correct_guesses:
             first_correct_guesses[chat_id] = []
-        
+
         if user_id not in [user.id for user in first_correct_guesses[chat_id]]:
             first_correct_guesses[chat_id].append(update.effective_user)
 
             # Update user database
             user = await user_collection.find_one({'id': user_id})
             update_fields = {}
-            
+
             if user:
                 if hasattr(update.effective_user, 'username') and update.effective_user.username != user.get('username'):
                     update_fields['username'] = update.effective_user.username
@@ -359,8 +371,8 @@ async def guess(update: Update, context: CallbackContext) -> None:
             f'✅ <b><a href="tg://user?id={user_id}">{escape(update.effective_user.first_name)}</a></b> You got a new character!\n\n'
             f'🌸 𝗡𝗔𝗠𝗘: <b>{last_characters[chat_id]["name"]}</b>\n'
             f'❇️ 𝗔𝗡𝗜𝗠𝗘: <b>{last_characters[chat_id]["anime"]}</b>\n'
-            f'{last_characters[chat_id]["rarity"][0]} 𝗥𝗔𝗥𝗜𝗧𝗬: <b>{last_characters[chat_id]["rarity"]}</b>\n',
-            f'⏱️ Time taken: <b>{minutes}m {seconds}s</b>\n',
+            f'{last_characters[chat_id]["rarity"][0]} 𝗥𝗔𝗥𝗜𝗧𝗬: <b>{last_characters[chat_id]["rarity"]}</b>\n'
+            f'⏱️ Time taken: <b>{minutes}m {seconds}s</b>',
             parse_mode='HTML',
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
@@ -371,7 +383,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(
             '❌ Incorrect guess! Please try again.',
             reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+        )
         
 # Assuming rarity_map and rarity_active are predefined dictionaries
 # rarity_map = {1: "Common", 2: "Rare", ...}
