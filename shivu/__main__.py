@@ -96,7 +96,7 @@ async def message_counter(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
         # 2. Send a celebratory image or message for every `message_frequency` messages
         if message_counts[chat_id] % message_frequency == 0:
-            await send_image_or_message(update, context, chat_id)
+            await send_image(update, context)
             message_counts[chat_id] = 0
     
 rarity_active = {
