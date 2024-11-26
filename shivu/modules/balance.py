@@ -45,33 +45,39 @@ async def check_balance(_, message: Message):
         await send_start_button(message.chat.id)
         return
 
-    # Get user's balance and rank-related data
+    # Get user's balance, rank, and last activity
     balance = user_data.get('balance', 0)
     formatted_balance = "{:,.0f}".format(balance)
-
-    # Improved rank logic
     rank_value = user_data.get('user_rank', 0)  # Assuming user_rank is a numeric value
     user_rank = get_rank_description(rank_value)  # Get rank description based on value
+    last_activity = user_data.get('last_activity', 'Unknown')  # Assuming last_activity is stored
 
     # Mention the user
-    user_mention = f"[{user_data.get('first_name', 'User')}](tg://user?id={user_id})"  # Use user_data for mention
+    user_mention = f"[{user_data.get('first_name', 'User')}](tg://user?id={user_id})"
 
-    # Add an image URL (customize this URL as needed)
-    image_url = "https://files.catbox.moe/86pzuh.jpg"  # Replace with your image URL
+    # Add a video URL
+    video_url = "https://files.catbox.moe/t0o9g5.mp4"  # Replace with your video URL
 
-    # Enhanced message with balance and user rank
+    # Compact and feature-rich custom message
     custom_message = f"""
-┬── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┬
- **{user_mention}'s ᴡᴀᴇʟᴛʜ ᴏᴠᴇʀᴠɪᴇᴡ** 🏵️
-🫧 **ᴄᴜʀʀᴇɴᴛ ʙᴀʟᴀɴᴄᴇ:** ₩ `{formatted_balance}` 
-🏅 **ᴜsєʀ ʀᴀɴк:** `{user_rank}`
-┴── ⋅ ⋅ ─── ᯽ ─── ⋅ ⋅ ──┴
-╭── ⋅ ⋅ ─── ✩ ─── ⋅ ⋅ ──╮
- **sᴛᴀʏ ᴀᴄᴛɪᴠᴇ ғᴏʀ ᴍᴏʀᴇ ʀᴇᴡᴀʀᴅs!**
-╰── ⋅ ⋅ ─── ✩ ─── ⋅ ⋅ ──╯
+💳 **Balance Overview** 💳
+
+👤 **User:** {user_mention}  
+💰 **Balance:** ₩ `{formatted_balance}`  
+📅 **Last Activity:** `{last_activity}`  
+
 """
 
-    await message.reply_photo(photo=image_url, caption=custom_message)
+    # Buttons for rank and balance
+    buttons = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("🔍 View Balance", callback_data=f"view_balance_{user_id}"),
+            InlineKeyboardButton("📊 View Rank", callback_data=f"view_rank_{user_id}")
+        ]
+    ])
+
+    # Reply with a video, custom message, and buttons
+    await message.reply_video(video=video_url, caption=custom_message, reply_markup=buttons)
 
 def get_rank_description(rank_value):
     """
@@ -79,167 +85,284 @@ def get_rank_description(rank_value):
     Adjust the ranges and descriptions as necessary.
     """
     if rank_value >= 1000:
-        return "Legendary"
+        return "🌟 Legendary"
     elif rank_value >= 500:
-        return "Elite"
+        return "🏅 Elite"
     elif rank_value >= 100:
-        return "Pro"
+        return "🥇 Pro"
     elif rank_value >= 10:
-        return "Intermediate"
+        return "🔰 Intermediate"
     else:
-        return "Novice"
-    
-async def pay(update, context):
-    sender_id = update.effective_user.id
-    keyboard = [[InlineKeyboardButton("📩 Appeal Support", url='https://t.me/dynamic_gangs')]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+        return "🎖️ Novice"
 
-    # Check if the user is still in cooldown
+@app.on_callback_query()
+async def handle_callback_query(_, callback_query):
+    """
+    Handles button interactions for viewing balance or rank.
+    """
+    data = callback_query.data
+    user_id = int(data.split("_")[-1])  # Extract user ID from callback data
+
+    # Fetch user data
+    user_data = await user_collection.find_one({'id': user_id})
+    if not user_data:
+        await callback_query.answer("User data not found.", show_alert=True)
+        return
+
+    if "view_balance" in data:
+        balance = user_data.get('balance', 0)
+        formatted_balance = "{:,.0f}".format(balance)
+        await callback_query.message.edit_text(
+            f"💰 **Balance:** ₩ `{formatted_balance}`",
+            reply_markup=None
+        )
+    elif "view_rank" in data:
+        rank_value = user_data.get('user_rank', 0)
+        user_rank = get_rank_description(rank_value)
+        await callback_query.message.edit_text(
+            f"🏅 **Rank:** `{user_rank}`",
+            reply_markup=None
+        )
+    
+# Command: Pay
+async def pay(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    sender_id = update.effective_user.id
+
+    # Custom help keyboard
+    support_keyboard = [
+        [InlineKeyboardButton("📩 Appeal Support", url="https://t.me/dynamic_gangs")]
+    ]
+    support_markup = InlineKeyboardMarkup(support_keyboard)
+
+    # Cooldown check (20 minutes)
     if sender_id in cooldowns and (time.time() - cooldowns[sender_id]) < 1200:
         remaining_time = int(1200 - (time.time() - cooldowns[sender_id]))
-        await update.message.reply_text(f"⏳ Please wait {remaining_time // 60} minutes and {remaining_time % 60} seconds before using /pay again.")
+        await update.message.reply_text(
+            f"⏳ You can use /pay again in {remaining_time // 60} minutes and {remaining_time % 60} seconds.",
+            reply_markup=support_markup,
+        )
         return
 
     if not update.message.reply_to_message:
-        await update.message.reply_text("❌ Please reply to a user to /pay.")
+        await update.message.reply_text("❌ Please reply to the user you want to pay.")
         return
 
+    # Extract recipient ID and payment amount
     recipient_id = update.message.reply_to_message.from_user.id
-
     try:
         amount = int(context.args[0])
-        # Check if the amount is negative
-        if amount < 0:
-            raise ValueError("Negative amounts are not allowed.")
+        if amount <= 0:
+            raise ValueError("Amount must be positive.")
     except (IndexError, ValueError):
-        await update.message.reply_text("🚫 Invalid amount. Usage: /pay <amount>")
+        await update.message.reply_text("🚫 Invalid amount. Use: /pay <amount>")
         return
 
-    # Check if the amount is greater than 1,000,000,000
-    if amount > 1000000000:
+    # Payment limit validation
+    if amount > 1_000_000_000:
         await update.message.reply_text("💸 You can't pay more than ₩1,000,000,000.")
         return
 
-    sender_balance = await user_collection.find_one({'id': sender_id}, projection={'balance': 1})
-    if not sender_balance or sender_balance.get('balance', 0) < amount:
-        await update.message.reply_text("❌ Insufficient balance to make the payment.")
+    # Sender balance check
+    sender_data = await user_collection.find_one({'id': sender_id}, projection={'balance': 1})
+    if not sender_data or sender_data.get('balance', 0) < amount:
+        await update.message.reply_text("❌ Insufficient balance for the transaction.")
         return
 
-    disallowed_words = ['negative', 'badword']  # Add your disallowed words here
-    payment_message = update.message.text.lower()
-    if any(word in payment_message for word in disallowed_words):
-        await update.message.reply_text("🚫 Sorry, your payment message contains disallowed words.")
+    # Check for disallowed words in the command
+    disallowed_words = ['negative', 'badword']  # Add any disallowed words here
+    if any(word in update.message.text.lower() for word in disallowed_words):
+        await update.message.reply_text("🚫 Disallowed words detected in the payment message.")
         return
 
     # Process the payment
     await user_collection.update_one({'id': sender_id}, {'$inc': {'balance': -amount}})
     await user_collection.update_one({'id': recipient_id}, {'$inc': {'balance': amount}})
+    cooldowns[sender_id] = time.time()  # Set cooldown for the sender
 
-    # Send a success message with enhanced formatting
+    # Fetch recipient details
+    recipient = await context.bot.get_chat(recipient_id)
+    recipient_name = recipient.first_name + (f" {recipient.last_name}" if recipient.last_name else "")
+    recipient_username = f"@{recipient.username}" if recipient.username else "an anonymous user"
+
+    # Success message
+    new_balance = sender_data['balance'] - amount
     success_message = (
-        f"✅ <b>₩ Payment Successful!</b> 🎉\n"
-        f"You paid <b>₩{amount}</b> to <b>{update.message.reply_to_message.from_user.first_name}</b>.\n"
-        f"💰 Your new balance: <code>₩{sender_balance['balance'] - amount}</code>"
+        f"✅ <b>Transaction Successful!</b>\n"
+        f"💳 You sent <b>₩{amount:,}</b> to <b>{recipient_name}</b> ({recipient_username}).\n"
+        f"🔢 <b>Your New Balance:</b> <code>₩{new_balance:,}</code>\n"
+        "📈 Keep growing your wealth!"
     )
-    await update.message.reply_text(success_message, parse_mode='HTML')
+    await update.message.reply_text(success_message, parse_mode=ParseMode.HTML)
 
-    # Set the cooldown time for the user
-    cooldowns[sender_id] = time.time()
-
-    # Log payment information
-    logs_message = (
-        f"🔄 <b>Payment Log</b>\n"
-        f"👤 Sender: @{update.effective_user.username} (ID: {sender_id})\n"
-        f"💵 Amount: <b>₩{amount}</b>\n"
-        f"📬 Recipient: @{update.message.reply_to_message.from_user.username} (ID: {recipient_id})"
+    # Recipient notification
+    recipient_message = (
+        f"🎉 <b>You've received a payment!</b>\n"
+        f"💸 Amount: <b>₩{amount:,}</b>\n"
+        f"👤 From: <b>{update.effective_user.first_name}</b> "
+        f"({f'@{update.effective_user.username}' if update.effective_user.username else 'an anonymous user'})\n"
+        f"💰 Check your balance now!"
     )
+    try:
+        await context.bot.send_message(recipient_id, recipient_message, parse_mode=ParseMode.HTML)
+    except Exception:
+        # If the recipient can't be notified
+        await update.message.reply_text("⚠️ Payment was successful, but the recipient could not be notified.")
 
-    for log_group_id in logs:
-        try:
-            await context.bot.send_message(log_group_id, logs_message, parse_mode='HTML')
-        except Exception as e:
-            print(f"Error sending payment log to group {log_group_id}: {str(e)}")
+    # Additional Feature: Optional Leaderboard Updates (if implemented)
+    # Example: await update_leaderboard(sender_id, recipient_id, amount)
+
+# Summary of Features Added
+# 1. **Improved Error Handling**:
+#    - Custom responses for invalid input, cooldowns, or disallowed words.
+# 2. **Recipient Notification**:
+#    - Notifies the recipient of a successful payment.
+# 3. **Detailed Success Message**:
+#    - Includes formatted amount and new balance.
+# 4. **Support Appeal Link**:
+#    - Inline keyboard for user support.
+# 5. **Balance Safeguards**:
+#    - Ensures users can't pay more than their balance or bypass limits.
             
 async def mtop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    top_users = await user_collection.find({}, projection={'id': 1, 'first_name': 1, 'last_name': 1, 'balance': 1}).sort('balance', -1).limit(10).to_list(10)
+    # Fetch top 10 users sorted by balance in descending order
+    top_users = await user_collection.find(
+        {}, 
+        projection={'id': 1, 'first_name': 1, 'last_name': 1, 'balance': 1}
+    ).sort('balance', -1).limit(10).to_list(10)
+
+    # Header for the leaderboard
+    top_users_message = (
+        "🏅 <b>Top 10 Richest Users</b> 🏅\n"
+        "💰 <i>Who’s ruling the leaderboard?</i>\n\n"
+    )
+
+    # List users with rank, name, and balance
+    if not top_users:
+        top_users_message += "❌ <i>No users found in the database.</i>"
+    else:
+        for i, user in enumerate(top_users, start=1):
+            user_id = user.get('id', 'Unknown')
+            first_name = html.escape(user.get('first_name', 'Unknown'))
+            last_name = html.escape(user.get('last_name', '')) if user.get('last_name') else ''
+            full_name = f"{first_name} {last_name}".strip()
+            user_link = f"<a href='tg://user?id={user_id}'>{first_name}</a>"
+            balance = user.get('balance', 0)
+            top_users_message += f"❖ <b>{i}. {user_link}</b> — ₩{balance:,.0f}\n"
+
+    # Footer
+    top_users_message += "\n━━━━━━━━━━━━━━━━━\n<i>Stay active to secure your spot!</i>"
+
+    # Send the leaderboard as a plain message
+    await update.message.reply_text(
+        text=top_users_message,
+        parse_mode='HTML'
+    )
     
-    top_users_message = "✨ **Top 10 Wealthy Users** ✨\n"
-    top_users_message += "───────────────────\n"
-
-    for i, user in enumerate(top_users, start=1):
-        first_name = user.get('first_name', 'Unknown')
-        last_name = user.get('last_name', '')
-        user_id = user.get('id', 'Unknown')
-        full_name = f"{first_name} {last_name}" if last_name else first_name
-        user_link = f"<a href='tg://user?id={user_id}'>{html.escape(first_name)}</a>"
-        balance = user.get('balance', 0)
-        top_users_message += f"🪙 **{i}. {user_link}** - ₩{balance:,.0f}\n"
-
-    top_users_message += "────────────────────\n"
-    top_users_message += "🏆 **Top 10 Wealthy Users via @Character_seize_bot**"
-
-    photo_path = 'https://telegra.ph/file/5ccbb080aa1761a5c2a49.jpg'
-    await update.message.reply_photo(photo=photo_path, caption=top_users_message, parse_mode='HTML')
-
 @bot.on_message(filters.command("daily"))
 async def daily_reward(_, message):
     user_id = message.from_user.id
-    user_data = await user_collection.find_one({'id': user_id}, projection={'last_daily_reward': 1, 'balance': 1})
-    
+
+    # Fetch user data
+    user_data = await user_collection.find_one(
+        {'id': user_id}, 
+        projection={'last_daily_reward': 1, 'balance': 1, 'streak': 1}
+    )
+
     if not user_data:
-        await send_start_button(message.chat.id)
+        await message.reply_text("❌ **You are not registered yet. Use /start to begin your journey!**")
         return
 
     last_claimed_date = user_data.get('last_daily_reward')
+    streak = user_data.get('streak', 0)
+
+    # Check if the reward was already claimed today
     if last_claimed_date and last_claimed_date.date() == datetime.utcnow().date():
-        await message.reply_text("🚫 **You've already claimed your daily reward today. Come back tomorrow!**")
+        await message.reply_text(
+            "🚫 **You've already claimed your daily reward today!**\n"
+            "⏳ **Come back tomorrow to continue your streak!**"
+        )
         return
 
-    # Update the user's balance and set the last claimed date to today
+    # Check if the streak was broken
+    if last_claimed_date and last_claimed_date.date() < (datetime.utcnow().date() - timedelta(days=1)):
+        streak = 0  # Reset streak if not claimed yesterday
+
+    # Increment streak and calculate reward
+    streak += 1
+    base_reward = 50000
+    streak_bonus = streak * 1000  # Bonus increases with streak
+    total_reward = base_reward + streak_bonus
+
+    # Update the user's balance, streak, and last claimed date
     await user_collection.update_one(
         {'id': user_id},
-        {'$inc': {'balance': 50000}, '$set': {'last_daily_reward': datetime.utcnow()}}
+        {'$inc': {'balance': total_reward}, 
+         '$set': {'last_daily_reward': datetime.utcnow(), 'streak': streak}}
     )
 
+    # Respond with a detailed message
     await message.reply_text(
-        "🎉 **❰ 𝗥 𝗘 𝗪 𝗔 𝗥 𝗗 𝗦 🧧 ❱** 🎉\n\n"
-        "🌟 **Daily reward claimed successfully!**\n"
-        "💰 You gained <code>₩50,000</code>! 🎊"
-        )
+        "🎁 <b><u>❰ DAILY REWARDS ❱</u></b> 🎁\n\n"
+        f"💰 <b>Base Reward:</b> <code>₩{base_reward:,}</code>\n"
+        f"🔥 <b>Streak Bonus:</b> <code>₩{streak_bonus:,}</code>\n"
+        f"🏆 <b>Total Reward:</b> <code>₩{total_reward:,}</code>\n\n"
+        f"📅 <b>Current Streak:</b> {streak} days\n"
+            )
     
 @bot.on_message(filters.command("weekly"))
-async def weekly_reward(_, message: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def weekly_reward(_, message):
     user_id = message.from_user.id
-    user_data = await user_collection.find_one({'id': user_id}, projection={'last_weekly_reward': 1, 'balance': 1})
-    
+
+    # Fetch user data
+    user_data = await user_collection.find_one(
+        {'id': user_id}, 
+        projection={'last_weekly_reward': 1, 'balance': 1, 'weekly_streak': 1}
+    )
+
     if not user_data:
-        await send_start_button(message.chat.id)
+        await message.reply_text("❌ **You are not registered yet. Use /start to begin your journey!**")
         return
 
     last_weekly_date = user_data.get('last_weekly_reward')
+    weekly_streak = user_data.get('weekly_streak', 0)
 
-    # Check if the user has already claimed their weekly reward this week
-    if last_weekly_date and last_weekly_date.date() == datetime.utcnow().date():
-        await message.reply_text("🚫 **You've already claimed your weekly reward for this week. Come back next week!**")
+    # Check if the reward was already claimed this week
+    current_week = datetime.utcnow().isocalendar()[1]  # Current week number
+    last_week = last_weekly_date.isocalendar()[1] if last_weekly_date else -1
+
+    if last_weekly_date and last_week == current_week:
+        await message.reply_text(
+            "🚫 **You've already claimed your weekly reward for this week!**\n"
+            "⏳ **Come back next week to continue your streak!**"
+        )
         return
 
-    # Update the user's balance and set the last claimed date to today
+    # Check if the streak was broken
+    if last_weekly_date and last_week < current_week - 1:
+        weekly_streak = 0  # Reset streak if skipped a week
+
+    # Increment streak and calculate reward
+    weekly_streak += 1
+    base_reward = 250000
+    streak_bonus = weekly_streak * 50000  # Bonus increases with streak
+    total_reward = base_reward + streak_bonus
+
+    # Update the user's balance, weekly streak, and last claimed date
     await user_collection.update_one(
         {'id': user_id},
-        {'$inc': {'balance': 250000}, '$set': {'last_weekly_reward': datetime.utcnow()}}
+        {'$inc': {'balance': total_reward}, 
+         '$set': {'last_weekly_reward': datetime.utcnow(), 'weekly_streak': weekly_streak}}
     )
 
-    # Send success message
+    # Respond with a detailed message
     await message.reply_text(
-        "🎉 **❰ 𝗥 𝗘 𝗪 𝗔 𝗥 𝗗 𝗦 🧧 ❱** 🎉\n\n"
-        "🌟 **Weekly reward claimed successfully!**\n"
-        "💰 You gained <code>₩250,000</code>! 🎊\n"
-        "🚀 Enjoy your wealth and keep thriving!"
-    )
-    
-user_last_command_times = {}
+        "🎁 <b><u>❰ WEEKLY REWARDS ❱</u></b> 🎁\n\n"
+        f"💰 <b>Base Reward:</b> <code>₩{base_reward:,}</code>\n"
+        f"🔥 <b>Streak Bonus:</b> <code>₩{streak_bonus:,}</code>\n"
+        f"🏆 <b>Total Reward:</b> <code>₩{total_reward:,}</code>\n\n"
+        f"📅 <b>Current Streak:</b> {weekly_streak} weeks\n"
+        )
 
-# Handler for the "tesure" command
 @bot.on_message(filters.command("tesure"))
 async def tesure(_, message: Message):
     user_id = message.from_user.id
@@ -249,24 +372,34 @@ async def tesure(_, message: Message):
 
     # Check if the user is sending commands too quickly
     if user_id in user_last_command_times and (current_time - user_last_command_times[user_id]).total_seconds() < 5:
-        await message.reply_text("⏳ **You are sending commands too quickly. Please wait a moment!**")
+        await message.reply_text("⏳ **You're sending commands too quickly! Please wait a moment.**")
         return
 
     # Update the last command time
     user_last_command_times[user_id] = current_time
-    print(f"Debug: User's first name is '{first_name}', last name is '{last_name}'")  # Debug statement
 
-    # Check for specific tags in both first name and last name
-    if "˹ 𝐃ʏɴᴧϻɪᴄ ˼" not in first_name and "˹ 𝐃ʏɴᴧϻɪᴄ ˼" not in last_name:
-        await message.reply_text("🚫 **Please set `˹ 𝐃ʏɴᴧϻɪᴄ ˼` in your first or last name to use this command.**")
+    # Debugging: log the user's name
+    print(f"Debug: User's first name is '{first_name}', last name is '{last_name}'")
+
+    # Check for specific tags in both first and last names
+    required_tag = "˹ 𝐃ʏɴᴧϻɪᴄ ˼"
+    disallowed_tag = "⸻꯭፝֟͠DCS 𐀔"
+
+    if required_tag not in first_name and required_tag not in last_name:
+        await message.reply_text(
+            f"🚫 **Please include `{required_tag}` in your first or last name to use this command.**"
+        )
         return
 
-    if "⸻꯭፝֟͠DCS 𐀔" in first_name or "⸻꯭፝֟͠DCS 𐀔" in last_name:
-        await message.reply_text("⚠️ **Please remove the tag `⸻꯭፝֟͠DCS 𐀔` and only use `˹ 𝐃ʏɴᴧϻɪᴄ ˼` in your name to use this command.**")
+    if disallowed_tag in first_name or disallowed_tag in last_name:
+        await message.reply_text(
+            f"⚠️ **Please remove the tag `{disallowed_tag}` and only use `{required_tag}` to access this feature.**"
+        )
         return
 
+    # Retrieve user data from the database
     user_data = await user_collection.find_one({'id': user_id}, projection={'last_tesure_reward': 1, 'balance': 1})
-    
+
     if not user_data:
         await send_start_button(message.chat.id)
         return
@@ -275,28 +408,40 @@ async def tesure(_, message: Message):
     if last_claimed_time:
         last_claimed_time = last_claimed_time.replace(tzinfo=None)
 
-    # Check if the user can claim the treasure reward
+    # Check cooldown period (30 minutes)
     if last_claimed_time and (current_time - last_claimed_time) < timedelta(minutes=30):
         remaining_time = timedelta(minutes=30) - (current_time - last_claimed_time)
         minutes, seconds = divmod(remaining_time.seconds, 60)
-        await message.reply_text(f"⏰ **Try again in `{minutes}:{seconds:02}` minutes.**")
+        await message.reply_text(f"⏰ **Try again in `{minutes}:{seconds:02}` minutes!**")
         return
 
-    # Generate a random reward between 5,000,000 and 10,000,000
+    # Reward tiers
     reward = random.randint(5000000, 10000000)
+    if reward > 9500000:
+        luck_factor = "🌟 Ultra Lucky! 🌟"
+    elif reward > 7500000:
+        luck_factor = "🔥 Very Lucky!"
+    else:
+        luck_factor = "💎 Lucky!"
 
-    # Update the user's balance and set the last claimed time to now
+    # Update the user's balance and last claimed time
     await user_collection.update_one(
         {'id': user_id},
         {'$inc': {'balance': reward}, '$set': {'last_tesure_reward': current_time}}
     )
 
-    # Send a success message
-    await message.reply_text(
-        "🎉 **❰ 𝗧 𝗥 𝗘 𝗔 𝗦 𝗨 𝗥 𝗘 🧧 ❱** 🎉\n\n"
-        "🌟 **Treasure claimed successfully!**\n"
-        f"💰 You gained <code>₩{reward:,}</code>! 🎊\n"
-        "📸 ![Your reward](https://telegra.ph/file/1725558c206507d3e36ee.jpg)"
+    # Success message with a reward image
+    reward_image = "https://telegra.ph/file/1725558c206507d3e36ee.jpg"
+    await message.reply_photo(
+        photo=reward_image,
+        caption=(
+            "🎉 **❰ 𝗧 𝗥 𝗘 𝗔 𝗦 𝗨 𝗥 𝗘 🧧 ❱** 🎉\n\n"
+            f"🌟 **Treasure claimed successfully!**\n"
+            f"💰 **Reward:** <code>₩{reward:,}</code>\n"
+            f"{luck_factor}\n\n"
+            "📅 **Cooldown:** 30 minutes before you can claim again.\n"
+        ),
+        parse_mode="HTML"
     )
     
 application.add_handler(CommandHandler("tops", mtop, block=False))
@@ -368,22 +513,4 @@ async def delete_tokens(update: Update, context: CallbackContext) -> None:
 
     # Update the balance by deleting tokens
     new_balance = current_balance - amount
-    await user_collection.update_one({'id': target_user_id}, {'$set': {'balance': new_balance}})
-    await update.message.reply_text(f"✅ **Deleted** `{amount}` **tokens from user** `{target_user_id}`. \n💰 **New balance:** `{new_balance}` tokens.")
-
-async def reset_tokens(update: Update, context: CallbackContext) -> None:
-    owner_id = 6402009857  # Replace with the actual owner's user ID
-    # Check if the user invoking the command is the owner
-    if update.effective_user.id != owner_id:
-        await update.message.reply_text("🚫 **You don't have permission to perform this action.**")
-        return
-
-    # Reset tokens for all users
-    await user_collection.update_many({}, {'$set': {'balance': 10000}})
-    
-    await update.message.reply_text("🔄 **All user wealth have been reset to** `10,000` **wealth.**")
-
-# Add handlers for the commands
-application.add_handler(CommandHandler("addt", add_tokens, block=False))
-application.add_handler(CommandHandler("delt", delete_tokens, block=False))
-application.add_handler(CommandHandler("reset", reset_tokens, block=False))
+    await user_collection.update_one({'id': target_us
