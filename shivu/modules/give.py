@@ -7,16 +7,8 @@ import asyncio
 import random
 import time
 
-LOGS_CHANNEL_ID = -1002446048543  # Replace with your actual logs channel ID
-
 backup_collection = db["backup_collection"]
 
-async def send_log_message(log_message: str):
-    try:
-        await app.send_message(LOGS_CHANNEL_ID, log_message)
-    except Exception as e:
-        print(f"Failed to send log message: {e}")
-        
 async def backup_characters(user_id):
     user = await user_collection.find_one({'id': user_id})
     if user:
@@ -44,182 +36,157 @@ async def send_action_notification(message: str):
             print(f"Failed to send message to {user_id}: {e}")
 
 async def give_character_batch(receiver_id, character_ids):
-    # Fetch the characters based on the provided IDs
     characters = await collection.find({'id': {'$in': character_ids}}).to_list(length=len(character_ids))
-    
     if characters:
         try:
-            # Update the user's character list with the new characters
-            await user_collection.update_one(
-                {'id': receiver_id},
-                {'$push': {'characters': {'$each': characters}}}
-            )
+            await user_collection.update_one({'id': receiver_id}, {'$push': {'characters': {'$each': characters}}})
             await update_user_rank(receiver_id)
-
-            # Prepare a success message summarizing the characters added
-            character_names = ', '.join([char['name'] for char in characters])
-            await notify_user(receiver_id, f"🎉 You have received new characters: {character_names}!\n\nTotal characters: {len(characters)} added! 🚀")
             return characters
-
         except Exception as e:
             print(f"Error updating user: {e}")
             raise
     else:
-        raise ValueError("⚠️ <b>Some characters not found.</b> Please check the character IDs provided.")
+        raise ValueError("Some characters not found.")
 
 @app.on_message(filters.command(["daan"]) & filters.reply)
 async def give_character_command(client, message):
-    user_id = str(message.from_user.id)
-
-    if user_id not in SPECIALGRADE and user_id not in GRADE1:
-        await message.reply_text("🚫 **This command can only be used by Special Grade and Grade 1 sorcerers.**")
+    if str(message.from_user.id) not in SPECIALGRADE and str(message.from_user.id) not in GRADE1:
+        await message.reply_text("This command can only be used by Special Grade and Grade 1 sorcerers.")
         return
 
     if not message.reply_to_message:
-        await message.reply_text("⚠️ **You need to reply to a user's message to give a character!**")
+        await message.reply_text("You need to reply to a user's message to give a character!")
         return
 
     try:
-        # Extract the character ID from the message
-        character_id = str(message.text.split()[1])
+        character_ids = message.text.split()[1:]
+        if not character_ids:
+            await message.reply_text("Please provide at least one character ID.")
+            return
+
         receiver_id = message.reply_to_message.from_user.id
         receiver_first_name = message.reply_to_message.from_user.first_name
+        sender_first_name = message.from_user.first_name
 
         # Ensure the bot has interacted with the receiver
         try:
             await client.get_chat(receiver_id)
         except Exception as e:
-            await message.reply_text(f"❌ **Error interacting with the receiver:** {e}")
+            await message.reply_text(f"Error interacting with the receiver: {e}")
             return
 
         # Backup user characters before giving
         await backup_characters(receiver_id)
 
-        # Give the character
-        character = await give_character_batch(receiver_id, [character_id])
+        # Give characters to the receiver
+        characters = await give_character_batch(receiver_id, character_ids)
 
-        if character:
-            img_url = character[0]['img_url']
+        if characters:
+            character_list = "\n".join(
+                [f"ID: {char['id']}, Name: {char['name']}, Rarity: {char['rarity']}" for char in characters]
+            )
+            img_url = characters[0]['img_url']  # Use the first character's image for the reply
             user_link = f"[{receiver_first_name}](tg://user?id={receiver_id})"
+
             caption = (
-                f"🎉 **Successfully Given to:** {user_link}\n\n"
-                f"📜 **Character Details:**\n"
-                f"✅ **Rarity:** {character[0]['rarity']}\n"
-                f"🌀 **Anime:** {character[0]['anime']}\n"
-                f"💖 **Name:** {character[0]['name']}\n"
-                f"🆔 **ID:** {character[0]['id']}"
+                f"🎉 {user_link}, you have received {len(characters)} character(s) from {sender_first_name}!\n\n"
+                f"📜 Details of given characters:\n{character_list}"
             )
             await message.reply_photo(photo=img_url, caption=caption)
 
             # Send notification to SPECIALGRADE users
             notification_message = (
-                f"📣 **Action:** Give Character\n"
-                f"👤 **Given by:** {message.from_user.first_name}\n"
-                f"🎯 **Receiver:** {user_link}\n"
-                f"🆔 **Character ID:** {character[0]['id']}"
+                f"Action: Give Character\n"
+                f"Given by: {sender_first_name}\n"
+                f"Receiver: {user_link}\n"
+                f"Character IDs: {', '.join(character_ids)}"
             )
             await send_action_notification(notification_message)
-
-            # Send log to logs channel
-            log_message = (
-                f"📝 <b>Character Given</b>\n\n"
-                f"👤 <b>By:</b> {message.from_user.first_name}\n"
-                f"🎁 <b>Receiver:</b> [{receiver_first_name}](tg://user?id={receiver_id})\n"
-                f"🍿 <b>Character ID:</b> {character[0]['id']}\n"
-            )
-            await send_log_message(log_message)
-
-    except IndexError:
-        await message.reply_text("⚠️ **Please provide a character ID.**")
-    except ValueError as e:
-        await message.reply_text(f"❌ **Error:** {str(e)}")
     except Exception as e:
         print(f"Error in give_character_command: {e}")
-        await message.reply_text("❌ **An error occurred while processing the command.**")
+        await message.reply_text("An error occurred while processing the command.")
 
 @app.on_message(filters.command(["kill"]) & filters.reply)
 async def remove_character_command(client, message):
-    user_id = str(message.from_user.id)
+    if str(message.from_user.id) not in SPECIALGRADE and str(message.from_user.id) not in GRADE1:
+        await message.reply_text("This command can only be used by Special Grade and Grade 1 sorcerers.")
+        return
 
-    if user_id not in SPECIALGRADE and user_id not in GRADE1:
-        await message.reply_text("🚫 **This command can only be used by Special Grade and Grade 1 sorcerers.**")
+    if not message.reply_to_message:
+        await message.reply_text("You need to reply to a user's message to remove a character!")
         return
 
     try:
-        if not message.reply_to_message:
-            await message.reply_text("⚠️ **You need to reply to a user's message to remove a character!**")
+        character_ids = message.text.split()[1:]
+        if not character_ids:
+            await message.reply_text("Please provide at least one character ID to remove.")
             return
 
-        character_id = str(message.text.split()[1])
         receiver_id = message.reply_to_message.from_user.id
+        receiver_first_name = message.reply_to_message.from_user.first_name
+        sender_first_name = message.from_user.first_name
 
         # Ensure the bot has interacted with the receiver
         try:
             await client.get_chat(receiver_id)
         except Exception as e:
-            await message.reply_text(f"❌ **Error interacting with the receiver:** {e}")
+            await message.reply_text(f"Error interacting with the receiver: {e}")
             return
 
         # Backup user characters before removing
         await backup_characters(receiver_id)
 
-        character = await collection.find_one({'id': character_id})
+        removed_characters = []
+        for character_id in character_ids:
+            character = await collection.find_one({'id': character_id})
+            if character:
+                await user_collection.update_one({'id': receiver_id}, {'$pull': {'characters': {'id': character_id}}})
+                removed_characters.append(character)
 
-        if character:
-            await user_collection.update_one({'id': receiver_id}, {'$pull': {'characters': {'id': character_id}}})
+        if removed_characters:
+            character_list = "\n".join(
+                [f"ID: {char['id']}, Name: {char['name']}, Rarity: {char['rarity']}" for char in removed_characters]
+            )
+            user_link = f"[{receiver_first_name}](tg://user?id={receiver_id})"
 
-            await update_user_rank(receiver_id)  # Update user rank after removing character
-
-            await message.reply_text(f"✅ **Successfully removed character ID** `{character_id}` **from user** [{receiver_id}](tg://user?id={receiver_id}).")
+            await message.reply_text(
+                f"🚫 {len(removed_characters)} character(s) have been removed from {user_link}'s collection:\n\n"
+                f"{character_list}"
+            )
 
             # Send notification to SPECIALGRADE users
             notification_message = (
-                f"📌 **Action:** Remove Character\n"
-                f"🗡️ **Removed by:** {message.from_user.first_name}\n"
-                f"👤 **Receiver ID:** {receiver_id}\n"
-                f"🆔 **Character ID:** {character_id}"
+                f"Action: Remove Character\n"
+                f"Removed by: {sender_first_name}\n"
+                f"Receiver: {user_link}\n"
+                f"Character IDs: {', '.join(character_ids)}"
             )
             await send_action_notification(notification_message)
-
-            # Send log to logs channel
-            log_message = (
-                f"❌ <b>Character Removed</b>\n\n"
-                f"👤 <b>By:</b> {message.from_user.first_name}\n"
-                f"🎯 <b>From User:</b> [{receiver_id}](tg://user?id={receiver_id})\n"
-                f"🆔 <b>Character ID:</b> {character_id}\n"
-            )
-            await send_log_message(log_message)
         else:
-            await message.reply_text("⚠️ **Character not found.**")
-    except IndexError:
-        await message.reply_text("⚠️ **Please provide a character ID.**")
-    except ValueError as e:
-        await message.reply_text(f"❌ **Error:** {str(e)}")
+            await message.reply_text("No characters found for the given IDs.")
     except Exception as e:
         print(f"Error in remove_character_command: {e}")
-        await message.reply_text("❌ **An error occurred while processing the command.**")
+        await message.reply_text("An error occurred while processing the command.")
 
 @app.on_message(filters.command(["given"]))
 async def random_characters_command(client, message):
-    user_id = str(message.from_user.id)
-
-    if user_id not in SPECIALGRADE and user_id not in GRADE1:
-        await message.reply_text("🚫 **This command can only be used by Special Grade and Grade 1 sorcerers.**")
+    if str(message.from_user.id) not in SPECIALGRADE and str(message.from_user.id) not in GRADE1:
+        await message.reply_text("This command can only be used by Special Grade and Grade 1 sorcerers.")
         return
 
     try:
         if not message.reply_to_message:
-            await message.reply_text("⚠️ **You need to reply to a user's message to give characters!**")
+            await message.reply_text("You need to reply to a user's message to give characters!")
             return
 
         if len(message.command) < 2:
-            await message.reply_text("⚠️ **Please provide the amount of random characters to give.**")
+            await message.reply_text("Please provide the amount of random characters to give.")
             return
 
         try:
             amount = int(message.command[1])
         except ValueError:
-            await message.reply_text("❌ **Invalid amount. Please provide a valid number.**")
+            await message.reply_text("Invalid amount. Please provide a valid number.")
             return
 
         amount = min(amount, 2000)
@@ -230,7 +197,7 @@ async def random_characters_command(client, message):
         try:
             await client.get_chat(receiver_id)
         except Exception as e:
-            await message.reply_text(f"❌ **Error interacting with the receiver:** {e}")
+            await message.reply_text(f"Error interacting with the receiver: {e}")
             return
 
         # Backup user characters before giving
@@ -243,7 +210,7 @@ async def random_characters_command(client, message):
         all_characters = [character for character in all_characters if 'id' in character]
 
         if len(all_characters) < amount:
-            await message.reply_text("⚠️ **Not enough characters available to give.**")
+            await message.reply_text("Not enough characters available to give.")
             return
 
         random_characters = random.sample(all_characters, amount)
@@ -258,30 +225,25 @@ async def random_characters_command(client, message):
 
         await asyncio.gather(*tasks)
 
+        giver_name = message.from_user.first_name
         user_link = f"[{message.reply_to_message.from_user.first_name}](tg://user?id={receiver_id})"
+
+        # Send a message to the receiver, mentioning the giver and the amount of characters given
+        await message.reply_to_message.reply_text(
+            f"{giver_name} has given you {amount} character(s)!"
+        )
 
         # Send summary notification to the owner
         notification_message = (
-            f"📦 **Action:** Give Random Characters\n"
-            f"👤 **Given by:** {message.from_user.first_name}\n"
-            f"🎉 **Amount:** {amount}\n"
-            f"🎁 **Receiver:** {user_link}\n"
+            f"Action: Give Random Characters\n"
+            f"Given by: {giver_name}\n"
+            f"Amount: {amount}\n"
+            f"Receiver: {user_link}\n"
         )
         await send_action_notification(notification_message)
-
-        # Send log to logs channel
-        log_message = (
-            f"📝 <b>Character Given</b>\n\n"
-            f"👤 <b>By:</b> {message.from_user.first_name}\n"
-            f"🎁 <b>Receiver:</b> [{message.reply_to_message.from_user.first_name}](tg://user?id={receiver_id})\n"
-            f"🎉 <b>Amount:</b> {amount}\n"
-        )
-        await send_log_message(log_message)
-
-        await message.reply_text(f"✅ **Success!** {amount} character(s) added to {user_link}'s collection.")
     except Exception as e:
         print(f"Error in random_characters_command: {e}")
-        await message.reply_text("❌ **An error occurred while processing the command.**")
+        await message.reply_text("An error occurred while processing the command.")
 
 @app.on_callback_query(filters.regex(r'^reverse_\d+\.\d+$'))
 async def reverse_action(client, callback_query: CallbackQuery):
@@ -291,8 +253,8 @@ async def reverse_action(client, callback_query: CallbackQuery):
     if str(callback_query.from_user.id) in SPECIALGRADE:
         restored = await restore_characters(target_id, timestamp)
         if restored:
-            await callback_query.edit_message_text("🔄 **The action has been reversed successfully.**")
+            await callback_query.edit_message_text("The action has been reversed.")
         else:
-            await callback_query.answer("⚠️ **Failed to reverse the action or no backup found.**", show_alert=True)
+            await callback_query.answer("Failed to reverse the action or no backup found.", show_alert=True)
     else:
-        await callback_query.answer("🚫 **You don't have permission to reverse actions.**", show_alert=True)
+        await callback_query.answer("You don't have permission to reverse actions.", show_alert=True)
