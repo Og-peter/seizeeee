@@ -54,12 +54,12 @@ async def start(update: Update, context: CallbackContext) -> None:
     emojis = ["✨", "🚀", "🎉"]
     for emoji in emojis:
         emoji_message = await update.message.reply_text(emoji)
-        await asyncio.sleep(1.0)  # Wait for 1.5 seconds between emojis
+        await asyncio.sleep(1.0)  # Wait for 1 second between emojis
         await emoji_message.delete()
 
     # "Starting..." animation message
     starting_message = await update.message.reply_text("Starting...")
-    await asyncio.sleep(1.0)  # Wait for 2 seconds before deleting
+    await asyncio.sleep(1.0)  # Wait for 1 second before deleting
     await starting_message.delete()
 
     # Handle referral if present
@@ -101,6 +101,29 @@ async def start(update: Update, context: CallbackContext) -> None:
                 {"id": user_id},
                 {"$set": {"first_name": first_name, "username": username}}
             )
+
+    # Send DM to user with profile picture and details
+    try:
+        profile_picture = await context.bot.get_user_profile_photos(user_id)
+        photo = profile_picture.photos[0][0].file_id if profile_picture.total_count > 0 else None
+
+        button = InlineKeyboardMarkup([[
+            InlineKeyboardButton(f"{first_name}", url=f"tg://user?id={user_id}")
+        ]])
+
+        await context.bot.send_photo(
+            chat_id=user_id,
+            photo=photo or DEFAULT_IMAGE_URL,  # Fallback to a default image if no profile picture exists
+            caption=f"ㅤ<b>ʜᴀs sᴛᴀʀᴛᴇᴅ ʙᴏᴛ.</b>\n\n"
+                    f"• <b>ɴᴀᴍᴇ :</b> {first_name}\n"
+                    f"• <b>ᴜsᴇʀɴᴀᴍᴇ :</b> @{username if username else 'N/A'}\n"
+                    f"• <b>ɪᴅ :</b> <code>{user_id}</code>\n\n"
+                    f"Thanks for starting the bot!",
+            reply_markup=button,
+            parse_mode="HTML"
+        )
+    except Exception as e:
+        print(f"Error sending DM to user: {e}")
 
     if update.effective_chat.type == "private":
         bot_id = "7335799800"  # Replace with the actual bot ID
@@ -175,25 +198,27 @@ Use the buttons below to navigate."""
 
     elif query.data == 'basic':
         basic_text = """
-***Basic Commands:***
+***➲ ʙᴇʟᴏᴡ ᴀʀᴇ ᴛʜᴇ ʙᴀsɪᴄ ᴄᴏᴍᴍᴀɴᴅs ғᴏʀ ᴜsᴇʀs::***
 
-/seize - Start the seize event  
-/hmode - Change harem mode  
-/post - Post an update  
-/placebid - Place a bid on an auction  
-/bonus - Collect your bonus rewards  
-/wclaim - Claim a waifu  
-/claim - Claim your rewards  
-/check - Check stats or availability  
-/fav - Mark your favorite  
-/gift - Gift an item or character  
-/trade - Trade with another user  
-/harem - View your collection  
-/gtop - View group top rankings  
-/ctop - View character top rankings  
-/status - Check your status  
-/store - Open your storage  
-/changetime - Change spawn times  
+━─━─── ᴄᴏᴍᴍᴀɴᴅs────━─━
+◈ /seize ➵ ᴛᴏ sᴇɪᴢᴇ ᴀ ᴄʜᴀʀᴀᴄᴛᴇʀ
+◈ /hmode ➵ ᴛᴏ ᴄʜᴀɴɢᴇ ʜᴀʀᴇᴍ ᴍᴏᴅᴇ
+◈ /post ➵ ᴛᴏ ᴘᴏsᴛ ᴄʜᴀʀᴀᴄᴛᴇʀ 
+◈ /placebid ➵ ᴘʟᴀᴄᴇ ᴀ ʙɪᴅ ᴏɴ ᴀɴ ᴀᴜᴄᴛɪᴏɴ 
+◈ /bonus ➵ ᴄᴏʟʟᴇᴄᴛ ʏᴏᴜʀ ʙᴏɴᴜs ʀᴇᴡᴀʀᴅs
+◈ /wclaim ➵ ᴄʟᴀɪᴍ ʏᴏᴜʀ ᴅᴀɪʟʏ ᴄʜᴀʀᴀᴄᴛᴇʀ
+◈ /claim ➵ ᴄʟᴀɪᴍ ᴀɴᴏᴛʜᴇʀ ᴄʜᴀʀᴀᴄᴛᴇʀ  
+◈ /check ➵ ᴛᴏ ᴄʜᴇᴄᴋ ᴄʜᴀʀᴀᴄᴛᴇʀ ɪɴғᴏ
+◈ /fav ➵ ᴛᴏ ᴍᴀᴋᴇ ᴀ ᴄʜᴀʀᴀᴄᴛᴇʀ ʏᴏᴜ ғᴀᴠᴏᴜʀɪᴛᴇ  
+◈ /gift ➵ ᴛᴏ ɢɪғᴛ ᴀ ᴄʜᴀʀᴀᴄᴛᴇʀ  
+◈ /trade ➵ ᴛᴏ ᴛʀᴀᴅᴇ ᴄʜᴀʀᴀᴄᴛᴇʀs
+◈ /harem ➵ ᴛᴏ sᴇᴇ ʏᴏᴜʀ sᴇɪᴢᴢᴇᴅ ᴄʜᴀʀᴀᴄᴛᴇʀs 
+◈ /gtop ➵ ᴛᴏ sᴇᴇ ᴛᴏᴘ sᴇɪᴢᴇʀs  
+◈ /ctop ➵ ᴛᴏ sᴇᴇ ᴛᴏᴘ ᴄʜᴀᴛ sᴇɪᴢᴇʀs  
+◈ /status ➵ ᴄʜᴇᴄᴋ ʏᴏᴜʀ ʙᴏᴛ sᴛᴀᴛᴜs 
+◈ /store ➵ ᴛᴏ ᴏᴘᴇɴ ᴄʜᴀʀᴀᴄᴛᴇʀ ʙᴜʏ ᴀɴᴅ sᴇʟʟ sᴛᴏʀᴇ  
+◈ /changetime ➵ ᴛᴏ ᴄʜᴀɴɢᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ sᴘᴀᴡɴ ᴛɪᴍᴇ  
+━─━─── ᴄᴏᴍᴍᴀɴᴅs────━─━
 """
         help_keyboard = [[InlineKeyboardButton("⤾ Back", callback_data='help')]]
         reply_markup = InlineKeyboardMarkup(help_keyboard)
@@ -207,24 +232,26 @@ Use the buttons below to navigate."""
 
     elif query.data == 'game':
         game_text = """
-***Game Commands:***
+***➲ ʙᴇʟᴏᴡ ᴀʀᴇ ᴛʜᴇ ɢᴀᴍᴇ ᴄᴏᴍᴍᴀɴᴅs ғᴏʀ ᴜsᴇʀs***
 
-/propose - Propose to a character  
-/fight - Engage in a fight  
-/marry - Marry a character  
-/roll - Roll for a random character  
-/crime - Commit a crime  
-/explore - Explore new options  
-/pass - Pass your turn  
-/hunt - Go on a hunt  
-/bal - Check your balance  
-/pay - Pay another user  
-/football - Play a football match  
-/basketball - Play a basketball game  
-/guess - Guess the answer  
-/quiz - Participate in a quiz  
-/tokens - View your tokens  
-/beastshop - Shop for beasts  
+━─━─── ᴄᴏᴍᴍᴀɴᴅs────━─━
+◉ /propose ➸ ᴘʀᴏᴘᴏsᴇ ᴛᴏ ᴀ ᴄʜᴀʀᴀᴄᴛᴇʀ  
+◉ /fight ➸ ғɪɢʜᴛ sᴜᴋᴜɴᴀ ᴠ/s ɢᴏᴊᴏ 
+◉ /marry ➸ ᴍᴀʀʀʏ ᴀ ᴄʜᴀʀᴀᴄᴛᴇʀ  
+◉ /roll ➸ ʀᴏʟʟ ғᴏʀ ᴀ ʀᴀɴᴅᴏᴍ ᴄʜᴀʀᴀᴄᴛᴇʀ
+◉ /crime ➸ ᴄᴏᴍᴍɪᴛ ᴀ ᴄʀɪᴍᴇ
+◉ /explore ➸ ᴇxᴘʟᴏʀᴇ ᴄʜᴀʀᴀᴄᴛᴇʀs 
+◉ /pass ➸ ʙᴜʏ ᴘᴀss ᴀɴᴅ ᴄʟᴀɪᴍ ʀᴇᴡᴀʀᴅs 
+◉ /hunt ➸ ᴛᴏ ʜᴜɴᴛ
+◉ /bal ➸ ᴄʜᴇᴄᴋ ʏᴏᴜʀ ʙᴀʟᴀɴᴄᴇ  
+◉ /pay ➸ ᴘᴀʏ ᴀɴᴏᴛʜᴇʀ ᴜsᴇʀ 
+◉ /football ➸ ᴘʟᴀʏ ᴀ ғᴏᴏᴛʙᴀʟʟ ɢᴀᴍᴇ { ʙʟᴜᴇ ʟᴏᴏᴋ ʙᴀsᴇᴅ }
+◉ /basketball ➸ ᴘʟᴀʏ ᴀ ʙᴀsᴋᴇᴛʙᴀʟʟ { ʜᴀɪᴋʏᴜᴜ ʙᴀsᴇᴅ }  
+◉ /guess ➸ ᴄʜᴀʀᴀᴄᴛᴇʀ ɢᴜᴇss   
+◉ /quiz ➸ ᴀɴɪᴍᴇ ǫᴜɪᴢ   
+◉ /tokens ➸ ᴠɪᴇᴡ ʏᴏᴜʀ ᴛᴏᴋᴇɴs  
+◉ /beastshop ➸ sʜᴏᴘ ғᴏʀ ʙᴇᴀsᴛs
+━─━─── ᴄᴏᴍᴍᴀɴᴅs────━─━ 
 """
         help_keyboard = [[InlineKeyboardButton("⤾ Back", callback_data='help')]]
         reply_markup = InlineKeyboardMarkup(help_keyboard)
