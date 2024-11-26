@@ -3,79 +3,87 @@ from shivu import db, user_collection, SPECIALGRADE, GRADE1
 from shivu import shivuu as app
 import random
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from datetime import datetime, timedelta
-import asyncio  # To handle delays for animated messages
 
-# Define collections and constants
 backup_collection = db["backup_collection"]
-logs_collection = db["logs_collection"]
-COOLDOWN_TIME = timedelta(minutes=5)
-reward_for_restoring = 1000  # Reward for reversing an erase operation
-erase_cost = 200  # Cost to erase a character
-LOG_CHANNEL_ID = -1002446048543  # Replace with your actual log channel ID
 
-# Helper function to log actions
-async def log_action(eraser_id, target_id, action, details=""):
-    await logs_collection.insert_one({
-        'eraser_id': eraser_id,
-        'target_id': target_id,
-        'action': action,
-        'details': details,
-        'timestamp': datetime.utcnow()
-    })
-
-# Backup characters before erasure
+# Back up user characters to the backup collection
 async def backup_characters(user_id, characters):
     await backup_collection.insert_one({'user_id': user_id, 'characters': characters})
 
-# Function to erase characters from a user's collection
+# Function to count characters by rarity
+def count_characters_by_rarity(characters):
+    rarity_count = {}
+    for character in characters:
+        rarity = character.get("rarity", "Unknown")
+        rarity_count[rarity] = rarity_count.get(rarity, 0) + 1
+    return rarity_count
+
+# Erase characters for a user
 async def erase_characters_for_user(user_id, num_characters):
     user = await user_collection.find_one({'id': user_id})
 
     if user:
         total_characters = len(user.get('characters', []))
-
+        
         if total_characters == 0:
-            return f"⚠️ <a href='tg://user?id={user_id}'>{user.get('first_name', 'User')}</a> has no characters to erase. 🥺"
+            return f"User <a href='tg://user?id={user_id}'>{user.get('first_name', 'User')}</a> has no characters in their harem."
 
         num_characters_to_remove = min(num_characters, total_characters)
+        
+        if num_characters_to_remove > 0:
+            characters_to_remove = random.sample(user['characters'], num_characters_to_remove)
+            user_characters = [character for character in user['characters'] if character not in characters_to_remove]
+            
+            # Backup characters before erasing
+            await backup_characters(user_id, user['characters'])
 
-        characters_to_remove = random.sample(user['characters'], num_characters_to_remove)
-        user_characters = [character for character in user['characters'] if character not in characters_to_remove]
+            # Update user collection with remaining characters
+            await user_collection.update_one(
+                {'id': user_id},
+                {'$set': {'characters': user_characters}}
+            )
 
-        await backup_characters(user_id, user['characters'])  # Backup characters
+            # Count the rarity of removed characters and remaining characters
+            rarity_count_removed = count_characters_by_rarity(characters_to_remove)
+            rarity_count_remaining = count_characters_by_rarity(user_characters)
 
-        await user_collection.update_one(
-            {'id': user_id},
-            {'$set': {'characters': user_characters}}
-        )
+            # Determine the most erased rarity
+            max_erased_rarity = max(rarity_count_removed, key=rarity_count_removed.get)
+            max_erased_count = rarity_count_removed[max_erased_rarity]
 
-        # Deduct balance for the erase operation
-        await user_collection.update_one({'id': user_id}, {'$inc': {'balance': -erase_cost * num_characters_to_remove}})
+            # Create messages for rarity counts
+            removed_rarity_message = "\n".join([f"{rarity}: {count}" for rarity, count in rarity_count_removed.items()])
+            remaining_rarity_message = "\n".join([f"{rarity}: {count}" for rarity, count in rarity_count_remaining.items()])
 
-        return (num_characters_to_remove, user.get('first_name', 'User'))
+            return (
+                f"🗑️ **Erase Summary**:\n"
+                f"User: <a href='tg://user?id={user_id}'>{user.get('first_name', 'User')}</a>\n\n"
+                f"**Total Erased Characters:** {num_characters_to_remove}\n"
+                f"**Total Remaining Characters:** {len(user_characters)}\n"
+                f"**Most Erased Rarity:** {max_erased_rarity} ({max_erased_count} characters)\n\n"
+                f"**Removed Characters by Rarity:**\n{removed_rarity_message}\n\n"
+                f"**Remaining Characters by Rarity:**\n{remaining_rarity_message}"
+            )
+        else:
+            return f"Cannot remove characters. User <a href='tg://user?id={user_id}'>{user.get('first_name', 'User')}</a> has no characters to erase."
+    else:
+        return f"User with ID {user_id} not found."
 
-    return 0, "not found"
-
-# Send notifications to SpecialGrade users
+# Send notification to Special Grade users about the erase action
 async def send_notification_to_specialgrade(eraser_id, eraser_name, target_id, target_name, num_characters):
     message = (
-        f"⚔️ **Character Erasure Alert!** ⚔️\n\n"
-        f"👤 **Eraser:** <a href='tg://user?id={eraser_id}'>{eraser_name}</a>\n"
-        f"🎯 **Target:** <a href='tg://user?id={target_id}'>{target_name}</a>\n"
-        f"🧹 **Total Characters Erased:** <b>{num_characters}</b>\n"
-        f"💰 **Total Cost:** <b>{erase_cost * num_characters} coins</b>\n\n"
-        f"🚨 <i>This action has been logged for accountability!</i> 🚨"
+        f"⚠️ **Action: Erase Characters**\n"
+        f"Eraser: <a href='tg://user?id={eraser_id}'>{eraser_name}</a>\n"
+        f"Target: <a href='tg://user?id={target_id}'>{target_name}</a> (ID: {target_id})\n"
+        f"Number of characters erased: {num_characters}"
     )
-    
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔄 Reverse Erasure", callback_data=f"reverse_{target_id}")]
+        [InlineKeyboardButton("Reverse", callback_data=f"reverse_{target_id}")]
     ])
-    
     for user_id in SPECIALGRADE:
         await app.send_message(user_id, message, reply_markup=keyboard)
-        
-# Restore erased characters
+
+# Restore characters from backup
 async def restore_characters(user_id):
     backup = await backup_collection.find_one({'user_id': user_id})
     if backup:
@@ -87,120 +95,49 @@ async def restore_characters(user_id):
         return True
     return False
 
-# Add cooldown system to prevent frequent erases
-erase_timestamps = {}
-
-# Animation function after erasure
-async def send_erase_animation(message, user_id, num_characters):
-    animation_steps = [
-        "💥 <b>Initiating Erasure...</b> 💥",
-        "🧹 <b>Cleaning up the characters...</b> 🧹",
-        "🌀 <b>Wiping all traces from existence...</b> 🌀",
-        f"❌ <b>{num_characters} characters from</b> <a href='tg://user?id={user_id}'>the user</a> <b>have been successfully erased! 💀</b>"
-    ]
-    
-    for step in animation_steps:
-        await message.edit_text(step, parse_mode='HTML')  # Ensure HTML parsing for bold text
-        await asyncio.sleep(1.5)  # Delay for the animation effect
-
+# Command to erase characters
 @app.on_message(filters.command(["erase"]))
 async def erase_characters_command(client, message):
-    eraser_id = message.from_user.id
-    if str(eraser_id) not in SPECIALGRADE and str(eraser_id) not in GRADE1:
-        await message.reply_text("⚠️ <b>This command is restricted to Special Grade and Grade 1 users.</b>")
+    user_id = str(message.from_user.id)
+    
+    # Check if the user has sufficient permissions
+    if user_id not in SPECIALGRADE and user_id not in GRADE1:
+        await message.reply_text("🚫 This command can only be used by Special Grade and Grade 1 sorcerers.")
         return
 
     if message.reply_to_message and message.reply_to_message.from_user:
-        target_id = message.reply_to_message.from_user.id
-
-        if target_id == eraser_id:
-            await message.reply_text("❌ <b>You cannot erase your own characters! 💀</b>")
-            return
-        
-        if len(message.command) != 2 or not message.command[1].isdigit():
-            await message.reply_text("⚠️ <b>Usage:</b> /erase {num_characters}")
-            return
-
-        num_characters_to_erase = int(message.command[1])
-
-        # Check for cooldown
-        last_erase_time = erase_timestamps.get(eraser_id)
-        if last_erase_time and datetime.utcnow() - last_erase_time < COOLDOWN_TIME:
-            cooldown_remaining = COOLDOWN_TIME - (datetime.utcnow() - last_erase_time)
-            await message.reply_text(f"⏳ <b>You need to wait {cooldown_remaining.seconds // 60} minutes before using this command again.</b>")
-            return
-
-        # Send confirmation before erasing
-        confirm_keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("⚔️ Confirm Erase", callback_data=f"confirm_erase_{target_id}_{num_characters_to_erase}")]
-        ])
-        
-        await message.reply_text(
-            f"⚠️ <b>Are you sure you want to erase {num_characters_to_erase} characters from</b> <a href='tg://user?id={target_id}'>{message.reply_to_message.from_user.first_name}</a>? \n"
-            f"<b>This will cost {erase_cost * num_characters_to_erase} coins.</b>",
-            reply_markup=confirm_keyboard,
-            parse_mode='HTML'  # Ensure HTML parsing for bold text
-        )
-
+        user_id_to_erase_characters_for = message.reply_to_message.from_user.id
+        if len(message.command) == 2:
+            num_characters_to_erase_str = message.command[1]
+            if not num_characters_to_erase_str.isdigit():
+                await message.reply_text("❌ Please enter a valid integer for the number of characters to erase.")
+                return
+            num_characters_to_erase = int(num_characters_to_erase_str)
+            result_message = await erase_characters_for_user(user_id_to_erase_characters_for, num_characters_to_erase)
+            await message.reply_text(result_message)
+            if "Successfully removed" in result_message:
+                eraser_id = message.from_user.id
+                eraser_name = message.from_user.first_name
+                target_id = message.reply_to_message.from_user.id
+                target_name = message.reply_to_message.from_user.first_name
+                await send_notification_to_specialgrade(eraser_id, eraser_name, target_id, target_name, num_characters_to_erase)
+        else:
+            await message.reply_text("Usage: /erase {num_characters}")
     else:
-        await message.reply_text("⚠️ <b>Please reply to a user's message to erase their characters.</b>")
+        await message.reply_text("❌ Please reply to a user's message to erase their characters.")
 
-@app.on_callback_query(filters.regex(r"^confirm_erase_\d+_\d+$"))
-async def confirm_erase(client, callback_query: CallbackQuery):
-    data = callback_query.data.split("_")
-    target_id = int(data[2])
-    num_characters_to_erase = int(data[3])
-    eraser_id = callback_query.from_user.id
-
-    # Perform the erase action
-    num_erased, user_name = await erase_characters_for_user(target_id, num_characters_to_erase)
-    if num_erased > 0:
-        # Send animated message
-        await send_erase_animation(callback_query.message, target_id, num_characters_to_erase)
-        
-        eraser_name = callback_query.from_user.first_name
-        target_name = (await app.get_users(target_id)).first_name
-        
-        # Send notification to Special Grade users
-        await send_notification_to_specialgrade(eraser_id, eraser_name, target_id, target_name, num_characters_to_erase)
-        
-        # Log the action
-        await log_action(eraser_id, target_id, "erase", f"Erased {num_characters_to_erase} characters.")
-        erase_timestamps[eraser_id] = datetime.utcnow()
-
-        # Log the erase operation in the log channel
-        log_message = (
-            f"🚨 <b>Erase Operation Log</b> 🚨\n"
-            f"👤 <b>Eraser:</b> <a href='tg://user?id={eraser_id}'>{eraser_name}</a>\n"
-            f"🎯 <b>Target:</b> <a href='tg://user?id={target_id}'>{target_name}</a>\n"
-            f"🧹 <b>Characters Erased:</b> {num_characters_to_erase}\n"
-            f"💰 <b>Cost:</b> {erase_cost * num_characters_to_erase} coins\n"
-            f"🕒 <b>Time:</b> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
-        )
-        await app.send_message(LOG_CHANNEL_ID, log_message, parse_mode='HTML')
-
-    else:
-        await callback_query.message.edit_text("❌ <b>Unable to erase characters. Please try again later.</b>")
-        
+# Handle callback to reverse erase operation
 @app.on_callback_query(filters.regex(r"^reverse_\d+$"))
 async def reverse_erase(client, callback_query: CallbackQuery):
     target_id = int(callback_query.data.split("_")[1])
-    eraser_id = callback_query.from_user.id
 
-    if str(eraser_id) in SPECIALGRADE:
+    # Ensure the user has permissions to reverse the erase
+    if str(callback_query.from_user.id) in SPECIALGRADE:
         restored = await restore_characters(target_id)
         if restored:
-            await callback_query.answer("✅ <b>The erase operation has been successfully reversed!</b> Characters restored! 💫")
-            await callback_query.edit_message_text("🔄 <b>The erase operation has been successfully reversed.</b>")
-
-            # Reward for restoring characters
-            await user_collection.update_one({'id': target_id}, {'$inc': {'balance': reward_for_restoring}})
-            await callback_query.message.reply_text(
-                f"🎁 <b>{reward_for_restoring} coins</b> have been rewarded to <a href='tg://user?id={target_id}'>the user</a> for reversing the erase operation. Thank you for restoring their collection! 🌟"
-            )
-
-            await log_action(eraser_id, target_id, "restore", "Characters restored after erasure.")
+            await callback_query.answer("✅ The erase operation has been reversed.")
+            await callback_query.edit_message_text("✅ The erase operation has been reversed.")
         else:
-            await callback_query.answer("⚠️ <b>No backup found to restore.</b> Please check if the characters were backed up before erasure.", show_alert=True)
+            await callback_query.answer("⚠️ No backup found to restore.", show_alert=True)
     else:
-        await callback_query.answer("❌ <b>You do not have permission to reverse this operation.</b> Only Special Grade users can perform this action.", show_alert=True)
+        await callback_query.answer("🚫 You do not have permission to reverse this operation.", show_alert=True)
