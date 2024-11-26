@@ -1,108 +1,118 @@
-import random
-from pyrogram import filters, Client
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from bson import ObjectId
-from shivu import user_collection, shivuu, SPECIALGRADE, GRADE1, db
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CommandHandler, CallbackQueryHandler
+from shivu import application, user_collection
 
-backup_collection = db["backup_collection"]
+# Replace OWNER_ID with the actual owner's user ID
+OWNER_ID = 6402009857
 
-# List of emojis for fun effect
-EMOJIS = ['🚀', '💥', '✨', '🔥', '⚡', '🏆', '🎉', '🔄', '👑']
-
-@shivuu.on_message(filters.command("transfer"))
-async def transfer(client: Client, message):
-    # Check authorization
-    if str(message.from_user.id) not in SPECIALGRADE and str(message.from_user.id) not in GRADE1:
-        await message.reply_text(f"🚫 You are not authorized to use this command.")
-        return
-
-    # Validate command usage
-    if len(message.command) != 3:
-        await message.reply_text(f"{random.choice(EMOJIS)} Please provide two user IDs! Usage: /transfer [Source User ID] [Target User ID]")
-        return
-
-    # Extract and validate user IDs
+async def transfer(update, context):
     try:
-        source_user_id = int(message.command[1])
-        target_user_id = int(message.command[2])
+        user_id = update.effective_user.id
+
+        # Check if the user is the owner
+        if user_id != OWNER_ID:
+            await update.message.reply_text("🚫 You are not authorized to use this command.")
+            return
+
+        # Ensure the command has the correct number of arguments
+        if len(context.args) != 2:
+            await update.message.reply_text("⚠️ Please provide two valid user IDs for the transfer.")
+            return
+
+        sender_id = int(context.args[0])
+        receiver_id = int(context.args[1])
+
+        # Retrieve sender's and receiver's information
+        sender = await user_collection.find_one({"id": sender_id})
+        receiver = await user_collection.find_one({"id": receiver_id})
+
+        if not sender:
+            await update.message.reply_text(f"❌ Sender with ID {sender_id} not found.")
+            return
+
+        if not receiver:
+            await update.message.reply_text(f"❌ Receiver with ID {receiver_id} not found.")
+            return
+
+        # Collect information about the sender's waifus
+        sender_waifus = sender.get("characters", [])
+        total_waifus = len(sender_waifus)
+        sender_name = sender.get("name", "Unknown")
+        rarity_counts = {}
+
+        # Count waifus by rarity
+        for waifu in sender_waifus:
+            rarity = waifu.get("rarity", "Unknown")
+            rarity_counts[rarity] = rarity_counts.get(rarity, 0) + 1
+
+        # Create a summary of the sender's waifus
+        rarity_summary = "\n".join([f"✨ {rarity}: {count}" for rarity, count in rarity_counts.items()])
+        info_message = (
+            "┎━─━─━─━─━─━─━─━─━┒\n"
+            "🎴 **Sender Information (Old Account)** 🎴\n"
+            "┖━─━─━─━─━─━─━─━─━┚\n"
+            f"👤 **User ID**: `{sender_id}`\n"
+            f"📝 **Name**: `{sender_name}`\n"
+            f"🔢 **Total Waifus**: `{total_waifus}`\n"
+            "📊 **Rarity Summary**:\n"
+            f"{rarity_summary}\n"
+            "━━━━━━━༺༻━━━━━━━"
+        )
+
+        # Send the summary and ask for confirmation
+        keyboard = [
+            [
+                InlineKeyboardButton("✅ Accept", callback_data=f"accept_transfer|{sender_id}|{receiver_id}"),
+                InlineKeyboardButton("❌ Reject", callback_data="reject_transfer"),
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await update.message.reply_text(info_message, reply_markup=reply_markup, parse_mode="Markdown")
+
     except ValueError:
-        await message.reply_text(f"⚠️ Invalid user IDs provided. Please provide valid integers.")
-        return
+        await update.message.reply_text("⚠️ Invalid User IDs provided.")
 
-    # Fetch source and target users
-    source_user = await user_collection.find_one({'id': source_user_id})
-    target_user = await user_collection.find_one({'id': target_user_id})
+async def handle_transfer_response(update, context):
+    query = update.callback_query
+    await query.answer()
 
-    # Handle cases where users don't exist or characters are empty
-    if not source_user:
-        await message.reply_text(f"❌ Source user does not exist!")
-        return
-    if not source_user.get('characters'):
-        await message.reply_text(f"❌ Source user has no characters to transfer!")
-        return
-    if not target_user:
-        await message.reply_text(f"❌ Target user does not exist!")
-        return
+    data = query.data
+    user_id = update.effective_user.id
 
-    # Calculate character rarity counts
-    characters = source_user['characters']
-    rarity_counts = {
-        "Legendary": sum(1 for c in characters if c.get('rarity') == "Legendary"),
-        "Rare": sum(1 for c in characters if c.get('rarity') == "Rare"),
-        "Medium": sum(1 for c in characters if c.get('rarity') == "Medium"),
-        "Common": sum(1 for c in characters if c.get('rarity') == "Common")
-    }
-    total_characters = len(characters)
+    if "accept_transfer" in data:
+        _, sender_id, receiver_id = data.split("|")
+        sender_id = int(sender_id)
+        receiver_id = int(receiver_id)
 
-    # Confirmation message with rarity counts
-    confirm_text = (
-        f"Do you want to transfer {source_user.get('name', 'Unknown')}'s harem to {target_user.get('name', 'Unknown')}?\n\n"
-        f"Name: {source_user.get('name', 'Unknown')}\n"
-        f"User ID: {source_user_id}\n"
-        f"Character Count: {total_characters}\n\n"
-        f"Rarity Counts:\n"
-        f"╭───────────────────\n"
-        f"├─➩ 🟡 Rarity: Legendary: {rarity_counts['Legendary']}\n"
-        f"├─➩ 🟠 Rarity: Rare: {rarity_counts['Rare']}\n"
-        f"├─➩ 🔴 Rarity: Medium: {rarity_counts['Medium']}\n"
-        f"├─➩ 🔵 Rarity: Common: {rarity_counts['Common']}\n"
-        f"╰───────────────────"
-    )
+        # Double-check if the user is the receiver
+        if user_id != receiver_id:
+            await query.edit_message_text("🚫 You are not authorized to accept this transfer.")
+            return
 
-    # Inline keyboard for confirmation
-    confirm_keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("✅ Confirm Transfer", callback_data=f"confirm_transfer_{source_user_id}_{target_user_id}")],
-        [InlineKeyboardButton("❌ Cancel", callback_data="cancel_transfer")]
-    ])
+        # Retrieve sender's and receiver's information
+        sender = await user_collection.find_one({"id": sender_id})
+        receiver = await user_collection.find_one({"id": receiver_id})
 
-    await message.reply_text(confirm_text, reply_markup=confirm_keyboard)
+        if not sender or not receiver:
+            await query.edit_message_text("❌ Transfer failed: Sender or receiver not found.")
+            return
 
+        # Transfer all waifus from sender to receiver
+        receiver_waifus = receiver.get("characters", [])
+        receiver_waifus.extend(sender.get("characters", []))
 
-@shivuu.on_callback_query(filters.regex(r'^confirm_transfer_'))
-async def confirm_transfer(callback_query):
-    # Extract source and target user IDs from callback data
-    data = callback_query.data.split('_')
-    source_user_id = int(data[2])
-    target_user_id = int(data[3])
+        # Update receiver's waifus
+        await user_collection.update_one({"id": receiver_id}, {"$set": {"characters": receiver_waifus}})
 
-    # Fetch source and target users again
-    source_user = await user_collection.find_one({'id': source_user_id})
-    target_user = await user_collection.find_one({'id': target_user_id})
+        # Remove waifus from the sender
+        await user_collection.update_one({"id": sender_id}, {"$set": {"characters": []}})
 
-    # Proceed with transfer if both users are valid
-    if source_user and target_user:
-        # Perform the character transfer
-        characters = source_user.get('characters', [])
-        await user_collection.update_one({'id': target_user_id}, {'$push': {'characters': {'$each': characters}}})
-        await user_collection.update_one({'id': source_user_id}, {'$set': {'characters': []}})
+        await query.edit_message_text("✅ Transfer accepted! All waifus have been successfully transferred.")
 
-        # Success response with emoji
-        await callback_query.message.edit_text(f"✅ {random.choice(EMOJIS)} Harem transferred successfully from user {source_user.get('name', 'Unknown')} to user {target_user.get('name', 'Unknown')}.")
-    else:
-        await callback_query.message.edit_text("❌ Transfer failed. One of the users no longer exists.")
+    elif data == "reject_transfer":
+        await query.edit_message_text("❌ Transfer rejected.")
 
-
-@shivuu.on_callback_query(filters.regex(r'^cancel_transfer'))
-async def cancel_transfer(callback_query):
-    await callback_query.answer("❌ Transfer canceled.")
-    await callback_query.message.delete()
+# Register the handlers
+application.add_handler(CommandHandler("transfer", transfer))
+application.add_handler(CallbackQueryHandler(handle_transfer_response))
