@@ -85,7 +85,12 @@ async def gift(client, message):
         f"Click 'Cᴏɴfɪʀᴍ Gɪғᴛ' tᴏ prᴏcᴇᴇd ᴏʀ 'Cᴀɴᴄᴇʟ Gɪғᴛ' tᴏ sᴛᴏp."
     )
 
-    await message.reply_text(message_text, reply_markup=keyboard)
+    # Send the character's image URL
+    character_image_url = character.get('image_url')  # Assuming 'image_url' is the key for the character's image URL
+    if character_image_url:
+        await message.reply_photo(character_image_url, caption=message_text, reply_markup=keyboard)
+    else:
+        await message.reply_text(message_text, reply_markup=keyboard)
     
 # Start a trade transaction
 async def start_trade(sender_id, message):
@@ -294,20 +299,23 @@ async def on_callback_query(client, callback_query):
 
         # Gift confirmation message
         message_text = (
-            f"🥂 **ɢɪғᴛ Cᴏᴍᴘʟᴇᴛᴇᴅ!** 🎉\n\n"
             f"❄️ **Cᴏngrᴀᴛᴜʟᴀᴛɪᴏɴs, [{receiver_first_name}](tg://user?id={receiver_id})!**\n"
             f"**[{sender_first_name}](tg://user?id={sender_id})** ʜᴀs ɢɪғᴛᴇᴅ ʏᴏᴜ ᴀ ᴄʜᴀʀᴀᴄᴛᴇʀ!\n\n"
             f"🌋 **Yᴏᴜ ʀᴇᴄᴇɪᴠᴇᴅ:**\n"
             f" **Nᴀᴍᴇ:** `{character_name}`\n"
-            f" **Rᴀʀɪᴛʏ:** {rarity_emoji} `{rarity}`\n"
+            f" **Rᴀʀɪᴛʏ:** `{rarity}`\n"
             f" **ᴀɴɪᴍᴇ:** `{anime_name}`\n\n"
             "🌪️ ʏᴏᴜ'ʀᴇ ɴᴏᴡ ᴏᴜᴛ ᴏғ ᴏᴘᴛɪᴏɴs! ᴡʜᴏᴇᴠᴇʀ sʜɪɴᴏʙᴜ ʙᴇʟɪᴇᴠᴇs ᴛʜᴇ ᴍᴀʟʟ ᴡɪʟʟ ʙᴇ ʏᴏᴜ!"
         )
 
-        # Send message to receiver's PM
-        await app.send_photo(receiver_id, photo=img_url, caption=message_text)
+        # Send message to receiver's PM with the character's image
+        if img_url:
+            await app.send_photo(receiver_id, photo=img_url, caption=message_text)
+        else:
+            await app.send_message(receiver_id, text=message_text)
 
-        await callback_query.message.edit_text("🎁 **ɢɪғᴛ sᴜᴄᴄᴇssfᴜʟʟʏ dᴇlɪvᴇʀᴇᴅ!** 🎁\n\n" + message_text)
+        # Edit the message in the sender's chat
+        await callback_query.message.edit_text("🎁 **ɢɪғᴛ sᴜᴄᴄᴇssfᴜʟʟʏ dᴇlɪᴠᴇʀᴇᴅ!** 🎁\n\n" + message_text)
 
     elif callback_query.data.lower() == "cancel_gift":
         del pending_gifts[(sender_id, receiver_id)]
@@ -350,11 +358,11 @@ def get_trade_info_message(sender_character, receiver_character, sender_rarity_e
         f"📩 **ᴛʀᴀᴅᴇ RᴇQᴜᴇsᴛ**\n\n"
         f"🔄 **Yᴏᴜ Rᴇᴄᴇɪᴠᴇ:**\n"
         f" **Nᴀᴍᴇ:** `{receiver_character['name']}`\n"
-        f" **Rᴀʀɪᴛʏ:** {receiver_rarity_emoji} `{receiver_character['rarity']}`\n"
+        f" **Rᴀʀɪᴛʏ:** `{receiver_character['rarity']}`\n"
         f" **ᴀɴɪᴍᴇ:** `{receiver_character['anime']}`\n\n"
         f"➡️ **Yᴏᴜ Gɪᴠᴇ:**\n"
         f" **Nᴀᴍᴇ:** `{sender_character['name']}`\n"
-        f" **Rᴀʀɪᴛʏ:** {sender_rarity_emoji} `{sender_character['rarity']}`\n"
+        f" **Rᴀʀɪᴛʏ:** `{sender_character['rarity']}`\n"
         f" **ᴀɴɪᴍᴇ:** `{sender_character['anime']}`\n\n"
         "⚠️ Cʟɪᴄᴋ 'ᴀᴄᴄᴇᴘᴛ' ᴛᴏ ᴀᴄᴄᴇᴘᴛ ᴛʜɪs ᴏғғᴇʀ.\n"
         "❌ Cʟɪᴄᴋ 'ʀᴇjᴇct' ᴛᴏ dᴇclɪɴᴇ."
