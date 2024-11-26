@@ -1,135 +1,177 @@
-import asyncio
-import traceback
 from pyrogram import filters, Client, types as t
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from shivu import shivuu as bot
 from shivu import user_collection, collection
 from datetime import datetime, timedelta
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.date import DateTrigger
+from pyrogram.errors.exceptions.bad_request_400 import UserNotParticipant
+from pyrogram.enums import ChatMemberStatus
+import asyncio
 
-DEVS = [6402009857]
+# Developer user IDs and group/channel IDs
+DEVS = (6995317382,)
+SUPPORT_CHAT_ID = -1002104939708
+CHANNEL_ID = -1002122552289
 
-GROUP_ID = -1002104939708
-LOG_CHANNEL_ID = -1002446048543  # Replace with your actual log channel ID
+# Initialize the scheduler
+scheduler = AsyncIOScheduler()
+scheduler.start()
 
-async def send_error_to_devs(error_message):
-    for dev_id in DEVS:
-        try:
-            await bot.send_message(dev_id, error_message)
-        except Exception as e:
-            print(f"Error sending message to dev {dev_id}: {e}")
+# Support group and channel buttons
+keyboard_support = InlineKeyboardMarkup([
+    [InlineKeyboardButton("Official Group", url="https://t.me/dynamic_gangs")]
+])
+keyboard_channel = InlineKeyboardMarkup([
+    [InlineKeyboardButton("Official Channel", url="https://t.me/Seizer_updates")]
+])
+keyboard_both = InlineKeyboardMarkup([
+    [InlineKeyboardButton("Official Group", url="https://t.me/dynamic_gangs")],
+    [InlineKeyboardButton("Official Channel", url="https://t.me/Seizer_updates")]
+])
 
-async def send_log_message(log_message):
+# Function to check if a user is a member
+async def check_membership(user_id):
+    is_member_group = False
+    is_member_channel = False
+    valid_statuses = [
+        ChatMemberStatus.MEMBER,
+        ChatMemberStatus.ADMINISTRATOR,
+        ChatMemberStatus.OWNER
+    ]
+
+    # Check membership in the support group
     try:
-        await bot.send_message(LOG_CHANNEL_ID, log_message)
+        member_group = await bot.get_chat_member(SUPPORT_CHAT_ID, user_id)
+        is_member_group = member_group.status in valid_statuses
+    except UserNotParticipant:
+        pass
     except Exception as e:
-        print(f"Error sending log message: {e}")
+        print(f"Error checking group membership: {e}")
 
-async def get_unique_characters(receiver_id, target_rarities=None):
-    if target_rarities is None:
-        target_rarities = ['⚪️ Common', '🔵 Medium', '🟠 Rare', '🟡 Legendary', '👶 Chibi', '💮 Exclusive']
-
+    # Check membership in the channel
     try:
-        user = await user_collection.find_one({'id': receiver_id}, {'characters': 1})
-        owned_character_ids = [char.get('id') for char in user.get('characters', [])]
+        member_channel = await bot.get_chat_member(CHANNEL_ID, user_id)
+        is_member_channel = member_channel.status in valid_statuses
+    except UserNotParticipant:
+        pass
+    except Exception as e:
+        print(f"Error checking channel membership: {e}")
+
+    return is_member_group, is_member_channel
+
+# Function to get unique characters
+async def get_unique_characters(receiver_id, target_rarities=['⚪️ Common', '🔵 Medium', '🟠 Rare', '🟡 Legendary', '👶 Chibi', '💮 Exclusive']):
+    try:
+        user_data = await user_collection.find_one({'id': receiver_id}, {'characters': 1})
+        owned_character_ids = [char['id'] for char in user_data.get('characters', [])]
 
         pipeline = [
             {'$match': {'rarity': {'$in': target_rarities}, 'id': {'$nin': owned_character_ids}}},
-            {'$sample': {'size': 1}}
+            {'$sample': {'size': 1}}  # Adjust the number of characters retrieved here
         ]
-        
+
         cursor = collection.aggregate(pipeline)
         characters = await cursor.to_list(length=None)
         return characters
     except Exception as e:
-        await send_error_to_devs(f"Error in get_unique_characters: {traceback.format_exc()}")
+        print(f"Error fetching characters: {e}")
         return []
 
-last_claim_time = {}
-
-async def process_claim(user_id, chat_id, user_first_name, message_id):
-    unique_characters = await get_unique_characters(user_id)
+# Function to notify users when their cooldown ends
+async def send_cooldown_notification(user_id, mention):
     try:
-        # Update user's character list in the database
-        await user_collection.update_one({'id': user_id}, {'$push': {'characters': {'$each': unique_characters}}})
-        
-        # Prepare image URLs and captions with additional text and user mention
-        img_urls = [character['img_url'] for character in unique_characters]
-        captions = [
-            f"❄️ **ᴏᴡᴏ, {user_first_name}! ʜᴇʀᴇ ɪs ᴀ sᴘᴇᴄɪᴀʟ ᴄʟᴀɪᴍ ғᴏʀ ʏᴏᴜ!** 🏮\n\n"
-            f"🥂 **ɴᴀᴍᴇ:** {character['name']}\n"
-            f"☃️ **ʀᴀʀɪᴛʏ:** {character['rarity']}\n"
-            f"⛩️ **ᴀɴɪᴍᴇ:** {character['anime']}\n\n"
-            f"🍃 **ᴅᴏɴ'ᴛ ғᴏʀɢᴇᴛ ᴛᴏ ᴄᴏᴍᴇ ʙᴀᴄᴋ ᴛᴏᴍᴏʀʀᴏᴡ ғᴏʀ ᴍᴏʀᴇ ᴄʟᴀɪᴍs!**"
-            for character in unique_characters
-        ]
-        
-        # Send each image with caption, replying to the specified message
-        for img_url, caption in zip(img_urls, captions):
-            await bot.send_photo(
-                chat_id=chat_id,
-                photo=img_url,
-                caption=caption,
-                reply_to_message_id=message_id  # Replying to a specific message
-            )
+        await bot.send_message(
+            chat_id=user_id,
+            text=f"✨ Hello {mention}, your cooldown has ended! You can now claim a new character using the `/wclaim` command."
+        )
     except Exception as e:
-        await send_error_to_devs(f"Error in process_claim: {traceback.format_exc()}")
+        print(f"Error sending cooldown notification to {user_id}: {e}")
 
+# Main command function for wclaim with cooldown notifications
 @bot.on_message(filters.command(["wclaim"]))
-async def claim_waifu(_, message: t.Message):
+async def wclaim(_, message: t.Message):
     user_id = message.from_user.id
-    chat_id = message.chat.id
-    user_first_name = message.from_user.first_name
-    message_id = message.id  # Corrected line to get the message ID
+    mention = message.from_user.mention
 
-    if chat_id != GROUP_ID:
-        keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("ᴊᴏɪɴ ɢʀᴏᴜᴘ ᴛᴏ ᴄʟᴀɪᴍ", url="https://t.me/dynamic_gangs")]
-        ])
+    # Check if user is banned
+    if user_id in DEVS:
+        return await message.reply("🚫 Sorry, you are banned from using this command.")
+
+    # Membership check
+    is_member_group, is_member_channel = await check_membership(user_id)
+    
+    if not is_member_group and not is_member_channel:
         return await message.reply_text(
-            "🚫 **ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ᴄᴀɴ ᴏɴʟʏ ʙᴇ ᴜsᴇᴅ ɪɴ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ.**\n\n"
-            "ᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴛʜᴇ ɢʀᴏᴜᴘ ᴜsɪɴɢ ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ᴄʟᴀɪᴍ ʏᴏᴜʀ ᴄʜᴀʀᴀᴄᴛᴇʀ!",
-            reply_markup=keyboard,
-            quote=True
+            "To use this command, please join our official group and channel.",
+            reply_markup=keyboard_both
+        )
+    elif not is_member_group:
+        return await message.reply_text(
+            "Please join the official group to use this command.",
+            reply_markup=keyboard_support
+        )
+    elif not is_member_channel:
+        return await message.reply_text(
+            "Please join the official channel to use this command.",
+            reply_markup=keyboard_channel
         )
 
-    if user_id == 7162166061:
-        return await message.reply_text("⚠️ **Sorry, you are banned from using this command.**")
+    # Fetch user data or initialize if not present
+    user_data = await user_collection.find_one({'id': user_id})
+    if not user_data:
+        await user_collection.insert_one({'id': user_id, 'characters': [], 'last_claim_time': None})
 
-    now = datetime.now()
-    if user_id in last_claim_time:
-        last_claim_date = last_claim_time[user_id]
-        if last_claim_date.date() == now.date():
-            next_claim_time = (last_claim_date + timedelta(days=1)).strftime("%H:%M:%S")
-            return await message.reply_text(
-                             f"⏰ **ɢᴏᴍᴇɴ'ɴᴀsᴀɪ, @{message.from_user.username}!**\n"
-                             f"**ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ ᴜɴᴛɪʟ {next_claim_time} ᴛᴏ ᴄʟᴀɪᴍ ʏᴏᴜʀ ɴᴇxᴛ ᴄʜᴀʀᴀᴄᴛᴇʀ.**",
-                             quote=True
-                        )
+    # Check last claim time
+    now = datetime.utcnow()
+    last_claim_time = user_data.get('last_claim_time')
 
-    last_claim_time[user_id] = now
+    if last_claim_time and last_claim_time.date() == now.date():
+        next_claim_time = (last_claim_time + timedelta(days=1))
+        next_claim_time_str = next_claim_time.strftime("%H:%M:%S")
+        return await message.reply_text(
+            f"✨ You’ve already claimed today. Try again tomorrow at {next_claim_time_str}!"
+        )
 
+    # Animated sequence of claim messages
     animation_messages = [
-        "🔥 **ɢᴇᴛᴛɪɴɢ ʏᴏᴜʀ ᴄʟᴀɪᴍ ʀᴇᴀᴅʏ...**",
-        "⚡ **ᴘʀᴇᴘᴀʀɪɴɢ ᴛʜᴇ ʀᴇᴡᴀʀᴅs...**",
-        "❄️ **ᴡᴀɪᴛᴏ ʙᴀᴋᴀ...**",
-        "🎉 **ʜᴇʀᴇ ᴄᴏᴍᴇs ʏᴏᴜʀ ʀᴇᴡᴀʀᴅ ʙᴀʙʏ!**"
+        "🔥 **Getting your claim ready...**",
+        "⚡ **Preparing the rewards...**",
+        "❄️ **Almost there...**",
+        "🎉 **Here comes your reward!**"
     ]
-
     animation_message = await message.reply_text(animation_messages[0])
     for msg in animation_messages[1:]:
         await asyncio.sleep(1)
         await animation_message.edit_text(msg)
 
-    await process_claim(user_id, chat_id, user_first_name, message_id)  # Pass the message ID
+    # Update last claim time and schedule a cooldown notification
+    next_claim_time = now + timedelta(days=1)
+    await user_collection.update_one({'id': user_id}, {'$set': {'last_claim_time': now}})
 
-    # Send a log message about the claim
-    log_message = (
-        f"📢 <b>Waifu Claimed!</b>\n\n"
-        f"🧑‍🚀 <b>User:</b> {user_first_name} (ID: <code>{user_id}</code>)\n"
-        f"🗣 <b>Chat ID:</b> <code>{chat_id}</code>\n"
-        f"📅 <b>Date & Time:</b> {now.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-        f"🌸 <i>Another waifu has been claimed! Happy hunting!</i>"
+    scheduler.add_job(
+        send_cooldown_notification,
+        trigger=DateTrigger(run_date=next_claim_time),
+        args=[user_id, mention]
     )
 
-    # Send the log message
-    await send_log_message(log_message)
+    # Retrieve a unique character
+    unique_characters = await get_unique_characters(user_id)
+    if unique_characters:
+        try:
+            await user_collection.update_one({'id': user_id}, {'$push': {'characters': {'$each': unique_characters}}})
+            for character in unique_characters:
+                img_url = character.get('img_url')
+                caption = (
+                    f"🎉 Congratulations {mention}! You claimed a new character:\n\n"
+                    f"🥂 Name: {character['name']}\n"
+                    f"⛩️ Anime: {character['anime']}\n"
+                    f"🍁 Rarity: {character['rarity']}\n\n"
+                    f"Come back tomorrow for another chance!"
+                )
+                await message.reply_photo(photo=img_url, caption=caption)
+        except Exception as e:
+            print(f"Error claiming character: {e}")
+            await message.reply("An error occurred while claiming your character. Please try again later.")
+    else:
+        await message.reply("No new characters available to claim. Try again tomorrow.")
