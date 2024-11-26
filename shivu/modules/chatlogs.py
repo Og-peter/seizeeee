@@ -81,7 +81,7 @@ async def on_new_chat_members(client: Client, message: Message):
         welcome_photo_url = "https://files.catbox.moe/h8hiod.jpg"
         
         # Send welcome message with photo and buttons
-        await send_photo_message(message.chat.id, welcome_text, welcome_photo_url)
+        await send_photo_message(message.chat.id, welcome_text, welcome_photo_url, buttons)
         
         # Fun fact after welcome message
         fun_fact = random.choice(FACTS_QUOTES)
@@ -91,9 +91,29 @@ async def on_new_chat_members(client: Client, message: Message):
         await asyncio.sleep(5)
         await app.send_message(message.chat.id, text=RULES)
 
-        # Log the bot being added to a new group, if applicable
+        # Send notification to the user who added the bot
         if user.id == (await client.get_me()).id:
             added_by = message.from_user
+            profile_photos = await app.get_user_photos(added_by.id, limit=1)
+            profile_photo = profile_photos[0].file_id if profile_photos else None
+            thank_you_message = (
+                f"🌟 **Thank You for Adding Me!** 🌟\n\n"
+                f"👤 **Name:** {added_by.first_name}\n"
+                f"🆔 **ID:** `{added_by.id}`\n"
+                f"🌐 I’m thrilled to be a part of the group **{message.chat.title}**!\n\n"
+                f"Feel free to explore my features and let me know if I can assist in any way. 💖"
+            )
+
+            if profile_photo:
+                await app.send_photo(
+                    chat_id=added_by.id,
+                    photo=profile_photo,
+                    caption=thank_you_message
+                )
+            else:
+                await app.send_message(added_by.id, text=thank_you_message)
+
+            # Log the bot being added to a new group
             join_text = (
                 f"✨ 𝗕𝗼𝘁 𝗔𝗱𝗱𝗲𝗱 𝗶𝗻 𝗮 𝗡𝗲𝘄 𝗚𝗿𝗼𝘂𝗽 ✨\n\n"
                 f"🏠 **Group**: {message.chat.title}\n"
