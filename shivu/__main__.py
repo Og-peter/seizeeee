@@ -304,7 +304,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
             time_sent = sent_characters[chat_id].get(character['id'], time.time())
         elif isinstance(sent_characters.get(chat_id), list):
             for entry in sent_characters[chat_id]:
-                if entry.get('id') == character['id']:
+                if isinstance(entry, dict) and entry.get('id') == character['id']:
                     time_sent = entry.get('time', time.time())
                     break
 
@@ -383,7 +383,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(
             '❌ Incorrect guess! Please try again.',
             reply_markup=InlineKeyboardMarkup(keyboard)
-        )
+                )
         
 # Assuming rarity_map and rarity_active are predefined dictionaries
 # rarity_map = {1: "Common", 2: "Rare", ...}
