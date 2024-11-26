@@ -1,187 +1,163 @@
 import os
-import logging 
 import random
 import html
-from html import escape
-from telegram import Update
-from telegram.ext import CommandHandler, CallbackContext
-
-from shivu import (application, PHOTO_URL, OWNER_ID,
-                   user_collection, top_global_groups_collection,
-                   group_user_totals_collection, db)
-from shivu import sudo_users as SUDO_USERS
-
-# Fetch from your specific collections
-groups_collection = db['top_global_groups']
-users_collection = db['user_collection_lmaoooo']
-characters_collection = db['anime_characters_lol']
-
-# List of video links
-video = [
-    "https://files.catbox.moe/x7cjqd.mp4",
-    "https://files.catbox.moe/d5uiqt.mp4",
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
+from shivu import (application, OWNER_ID,
+                   user_collection, top_global_groups_collection, 
+                   group_user_totals_collection, sudo_users as SUDO_USERS)
+# Replace PHOTO_URL with a list of video URLs
+VIDEO_URL = [
+    "https://files.catbox.moe/sab0z3.mp4",
+    "https://files.catbox.moe/erfe6v.mp4",
+    "https://files.catbox.moe/sab0z3.mp4"
 ]
 
-# Function to display the global leaderboard of top groups
-async def global_leaderboard(update: Update, context: CallbackContext) -> None:
-    try:
-        # Fetch the top 10 groups based on count
-        cursor = top_global_groups_collection.aggregate([
-            {"$project": {"group_name": 1, "count": 1}},
-            {"$sort": {"count": -1}},
-            {"$limit": 10}
-        ])
-        
-        # Load leaderboard data
-        leaderboard_data = await cursor.to_list(length=10)
+# <======================================= GLOBAL TOP GROUPS ==================================================>
+async def global_leaderboard(update: Update, context: CallbackContext, query=None) -> None:
+    cursor = top_global_groups_collection.aggregate([
+        {"$project": {"group_name": 1, "count": 1}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ])
+    leaderboard_data = await cursor.to_list(length=10)
 
-        # Debugging: Log fetched data
-        logging.info("Fetched leaderboard data: %s", leaderboard_data)
+    # Anime-themed message with kawaii words and unique fonts
+    leaderboard_message = (
+        "ʜᴇʀᴇ ᴀʀᴇ ᴛʜᴇ ᴍᴏꜱᴛ ᴛᴏᴘ 𝟷𝟶 ɢʟᴏʙᴀʟ ɢʀᴏᴜᴘꜱ ᴀʀᴀ ᴀʀᴀ~\n\n"
+        "┏━⊱ 🌸 ᴛᴏᴘ 𝟷𝟶 ɢʀᴏᴜᴘꜱ 🌸 ⊰━┓\n"
+    )
 
-        # Check if leaderboard data is empty
-        if not leaderboard_data:
-            await update.message.reply_text("🚫 No data available for the top groups leaderboard.", parse_mode='HTML')
-            return
+    for i, group in enumerate(leaderboard_data, start=1):
+        group_name = html.escape(group.get('group_name', 'Unknown'))
+        if len(group_name) > 10:
+            group_name = group_name[:15] + '...'  # Truncate long names
+        count = group['count']
 
-        # Prepare the leaderboard message
-        leaderboard_message = "<b>🌟 𝚃𝙾𝙿 10 𝙶𝚁𝙾𝚄𝙿𝚂 🌟</b>\n"
-        leaderboard_message += "─────────────────────\n"
-        
-        for i, group in enumerate(leaderboard_data, start=1):
-            group_name = escape(group.get('group_name', 'Unknown'))
-            if len(group_name) > 15:
-                group_name = group_name[:15] + '...'
-            count = group.get('count', 0)
-            leaderboard_message += f"{i}. <b>{group_name}</b> - <b>{count}</b> 🏆\n"
+        leaderboard_message += f"┣ {i:02d}.  <b>{group_name}</b> ➾ <b>{count}</b>\n"
 
-        leaderboard_message += "─────────────────────\n"
-        leaderboard_message += "✨ 𝚃𝚘𝚙 𝙶𝚛𝚘𝚞𝚙𝚜 𝚟𝚒𝚊 @Character_seize_bot ✨"
+    # Choose a random anime-themed video
+    video_url = random.choice(VIDEO_URL)
 
-        # Select a random video from the list and send it with the leaderboard message
-        video_url = random.choice(video)
-        await update.message.reply_video(video=video_url, caption=leaderboard_message, parse_mode='HTML')
+    # Inline keyboard with anime-themed buttons
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("❂ ᴛᴏᴘ ᴏɴɪɪ-ᴄʜᴀɴꜱ ᴜsᴇʀs ❂", callback_data="global_users")],
+        [InlineKeyboardButton("❖ ᴛᴏᴘ ᴄʜᴀᴛꜱ ❖", callback_data="ctop")],
+        [InlineKeyboardButton("⊗ ᴄʟᴏꜱᴇ ᴀʀᴀ ᴀʀᴀ ⊗", callback_data="close")]
+    ])
 
-    except Exception as e:
-        logging.error("Error in global_leaderboard: %s", e)
-        await update.message.reply_text(f"⚠️ 𝔸𝕟 𝕖𝕣𝕣𝕠𝕣 𝕠𝕔𝕔𝕦𝕣𝕖𝕕: {e}", parse_mode='HTML')
+    if query:
+        # Update existing message if query is passed
+        await query.edit_message_caption(
+            caption=leaderboard_message, parse_mode='HTML', reply_markup=keyboard
+        )
+    else:
+        # Send a new message with the video and caption
+        message = await update.message.reply_video(
+            video=video_url, caption=leaderboard_message, parse_mode='HTML', reply_markup=keyboard
+        )
+        # Store the message ID in chat data
+        context.chat_data['leaderboard_message_id'] = message.message_id
 
-# Function to display the top users in the current chat
-async def ctop(update: Update, context: CallbackContext) -> None:
-    try:
-        chat_id = update.effective_chat.id
-        cursor = group_user_totals_collection.aggregate([
-            {"$match": {"group_id": chat_id}},
-            {"$project": {"username": 1, "first_name": 1, "character_count": "$count"}},
-            {"$sort": {"character_count": -1}},
-            {"$limit": 10}
-        ])
-        leaderboard_data = await cursor.to_list(length=10)
+# <======================================= TOP USERS IN THIS GROUP ==================================================>
+async def ctop(update: Update, context: CallbackContext, query=None) -> None:
+    chat_id = update.effective_chat.id
 
-        leaderboard_message = "<b>✨ 𝚃𝙾𝙿 10 𝚄𝚂𝙴𝚁𝚂 𝙸𝙽 𝚃𝙷𝙸𝚂 𝙲𝙷𝙰𝚃 ✨</b>\n"
-        leaderboard_message += "─────────────────────\n"
-        
-        for i, user in enumerate(leaderboard_data, start=1):
-            username = user.get('username', 'Unknown')
-            first_name = escape(user.get('first_name', 'Unknown'))
-            if len(first_name) > 15:
-                first_name = first_name[:15] + '...'
-            character_count = user['character_count']
-            leaderboard_message += f'{i}. <a href="https://t.me/{username}"><b>{first_name}</b></a> - <b>{character_count}</b> 🌟\n'
+    cursor = group_user_totals_collection.aggregate([
+        {"$match": {"group_id": chat_id}},
+        {"$project": {"username": 1, "first_name": 1, "character_count": "$count"}},
+        {"$sort": {"character_count": -1}},
+        {"$limit": 10}
+    ])
+    leaderboard_data = await cursor.to_list(length=10)
 
-        leaderboard_message += "─────────────────────\n"
-        leaderboard_message += "✨ 𝚃𝚘𝚙 𝚄𝚜𝚎𝚛𝚜 𝚟𝚒𝚊 @Character_seize_bot ✨"
+    leaderboard_message = (
+        "<b>🌸 ᴋᴀᴡᴀɪɪ ᴛᴏᴘ 10 ᴜꜱᴇʀꜱ ɪɴ ᴛʜɪꜱ ᴄʜᴀᴛ 🌸</b>\n\n"
+        "┏━⊱ 💖 ᴏɴɪɪ-ᴄʜᴀɴ ꜰᴀᴠᴏʀɪᴛᴇꜱ 💖 ⊰━┓\n"
+    )
 
-        # Select a random video from the list and send it with the leaderboard message
-        video_url = random.choice(video)
-        await update.message.reply_video(video=video_url, caption=leaderboard_message, parse_mode='HTML')
+    for i, user in enumerate(leaderboard_data, start=1):
+        username = user.get('username', 'Unknown')
+        first_name = html.escape(user.get('first_name', 'Unknown'))
 
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ 𝔸𝕟 𝕖𝕣𝕣𝕠𝕣 𝕠𝕔𝕔𝕦𝕣𝕖𝕕: {e}", parse_mode='HTML')
+        if len(first_name) > 10:
+            first_name = first_name[:15] + '...'  # Truncate long names
+        character_count = user['character_count']
+        leaderboard_message += f"┣ {i:02d}. <a href='https://t.me/{username}'>{first_name}</a> ⇒ <b>{character_count}</b>\n"
 
-# Function to display the global user leaderboard
-async def leaderboard(update: Update, context: CallbackContext) -> None:
-    try:
-        cursor = user_collection.aggregate([
-            {"$match": {"characters": {"$exists": True, "$type": "array"}}},
-            {"$project": {"username": 1, "first_name": 1, "character_count": {"$size": "$characters"}}},
-            {"$sort": {"character_count": -1}},
-            {"$limit": 10}
-        ])
-        leaderboard_data = await cursor.to_list(length=10)
+    video_url = random.choice(VIDEO_URL)
 
-        # Enhanced leaderboard message with unique styling
-        leaderboard_message = "<b>🏆 𝗧𝗼𝗽 𝟭𝟬 𝗨𝘀𝗲𝗿𝘀 𝘄𝗶𝘁𝗵 𝗺𝗼𝘀𝘁 𝗖𝗵𝗮𝗿𝗮𝗰𝘁𝗲𝗿𝘀 🏆</b>\n"
-        leaderboard_message += "━━━━━━━━━━━━━━━━━━━━━━\n"
-        
-        for i, user in enumerate(leaderboard_data, start=1):
-            username = user.get('username', 'Unknown')
-            first_name = escape(user.get('first_name', 'Unknown'))
-            if len(first_name) > 15:
-                first_name = first_name[:15] + '...'
-            character_count = user['character_count']
-            leaderboard_message += f'<b>{i}. <a href="https://t.me/{username}">{first_name}</a></b> — <code>{character_count}</code> ✨\n'
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("❂ ᴛᴏᴘ ɢʟᴏʙᴀʟ ᴜꜱᴇʀꜱ ❂", callback_data="global_users")],
+        [InlineKeyboardButton("▣ ᴛᴏᴘ ɢʀᴏᴜᴘꜱ ▣", callback_data="global")],
+        [InlineKeyboardButton("⊗ ᴄʟᴏꜱᴇ ꜱᴇɴᴘᴀɪ ⊗", callback_data="close")]
+    ])
 
-        leaderboard_message += "━━━━━━━━━━━━━━━━━━━━━━\n"
-        leaderboard_message += "🌟 𝑻𝒐𝒑 𝑼𝒔𝒆𝒓𝒔 𝒗𝒊𝒂 @Character_seize_bot 🌟"
+    if query:
+        await query.edit_message_caption(caption=leaderboard_message, parse_mode='HTML', reply_markup=keyboard)
+    else:
+        message = await update.message.reply_video(video=video_url, caption=leaderboard_message, parse_mode='HTML', reply_markup=keyboard)
+        context.chat_data['leaderboard_message_id'] = message.message_id
 
-        # Select a random video from the list and send it with the leaderboard message
-        video_url = random.choice(video)
-        await update.message.reply_video(video=video_url, caption=leaderboard_message, parse_mode='HTML')
 
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ 𝗔𝗻 𝗲𝗿𝗿𝗼𝗿 𝗼𝗰𝗰𝘂𝗿𝗿𝗲𝗱: {e}", parse_mode='HTML')
-      
-# Function to send a document listing all users
-async def send_users_document(update: Update, context: CallbackContext) -> None:
-    try:
-        if str(update.effective_user.id) not in SUDO_USERS:
-            await update.message.reply_text('Only for sudo users...')
-            return
+# <======================================= GLOBAL TOP USERS ==================================================>
+async def global_users_leaderboard(update: Update, context: CallbackContext, query=None) -> None:
+    cursor = user_collection.aggregate([
+        {"$project": {"username": 1, "first_name": 1, "character_count": {"$size": "$characters"}}},
+        {"$sort": {"character_count": -1}},
+        {"$limit": 10}
+    ])
+    leaderboard_data = await cursor.to_list(length=10)
 
-        cursor = user_collection.find({})
-        users = []
-        async for document in cursor:
-            users.append(document)
-        user_list = "\n".join([user['first_name'] for user in users])
+    leaderboard_message = (
+        "<b>🌟 ᴛᴏᴘ 10 ɢʟᴏʙᴀʟ ᴜꜱᴇʀꜱ 🌟</b>\n\n"
+        "┏━⊱ ✨ ᴀᴍᴀᴢɪɴɢ ꜱᴏᴜʟꜱ ✨ ⊰━┓\n"
+    )
 
-        with open('users.txt', 'w') as f:
-            f.write(user_list)
-        with open('users.txt', 'rb') as f:
-            await context.bot.send_document(chat_id=update.effective_chat.id, document=f)
+    for i, user in enumerate(leaderboard_data, start=1):
+        username = user.get('username', 'Unknown')
+        first_name = html.escape(user.get('first_name', 'Unknown'))
 
-        os.remove('users.txt')
+        if len(first_name) > 10:
+            first_name = first_name[:15] + '...'  # Truncate long names
+        character_count = user['character_count']
+        leaderboard_message += f"┣ {i:02d}. <a href='https://t.me/{username}'>{first_name}</a> ⇒ <b>{character_count}</b>\n"
 
-    except Exception as e:
-        await update.message.reply_text(f"An error occurred: {e}")
+    video_url = random.choice(VIDEO_URL)
 
-# Function to send a document listing all groups
-async def send_groups_document(update: Update, context: CallbackContext) -> None:
-    try:
-        if str(update.effective_user.id) not in SUDO_USERS:
-            await update.message.reply_text('Only for sudo users...')
-            return
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("❖ ᴛᴏᴘ ᴄʜᴀᴛꜱ ❖", callback_data="ctop")],
+        [InlineKeyboardButton("▣ ᴛᴏᴘ ɢʀᴏᴜᴘꜱ ▣", callback_data="global")],
+        [InlineKeyboardButton("⊗ ᴄʟᴏꜱᴇ ꜱᴇɴᴘᴀɪ ⊗", callback_data="close")]
+    ])
 
-        cursor = top_global_groups_collection.find({})
-        groups = []
-        async for document in cursor:
-            groups.append(document)
-        group_list = "\n".join([group['group_name'] for group in groups])
+    if query:
+        await query.edit_message_caption(caption=leaderboard_message, parse_mode='HTML', reply_markup=keyboard)
+    else:
+        message = await update.message.reply_video(video=video_url, caption=leaderboard_message, parse_mode='HTML', reply_markup=keyboard)
+        context.chat_data['leaderboard_message_id'] = message.message_id
 
-        with open('groups.txt', 'w') as f:
-            f.write(group_list)
-        with open('groups.txt', 'rb') as f:
-            await context.bot.send_document(chat_id=update.effective_chat.id, document=f)
 
-        os.remove('groups.txt')
+# <======================================= CALLBACK ==================================================>
+async def callback_query(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    data = query.data
 
-    except Exception as e:
-        await update.message.reply_text(f"An error occurred: {e}")
+    if data == "close":
+        message_id = context.chat_data.get('leaderboard_message_id')
+        if message_id:
+            await query.message.delete()
+            del context.chat_data['leaderboard_message_id']
+    elif data == "ctop":
+        await ctop(update, context, query)
+    elif data == "global":
+        await global_leaderboard(update, context, query)
+    elif data == "global_users":
+        await global_users_leaderboard(update, context, query)
 
-  
-# Register the command handlers
+
+# <======================================= KEEPING ALL FEATURES ================================================>
+application.add_handler(CallbackQueryHandler(callback_query))
 application.add_handler(CommandHandler('ctop', ctop, block=False))
-application.add_handler(CommandHandler('topGroups', global_leaderboard, block=False))
-
-application.add_handler(CommandHandler('list', send_users_document, block=False))
-application.add_handler(CommandHandler('groups', send_groups_document, block=False))
-application.add_handler(CommandHandler('gtop', leaderboard, block=False))
+application.add_handler(CommandHandler('topgroups', global_leaderboard, block=False))
+application.add_handler(CommandHandler('gtop', global_users_leaderboard, block=False))
