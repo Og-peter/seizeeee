@@ -388,15 +388,15 @@ async def guess(update: Update, context: CallbackContext) -> None:
             reply_markup=InlineKeyboardMarkup(keyboard)
                        )
     else:
-        # Extracting user guess after the command
-        user_input = update.message.text.strip()  # Full user input
-        command_prefix = "/seize"  # Your bot command prefix
+        # Extract user input and remove the bot mention and command prefix
+        user_input = update.message.text.strip()  # Full input with command
+        command_parts = user_input.split(" ")  # Split based on spaces
 
-        # Remove the command from the input
-        if user_input.startswith(command_prefix):
-               user_guess = user_input[len(command_prefix):].strip()  # Extracts the guess after '/seize'
+        # Ignore the command and bot mention, take the guess part only
+        if len(command_parts) > 1:
+            user_guess = command_parts[-1].strip()  # Last part is user's guess
         else:
-            user_guess = user_input
+            user_guess = ""
 
         wrong_letter = user_guess
 
