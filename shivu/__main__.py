@@ -388,12 +388,20 @@ async def guess(update: Update, context: CallbackContext) -> None:
             reply_markup=InlineKeyboardMarkup(keyboard)
                        )
     else:
-        # Assuming `update.message.text` contains the user's guess
-        user_guess = update.message.text.strip()  # Ensure it's not empty and remove extra spaces
+        # Extracting user guess after the command
+        user_input = update.message.text.strip()  # Full user input
+        command_prefix = "/seize"  # Your bot command prefix
+
+        # Remove the command from the input
+        if user_input.startswith(command_prefix):
+               user_guess = user_input[len(command_prefix):].strip()  # Extracts the guess after '/seize'
+        else:
+            user_guess = user_input
+
         wrong_letter = user_guess
 
         # Prepare the retry message with a character link
-        message_link = character_message_links.get(chat_id, "#")  # Fallback to "#"
+        message_link = character_message_links.get(chat_id, "#")
         keyboard = [[InlineKeyboardButton("★ See Character ★", url=message_link)]]
 
         await update.message.reply_text(
