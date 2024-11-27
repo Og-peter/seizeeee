@@ -391,13 +391,17 @@ async def guess(update: Update, context: CallbackContext) -> None:
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
     else:
+        # Assume `wrong_letter` contains the letter the user guessed incorrectly
+        wrong_letter = user_guess  # Replace `user_guess` with the actual variable holding the guessed letter
+
         # Prepare the retry message with a character link
-        message_link = character_message_links.get(chat_id, "#")
+        message_link = character_message_links.get(chat_id, "#")  # Get the link or fallback to "#"
         keyboard = [[InlineKeyboardButton("★ See Character ★", url=message_link)]]
+
         await update.message.reply_text(
-            '❌ Incorrect guess! Please try again.',
-            reply_markup=InlineKeyboardMarkup(keyboard)
-                )
+        f"❌ Wrong guess: '{wrong_letter}'! Please try again.",  # Include the wrong letter in the message
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
         
 # Assuming rarity_map and rarity_active are predefined dictionaries
 # rarity_map = {1: "Common", 2: "Rare", ...}
