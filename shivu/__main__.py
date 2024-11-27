@@ -330,10 +330,10 @@ async def guess(update: Update, context: CallbackContext) -> None:
         guessed_time_str = datetime.fromtimestamp(time_sent).strftime("%Y-%m-%d %H:%M:%S")
 
         if chat_id not in first_correct_guesses:
-            first_correct_guesses[chat_id] = {'user': update.effective_user, 'character': character['name'], 'time': guessed_time_str}
+            first_correct_guesses[chat_id] = []
 
         if user_id not in [user.id for user in first_correct_guesses[chat_id]]:
-            first_correct_guesses[chat_id]['user'] = update.effective_user
+            first_correct_guesses[chat_id].append(update.effective_user)
 
             # Update user database
             user = await user_collection.find_one({'id': user_id})
