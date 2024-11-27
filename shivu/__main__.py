@@ -257,6 +257,7 @@ Here are the details:""",
                 parse_mode="HTML"
             )
         await query.answer()
+application.add_handler(CallbackQueryHandler(placeholder_callback, pattern=r"info_\d+"))
 
 async def guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
@@ -440,8 +441,6 @@ async def set_off(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 # Register handlers
 application.add_handler(CommandHandler('set_on', set_on, block=False))
 application.add_handler(CommandHandler('set_off', set_off, block=False))
-
-application.add_handler(CallbackQueryHandler(placeholder_callback, pattern=r"info_\d+"))
 
 def main() -> None:
     """Run bot."""
