@@ -5,7 +5,6 @@ import random
 import re
 import asyncio
 import math
-import info_callback
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters, ContextTypes, Application, CallbackQueryHandler, CallbackContext
