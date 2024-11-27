@@ -5,7 +5,7 @@ class Development:
     # Define all the required configurations here
     api_id = 29098103
     api_hash = "06baef4020832888ccf3ebf4e746d52b"
-    TOKEN = "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"  # Replace with your actual bot token
+    TOKEN = "7335799800:AAG9rnuM3yl2n7Qy0DSrvqBAx_f9rpDR1go"  # Replace with your actual bot token
     GROUP_ID = -1002104939708
     CHARA_CHANNEL_ID = -1002049694247
     mongo_url = "mongodb+srv://seizewaifubot:seizewaifubot@itachi.9qya0.mongodb.net/?retryWrites=true&w=majority&appName=itachi"  # Replace with your actual MongoDB URL
