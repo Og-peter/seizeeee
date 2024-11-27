@@ -405,7 +405,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
         keyboard = [[InlineKeyboardButton("★ See Character ★", url=message_link)]]
 
         await update.message.reply_text(
-                  f"❌ Wrong guess: '{wrong_letter}'! Please try again.",
+                  f"❌ Wrong guess: '{wrong_letter}'!\n\nPlease try again.",
         reply_markup=InlineKeyboardMarkup(keyboard)
 )
         
