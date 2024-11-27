@@ -242,7 +242,7 @@ Here are the details:""",
     context.job_queue.run_once(character_flew_away, 120)
 
     # Define the callback function first
-    async def info_callback(update: Update, context: CallbackContext):
+    async def placeholder_callback(update: Update, context: CallbackContext):
         query = update.callback_query
         character_id = query.data.split("_")[1]
         character = await collection.find_one({"id": character_id})
@@ -441,7 +441,7 @@ async def set_off(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 application.add_handler(CommandHandler('set_on', set_on, block=False))
 application.add_handler(CommandHandler('set_off', set_off, block=False))
 
-application.add_handler(CallbackQueryHandler(info_callback, pattern=r"info_\d+"))
+application.add_handler(CallbackQueryHandler(placeholder_callback, pattern=r"info_\d+"))
 
 def main() -> None:
     """Run bot."""
