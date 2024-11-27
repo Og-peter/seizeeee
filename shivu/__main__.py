@@ -241,22 +241,40 @@ Here are the details:""",
 
     context.job_queue.run_once(character_flew_away, 120)
 
-    # Define the callback function first
+    # Define the callback function
     async def placeholder_callback(update: Update, context: CallbackContext):
-        query = update.callback_query
-        character_id = query.data.split("_")[1]
-        character = await collection.find_one({"id": character_id})
+    query = update.callback_query
 
-        if character:
-            await query.message.reply_photo(
-                photo=character['img_url'],
-                caption=f"<b>📜 Character Details:</b>\n"
-                        f"🌸 <b>Name:</b> {character['name']}\n"
-                        f"❇️ <b>Anime:</b> {character['anime']}\n"
-                        f"💎 <b>Rarity:</b> {character['rarity']}",
-                parse_mode="HTML"
-            )
-        await query.answer()
+    # Acknowledge the callback query to avoid "button still active" issues
+    await query.answer()
+
+    # Extract the character ID from the callback query data
+    character_id = query.data.split("_")[1]
+
+    # Retrieve the character details from the database
+    character = await collection.find_one({"id": character_id})
+
+    # Check if the character exists
+    if character:
+        # Reply with the character's details and image
+        await query.message.reply_photo(
+            photo=character['img_url'],
+            caption=(
+                f"<b>📜 Character Details:</b>\n"
+                f"🌸 <b>Name:</b> {character['name']}\n"
+                f"❇️ <b>Anime:</b> {character['anime']}\n"
+                f"💎 <b>Rarity:</b> {character['rarity']}"
+            ),
+            parse_mode="HTML"
+        )
+    else:
+        # Inform the user if the character is not found
+        await query.message.reply_text(
+            "<b>❌ Character not found!</b>",
+            parse_mode="HTML"
+        )
+
+# Add the handler to the application
 application.add_handler(CallbackQueryHandler(placeholder_callback, pattern=r"info_\d+"))
 
 async def guess(update: Update, context: CallbackContext) -> None:
