@@ -179,10 +179,12 @@ async def view_auction(client, message: t.Message):
 
     # Check if there are bids in the auction
     if auction_data['bids']:
-        top_bids = "\n".join(
-            [f"{idx + 1}. {await bot.get_users(bid['user_id']).mention} - {bid['amount']} coins" 
-             for idx, bid in enumerate(sorted(auction_data['bids'], key=lambda x: x['amount'], reverse=True))]
-        )
+        top_bids_list = []
+        for idx, bid in enumerate(sorted(auction_data['bids'], key=lambda x: x['amount'], reverse=True)):
+            user = await bot.get_users(bid['user_id'])
+            mention = f"[{user.first_name}](tg://user?id={user.id})"  # Create a proper mention
+            top_bids_list.append(f"{idx + 1}. {mention} - {bid['amount']} coins")
+        top_bids = "\n".join(top_bids_list)
     else:
         top_bids = "No bids have been placed yet."
 
