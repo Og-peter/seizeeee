@@ -243,7 +243,7 @@ Here are the details:""",
 
     # Define the callback function
     async def placeholder_callback(update: Update, context: CallbackContext):
-    query = update.callback_query
+        query = update.callback_query
 
     # Acknowledge the callback query to avoid "button still active" issues
     await query.answer()
