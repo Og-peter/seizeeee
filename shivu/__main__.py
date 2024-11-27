@@ -12,6 +12,7 @@ from shivu import collection, top_global_groups_collection, group_user_totals_co
 from shivu import application, SUPPORT_CHAT, UPDATE_CHAT, OWNER_ID, sudo_users, db, LOGGER
 from shivu import set_on_data, set_off_data
 from shivu.modules import ALL_MODULES
+from datetime import datetime
 
 locks = {}
 message_counters = {}
@@ -284,10 +285,13 @@ async def guess(update: Update, context: CallbackContext) -> None:
 
     # Check if the character has already been guessed
     if chat_id in first_correct_guesses:
-        correct_guess_user = first_correct_guesses[chat_id]
+        correct_guess_user = first_correct_guesses[chat_id]['user']
+        seized_character = first_correct_guesses[chat_id]['character']
+        time_guessed = first_correct_guesses[chat_id]['time']
         user_link = f'<a href="tg://user?id={correct_guess_user.id}">{correct_guess_user.first_name}</a>'
         await update.message.reply_text(
-            f'🌟 This character has been seized by {user_link}!\n'
+            f'🌟 This character <b>{seized_character}</b> has already been seized by {user_link}!\n'
+            f'⏱️ Guessed at: <b>{time_guessed}</b>\n'
             f'🍵 Wait for the next character to spawn... 🌌',
             parse_mode='HTML'
         )
@@ -296,7 +300,6 @@ async def guess(update: Update, context: CallbackContext) -> None:
     # Retrieve the user's guess
     guess = ' '.join(context.args).lower() if context.args else ''
 
-    # Check for invalid characters in the guess
     if "()" in guess or "&" in guess.lower():
         await update.message.reply_text(
             "🔒 Sorry, invalid input! Please avoid '&' and special characters.",
@@ -304,16 +307,12 @@ async def guess(update: Update, context: CallbackContext) -> None:
         )
         return
 
-    # Retrieve character information
     character = last_characters[chat_id]
     character_name = character['name'].lower()
     name_parts = character_name.split()
 
-    # Check if the guess is correct
     if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
-        # Record the correct guess time
         time_sent = None
-
         if isinstance(sent_characters.get(chat_id), dict):
             time_sent = sent_characters[chat_id].get(character['id'], time.time())
         elif isinstance(sent_characters.get(chat_id), list):
@@ -328,12 +327,13 @@ async def guess(update: Update, context: CallbackContext) -> None:
         time_taken = time.time() - time_sent
         minutes, seconds = divmod(int(time_taken), 60)
 
-        # Add the character to both correct guessers
+        guessed_time_str = datetime.fromtimestamp(time_sent).strftime("%Y-%m-%d %H:%M:%S")
+
         if chat_id not in first_correct_guesses:
-            first_correct_guesses[chat_id] = []
+            first_correct_guesses[chat_id] = {'user': update.effective_user, 'character': character['name'], 'time': guessed_time_str}
 
         if user_id not in [user.id for user in first_correct_guesses[chat_id]]:
-            first_correct_guesses[chat_id].append(update.effective_user)
+            first_correct_guesses[chat_id]['user'] = update.effective_user
 
             # Update user database
             user = await user_collection.find_one({'id': user_id})
@@ -358,7 +358,6 @@ async def guess(update: Update, context: CallbackContext) -> None:
                     'characters': [character],
                 })
 
-            # Update group-specific user totals
             group_user_total = await group_user_totals_collection.find_one({'user_id': user_id, 'group_id': chat_id})
             if group_user_total:
                 await group_user_totals_collection.update_one(
@@ -374,13 +373,11 @@ async def guess(update: Update, context: CallbackContext) -> None:
                     'count': 1,
                 })
 
-        # Prepare the inline keyboard
         keyboard = [[InlineKeyboardButton(
             f"🏮 {escape(update.effective_user.first_name)}'s Harem 🏮",
             switch_inline_query_current_chat=f"collection.{user_id}"
         )]]
 
-        # Send the success message
         await update.message.reply_text(
             f'✅ <b><a href="tg://user?id={user_id}">{escape(update.effective_user.first_name)}</a></b> You got a new character!\n\n'
             f'🌸 𝗡𝗔𝗠𝗘: <b>{last_characters[chat_id]["name"]}</b>\n'
@@ -389,7 +386,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
             f'⏱️ Time taken: <b>{minutes}m {seconds}s</b>',
             parse_mode='HTML',
             reply_markup=InlineKeyboardMarkup(keyboard)
-        )
+                       )
     else:
         # Assume `wrong_letter` contains the letter the user guessed incorrectly
         wrong_letter = user_guess  # Replace `user_guess` with the actual variable holding the guessed letter
