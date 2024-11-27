@@ -241,7 +241,7 @@ Here are the details:""",
 
     context.job_queue.run_once(character_flew_away, 120)
 
-    # Handle info button callback
+    # Define the callback function first
     async def info_callback(update: Update, context: CallbackContext):
         query = update.callback_query
         character_id = query.data.split("_")[1]
