@@ -274,8 +274,6 @@ Here are the details:""",
             parse_mode="HTML"
         )
 
-# Add the handler to the application
-application.add_handler(CallbackQueryHandler(placeholder_callback, pattern=r"info_\d+"))
 
 async def guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
