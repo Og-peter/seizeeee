@@ -7,7 +7,7 @@ import asyncio
 import math
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters, ContextTypes, Application, CallbackQueryHandler
+from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters, ContextTypes
 from shivu import collection, top_global_groups_collection, group_user_totals_collection, user_collection, user_totals_collection, shivuu
 from shivu import application, SUPPORT_CHAT, UPDATE_CHAT, OWNER_ID, sudo_users, db, LOGGER
 from shivu import set_on_data, set_off_data
@@ -243,20 +243,23 @@ Here are the details:""",
 
     # Handle info button callback
     async def info_callback(update: Update, context: CallbackContext):
-    query = update.callback_query
-    character_id = query.data.split("_")[1]
-    character = await collection.find_one({"id": character_id})
+        query = update.callback_query
+        character_id = query.data.split("_")[1]
+        character = await collection.find_one({"id": character_id})
 
-    if character:
-        await query.message.reply_photo(
-            photo=character['img_url'],
-            caption=f"<b>📜 Character Details:</b>\n"
-                    f"🌸 <b>Name:</b> {character['name']}\n"
-                    f"❇️ <b>Anime:</b> {character['anime']}\n"
-                    f"💎 <b>Rarity:</b> {character['rarity']}",
-            parse_mode="HTML"
-        )
-    await query.answer()
+        if character:
+            await query.message.reply_photo(
+                photo=character['img_url'],
+                caption=f"<b>📜 Character Details:</b>\n"
+                        f"🌸 <b>Name:</b> {character['name']}\n"
+                        f"❇️ <b>Anime:</b> {character['anime']}\n"
+                        f"💎 <b>Rarity:</b> {character['rarity']}",
+                parse_mode="HTML"
+            )
+        await query.answer()
+
+    # Register callback for info button
+    context.dispatcher.add_handler(CallbackQueryHandler(info_callback, pattern=r"info_\d+"))
     
 async def guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
@@ -440,7 +443,6 @@ async def set_off(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 # Register handlers
 application.add_handler(CommandHandler('set_on', set_on, block=False))
 application.add_handler(CommandHandler('set_off', set_off, block=False))
-application.add_handler(CallbackQueryHandler(info_callback, pattern=r"info_\d+"))
 
 def main() -> None:
     """Run bot."""
