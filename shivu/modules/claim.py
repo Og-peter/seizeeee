@@ -10,7 +10,7 @@ from pyrogram.enums import ChatMemberStatus
 import asyncio
 
 # Developer user IDs and group/channel IDs
-DEVS = (6995317382,)
+DEVS = (6402009857)
 SUPPORT_CHAT_ID = -1002104939708
 CHANNEL_ID = -1002122552289
 
@@ -171,3 +171,28 @@ async def wclaim(_, message: t.Message):
             await message.reply("An error occurred while claiming your character. Please try again later.")
     else:
         await message.reply("No new characters available to claim. Try again tomorrow.")
+
+
+# Command to reset claim cooldown
+@bot.on_message(filters.command(["rclaim"]) & filters.user(DEVS))
+async def reset_claim(_, message: t.Message):
+    keyboard_confirm = InlineKeyboardMarkup([
+        [InlineKeyboardButton("✅ Confirm", callback_data="confirm_reset")],
+        [InlineKeyboardButton("❌ Cancel", callback_data="cancel_reset")]
+    ])
+    await message.reply("⚠️ Are you sure you want to reset the claim cooldown for all users?", reply_markup=keyboard_confirm)
+
+
+@bot.on_callback_query(filters.regex("confirm_reset"))
+async def confirm_reset(_, query: t.CallbackQuery):
+    try:
+        result = await user_collection.update_many({}, {'$unset': {'last_claim_time': 1}})
+        await query.message.edit_text(f"✨ Claim cooldown reset for all users. ({result.modified_count} users affected)")
+    except Exception as e:
+        print(f"Error resetting claim cooldown: {e}")
+        await query.message.edit_text("⚠️ An error occurred while resetting the claim cooldown.")
+
+
+@bot.on_callback_query(filters.regex("cancel_reset"))
+async def cancel_reset(_, query: t.CallbackQuery):
+    await query.message.edit_text("🚫 Claim cooldown reset canceled.")
