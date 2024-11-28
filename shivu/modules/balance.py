@@ -19,6 +19,7 @@ from shivu import sudo_users_collection, user_collection
 from shivu.modules.database.sudo import is_user_sudo
 
 cooldowns = {}
+user_last_command_times = {}
 ban_user_ids = {5553813115}
 logs_group_id = -1001992198513
 logs = {logs_group_id}
