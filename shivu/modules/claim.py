@@ -71,8 +71,7 @@ async def get_unique_characters(receiver_id, target_rarities=['⚪️ Common', '
             {'$sample': {'size': 1}}  # Adjust the number of characters retrieved here
         ]
 
-        cursor = collection.aggregate(pipeline)
-        characters = await cursor.to_list(length=None)
+        characters = await collection.aggregate(pipeline).to_list(length=1)
         return characters
     except Exception as e:
         print(f"Error fetching characters: {e}")
