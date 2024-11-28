@@ -10,7 +10,7 @@ from pyrogram.enums import ChatMemberStatus
 import asyncio
 
 # Developer user IDs and group/channel IDs
-DEVS = (6402009857)
+DEVS = (6402009857,)
 SUPPORT_CHAT_ID = -1002104939708
 CHANNEL_ID = -1002122552289
 
