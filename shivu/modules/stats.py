@@ -13,7 +13,7 @@ async def show_database(update: Update, context: CallbackContext) -> None:
 
     try:
         # Fetch counts from the database
-        total_characters = await collection.count_documents({})
+        total_characters = await collection.count_documents({}) or 0
         total_users = await user_collection.count_documents({"type": "user"}) or 0
         total_chats = await user_collection.count_documents({"type": "chat"}) or 0
         total_waifus = await collection.count_documents({"is_waifu": True}) or 0
