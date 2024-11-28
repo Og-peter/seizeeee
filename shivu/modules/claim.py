@@ -11,6 +11,7 @@ import asyncio
 
 # Developer user IDs and group/channel IDs
 DEVS = (6402009857,)
+DEvs = (2627273637,)
 SUPPORT_CHAT_ID = -1002104939708
 CHANNEL_ID = -1002122552289
 
@@ -94,7 +95,7 @@ async def wclaim(_, message: t.Message):
     mention = message.from_user.mention
 
     # Check if user is banned
-    if user_id in DEv:
+    if user_id in DEvs:
         return await message.reply("🚫 Sorry, you are banned from using this command.")
 
     # Membership check
