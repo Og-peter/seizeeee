@@ -94,7 +94,7 @@ async def wclaim(_, message: t.Message):
     mention = message.from_user.mention
 
     # Check if user is banned
-    if user_id in DEVS:
+    if user_id in DEv:
         return await message.reply("🚫 Sorry, you are banned from using this command.")
 
     # Membership check
