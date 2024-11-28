@@ -40,7 +40,6 @@ async def check_membership(user_id):
         ChatMemberStatus.OWNER
     ]
 
-    # Check membership in the support group
     try:
         member_group = await bot.get_chat_member(SUPPORT_CHAT_ID, user_id)
         is_member_group = member_group.status in valid_statuses
@@ -49,7 +48,6 @@ async def check_membership(user_id):
     except Exception as e:
         print(f"Error checking group membership: {e}")
 
-    # Check membership in the channel
     try:
         member_channel = await bot.get_chat_member(CHANNEL_ID, user_id)
         is_member_channel = member_channel.status in valid_statuses
@@ -63,15 +61,17 @@ async def check_membership(user_id):
 # Function to get unique characters
 async def get_unique_characters(receiver_id, target_rarities=['⚪️ Common', '🔵 Medium', '🟠 Rare', '🟡 Legendary', '👶 Chibi', '💮 Exclusive']):
     try:
-        user_data = await user_collection.find_one({'id': receiver_id}, {'characters': 1})
-        owned_character_ids = [char['id'] for char in user_data.get('characters', [])]
+        user_data = await user_collection.find_one({'id': receiver_id})
+        owned_character_ids = [char['id'] for char in user_data.get('characters', [])] if user_data else []
 
         pipeline = [
             {'$match': {'rarity': {'$in': target_rarities}, 'id': {'$nin': owned_character_ids}}},
-            {'$sample': {'size': 1}}  # Adjust the number of characters retrieved here
+            {'$sample': {'size': 1}}
         ]
 
         characters = await collection.aggregate(pipeline).to_list(length=1)
+        if not characters:
+            print("No characters found")
         return characters
     except Exception as e:
         print(f"Error fetching characters: {e}")
@@ -121,12 +121,11 @@ async def wclaim(_, message: t.Message):
     if not user_data:
         await user_collection.insert_one({'id': user_id, 'characters': [], 'last_claim_time': None})
 
-    # Check last claim time
     now = datetime.utcnow()
     last_claim_time = user_data.get('last_claim_time')
 
     if last_claim_time and last_claim_time.date() == now.date():
-        next_claim_time = (last_claim_time + timedelta(days=1))
+        next_claim_time = last_claim_time + timedelta(days=1)
         next_claim_time_str = next_claim_time.strftime("%H:%M:%S")
         return await message.reply_text(
             f"✨ You’ve already claimed today. Try again tomorrow at {next_claim_time_str}!"
@@ -145,12 +144,10 @@ async def wclaim(_, message: t.Message):
         await animation_message.edit_text(msg)
 
     # Update last claim time and schedule a cooldown notification
-    next_claim_time = now + timedelta(days=1)
     await user_collection.update_one({'id': user_id}, {'$set': {'last_claim_time': now}})
-
     scheduler.add_job(
         send_cooldown_notification,
-        trigger=DateTrigger(run_date=next_claim_time),
+        trigger=DateTrigger(run_date=now + timedelta(days=1)),
         args=[user_id, mention]
     )
 
