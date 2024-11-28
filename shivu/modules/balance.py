@@ -364,25 +364,29 @@ async def weekly_reward(_, message):
         f"📅 <b>Current Streak:</b> {weekly_streak} weeks\n"
         )
 
+# Assuming `user_collection` and `send_start_button` are already defined
+# Dictionary to track user cooldowns
+user_last_command_times = {}
+
 @bot.on_message(filters.command("tesure"))
 async def tesure(_, message: Message):
+    # Extract user information
     user_id = message.from_user.id
-    first_name = message.from_user.first_name.strip()
+    first_name = message.from_user.first_name.strip() if message.from_user.first_name else ""
     last_name = message.from_user.last_name.strip() if message.from_user.last_name else ""
     current_time = datetime.utcnow()
 
-    # Check if the user is sending commands too quickly
-    if user_id in user_last_command_times and (current_time - user_last_command_times[user_id]).total_seconds() < 5:
-        await message.reply_text("⏳ **You're sending commands too quickly! Please wait a moment.**")
-        return
+    # Cooldown for sending commands too quickly
+    if user_id in user_last_command_times:
+        time_since_last_command = (current_time - user_last_command_times[user_id]).total_seconds()
+        if time_since_last_command < 5:
+            await message.reply_text("⏳ **You're sending commands too quickly! Please wait a moment.**")
+            return
 
-    # Update the last command time
+    # Update the user's last command time
     user_last_command_times[user_id] = current_time
 
-    # Debugging: log the user's name
-    print(f"Debug: User's first name is '{first_name}', last name is '{last_name}'")
-
-    # Check for specific tags in both first and last names
+    # Check for required and disallowed tags
     required_tag = "˹ 𝐃ʏɴᴧϻɪᴄ ˼"
     disallowed_tag = "⸻꯭፝֟͠DCS 𐀔"
 
@@ -409,18 +413,19 @@ async def tesure(_, message: Message):
     if last_claimed_time:
         last_claimed_time = last_claimed_time.replace(tzinfo=None)
 
-    # Check cooldown period (30 minutes)
-    if last_claimed_time and (current_time - last_claimed_time) < timedelta(minutes=30):
-        remaining_time = timedelta(minutes=30) - (current_time - last_claimed_time)
+    # Check if cooldown period (30 minutes) has passed
+    cooldown_period = timedelta(minutes=30)
+    if last_claimed_time and (current_time - last_claimed_time) < cooldown_period:
+        remaining_time = cooldown_period - (current_time - last_claimed_time)
         minutes, seconds = divmod(remaining_time.seconds, 60)
         await message.reply_text(f"⏰ **Try again in `{minutes}:{seconds:02}` minutes!**")
         return
 
-    # Reward tiers
-    reward = random.randint(5000000, 10000000)
-    if reward > 9500000:
+    # Calculate reward
+    reward = random.randint(5_000_000, 10_000_000)
+    if reward > 9_500_000:
         luck_factor = "🌟 Ultra Lucky! 🌟"
-    elif reward > 7500000:
+    elif reward > 7_500_000:
         luck_factor = "🔥 Very Lucky!"
     else:
         luck_factor = "💎 Lucky!"
@@ -431,7 +436,7 @@ async def tesure(_, message: Message):
         {'$inc': {'balance': reward}, '$set': {'last_tesure_reward': current_time}}
     )
 
-    # Success message with a reward image
+    # Send reward image and message
     reward_image = "https://telegra.ph/file/1725558c206507d3e36ee.jpg"
     await message.reply_photo(
         photo=reward_image,
