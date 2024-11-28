@@ -76,49 +76,52 @@ async def exchange(update: Update, context: CallbackContext):
 
     if not args or len(args) < 2:
         await update.message.reply_text(
-            "💠 To exchange characters: `/exchange <old_character_name> <target_rarity>`"
+            "💠 **Usage:** `/exchange <old_character_id> <target_rarity>`\n\n"
+            "🌟 **Example:** `/exchange 12345 Legendary`"
         )
         return
 
-    old_character_name = args[0]
+    old_character_id = args[0]
     target_rarity = args[1].capitalize()
 
-    # Find old character
+    # Find old character by ID
     characters = user_data["characters"]
-    old_character = next((c for c in characters if c["name"] == old_character_name), None)
+    old_character = next((c for c in characters if str(c["id"]) == old_character_id), None)
 
     if not old_character:
-        await update.message.reply_text(f"❌ Character '{old_character_name}' not found!")
+        await update.message.reply_text(f"❌ **Character with ID `{old_character_id}` not found!**")
         return
 
     if old_character["rarity"] == target_rarity:
-        await update.message.reply_text("❌ You cannot exchange for the same rarity.")
+        await update.message.reply_text("❌ **You cannot exchange for the same rarity.**")
         return
 
     if target_rarity not in rarity_costs:
         await update.message.reply_text(
-            "❌ Invalid rarity! Available rarities: Legendary, Exclusive, Limited Edition, Premium, Astral, Exotic, Valentine."
+            "❌ **Invalid rarity!**\n\n"
+            "🎨 **Available rarities:**\n`Legendary, Exclusive, Limited Edition, Premium, Astral, Exotic, Valentine`"
         )
         return
 
-    # Determine the lowest rarity character as the cost
+    # Determine the lowest rarity character as the tax
     lowest_character = get_lowest_rarity_character(characters)
     if not lowest_character:
-        await update.message.reply_text("❌ You don't have any characters to exchange!")
+        await update.message.reply_text("❌ **You don't have any characters available for tax!**")
         return
 
-    # Display warning about losing the lowest rarity character
     await update.message.reply_text(
         f"""
-⚠️ **Warning!** ⚠️  
+⚠️ **Exchange Details** ⚠️
 
-In this exchange:  
-🌀 You will lose your **lowest rarity character**:  
-✨ **{lowest_character['name']} (Rarity: {lowest_character['rarity']})**  
+🔄 **Character to Exchange:**  
+🆔 `{old_character['id']}` - ✨ `{old_character['name']}` (Rarity: `{old_character['rarity']}`)
 
-💠 Make sure you're okay with this before proceeding!  
+🌟 **Target Rarity:** `{target_rarity}`
 
-👉 **Next Step**: You can confirm or reject the exchange in the following prompt.
+💰 **Tax Character:**  
+🆔 `{lowest_character['id']}` - ✨ `{lowest_character['name']}` (Rarity: `{lowest_character['rarity']}`)
+
+💠 **Proceed only if you're willing to lose this character in tax!**
 """,
         parse_mode="Markdown",
     )
@@ -127,52 +130,45 @@ In this exchange:
     keyboard = [
         [
             InlineKeyboardButton(
-                "✅ Accept", callback_data=f"accept:{user_id}:{old_character_name}:{target_rarity}"
+                "✅ Confirm Exchange",
+                callback_data=f"accept:{user_id}:{old_character['id']}:{target_rarity}:{lowest_character['id']}",
             ),
-            InlineKeyboardButton("❌ Reject", callback_data="reject"),
+            InlineKeyboardButton("❌ Cancel", callback_data="reject"),
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(
-        f"""
-⚠️ **Confirm Exchange** ⚠️
-
-🌀 **Old Character:** `{old_character_name}`  
-🌟 **Target Rarity:** `{target_rarity}`  
-
-📜 **Cost:** Your lowest rarity character:  
-✨ **{lowest_character['name']} (Rarity: {lowest_character['rarity']})**
-
-💠 **Note:** Once accepted, your lowest rarity character will be removed as part of the exchange.
-""",
+        "💬 **Do you want to proceed?**",
         reply_markup=reply_markup,
-        parse_mode="Markdown",
     )
+
 
 async def handle_exchange_confirmation(update: Update, context: CallbackContext):
     query = update.callback_query
     data = query.data
 
     if data == "reject":
-        await query.message.edit_text("❌ Exchange rejected.")
+        await query.message.edit_text("❌ **Exchange cancelled.**")
         return
 
     if data.startswith("accept"):
-        _, user_id, old_character_name, target_rarity = data.split(":")
+        _, user_id, old_character_id, target_rarity, tax_character_id = data.split(":")
         user_id = int(user_id)
         user_data = get_user_data(user_id)
 
-        # Find and remove old character
+        # Remove old character and tax character
         characters = user_data["characters"]
-        old_character = next((c for c in characters if c["name"] == old_character_name), None)
-        characters.remove(old_character)
+        old_character = next((c for c in characters if str(c["id"]) == old_character_id), None)
+        tax_character = next((c for c in characters if str(c["id"]) == tax_character_id), None)
 
-        # Remove the lowest rarity character as the cost
-        lowest_character = get_lowest_rarity_character(characters)
-        characters.remove(lowest_character)
+        if old_character:
+            characters.remove(old_character)
+        if tax_character:
+            characters.remove(tax_character)
 
         # Add new character
         new_character = {
+            "id": random.randint(1000, 9999),
             "name": f"Hero_{target_rarity}_{random.randint(1000, 9999)}",
             "rarity": target_rarity,
         }
@@ -180,13 +176,15 @@ async def handle_exchange_confirmation(update: Update, context: CallbackContext)
 
         await query.message.edit_text(
             f"""
-🎉 **Exchange Successful!** 🎉  
+🎉 **Exchange Completed!** 🎉  
 
-🔄 You exchanged **{old_character_name}** and your lowest rarity character **{lowest_character['name']}**  
-🌟 **For a new character:**  
-✨ **{new_character['name']} (Rarity: {target_rarity})**  
+🆔 **Old Character Removed:** `{old_character['id']}` - ✨ `{old_character['name']}`  
+💰 **Tax Character Removed:** `{tax_character['id']}` - ✨ `{tax_character['name']}`  
 
-💡 Thank you for using the exchange feature!
+🌟 **New Character Added:**  
+🆔 `{new_character['id']}` - ✨ `{new_character['name']}` (Rarity: `{target_rarity}`)
+
+💡 **Thank you for using the exchange service!**
 """
         )
 
