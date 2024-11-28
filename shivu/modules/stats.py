@@ -2,6 +2,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, CommandHandler, CallbackQueryHandler
 from shivu import collection, application, user_collection
 
+
 async def show_database(update: Update, context: CallbackContext) -> None:
     # Bot owner ID(s)
     DEV_LIST = [6402009857]
@@ -12,13 +13,21 @@ async def show_database(update: Update, context: CallbackContext) -> None:
         return
 
     try:
-        # Fetch counts from the database
+        # Ensure data fetching works and provide fallbacks
         total_characters = await collection.count_documents({}) or 0
         total_users = await user_collection.count_documents({"type": "user"}) or 0
         total_chats = await user_collection.count_documents({"type": "chat"}) or 0
         total_waifus = await collection.count_documents({"is_waifu": True}) or 0
         total_animes = len(await collection.distinct("anime")) or 0
-        total_harems = await user_collection.count_documents({"has_harem": {"$exists": True, "$eq": True}}) or 0
+        total_harems = await user_collection.count_documents(
+            {"has_harem": {"$exists": True, "$eq": True}}
+        ) or 0
+
+        # Debug: Print results for validation
+        print(
+            f"Characters: {total_characters}, Users: {total_users}, Chats: {total_chats}, "
+            f"Waifus: {total_waifus}, Animes: {total_animes}, Harems: {total_harems}"
+        )
 
         # Count characters by rarity
         rarities = [
@@ -26,9 +35,12 @@ async def show_database(update: Update, context: CallbackContext) -> None:
             "🟡 Legendary", "💮 Exclusive", "🫧 Premium", 
             "🔮 Limited Edition", "🌸 Exotic", "🎐 Astral", "💞 Valentine"
         ]
-        rarity_counts = {rarity: await collection.count_documents({"rarity": rarity}) or 0 for rarity in rarities}
+        rarity_counts = {
+            rarity: await collection.count_documents({"rarity": rarity}) or 0
+            for rarity in rarities
+        }
 
-        # Construct the message with a stylish format
+        # Construct a message to display
         message = (
             "╭───────────✧───────────╮\n"
             "        🌟 **Bot Database Summary** 🌟\n"
@@ -53,16 +65,23 @@ async def show_database(update: Update, context: CallbackContext) -> None:
         # Send the constructed message with the inline keyboard
         await update.message.reply_text(message, reply_markup=reply_markup, parse_mode="Markdown")
     except Exception as e:
-        # Handle unexpected errors
-        await update.message.reply_text(f"⚠️ An error occurred:\n`{e}`", parse_mode="Markdown")
+        # Error handling with better feedback
+        print(f"Error occurred: {e}")  # Debugging
+        await update.message.reply_text(
+            f"⚠️ An error occurred while fetching database data:\n`{e}`",
+            parse_mode="Markdown",
+        )
+
 
 # Callback to handle the "Close" button
 async def close_message_callback(update: Update, context: CallbackContext) -> None:
-    # Remove the message when the "Close" button is clicked
     try:
         await update.callback_query.message.delete()
     except Exception as e:
-        await update.callback_query.answer(f"⚠️ Unable to delete the message: {e}", show_alert=True)
+        await update.callback_query.answer(
+            f"⚠️ Unable to delete the message: {e}", show_alert=True
+        )
+
 
 # Add the command handler to the application
 application.add_handler(CommandHandler("stats", show_database, block=False))
