@@ -14,11 +14,11 @@ async def show_database(update: Update, context: CallbackContext) -> None:
     try:
         # Fetch counts from the database
         total_characters = await collection.count_documents({})
-        total_users = await user_collection.count_documents({"type": "user"})
-        total_chats = await user_collection.count_documents({"type": "chat"})
-        total_waifus = await collection.count_documents({"is_waifu": True})
-        total_animes = len(await collection.distinct("anime"))
-        total_harems = await user_collection.count_documents({"has_harem": True})
+        total_users = await user_collection.count_documents({"type": "user"}) or 0
+        total_chats = await user_collection.count_documents({"type": "chat"}) or 0
+        total_waifus = await collection.count_documents({"is_waifu": True}) or 0
+        total_animes = len(await collection.distinct("anime")) or 0
+        total_harems = await user_collection.count_documents({"has_harem": {"$exists": True, "$eq": True}}) or 0
 
         # Count characters by rarity
         rarities = [
@@ -26,7 +26,7 @@ async def show_database(update: Update, context: CallbackContext) -> None:
             "🟡 Legendary", "💮 Exclusive", "🫧 Premium", 
             "🔮 Limited Edition", "🌸 Exotic", "🎐 Astral", "💞 Valentine"
         ]
-        rarity_counts = {rarity: await collection.count_documents({"rarity": rarity}) for rarity in rarities}
+        rarity_counts = {rarity: await collection.count_documents({"rarity": rarity}) or 0 for rarity in rarities}
 
         # Construct the message with a stylish format
         message = (
