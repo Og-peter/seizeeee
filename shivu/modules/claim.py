@@ -7,7 +7,7 @@ import asyncio
 from pyrogram.errors.exceptions.bad_request_400 import UserNotParticipant
 from pyrogram.enums import ChatMemberStatus
 
-OWNER_ID = 123456789  # Replace with the owner user ID
+OWNER_ID = 6402009857  # Replace with the owner user ID
 DEVS = (6995317382,)
 SUPPORT_CHAT_ID = -1002104939708
 CHANNEL_ID = -1002122552289
