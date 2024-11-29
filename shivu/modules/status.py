@@ -78,16 +78,13 @@ async def my_profile(update: Update, context: CallbackContext):
                 f"ㅤ◦•●◉✿ ᴜsᴇʀ ɪɴғᴏʀᴍᴀᴛɪᴏɴ ✿◉●•◦\n"
                 f"▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭\n"
                 f"❍ ᴜsᴇʀ ɪᴅ ɴᴏ. ▷ {user_id}\n"
-                f"❍ ᴜsᴇʀɴᴀᴍᴇ ▷ {username}\n"
                 f"❍ ᴍᴇɴᴛɪᴏɴ ▷ {user_tag}\n"
-                f"❍ ʙɪᴏ ▷ {user_bio}\n"
                 f"━─━────༺༻────━─━\n"
                 f"❍ ᴄᴏɪɴ ▷ {user_balance}\n"
                 f"❍ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ ▷ {characters_count}/{total_characters} ({character_percentage:.2f}%)\n"
                 f"❍ ᴘʀᴏɢʀᴇss ʙᴀʀ ▷ {progress_bar}\n"
                 f"❍ ɢʟᴏʙᴀʟ ʀᴀɴᴋ ▷ {global_rank}/{total_users}\n"
                 f"❍ ʀᴀʀɪᴛʏ ᴄᴏᴜɴᴛ:\n{rarity_message}\n"
-                f"❖ ᴍᴀᴅᴇ ʙʏ ➛ [DYNAMIC NETWORK](https://t.me/the_dynamic_network)\n"
                 f"▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭"
             )
 
