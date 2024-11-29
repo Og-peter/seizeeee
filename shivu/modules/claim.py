@@ -63,7 +63,7 @@ async def get_unique_character(receiver_id, target_rarities=None):
         user_data = await user_collection.find_one({'id': receiver_id}, {'characters': 1})
         owned_character_ids = [char['id'] for char in user_data.get('characters', [])] if user_data else []
 
-        target_rarities = target_rarities or ['🔵 Low', '🟢 Medium', '🔴 High', '🟡 Nobel', '🔮 Limited', '🥵 Nudes']
+        target_rarities = target_rarities or ['⚪️ Common', '🔵 Medium', '🟠 Rare', '🟡 Legendary', '👶 Chibi', '💮 Exclusive']
         pipeline = [
             {'$match': {'rarity': {'$in': target_rarities}, 'id': {'$nin': owned_character_ids}}},
             {'$sample': {'size': 1}}
