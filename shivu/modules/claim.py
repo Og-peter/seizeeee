@@ -82,7 +82,7 @@ async def get_unique_character(receiver_id, target_rarities=None):
         return None
 
 
-@bot.on_message(filters.command(["claim"]))
+@bot.on_message(filters.command(["wclaim"]))
 async def claim_command(_, message: t.Message):
     user_id = message.from_user.id
     mention = message.from_user.mention
