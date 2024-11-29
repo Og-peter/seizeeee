@@ -31,99 +31,24 @@ async def send_start_button(chat_id):
 async def check_balance(_, message: Message):
     user_id = message.from_user.id
     replied_user_id = None
-
-    # Check if the command was used as a reply
+    
     if message.reply_to_message:
         replied_user_id = message.reply_to_message.from_user.id
-
-    # If replying to a message, use the replied user's ID
+    
+    # Check if the command was used as a reply
     if replied_user_id:
         user_id = replied_user_id
-
+    
     # Check if the user is registered
     user_data = await user_collection.find_one({'id': user_id})
     if not user_data:
         await send_start_button(message.chat.id)
         return
-
-    # Get user's balance, rank, and last activity
     balance = user_data.get('balance', 0)
     formatted_balance = "{:,.0f}".format(balance)
-    rank_value = user_data.get('user_rank', 0)  # Assuming user_rank is a numeric value
-    user_rank = get_rank_description(rank_value)  # Get rank description based on value
-    last_activity = user_data.get('last_activity', 'Unknown')  # Assuming last_activity is stored
-
-    # Mention the user
-    user_mention = f"[{user_data.get('first_name', 'User')}](tg://user?id={user_id})"
-
-    # Add a video URL
-    video_url = "https://files.catbox.moe/t0o9g5.mp4"  # Replace with your video URL
-
-    # Compact and feature-rich custom message
-    custom_message = f"""
-💳 **Balance Overview** 💳
-
-👤 **User:** {user_mention}  
-💰 **Balance:** ₩ `{formatted_balance}`  
-📅 **Last Activity:** `{last_activity}`  
-
-"""
-
-    # Buttons for rank and balance
-    buttons = InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("🔍 View Balance", callback_data=f"view_balance_{user_id}"),
-            InlineKeyboardButton("📊 View Rank", callback_data=f"view_rank_{user_id}")
-        ]
-    ])
-
-    # Reply with a video, custom message, and buttons
-    await message.reply_video(video=video_url, caption=custom_message, reply_markup=buttons)
-
-def get_rank_description(rank_value):
-    """
-    Returns a string description of the rank based on the given rank value.
-    Adjust the ranges and descriptions as necessary.
-    """
-    if rank_value >= 1000:
-        return "🌟 Legendary"
-    elif rank_value >= 500:
-        return "🏅 Elite"
-    elif rank_value >= 100:
-        return "🥇 Pro"
-    elif rank_value >= 10:
-        return "🔰 Intermediate"
-    else:
-        return "🎖️ Novice"
-
-@app.on_callback_query()
-async def handle_callback_query(_, callback_query):
-    """
-    Handles button interactions for viewing balance or rank.
-    """
-    data = callback_query.data
-    user_id = int(data.split("_")[-1])  # Extract user ID from callback data
-
-    # Fetch user data
-    user_data = await user_collection.find_one({'id': user_id})
-    if not user_data:
-        await callback_query.answer("User data not found.", show_alert=True)
-        return
-
-    if "view_balance" in data:
-        balance = user_data.get('balance', 0)
-        formatted_balance = "{:,.0f}".format(balance)
-        await callback_query.message.edit_text(
-            f"💰 **Balance:** ₩ `{formatted_balance}`",
-            reply_markup=None
-        )
-    elif "view_rank" in data:
-        rank_value = user_data.get('user_rank', 0)
-        user_rank = get_rank_description(rank_value)
-        await callback_query.message.edit_text(
-            f"🏅 **Rank:** `{user_rank}`",
-            reply_markup=None
-        )
+    first_name = user_data.get('first_name', 'User')
+    # Reply to the user with their balance
+    await message.reply_text(f"{first_name}'s Wealth: ₩`{formatted_balance}`[.](https://telegra.ph/file/af20fd1f2bed03d2bc438.jpg)")
     
 # Command: Pay
 async def pay(update: Update, context: ContextTypes.DEFAULT_TYPE):
