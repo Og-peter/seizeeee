@@ -7,6 +7,7 @@ import asyncio
 from pyrogram.errors.exceptions.bad_request_400 import UserNotParticipant
 from pyrogram.enums import ChatMemberStatus
 
+OWNER_ID = 123456789  # Replace with the owner user ID
 DEVS = (6995317382,)
 SUPPORT_CHAT_ID = -1002104939708
 CHANNEL_ID = -1002122552289
@@ -177,3 +178,19 @@ async def claim_command(_, message: t.Message):
     else:
         await anim_msg.delete()
         return await message.reply_text("An unexpected error occurred. Please try again later.")
+@bot.on_message(filters.command(["reset_claims"]) & filters.user(OWNER_ID))
+async def reset_claims_command(_, message: t.Message):
+    """
+    Resets the claim cooldown for all users except developers.
+    Only the owner can use this command.
+    """
+    try:
+        # Fetch all users except DEVS and reset their claim cooldown
+        result = await user_collection.update_many(
+            {'id': {'$nin': DEVS}},  # Exclude DEVS from reset
+            {'$set': {'last_claim_time': None}}
+        )
+        reset_count = result.modified_count
+        await message.reply_text(f"✅ Successfully reset claim cooldown for {reset_count} users (excluding developers).")
+    except Exception as e:
+        await message.reply_text(f"⚠️ An error occurred while resetting claims: {e}")
