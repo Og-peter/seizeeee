@@ -52,15 +52,41 @@ def get_streak_bonus_message(mention, streak):
 # Handle Marry and Reject Button Press
 @bot.on_callback_query(filters.regex(r"^(marry|reject)_"))
 async def handle_marry_reject(client, callback_query: t.CallbackQuery):
-    action, user_id = callback_query.data.split('_')
+    action, user_id, character_id = callback_query.data.split('_')
     user_id = int(user_id)
 
+    # Check if the callback query is from the correct user
     if callback_query.from_user.id != user_id:
         await callback_query.answer("🚫 You can't interact with this!", show_alert=True)
         return
 
+    # Fetch user data
+    user_data = await user_collection.find_one({'id': user_id})
+    if not user_data:
+        await callback_query.answer("❌ User data not found!", show_alert=True)
+        return
+
     if action == "marry":
-        await callback_query.answer("💍 Congratulations on your new partner!", show_alert=True)
+        # Fetch the character details
+        character = await collection.find_one({'id': int(character_id)})
+        if character:
+            # Check if the character is already in the user's collection
+            if any(c['id'] == character['id'] for c in user_data.get('characters', [])):
+                await callback_query.answer("⚠️ Character is already in your collection!", show_alert=True)
+                return
+            
+            # Add the character to the user's collection
+            await user_collection.update_one(
+                {'id': user_id},
+                {'$push': {'characters': character}}
+            )
+            await callback_query.answer("💍 Congratulations on your new partner!", show_alert=True)
+            await callback_query.message.edit_caption(
+                f"🎉 {callback_query.from_user.mention}, you married **{character['name']}** from **{character['anime']}**! 💖"
+            )
+        else:
+            await callback_query.answer("❌ Character not found!", show_alert=True)
+
     elif action == "reject":
         await callback_query.answer("❌ Character rejected!", show_alert=True)
         await callback_query.message.delete()
@@ -90,21 +116,17 @@ async def dice(_: bot, message: t.Message):
         unique_characters = await get_unique_characters(user_id)
         if unique_characters:
             character = unique_characters[0]
-            await user_collection.update_one({'id': user_id}, {'$push': {'characters': character}})
-            leaderboard[mention] = leaderboard.get(mention, 0) + 1
-            roll_streaks[mention] = roll_streaks.get(mention, 0) + 1
             img_url = character['img_url']
             caption = get_congratulatory_message(mention, character)
             buttons = t.InlineKeyboardMarkup(
                 [
-                    [t.InlineKeyboardButton("💍 Marry", callback_data=f"marry_{user_id}"),
-                     t.InlineKeyboardButton("❌ Reject", callback_data=f"reject_{user_id}")]
+                    [
+                        t.InlineKeyboardButton("💍 Marry", callback_data=f"marry_{user_id}_{character['id']}"),
+                        t.InlineKeyboardButton("❌ Reject", callback_data=f"reject_{user_id}_{character['id']}")
+                    ]
                 ]
             )
             await message.reply_photo(img_url, caption=caption, reply_markup=buttons)
-
-            if roll_streaks[mention] > 1:
-                await message.reply_text(get_streak_bonus_message(mention, roll_streaks[mention]))
         else:
             await message.reply_text("💔 No unique characters found.")
     else:
