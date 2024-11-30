@@ -95,17 +95,28 @@ async def choose_character(client, callback_query):
         f"You are facing:\n{generate_health_bar(first_zombie[1]['hp'], first_zombie[1]['hp'])} {first_zombie[1]['emoji']} <b>{first_zombie[0]}</b>\n\n"
         f"<b>Your HP:</b> {generate_health_bar(battle_data['user_hp'], 100)}\n\n"
         f"Select your weapon or use an item:",
-        reply_markup=InlineKeyboardMarkup(
-            [
-                [InlineKeyboardButton(f"{data['emoji']} {weapon}", callback_data=f"attack_{weapon}")]
-                for weapon, data in weapons.items()
-            ] + [
-                [InlineKeyboardButton(f"{items[item]['emoji']} {item}", callback_data=f"item_{item}")]
-                for item in battle_data["items"]
-            ] + [
-                [InlineKeyboardButton("🛑 Stop Battle", callback_data="stop_battle")]
-            ]
-        )
+    reply_markup=InlineKeyboardMarkup(
+        [
+            # Weapons in rows of 3
+            *[
+                [
+                    InlineKeyboardButton(f"{data['emoji']} {weapon}", callback_data=f"attack_{weapon}")
+                    for weapon, data in list(weapons.items())[i:i+3]
+                ]
+                for i in range(0, len(weapons), 3)
+            ],
+            # Items in rows of 3
+            *[
+                [
+                    InlineKeyboardButton(f"{items[item]['emoji']} {item}", callback_data=f"item_{item}")
+                    for item in battle_data["items"][j:j+3]
+                ]
+                for j in range(0, len(battle_data["items"]), 3)
+            ],
+            # Stop button
+            [InlineKeyboardButton("🛑 Stop Battle", callback_data="stop_battle")]
+        ]
+    )
     )
 
 # Stop battle
