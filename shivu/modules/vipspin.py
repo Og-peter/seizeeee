@@ -6,7 +6,7 @@ from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext
 from shivu import application, collection, user_collection
 
-LOW_RARITIES = ["🔵 Common", "🟢 Medium", "🟠 Rare", "🟣 Chibi"]
+LOW_RARITIES = ["⚪ Common", "🔵 Medium", "🟠 Rare", "👶 Chibi"]
 HIGH_RARITIES = ["🔮 Limited Edition", "🫧 Premium", "💮 Exclusive", "🟡 Legendary"]
 
 # In-memory tracking for daily spins
