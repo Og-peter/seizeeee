@@ -83,14 +83,18 @@ async def handle_marry_reject(client, callback_query: t.CallbackQuery):
             )
             await callback_query.answer("💍 Congratulations on your new partner!", show_alert=True)
             await callback_query.message.edit_caption(
-                f"🎉 {callback_query.from_user.mention}, you married **{character['name']}** from **{character['anime']}**! 💖"
+                f"🎉 {callback_query.from_user.mention}, you married **{character['name']}** from **{character['anime']}**! 💖",
+                reply_markup=None  # Remove buttons after action
             )
         else:
             await callback_query.answer("❌ Character not found!", show_alert=True)
 
     elif action == "reject":
         await callback_query.answer("❌ Character rejected!", show_alert=True)
-        await callback_query.message.delete()
+        try:
+            await callback_query.message.delete()  # Delete message if reject is clicked
+        except Exception as e:
+            print(f"Error deleting message: {e}")
 
 # Main Dice/Marry Command
 @bot.on_message(filters.command(["dice", "marry"]))
