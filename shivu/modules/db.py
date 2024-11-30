@@ -62,23 +62,24 @@ async def start_game(_, message: t.Message):
         ),
     )
 
-# Function to handle waves
+
 @Client.on_callback_query(filters.regex("start_fight"))
 async def start_fight(_, callback_query: t.CallbackQuery):
+    await callback_query.answer()  # Acknowledge the callback
+
     user_id = callback_query.from_user.id
 
     if user_id not in player_data:
         await callback_query.message.reply_text("Start a new game using /startgame.")
         return
 
-    # Spawn a zombie for the wave
     wave = player_data[user_id]["zombie_wave"]
     zombie_type = random.choice(list(zombies.keys()))
     zombie_data = zombies[zombie_type].copy()
     player_data[user_id]["current_zombie"] = zombie_data
 
     await callback_query.message.reply_photo(
-        photo="https://files.catbox.moe/41tiv6.jpg",  # Replace with relevant image URL
+        photo="https://via.placeholder.com/512",  # Replace with a valid URL
         caption=(
             f"**Wave {wave}: {zombie_data['emoji']} {zombie_type}**\n\n"
             f"Zombie Health: {zombie_data['health']}\n"
@@ -87,17 +88,17 @@ async def start_fight(_, callback_query: t.CallbackQuery):
         ),
         reply_markup=InlineKeyboardMarkup(
             [
-                [
-                    InlineKeyboardButton(f"{guns[gun]['emoji']} {gun}", callback_data=f"gun_{gun}")
-                    for gun in guns.keys()
-                ]
+                [InlineKeyboardButton(f"{guns[gun]['emoji']} {gun}", callback_data=f"gun_{gun}")]
+                for gun in guns.keys()
             ]
         ),
     )
 
-# Function to handle gun selection and attacks
+
 @Client.on_callback_query(filters.regex(r"gun_(.+)"))
 async def attack(_, callback_query: t.CallbackQuery):
+    await callback_query.answer()  # Acknowledge the callback
+
     user_id = callback_query.from_user.id
     if user_id not in player_data or "current_zombie" not in player_data[user_id]:
         await callback_query.message.reply_text("Start a new game using /startgame.")
@@ -116,37 +117,29 @@ async def attack(_, callback_query: t.CallbackQuery):
         await callback_query.answer("Out of ammo! Reload or choose another gun.", show_alert=True)
         return
 
-    # Attack the zombie
+    # Attack
     player["ammo"][gun_name] -= 1
     zombie["health"] -= gun["damage"]
 
-    # Special gun effect
-    if gun.get("special") == "Burn":
-        zombie["health"] -= 10
-        await callback_query.answer("🔥 Burn effect! Extra 10 damage dealt.", show_alert=True)
-
     if zombie["health"] <= 0:
-        # Zombie defeated
         player["score"] += zombie["reward"]
         player["zombie_wave"] += 1
-
         await callback_query.message.reply_text(
             f"🎉 **Zombie Defeated!** 🎉\n\n"
             f"You earned {zombie['reward']} points.\n"
             f"Total Score: {player['score']}\n\n"
-            f"Type /fight to start the next wave!",
+            f"Type /zfight to start the next wave!",
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("Next Wave", callback_data="start_fight")]]
             ),
         )
     else:
-        # Zombie still alive, random chance of event
+        # Random event
         event_triggered = random.random() < 0.2
         if event_triggered:
             event = random.choice(random_events)
             if event["type"] == "heal":
-                player["health"] += event["value"]
-                player["health"] = min(player["health"], 100)  # Cap health at 100
+                player["health"] = min(player["health"] + event["value"], 100)
             elif event["type"] == "ammo":
                 for gun in guns:
                     player["ammo"][gun] += event["value"]
