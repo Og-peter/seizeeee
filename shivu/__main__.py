@@ -294,7 +294,7 @@ async def placeholder_callback(update: Update, context: CallbackContext):
             parse_mode="HTML"
         ) 
 
- async def guess(update: Update, context: CallbackContext) -> None:
+async def guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
 
