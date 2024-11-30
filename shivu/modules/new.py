@@ -2,6 +2,7 @@ from pyrogram import Client, filters
 from telegram.ext import CommandHandler, CallbackContext
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from pymongo import MongoClient
+from shivu import application
 import random
 import time
 from collections import defaultdict
