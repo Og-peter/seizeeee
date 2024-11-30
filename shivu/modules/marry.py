@@ -5,109 +5,108 @@ from shivu import user_collection, collection
 import random
 import time
 
-# Cooldown Dictionary
+# Cooldown Management
 cooldowns = {}
 
 # Leaderboard & Streak Tracking
 leaderboard = {}
 roll_streaks = {}
 
-# Target Rarities
+# Rarity Categories
 target_rarities = ['⚪️ Common', '🔵 Medium', '🟠 Rare', '🟡 Legendary', '👶 Chibi', '💮 Exclusive']
-
-# Log Channel ID (Replace with your own)
-LOGS_CHANNEL_ID = -1002446048543  # Your Logs Channel ID
 
 # Function to Fetch Unique Characters
 async def get_unique_characters(receiver_id, target_rarities=target_rarities):
     try:
         pipeline = [
-            {'$match': {'rarity': {'$in': target_rarities}, 'id': {'$nin': [char['id'] for char in (await user_collection.find_one({'id': receiver_id}, {'characters': 1}))['characters']]}}},
+            {
+                '$match': {
+                    'rarity': {'$in': target_rarities},
+                    'id': {'$nin': [char['id'] for char in (await user_collection.find_one({'id': receiver_id}, {'characters': 1}))['characters']]}
+                }
+            },
             {'$sample': {'size': 1}}
         ]
         cursor = collection.aggregate(pipeline)
-        characters = await cursor.to_list(length=None)
-        return characters
+        return await cursor.to_list(length=None)
     except Exception as e:
-        print(f"Error in fetching characters: {e}")
+        print(f"Error fetching characters: {e}")
         return []
 
-# Fun Congratulatory Message with Styled Fonts
+# Generate Congratulatory Message
 def get_congratulatory_message(mention, character):
-    messages = [
-        f"💥 ᴄᴏɴɢᴇᴀᴛᴜʟᴀᴛɪᴏɴs {mention}! ʏᴏᴜ'ᴠᴇ ᴊᴜsᴛ ᴍᴀʀʀɪᴇᴅ {character['name']} ғʀᴏᴍ {character['anime']} 💍!",
-        f"🌿 ʜᴀɪ {mention}! {character['name']} ғʀᴏᴍ {character['anime']} 🏵️ ɪs ᴡᴀɪᴛɪɴɢ ɪɴ ʏᴏᴜʀ ʜᴀʀᴇᴍ!"
-    ]
-    return random.choice(messages)
+    return f"🎉 {mention}, you just met **{character['name']}** from **{character['anime']}**! 💖 What will you do next?"
 
-# Failure Message with Styled Fonts
+# Generate Failure Message
 def get_rejection_message(mention):
-    messages = [
-        f"💔 ʜᴀʀs ʟᴜᴄᴋ, {mention}! sʜᴇ sʟɪᴘᴘᴇᴅ ᴀᴡᴀʏ ᴀɴᴅ ʟᴇғᴛ ʏᴏᴜ",
-        f"💀 ʙᴇᴛᴛᴇʀ ʟᴜᴄᴋ ɴᴇxᴛ ᴛɪᴍᴇ, {mention}. sʜᴇ ʀᴇғᴜsᴇᴅ ᴀɴᴅ ᴠᴀɴɪsʜᴇᴅ! 👻",
-    ]
-    return random.choice(messages)
+    return f"💔 Sorry, {mention}. No character this time. Keep trying!"
 
-# Cooldown Message with Emoji Countdown
+# Cooldown Message with Timer
 def get_cooldown_message(cooldown_time):
-    countdown_emojis = ['⏳', '⌛', '🕒']
-    return f"{random.choice(countdown_emojis)} 𝑷𝒍𝒆𝒂𝒔𝒆 𝒘𝒂𝒊𝒕 {cooldown_time} 𝒔𝒆𝒄𝒐𝒏𝒅𝒔 𝒃𝒆𝒇𝒐𝒓𝒆 𝒂𝒏𝒐𝒕𝒉𝒆𝒓 𝒕𝒓𝒚!"
+    return f"⏳ Please wait **{cooldown_time}** seconds before trying again."
 
 # Streak Bonus Message
 def get_streak_bonus_message(mention, streak):
-    return f"🫧 ᴡᴏᴡ {mention}, ʏᴏᴜ'ᴠᴇ ʀᴇᴀᴄʜᴇᴅ ᴀ sᴛʀᴇᴀᴋ ᴏғ {streak}! 🔥"
+    return f"🔥 Impressive, {mention}! You're on a streak of **{streak}** successful rolls!"
 
-# Marry Command with Advanced Features
+# Handle Marry and Reject Button Press
+@bot.on_callback_query(filters.regex(r"^(marry|reject)_"))
+async def handle_marry_reject(client, callback_query: t.CallbackQuery):
+    action, user_id = callback_query.data.split('_')
+    user_id = int(user_id)
+
+    if callback_query.from_user.id != user_id:
+        await callback_query.answer("🚫 You can't interact with this!", show_alert=True)
+        return
+
+    if action == "marry":
+        await callback_query.answer("💍 Congratulations on your new partner!", show_alert=True)
+    elif action == "reject":
+        await callback_query.answer("❌ Character rejected!", show_alert=True)
+        await callback_query.message.delete()
+
+# Main Dice/Marry Command
 @bot.on_message(filters.command(["dice", "marry"]))
 async def dice(_: bot, message: t.Message):
     chat_id = message.chat.id
     mention = message.from_user.mention
     user_id = message.from_user.id
 
-    # Logging Command Usage
-    log_message = f"🎲 <b>Marry Command Activated</b>\n\n👤 User: {mention} (ID: <code>{user_id}</code>)\n💬 Chat ID: <code>{chat_id}</code>"
-    await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message)
-
     # Cooldown Check
     if user_id in cooldowns and time.time() - cooldowns[user_id] < 60:
         cooldown_time = int(60 - (time.time() - cooldowns[user_id]))
         return await message.reply_text(get_cooldown_message(cooldown_time), quote=True)
 
-    # Updating Last Roll Time
-    cooldowns[user_id] = time.time()
+    cooldowns[user_id] = time.time()  # Reset Cooldown
 
-    # Rolling Dice with Styled Message
-    await message.reply_text("🎲 ʀᴏʟʟɪɴɢ 🎲")
-    dice_msg = await bot.send_dice(chat_id=chat_id)
-    value = int(dice_msg.dice.value)
+    await message.reply_text("🎲 Rolling the dice... 🎲")
+    dice_msg = await bot.send_dice(chat_id)
+    value = dice_msg.dice.value
 
-    # Success Values (1, 6)
-    if value in [1, 6]:
-        receiver_id = user_id
-        unique_characters = await get_unique_characters(receiver_id)
+    # Define success range based on dice value
+    success_range = [1, 3, 5]  # Adjusted success range
 
-        for character in unique_characters:
-            try:
-                await user_collection.update_one({'id': receiver_id}, {'$push': {'characters': character}})
-                leaderboard[mention] = leaderboard.get(mention, 0) + 1
-                roll_streaks[mention] = roll_streaks.get(mention, 0) + 1
-            except Exception as e:
-                print(e)
-
-        for character in unique_characters:
+    if value in success_range:
+        unique_characters = await get_unique_characters(user_id)
+        if unique_characters:
+            character = unique_characters[0]
+            await user_collection.update_one({'id': user_id}, {'$push': {'characters': character}})
+            leaderboard[mention] = leaderboard.get(mention, 0) + 1
+            roll_streaks[mention] = roll_streaks.get(mention, 0) + 1
             img_url = character['img_url']
             caption = get_congratulatory_message(mention, character)
-            await message.reply_photo(photo=img_url, caption=caption)
+            buttons = t.InlineKeyboardMarkup(
+                [
+                    [t.InlineKeyboardButton("💍 Marry", callback_data=f"marry_{user_id}"),
+                     t.InlineKeyboardButton("❌ Reject", callback_data=f"reject_{user_id}")]
+                ]
+            )
+            await message.reply_photo(img_url, caption=caption, reply_markup=buttons)
 
-        # Success Message with Emojis
-        success_emojis = ['🎉', '💍', '💖', '🥳']
-        await message.reply_text(f"{random.choice(success_emojis)} ʟᴜᴄᴋʏ ʀᴏʟʟ! 💍 ʏᴏᴜʀ ᴘʀᴏᴘᴏsᴀʟ ᴡᴀs ᴀᴄᴄᴇᴘᴛᴇᴅ!")
-
-        # Bonus for Streaks
-        if roll_streaks[mention] > 1:
-            await message.reply_text(get_streak_bonus_message(mention, roll_streaks[mention]))
-
+            if roll_streaks[mention] > 1:
+                await message.reply_text(get_streak_bonus_message(mention, roll_streaks[mention]))
+        else:
+            await message.reply_text("💔 No unique characters found.")
     else:
-        # Failure Message
         await message.reply_text(get_rejection_message(mention), quote=True)
-        roll_streaks[mention] = 0  # Reset Streak
+        roll_streaks[mention] = 0  # Reset streak
