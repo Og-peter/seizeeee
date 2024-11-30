@@ -1,6 +1,14 @@
+import time
+import asyncio
 import random
-from pyrogram import filters, Client
+import os  # Import os for environment variables
+from pyrogram import filters, Client, types as t
+from shivu import shivuu as bot
+from shivu import shivuu as app
+from shivu import user_collection
+from pyrogram.errors import UserNotParticipant, ChatWriteForbidden
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
+
 
 # Weapons with damage ranges
 weapons = {
