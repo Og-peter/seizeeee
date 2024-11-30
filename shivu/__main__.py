@@ -292,9 +292,9 @@ async def placeholder_callback(update: Update, context: CallbackContext):
         await query.message.reply_text(
             "<b>❌ Character not found!</b>",
             parse_mode="HTML"
-        )    
+        ) 
 
-async def guess(update: Update, context: CallbackContext) -> None:
+ async def guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
 
@@ -311,7 +311,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
             correct_guess_user = entry["user"]
             seized_character = entry["character"]
             time_guessed = entry["time"]
-            user_link = f'<a href="tg://user?id={correct_guess_user.id}">{correct_guess_user.first_name}</a>'
+            user_link = f'<a href="tg://user?id={correct_guess_user.id}">{escape(correct_guess_user.first_name)}</a>'
             await update.message.reply_text(
                 f'🌟 This character <b>{seized_character}</b> has already been seized by {user_link}!\n'
                 f'⏱️ Guessed at: <b>{time_guessed}</b>\n'
@@ -323,6 +323,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
     # Retrieve the user's guess
     guess = ' '.join(context.args).lower() if context.args else ''
 
+    # Validate the guess for special characters
     if "()" in guess or "&" in guess:
         await update.message.reply_text(
             "🔒 Sorry, invalid input! Please avoid '&' and special characters.",
@@ -334,69 +335,61 @@ async def guess(update: Update, context: CallbackContext) -> None:
     character_name = character['name'].lower()
     name_parts = character_name.split()
 
-    if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
+    # Check if the guess is correct
+    if sorted(name_parts) == sorted(guess.split()) or guess in name_parts:
         # Get the time when the character was sent
-        time_sent = None
-        if isinstance(sent_characters.get(chat_id), dict):
-            time_sent = sent_characters[chat_id].get(character['id'], time.time())
-        elif isinstance(sent_characters.get(chat_id), list):
-            for entry in sent_characters[chat_id]:
-                if isinstance(entry, dict) and entry.get('id') == character['id']:
-                    time_sent = entry.get('time', time.time())
-                    break
-        time_sent = time_sent or time.time()  # Default to the current time if not found
-
-        # Calculate the time taken
+        time_sent = sent_characters.get(chat_id, {}).get(character['id'], time.time())
         time_taken = time.time() - time_sent
         minutes, seconds = divmod(int(time_taken), 60)
 
         guessed_time_str = datetime.fromtimestamp(time_sent).strftime("%Y-%m-%d %H:%M:%S")
 
         # Record the first correct guess
-        if chat_id not in first_correct_guesses:
-            first_correct_guesses[chat_id] = []
+        first_correct_guesses.append({
+            "chat_id": chat_id,
+            "user": update.effective_user,
+            "character": character["name"],
+            "time": guessed_time_str
+        })
 
-        if user_id not in [user.id for user in first_correct_guesses[chat_id]]:
-            first_correct_guesses[chat_id].append(update.effective_user)
+        # Update the user database
+        user = await user_collection.find_one({'id': user_id})
+        update_fields = {}
 
-            # Update the user database
-            user = await user_collection.find_one({'id': user_id})
-            update_fields = {}
+        if user:
+            if update.effective_user.username != user.get('username'):
+                update_fields['username'] = update.effective_user.username
+            if update.effective_user.first_name != user.get('first_name'):
+                update_fields['first_name'] = update.effective_user.first_name
+            if update_fields:
+                await user_collection.update_one({'id': user_id}, {'$set': update_fields})
+            await user_collection.update_one(
+                {'id': user_id},
+                {'$push': {'characters': character}}
+            )
+        else:
+            await user_collection.insert_one({
+                'id': user_id,
+                'username': update.effective_user.username,
+                'first_name': update.effective_user.first_name,
+                'characters': [character],
+            })
 
-            if user:
-                if update.effective_user.username != user.get('username'):
-                    update_fields['username'] = update.effective_user.username
-                if update.effective_user.first_name != user.get('first_name'):
-                    update_fields['first_name'] = update.effective_user.first_name
-                if update_fields:
-                    await user_collection.update_one({'id': user_id}, {'$set': update_fields})
-                await user_collection.update_one(
-                    {'id': user_id},
-                    {'$push': {'characters': character}}
-                )
-            else:
-                await user_collection.insert_one({
-                    'id': user_id,
-                    'username': update.effective_user.username,
-                    'first_name': update.effective_user.first_name,
-                    'characters': [character],
-                })
-
-            # Update group user totals
-            group_user_total = await group_user_totals_collection.find_one({'user_id': user_id, 'group_id': chat_id})
-            if group_user_total:
-                await group_user_totals_collection.update_one(
-                    {'user_id': user_id, 'group_id': chat_id},
-                    {'$inc': {'count': 1}}
-                )
-            else:
-                await group_user_totals_collection.insert_one({
-                    'user_id': user_id,
-                    'group_id': chat_id,
-                    'username': update.effective_user.username,
-                    'first_name': update.effective_user.first_name,
-                    'count': 1,
-                })
+        # Update group user totals
+        group_user_total = await group_user_totals_collection.find_one({'user_id': user_id, 'group_id': chat_id})
+        if group_user_total:
+            await group_user_totals_collection.update_one(
+                {'user_id': user_id, 'group_id': chat_id},
+                {'$inc': {'count': 1}}
+            )
+        else:
+            await group_user_totals_collection.insert_one({
+                'user_id': user_id,
+                'group_id': chat_id,
+                'username': update.effective_user.username,
+                'first_name': update.effective_user.first_name,
+                'count': 1,
+            })
 
         # Create a keyboard for the user's collection
         keyboard = [[InlineKeyboardButton(
@@ -415,15 +408,14 @@ async def guess(update: Update, context: CallbackContext) -> None:
         )
     else:
         # Wrong guess handling
-        wrong_letter = guess
+        wrong_letter = escape(guess)
         message_link = character_message_links.get(chat_id, "#")
         keyboard = [[InlineKeyboardButton("★ See Character ★", url=message_link)]]
 
         await update.message.reply_text(
             f"❌ Wrong guess: '{wrong_letter}'!\n\nPlease try again.",
             reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-
+        )
         
 # Assuming rarity_map and rarity_active are predefined dictionaries
 # rarity_map = {1: "Common", 2: "Rare", ...}
