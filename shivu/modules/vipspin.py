@@ -1,27 +1,23 @@
+
 import asyncio
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 from telegram import Update
 from telegram.ext import CommandHandler, CallbackContext
 from shivu import application, collection, user_collection
 
-# List of rarities for sorting (higher to lower for exchange)
-RARITIES = [
-    "🟡 Legendary",
-    "💮 Exclusive",
-    "🫧 Premium",
-    "🔮 Limited Edition"
-]
+LOW_RARITIES = ["🔵 Common", "🟢 Medium", "🟠 Rare", "🟣 Chibi"]
+HIGH_RARITIES = ["🔮 Limited Edition", "🫧 Premium", "💮 Exclusive", "🟡 Legendary"]
 
 # In-memory tracking for daily spins
 daily_spin_limit = {}
 
-async def add_characters_to_user(user_id, waifus):
-    user = await user_collection.find_one({'id': user_id})
-    if user:
-        await user_collection.update_one({'id': user_id}, {'$push': {'characters': {'$each': waifus}}})
-    else:
-        await user_collection.insert_one({'id': user_id, 'characters': waifus})
+async def add_characters_to_user(user_id, waifu):
+    await user_collection.update_one(
+        {'id': user_id},
+        {'$push': {'characters': waifu}},
+        upsert=True
+    )
 
 async def remove_characters_from_user(user_id, characters_to_remove):
     await user_collection.update_one(
@@ -38,75 +34,81 @@ async def vipspin(update: Update, context: CallbackContext) -> None:
         user_id = update.effective_user.id
         current_time = datetime.now()
 
-        # Initialize or update daily spin limit
+        # Initialize or reset daily spin limit
         if user_id not in daily_spin_limit:
             daily_spin_limit[user_id] = {'count': 0, 'last_spin': current_time}
-        last_spin = daily_spin_limit[user_id]['last_spin']
-
-        # Reset daily limit if more than 1 day has passed
-        if (current_time - last_spin).days >= 1:
+        elif (current_time - daily_spin_limit[user_id]['last_spin']).days >= 1:
             daily_spin_limit[user_id] = {'count': 0, 'last_spin': current_time}
 
         if daily_spin_limit[user_id]['count'] >= 3:
-            await update.message.reply_text(
-                "🚫 You have reached your daily limit of 3 spins. Try again tomorrow!"
-            )
+            await update.message.reply_text("🚫 You've reached your daily spin limit. Try again tomorrow!")
             return
 
         user_characters = await get_user_characters(user_id)
-        if len(user_characters) < 5:
+        low_rarity_characters = [c for c in user_characters if c['rarity'] in LOW_RARITIES]
+        
+        if len(low_rarity_characters) < 2 or len(user_characters) < 3:
             await update.message.reply_text(
-                "⚠️ You need at least 5 characters in your collection to perform a spin."
+                "⚠️ To use VIP Spin:\n"
+                "- You need at least **3 characters** in your collection.\n"
+                "- At least **2 of them** must be from **low rarity** categories (e.g., 🔵 Common, 🟢 Medium).\n"
             )
             return
 
-        # Randomly select 5 characters to exchange
-        characters_to_exchange = random.sample(user_characters, 5)
-        await remove_characters_from_user(user_id, characters_to_exchange)
+        # Instruction message
+        await update.message.reply_text(
+            "🔄 **VIP Spin Activated!**\n\n"
+            "📜 **How it works:**\n"
+            "- Two low-rarity characters from your collection will be exchanged.\n"
+            "- One extra random character will also be taken.\n"
+            "- In return, you will receive **one high-rarity character** as a reward.\n\n"
+            "✨ Let's begin the spin!"
+        )
 
-        # Generate rewards
-        waifus = []
-        for _ in range(5):  # Reward 5 characters for exchange
-            rarity = random.choice(RARITIES)
-            all_waifus = await collection.find({'rarity': rarity}).to_list(length=None)
-            if all_waifus:
-                waifu = random.choice(all_waifus)
-                waifus.append(waifu)
+        # Animation message
+        animation_msg = await update.message.reply_text("🔄 Preparing your VIP Spin...")
+        animations = ["✨ Spinning the wheel...", "🔄 Exchanging characters...", "🎁 Finding your reward..."]
+        for animation in animations:
+            await asyncio.sleep(1.5)
+            await animation_msg.edit_text(animation)
 
-        if waifus:
-            await add_characters_to_user(user_id, waifus)
+        # Select 2 low-rarity characters to exchange
+        characters_to_exchange = random.sample(low_rarity_characters, 2)
+        
+        # Select 1 extra random character from the user's collection
+        extra_character = random.choice(user_characters)
+        
+        # Remove selected characters from the user's collection
+        characters_to_remove = characters_to_exchange + [extra_character]
+        await remove_characters_from_user(user_id, characters_to_remove)
+
+        # Select one random high-rarity character as a reward
+        high_rarity = random.choice(HIGH_RARITIES)
+        high_rarity_characters = await collection.find({'rarity': high_rarity}).to_list(length=None)
+        
+        if high_rarity_characters:
+            rewarded_character = random.choice(high_rarity_characters)
+            await add_characters_to_user(user_id, rewarded_character)
             daily_spin_limit[user_id]['count'] += 1
-            daily_spin_limit[user_id]['last_spin'] = current_time
 
-            # Prepare reply message
-            reply_message = "🎰 **Your VIP Spin Results** 🎰\n\n"
-            for waifu in waifus:
-                reply_message += (
-                    f"✨ **Name**: {waifu['name']}\n"
-                    f"🎭 **Anime**: {waifu['anime']}\n"
-                    f"💎 **Rarity**: {waifu['rarity']}\n\n"
-                )
-            reply_message += (
-                f"🎉 You successfully exchanged 5 characters! "
-                f"You can spin {3 - daily_spin_limit[user_id]['count']} more time(s) today."
+            # Delete animation message
+            await animation_msg.delete()
+
+            # Prepare and send the final result
+            reply_message = (
+                f"🎰 **VIP Spin Results - Character Exchange** 🎰\n\n"
+                f"🔄 **Exchanged Characters:**\n"
+                + "\n".join(f"🔸 {char['name']} ({char['rarity']})" for char in characters_to_exchange)
+                + f"\n\n❗ **Extra Character Taken:** {extra_character['name']} ({extra_character['rarity']})\n\n"
+                f"🎁 **Received:** {rewarded_character['name']} ({rewarded_character['rarity']})\n\n"
+                f"🎉 You have **{3 - daily_spin_limit[user_id]['count']} spins** left today."
             )
-
-            # Animation using text effects
-            animations = [
-                "🔄 Spinning the wheel...",
-                "✨ Characters flying into the VIP zone...",
-                "🎁 Opening your rewards..."
-            ]
-            for animation in animations:
-                await update.message.reply_text(animation)
-                await asyncio.sleep(1)
-
-            # Send final results
             await update.message.reply_text(reply_message, parse_mode='Markdown')
         else:
-            await update.message.reply_text("❌ No rewards found. Please try again.")
+            await animation_msg.delete()
+            await update.message.reply_text("❌ No high-rarity rewards available. Try again later.")
     except Exception as e:
-        await update.message.reply_text(f"⚠️ Error: {str(e)}")
+        await update.message.reply_text(f"⚠️ An error occurred: {str(e)}")
 
 VIPSPIN_HANDLER = CommandHandler('vipspin', vipspin, block=False)
 application.add_handler(VIPSPIN_HANDLER)
