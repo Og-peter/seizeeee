@@ -78,7 +78,7 @@ async def start_fight(_, callback_query: t.CallbackQuery):
     player_data[user_id]["current_zombie"] = zombie_data
 
     await callback_query.message.reply_photo(
-        photo="https://telegra.ph/file/battle-zombies.jpg",  # Replace with relevant image URL
+        photo="https://files.catbox.moe/41tiv6.jpg",  # Replace with relevant image URL
         caption=(
             f"**Wave {wave}: {zombie_data['emoji']} {zombie_type}**\n\n"
             f"Zombie Health: {zombie_data['health']}\n"
