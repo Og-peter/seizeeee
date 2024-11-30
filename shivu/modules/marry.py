@@ -2,6 +2,7 @@ import asyncio
 from pyrogram import filters, Client, types as t
 from shivu import shivuu as bot
 from shivu import user_collection, collection
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 import random
 import time
 
