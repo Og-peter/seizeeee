@@ -224,32 +224,51 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         message_link = f"https://t.me/{update.effective_chat.username}/{message.message_id}"
     character_message_links[chat_id] = message_link
 
-    # Schedule the "flew away" logic after 2 minutes
-    async def character_flew_away():
-        if chat_id in last_characters and last_characters[chat_id] == selected_character:
-            del last_characters[chat_id]
-            await context.bot.send_photo(
-                chat_id=chat_id,
-                photo=selected_character['img_url'],
-                caption=f"""<b>⏳ Time's up!</b>\n
-The character <b>{selected_character['name']}</b> has flown away. 😭\n
-Here are the details:""",
-                parse_mode="HTML",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("📜 Info", callback_data=f"info_{selected_character['id']}")]
-                ])
-            )
+# Schedule the "flew away" logic after 2 minutes
+async def character_flew_away(context: CallbackContext):
+    # Retrieve data from the job context
+    job_data = context.job.context
+    chat_id = job_data['chat_id']
+    selected_character = job_data['selected_character']
+    last_characters = job_data['last_characters']
 
-    context.job_queue.run_once(character_flew_away, 120)
+    # Check if the character is still active
+    if chat_id in last_characters and last_characters[chat_id] == selected_character:
+        del last_characters[chat_id]  # Remove character from the list
 
-    # Define the callback function
-    async def placeholder_callback(update: Update, context: CallbackContext):
-        query = update.callback_query
+        # Notify the user that the character flew away
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=selected_character['img_url'],
+            caption=(
+                f"<b>⏳ Time's up!</b>\n\n"
+                f"The character <b>{selected_character['name']}</b> has flown away. 😭\n\n"
+                f"Here are the details:"
+            ),
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("📜 Info", callback_data=f"info_{selected_character['id']}")]
+            ])
+        )
 
-    # Acknowledge the callback query to avoid "button still active" issues
-    await query.answer()
+# Schedule the job
+def schedule_character_flew_away(context: CallbackContext, chat_id, selected_character, last_characters):
+    context.job_queue.run_once(
+        character_flew_away, 
+        120,  # 2 minutes
+        context={
+            'chat_id': chat_id,
+            'selected_character': selected_character,
+            'last_characters': last_characters
+        }
+    )
 
-    # Extract the character ID from the callback query data
+# Callback function to handle the "Info" button
+async def placeholder_callback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await query.answer()  # Acknowledge the callback query
+
+    # Extract the character ID from the callback data
     character_id = query.data.split("_")[1]
 
     # Retrieve the character details from the database
@@ -273,7 +292,7 @@ Here are the details:""",
         await query.message.reply_text(
             "<b>❌ Character not found!</b>",
             parse_mode="HTML"
-        )
+        )    
 
 
 async def guess(update: Update, context: CallbackContext) -> None:
