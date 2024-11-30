@@ -1,356 +1,204 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, InputMediaPhoto
-from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
-from pyrogram import Client, filters
-from shivu import user_collection, collection, application
+import time
 import asyncio
 import random
-from datetime import datetime, timedelta
+from pyrogram import filters, Client, types as t
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 
-# Dictionary to store active quizzes
-active_quizzes = {}
-# Dictionary to store user cooldowns
-user_cooldowns = {}
-
-# List of anime quiz questions with possible answers
-anime_questions = [
-    {
-        "question": "Who is the main protagonist of 'Naruto'?",
-        "answers": ["Naruto Uzumaki", "Sasuke Uchiha", "Kakashi Hatake", "Sakura Haruno"],
-        "correct_answer": "Naruto Uzumaki",
-        "image_url": "https://files.catbox.moe/sbyjpl.jpg"
-    },
-    {
-        "question": "In 'Dragon Ball Z', what is Goku's Saiyan name?",
-        "answers": ["Vegeta", "Broly", "Kakarot", "Raditz"],
-        "correct_answer": "Kakarot",
-        "image_url": "https://files.catbox.moe/4i812w.jpg"
-    },
-    {
-        "question": "Who is the captain of the 'Straw Hat Pirates' in 'One Piece'?",
-        "answers": ["Zoro", "Luffy", "Sanji", "Nami"],
-        "correct_answer": "Luffy",
-        "image_url": "https://files.catbox.moe/3c3c0o.jpg"
-    },
-    {
-        "question": "In 'Attack on Titan', who is the protagonist?",
-        "answers": ["Eren Yeager", "Mikasa Ackerman", "Armin Arlert", "Levi Ackerman"],
-        "correct_answer": "Eren Yeager",
-        "image_url": "https://files.catbox.moe/00ezy3.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "Who is the main antagonist of the 'Death Note' series?",
-        "answers": ["L", "Ryuk", "Light Yagami", "Misa Amane"],
-        "correct_answer": "Light Yagami",
-        "image_url": "https://files.catbox.moe/sbyjpl.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "In 'My Hero Academia', what is the quirk of the main protagonist, Izuku Midoriya?",
-        "answers": ["One For All", "Explosion", "Zero Gravity", "Engine"],
-        "correct_answer": "One For All",
-        "image_url": "https://files.catbox.moe/4i812w.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "In 'Fullmetal Alchemist', what is the forbidden act Edward and Alphonse Elric performed?",
-        "answers": ["Human Transmutation", "Alchemy Amplification", "Soul Binding", "Homunculus Creation"],
-        "correct_answer": "Human Transmutation",
-        "image_url": "https://files.catbox.moe/3c3c0o.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "What is the name of the village where Naruto Uzumaki was born?",
-        "answers": ["Konoha", "Suna", "Iwa", "Kumo"],
-        "correct_answer": "Konoha",
-        "image_url": "https://files.catbox.moe/00ezy3.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "Who is the strongest S-Class hero in 'One Punch Man'?",
-        "answers": ["Blast", "Tatsumaki", "Bang", "Genos"],
-        "correct_answer": "Blast",
-        "image_url": "https://files.catbox.moe/sbyjpl.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "In 'Tokyo Ghoul', what organ was transplanted into Kaneki to turn him into a ghoul?",
-        "answers": ["Kidney", "Liver", "Eye", "Heart"],
-        "correct_answer": "Eye",
-        "image_url": "https://files.catbox.moe/4i812w.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "In 'Bleach', who is the captain of the 13th Division?",
-        "answers": ["Byakuya Kuchiki", "Ukitake Jūshirō", "Shunsui Kyōraku", "Kenpachi Zaraki"],
-        "correct_answer": "Ukitake Jūshirō",
-        "image_url": "https://files.catbox.moe/00ezy3.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "Who is the main antagonist in 'Naruto Shippuden'?",
-        "answers": ["Madara Uchiha", "Orochimaru", "Obito Uchiha", "Pain"],
-        "correct_answer": "Madara Uchiha",
-        "image_url": "https://files.catbox.moe/3c3c0o.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "In 'Hunter x Hunter', what is Killua's primary ability?",
-        "answers": ["Zetsu", "Nen", "Lightning", "Enhancement"],
-        "correct_answer": "Lightning",
-        "image_url": "https://files.catbox.moe/4i812w.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "In 'Sword Art Online', what is Kirito's real name?",
-        "answers": ["Kazuto Kirigaya", "Asuna Yuuki", "Heathcliff", "Sinon"],
-        "correct_answer": "Kazuto Kirigaya",
-        "image_url": "https://files.catbox.moe/sbyjpl.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "What is the strongest Nen category in 'Hunter x Hunter'?",
-        "answers": ["Enhancement", "Transmutation", "Conjuration", "Specialization"],
-        "correct_answer": "Specialization",
-        "image_url": "https://files.catbox.moe/00ezy3.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "In 'Demon Slayer', what is Tanjiro's primary breathing technique?",
-        "answers": ["Water Breathing", "Flame Breathing", "Beast Breathing", "Wind Breathing"],
-        "correct_answer": "Water Breathing",
-        "image_url": "https://files.catbox.moe/3c3c0o.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "In 'Black Clover', what is Asta's primary weapon?",
-        "answers": ["Grimoire", "Magic Staff", "Demon Slayer Sword", "Anti-Magic Bow"],
-        "correct_answer": "Demon Slayer Sword",
-        "image_url": "https://files.catbox.moe/4i812w.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "In 'Fate/Stay Night', who is Shirou Emiya's Servant?",
-        "answers": ["Saber", "Rider", "Lancer", "Archer"],
-        "correct_answer": "Saber",
-        "image_url": "https://files.catbox.moe/sbyjpl.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "In 'Re:Zero', what is Subaru's unique ability?",
-        "answers": ["Gate of Babylon", "Return by Death", "Magic Eyes", "Command Seals"],
-        "correct_answer": "Return by Death",
-        "image_url": "https://files.catbox.moe/00ezy3.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "In 'Haikyuu!!', what position does Hinata Shoyo play?",
-        "answers": ["Setter", "Libero", "Spiker", "Middle Blocker"],
-        "correct_answer": "Spiker",
-        "image_url": "https://files.catbox.moe/3c3c0o.jpg"  # Replace with a valid image URL
-    },
-    {
-        "question": "What is the name of the protagonist in 'Sword Art Online'?",
-        "answers": ["Kirito", "Asuna", "Heathcliff", "Sinon"],
-        "correct_answer": "Kirito",
-        "image_url": "https://files.catbox.moe/sbyjpl.jpg"
-    },
-    {
-        "question": "In 'Attack on Titan', what is Levi's rank in the Survey Corps?",
-        "answers": ["Captain", "Commander", "Lieutenant", "Corporal"],
-        "correct_answer": "Captain",
-        "image_url": "https://files.catbox.moe/00ezy3.jpg"
-    },
-    {
-        "question": "Who is known as the 'Hero of the Leaf' in 'Naruto'?",
-        "answers": ["Minato Namikaze", "Naruto Uzumaki", "Kakashi Hatake", "Jiraiya"],
-        "correct_answer": "Minato Namikaze",
-        "image_url": "https://files.catbox.moe/3c3c0o.jpg"
-    },
-    {
-        "question": "In 'Dragon Ball Super', which character achieved Ultra Instinct?",
-        "answers": ["Vegeta", "Frieza", "Gohan", "Goku"],
-        "correct_answer": "Goku",
-        "image_url": "https://files.catbox.moe/4i812w.jpg"
-    },
-    {
-        "question": "Who is the creator of the 'One For All' quirk in 'My Hero Academia'?",
-        "answers": ["All Might", "Izuku Midoriya", "All For One", "Shigaraki"],
-        "correct_answer": "All For One",
-        "image_url": "https://files.catbox.moe/sbyjpl.jpg"
-    },
-    {
-        "question": "In 'Tokyo Revengers', what is the name of Takemichi's gang?",
-        "answers": ["Tokyo Manji Gang", "Black Dragons", "Valhalla", "Tenjiku"],
-        "correct_answer": "Tokyo Manji Gang",
-        "image_url": "https://files.catbox.moe/00ezy3.jpg"
-    },
-    {
-        "question": "In 'Jujutsu Kaisen', who is the strongest sorcerer?",
-        "answers": ["Satoru Gojo", "Sukuna", "Megumi Fushiguro", "Yuji Itadori"],
-        "correct_answer": "Satoru Gojo",
-        "image_url": "https://files.catbox.moe/3c3c0o.jpg"
-    },
-    {
-        "question": "What is the true form of the 'Beast Titan' in 'Attack on Titan'?",
-        "answers": ["Eren Yeager", "Zeke Yeager", "Reiner Braun", "Bertholdt Hoover"],
-        "correct_answer": "Zeke Yeager",
-        "image_url": "https://files.catbox.moe/4i812w.jpg"
-    },
-    {
-        "question": "In 'One Piece', what is the name of the sword used by Roronoa Zoro?",
-        "answers": ["Shusui", "Enma", "Wado Ichimonji", "Kitetsu"],
-        "correct_answer": "Wado Ichimonji",
-        "image_url": "https://files.catbox.moe/sbyjpl.jpg"
-    },
-    {
-        "question": "Who is the God of Destruction in 'Dragon Ball Super'?",
-        "answers": ["Beerus", "Whis", "Zeno", "Toppo"],
-        "correct_answer": "Beerus",
-        "image_url": "https://files.catbox.moe/00ezy3.jpg"
-    },
-    {
-        "question": "In 'Fairy Tail', what type of magic does Natsu Dragneel use?",
-        "answers": ["Ice-Make Magic", "Sky Dragon Slayer Magic", "Fire Dragon Slayer Magic", "Celestial Spirit Magic"],
-        "correct_answer": "Fire Dragon Slayer Magic",
-        "image_url": "https://files.catbox.moe/3c3c0o.jpg"
-    },
-    {
-        "question": "In 'Steins;Gate', who is the creator of the time machine?",
-        "answers": ["Okabe Rintarou", "Kurisu Makise", "Daru Hashida", "Mayuri Shiina"],
-        "correct_answer": "Kurisu Makise",
-        "image_url": "https://files.catbox.moe/4i812w.jpg"
-    },
-    {
-        "question": "In 'JoJo's Bizarre Adventure', what is the name of Jotaro's Stand?",
-        "answers": ["Star Platinum", "Silver Chariot", "The World", "Hermit Purple"],
-        "correct_answer": "Star Platinum",
-        "image_url": "https://files.catbox.moe/sbyjpl.jpg"
-    },
-    {
-        "question": "In 'The Promised Neverland', who is the mastermind behind the escape plan?",
-        "answers": ["Emma", "Ray", "Norman", "Isabella"],
-        "correct_answer": "Norman",
-        "image_url": "https://files.catbox.moe/00ezy3.jpg"
-    },
-    {
-        "question": "Who is the leader of the Phantom Troupe in 'Hunter x Hunter'?",
-        "answers": ["Chrollo Lucilfer", "Hisoka", "Pakunoda", "Feitan"],
-        "correct_answer": "Chrollo Lucilfer",
-        "image_url": "https://files.catbox.moe/00ezy3.jpg"
-    },
-    {
-    "question": "In 'Naruto', what is Kakashi's signature jutsu?",
-    "answers": ["Chidori", "Rasengan", "Shadow Clone Jutsu", "Fireball Jutsu"],
-    "correct_answer": "Chidori",
-    "image_url": "https://files.catbox.moe/3c3c0o.jpg"
-},
-{
-    "question": "In 'Dragon Ball Z', who killed Frieza on Namek?",
-    "answers": ["Goku", "Vegeta", "Piccolo", "Future Trunks"],
-    "correct_answer": "Future Trunks",
-    "image_url": "https://files.catbox.moe/4i812w.jpg"
-},
-{
-    "question": "In 'One Punch Man', who is Saitama's disciple?",
-    "answers": ["Genos", "King", "Bang", "Fubuki"],
-    "correct_answer": "Genos",
-    "image_url": "https://files.catbox.moe/sbyjpl.jpg"
-},
-{
-    "question": "In 'Attack on Titan', what is the name of the first Titan Eren fights?",
-    "answers": ["Colossal Titan", "Armored Titan", "Female Titan", "Smiling Titan"],
-    "correct_answer": "Smiling Titan",
-    "image_url": "https://files.catbox.moe/00ezy3.jpg"
-},
-{
-    "question": "In 'Naruto', who is the founder of the Akatsuki?",
-    "answers": ["Pain", "Itachi", "Madara", "Nagato"],
-    "correct_answer": "Nagato",
-    "image_url": "https://files.catbox.moe/3c3c0o.jpg"
+# Game constants
+zombies = {
+    "Normal Zombie": {"health": 100, "damage": 10, "emoji": "🧟", "reward": 5},
+    "Fast Zombie": {"health": 150, "damage": 15, "emoji": "⚡🧟", "reward": 10},
+    "Tank Zombie": {"health": 300, "damage": 20, "emoji": "🛡️🧟", "reward": 20},
+    "Mutated Zombie": {"health": 400, "damage": 25, "emoji": "🧪🧟", "reward": 30},
+    "Boss Zombie": {"health": 700, "damage": 50, "emoji": "👑🧟", "reward": 50},
 }
+
+guns = {
+    "Pistol": {"damage": 20, "reload_time": 2, "emoji": "🔫", "ammo": 15},
+    "Shotgun": {"damage": 50, "reload_time": 3, "emoji": "🔥", "ammo": 5},
+    "Rifle": {"damage": 30, "reload_time": 1, "emoji": "🔫🔫", "ammo": 20},
+    "Sniper": {"damage": 100, "reload_time": 5, "emoji": "🎯", "ammo": 3},
+    "Rocket Launcher": {"damage": 200, "reload_time": 8, "emoji": "💥", "ammo": 1},
+    "Flamethrower": {"damage": 40, "reload_time": 3, "emoji": "🔥🔥", "ammo": 10, "special": "Burn"},
+}
+
+player_data = {}
+
+random_events = [
+    {"event": "Healing Pack Found!", "type": "heal", "value": 30, "message": "You healed by 30 HP!"},
+    {"event": "Ammo Crate Found!", "type": "ammo", "value": 5, "message": "All guns reloaded with 5 extra ammo!"},
+    {"event": "Zombie Mutation!", "type": "mutate", "message": "The zombie has mutated! Its health and damage increased!"},
 ]
 
-# Command handler to start the anime quiz
-async def start_anime_quiz_cmd(update: Update, context: CallbackContext):
-    user_id = update.effective_user.id
-    current_time = datetime.now()
+# Helper function to format player stats
+def format_stats(player):
+    stats = (
+        f"**Health:** {player['health']}\n"
+        f"**Score:** {player['score']}\n"
+        f"**Wave:** {player['zombie_wave']}\n\n"
+        "**Ammo:**\n" + "\n".join([f"{guns[gun]['emoji']} {gun}: {player['ammo'][gun]} ammo" for gun in guns])
+    )
+    return stats
 
-    # Check if the user is on cooldown
-    if user_id in user_cooldowns and current_time < user_cooldowns[user_id]:
-        remaining_time = (user_cooldowns[user_id] - current_time).total_seconds()
-        await update.message.reply_text(f"Please wait {int(remaining_time)} seconds before starting a new quiz.")
-        return
+# Command to start the game
+@Client.on_message(filters.command(["startgame"]))
+async def start_game(_, message: t.Message):
+    user_id = message.from_user.id
 
-    # Select a random anime question
-    selected_question = random.choice(anime_questions)
-    question_text = selected_question["question"]
-    correct_answer = selected_question["correct_answer"]
-    answers = selected_question["answers"]
-    image_url = selected_question["image_url"]
-
-    # Shuffle answers
-    random.shuffle(answers)
-
-    # Store the active quiz
-    active_quizzes[user_id] = {
-        'question': question_text,
-        'correct_answer': correct_answer,
-        'start_time': current_time
+    # Initialize player data
+    player_data[user_id] = {
+        "health": 100,
+        "ammo": {gun: guns[gun]["ammo"] for gun in guns},
+        "zombie_wave": 1,
+        "score": 0,
     }
 
-    # Create buttons in a 2x2 layout
-    keyboard = InlineKeyboardMarkup(
-        [
-            [InlineKeyboardButton(answers[0], callback_data=f'quiz_answer_{user_id}_{answers[0]}'), InlineKeyboardButton(answers[1], callback_data=f'quiz_answer_{user_id}_{answers[1]}')],
-            [InlineKeyboardButton(answers[2], callback_data=f'quiz_answer_{user_id}_{answers[2]}'), InlineKeyboardButton(answers[3], callback_data=f'quiz_answer_{user_id}_{answers[3]}')]
-        ]
+    await message.reply_text(
+        "🎮 **Welcome to Advanced Zombie Mode!** 🎮\n\n"
+        "Zombies are coming! Prepare your weapons and stay alive.\n\n"
+        "Type /zfight to begin the first wave!",
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("Start Fighting", callback_data="start_fight")]]
+        ),
     )
 
-    # Send the question with the image
-    sent_message = await context.bot.send_photo(
-        chat_id=update.message.chat_id,
-        photo=image_url,
-        caption=f"{question_text}\n\nAnswer in 15 sec.",
-        reply_markup=keyboard
+# Function to handle waves
+@Client.on_callback_query(filters.regex("start_fight"))
+async def start_fight(_, callback_query: t.CallbackQuery):
+    user_id = callback_query.from_user.id
+
+    if user_id not in player_data:
+        await callback_query.message.reply_text("Start a new game using /startgame.")
+        return
+
+    # Spawn a zombie for the wave
+    wave = player_data[user_id]["zombie_wave"]
+    zombie_type = random.choice(list(zombies.keys()))
+    zombie_data = zombies[zombie_type].copy()
+    player_data[user_id]["current_zombie"] = zombie_data
+
+    await callback_query.message.reply_photo(
+        photo="https://telegra.ph/file/battle-zombies.jpg",  # Replace with relevant image URL
+        caption=(
+            f"**Wave {wave}: {zombie_data['emoji']} {zombie_type}**\n\n"
+            f"Zombie Health: {zombie_data['health']}\n"
+            f"Zombie Damage: {zombie_data['damage']}\n\n"
+            "Choose your gun to attack!"
+        ),
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(f"{guns[gun]['emoji']} {gun}", callback_data=f"gun_{gun}")
+                    for gun in guns.keys()
+                ]
+            ]
+        ),
     )
 
-    # Schedule timeout
-    asyncio.create_task(quiz_timeout(context, user_id, sent_message.chat_id, sent_message.message_id))
-
-# Function to handle quiz timeout
-async def quiz_timeout(context: CallbackContext, user_id: int, chat_id: int, message_id: int):
-    await asyncio.sleep(15)
-
-    if user_id in active_quizzes:
-        correct_answer = active_quizzes[user_id]['correct_answer']
-        del active_quizzes[user_id]
-
-        try:
-            await context.bot.edit_message_caption(
-                chat_id=chat_id,
-                message_id=message_id,
-                caption=f"Time out! The correct answer was {correct_answer}."
-            )
-        except Exception as e:
-            print(f"Failed to edit message: {e}")
-
-# Callback handler to process the quiz answer
-async def quiz_answer_callback(update: Update, context: CallbackContext):
-    query = update.callback_query
-    user_id = query.from_user.id
-    data = query.data.split('_')
-    quiz_user_id = int(data[2])
-    selected_answer = data[3]  # Selected answer
-
-    if user_id != quiz_user_id:
-        await query.answer("This quiz is not for you.", show_alert=True)
+# Function to handle gun selection and attacks
+@Client.on_callback_query(filters.regex(r"gun_(.+)"))
+async def attack(_, callback_query: t.CallbackQuery):
+    user_id = callback_query.from_user.id
+    if user_id not in player_data or "current_zombie" not in player_data[user_id]:
+        await callback_query.message.reply_text("Start a new game using /startgame.")
         return
 
-    if quiz_user_id not in active_quizzes:
-        await query.answer("You are not currently participating in any quiz.", show_alert=True)
+    gun_name = callback_query.data.split("_")[1]
+    if gun_name not in guns:
+        await callback_query.message.reply_text("Invalid gun selection.")
         return
 
-    correct_answer = active_quizzes[quiz_user_id]['correct_answer']
+    player = player_data[user_id]
+    gun = guns[gun_name]
+    zombie = player["current_zombie"]
 
-    if selected_answer == correct_answer:
-        # Correct answer
-        await user_collection.update_one({'id': user_id}, {'$inc': {'tokens': 80}})
-        await query.message.edit_caption("Correct answer! You got 80 tokens.")
+    if player["ammo"][gun_name] <= 0:
+        await callback_query.answer("Out of ammo! Reload or choose another gun.", show_alert=True)
+        return
+
+    # Attack the zombie
+    player["ammo"][gun_name] -= 1
+    zombie["health"] -= gun["damage"]
+
+    # Special gun effect
+    if gun.get("special") == "Burn":
+        zombie["health"] -= 10
+        await callback_query.answer("🔥 Burn effect! Extra 10 damage dealt.", show_alert=True)
+
+    if zombie["health"] <= 0:
+        # Zombie defeated
+        player["score"] += zombie["reward"]
+        player["zombie_wave"] += 1
+
+        await callback_query.message.reply_text(
+            f"🎉 **Zombie Defeated!** 🎉\n\n"
+            f"You earned {zombie['reward']} points.\n"
+            f"Total Score: {player['score']}\n\n"
+            f"Type /fight to start the next wave!",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("Next Wave", callback_data="start_fight")]]
+            ),
+        )
     else:
-        # Incorrect answer
-        await query.message.edit_caption(f"Incorrect answer. The correct answer was {correct_answer}.")
+        # Zombie still alive, random chance of event
+        event_triggered = random.random() < 0.2
+        if event_triggered:
+            event = random.choice(random_events)
+            if event["type"] == "heal":
+                player["health"] += event["value"]
+                player["health"] = min(player["health"], 100)  # Cap health at 100
+            elif event["type"] == "ammo":
+                for gun in guns:
+                    player["ammo"][gun] += event["value"]
+            elif event["type"] == "mutate":
+                zombie["health"] += 50
+                zombie["damage"] += 5
+            await callback_query.message.reply_text(f"**Random Event:** {event['event']} - {event['message']}")
 
-    # Remove the active quiz
-    del active_quizzes[quiz_user_id]
-    # Set user cooldown for 30 seconds
-    user_cooldowns[quiz_user_id] = datetime.now() + timedelta(seconds=30)
+        # Update stats
+        await callback_query.message.edit_caption(
+            caption=(
+                f"**Wave {player['zombie_wave']}: {zombie['emoji']} Zombie**\n\n"
+                f"Zombie Health: {zombie['health']}\n"
+                f"Player Ammo ({gun_name}): {player['ammo'][gun_name]}\n\n"
+                f"Keep fighting or choose another gun!"
+            ),
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(f"{guns[gun]['emoji']} {gun}", callback_data=f"gun_{gun}")
+                        for gun in guns.keys()
+                    ]
+                ]
+            ),
+        )
 
-# Add command handler for starting anime quiz
-application.add_handler(CommandHandler("quiz", start_anime_quiz_cmd, block=False))
-# Add callback query handler for quiz answers
-application.add_handler(CallbackQueryHandler(quiz_answer_callback, pattern=r'quiz_answer_', block=False))
+# Additional Commands
+@Client.on_message(filters.command(["stats"]))
+async def stats(_, message: t.Message):
+    user_id = message.from_user.id
+    if user_id not in player_data:
+        await message.reply_text("Start a new game using /startgame.")
+        return
+
+    await message.reply_text(f"🎯 **Player Stats:** 🎯\n\n{format_stats(player_data[user_id])}")
+
+@Client.on_message(filters.command(["reload"]))
+async def reload(_, message: t.Message):
+    user_id = message.from_user.id
+    if user_id not in player_data:
+        await message.reply_text("Start a new game using /startgame.")
+        return
+
+    for gun in guns:
+        player_data[user_id]["ammo"][gun] = guns[gun]["ammo"]
+
+    await message.reply_text("🔄 All guns have been reloaded!")
+
+# Reset command for debugging or restarting
+@Client.on_message(filters.command(["resetgame"]))
+async def reset_game(_, message: t.Message):
+    user_id = message.from_user.id
+    if user_id in player_data:
+        del player_data[user_id]
+    await message.reply_text("🔄 Game has been reset. Type /startgame to play again.")
