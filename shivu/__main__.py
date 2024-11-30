@@ -299,21 +299,29 @@ async def guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
 
+    # Check if the current chat_id exists in last_characters
     if chat_id not in last_characters:
         return
 
-    # Check if the character has already been guessed
-    if chat_id in first_correct_guesses:  # Ensure it's a dict
-        correct_guess_user = first_correct_guesses[chat_id]['user']
-        seized_character = first_correct_guesses[chat_id]['character']
-        time_guessed = first_correct_guesses[chat_id]['time']
-        user_link = f'<a href="tg://user?id={correct_guess_user.id}">{correct_guess_user.first_name}</a>'
-        await update.message.reply_text(
-            f'🌟 This character <b>{seized_character}</b> has already been seized by {user_link}!\n'
-            f'⏱️ Guessed at: <b>{time_guessed}</b>\n'
-            f'🍵 Wait for the next character to spawn... 🌌',
-            parse_mode='HTML'
-        )
+    # Search for the correct chat_id in the list
+    for entry in first_correct_guesses:
+        if entry.get("chat_id") == chat_id:
+            correct_guess_user = entry["user"]
+            seized_character = entry["character"]
+            time_guessed = entry["time"]
+            user_link = f'<a href="tg://user?id={correct_guess_user.id}">{correct_guess_user.first_name}</a>'
+            await update.message.reply_text(
+                f'🌟 This character <b>{seized_character}</b> has already been seized by {user_link}!\n'
+                f'⏱️ Guessed at: <b>{time_guessed}</b>\n'
+                f'🍵 Wait for the next character to spawn... 🌌',
+                parse_mode="HTML"
+            )
+            return  # Exit after finding the match
+
+    # If no matching chat_id is found
+    await update.message.reply_text(
+        "⚠️ No guesses for this chat yet. Try again when a character appears!"
+    )
         return
 
     # Retrieve the user's guess
