@@ -21,7 +21,7 @@ async def add_characters_to_user(user_id, waifu):
 async def remove_characters_from_user(user_id, characters_to_remove):
     await user_collection.update_one(
         {'id': user_id},
-        {'$pull': {'characters': {'$in': characters_to_remove}}}
+        {'$pull': {'characters': {'name': {'$in': [c['name'] for c in characters_to_remove]}}}}
     )
 
 async def get_user_characters(user_id):
@@ -93,21 +93,14 @@ async def handle_vipspin_callback(update: Update, context: CallbackContext) -> N
         await query.edit_message_text("🔄 Processing your VIP Spin...")
         
         try:
-            # Retrieve the original user data again
             user_characters = await get_user_characters(user_id)
             low_rarity_characters = [c for c in user_characters if c['rarity'] in LOW_RARITIES]
 
-            # Select 2 low-rarity characters to exchange
             characters_to_exchange = random.sample(low_rarity_characters, 2)
-            
-            # Select 1 extra random character from the user's collection
             extra_character = random.choice(user_characters)
-            
-            # Remove selected characters from the user's collection
             characters_to_remove = characters_to_exchange + [extra_character]
             await remove_characters_from_user(user_id, characters_to_remove)
 
-            # Select one random high-rarity character as a reward
             high_rarity = random.choice(HIGH_RARITIES)
             high_rarity_characters = await collection.find({'rarity': high_rarity}).to_list(length=None)
             
@@ -116,7 +109,6 @@ async def handle_vipspin_callback(update: Update, context: CallbackContext) -> N
                 await add_characters_to_user(user_id, rewarded_character)
                 daily_spin_limit[user_id]['count'] += 1
 
-                # Send the final result
                 reply_message = (
                     f"🎰 **VIP Spin Results - Character Exchange** 🎰\n\n"
                     f"🔄 **Exchanged Characters:**\n"
