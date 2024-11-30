@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from shivu import application, user_collection
 from shivu import shivuu as app
 
-MUST_JOIN = "dynamic_gangs"  # Replace with your group/channel username or ID
+MUST_JOIN = "Seizer_updates"  # Replace with your group/channel username or ID
 allowed_group_id = -1002104939708  # Replace with your allowed group ID
 COOLDOWN_HOURS = 5  # Cooldown period in hours
 
