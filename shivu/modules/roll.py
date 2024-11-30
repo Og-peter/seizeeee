@@ -1,129 +1,92 @@
 import asyncio
+import time
 from pyrogram import filters, Client, types as t
 from shivu import shivuu as bot
-from shivu import collection, user_collection, user_totals_collection, shivuu, application
-import time
+from shivu import collection, user_collection
 
-DEVS = (6402009857)
-
-# Logs Channel ID (replace with actual channel ID)
-LOGS_CHANNEL_ID = -1002446048543  # Replace with your logs channel's chat ID
-
-async def get_unique_characters(receiver_id, target_rarities=['🟡 Legendary', '💮 Exclusive']):
-    try:
-        pipeline = [
-            {'$match': {
-                'rarity': {'$in': target_rarities}, 
-                'id': {'$nin': [char['id'] for char in (await user_collection.find_one({'id': receiver_id}, {'characters': 1}))['characters']]}
-            }},
-            {'$sample': {'size': 1}}  # Adjust the number of characters sampled
-        ]
-        cursor = collection.aggregate(pipeline)
-        characters = await cursor.to_list(length=None)
-        return characters
-    except Exception as e:
-        print(f"Error in get_unique_characters: {e}")
-        return []
-
-# Dictionary to store last roll time for each user
+# Cooldown dictionary to track user command usage
 cooldowns = {}
 
-@bot.on_message(filters.command(["dice", "roll"]))
-async def dice(_, message: t.Message):
-    chat_id = message.chat.id
-    mention = message.from_user.mention
-    user_id = message.from_user.id
+# Bonus rewards based on dice value
+BONUS_REWARDS = {
+    6: "⭐ 100 Bonus Coins! ⭐",
+    5: "💎 50 Bonus Coins! 💎",
+    4: "🌟 20 Bonus Coins! 🌟",
+}
 
-    # Send logs notification
-    log_message = f"🎲 *Dice/Roll Command Used*\n\n👤 User: {mention} (ID: {user_id})\n💬 Chat ID: {chat_id}"
-    await bot.send_message(chat_id=LOGS_CHANNEL_ID, text=log_message)
+async def fetch_unique_characters(receiver_id, target_rarities=['🟡 Legendary', '💮 Exclusive']):
+    try:
+        existing_character_ids = await user_collection.find_one(
+            {'id': receiver_id}, {'characters.id': 1}
+        ) or {'characters': []}
+        
+        pipeline = [
+            {'$match': {
+                'rarity': {'$in': target_rarities},
+                'id': {'$nin': [char['id'] for char in existing_character_ids['characters']]}
+            }},
+            {'$sample': {'size': 1}}
+        ]
+        
+        characters = await collection.aggregate(pipeline).to_list(length=None)
+        return characters
+    except Exception as e:
+        print(f"Error in fetch_unique_characters: {e}")
+        return []
 
-    # Check if the user is in cooldown
-    if user_id in cooldowns and time.time() - cooldowns[user_id] < 60:  # Adjust the cooldown time (in seconds)
-        cooldown_time = int(60 - (time.time() - cooldowns[user_id]))
-        await message.reply_text(
-            f"⏳ Hold on {mention}, you can roll again in *{cooldown_time}* seconds.", 
-            quote=True
+async def handle_dice_result(user_id, mention, value, message, unique_characters):
+    # Bonus reward message
+    bonus_message = BONUS_REWARDS.get(value, "")
+
+    if value in [5, 6]:
+        img_urls = [char['img_url'] for char in unique_characters]
+        captions = [
+            f"🎉 **Jackpot!**\n\n🍃 **Name:** {char['name']}\n⚜️ **Rarity:** {char['rarity']}\n⛩️ **Anime:** {char['anime']}\n\n**Congratulations {mention}! 🎊**\n{bonus_message}"
+            for char in unique_characters
+        ]
+        
+        for img, caption in zip(img_urls, captions):
+            await message.reply_photo(photo=img, caption=caption)
+            
+        await user_collection.update_one({'id': user_id}, {'$push': {'characters': {'$each': unique_characters}}})
+        
+    elif value in [3, 4]:
+        await message.reply_animation(
+            animation="https://files.catbox.moe/p62bql.mp4",  # Medium roll animation
+            caption=f"❄️ **Nice roll, {mention}!** Rolled {value}. Keep going for the jackpot! 🩷\n{bonus_message}"
         )
+        
+    else:
+        await message.reply_animation(
+            animation="https://files.catbox.moe/hn08wr.mp4",  # Low roll animation
+            caption=f"💔 **Oops, {mention}.** Rolled {value}. Better luck next time! 🎲"
+        )
+
+@bot.on_message(filters.command(["dice", "roll"]))
+async def roll_command(_, message: t.Message):
+    user_id = message.from_user.id
+    mention = message.from_user.mention
+
+    # Cooldown management
+    if user_id in cooldowns and time.time() - cooldowns[user_id] < 60:
+        await message.reply_text(f"⏳ Please wait {int(60 - (time.time() - cooldowns[user_id]))} seconds before rolling again.")
         return
 
-    # Update the last roll time for the user
     cooldowns[user_id] = time.time()
 
-    # Check for banned users
-    if user_id == 7162166061:
-        return await message.reply_text(f"🚫 Sorry {mention}, you are banned from using this command.", quote=True)
+    # Fetch unique characters
+    unique_characters = await fetch_unique_characters(user_id)
+    
+    # Dice roll with custom emoji and suspense
+    suspense_msg = await message.reply_text("🎲 Rolling the dice... 🔄")
+    await asyncio.sleep(2)
+    dice_msg = await bot.send_dice(chat_id=message.chat.id, emoji="🎲")
+    value = dice_msg.dice.value
+    
+    # Edit suspense message with result
+    await suspense_msg.edit_text(f"🎲 **You rolled a {value}, {mention}!**")
+    await handle_dice_result(user_id, mention, value, message, unique_characters)
 
-    # Special condition for specific user
-    elif user_id == 6600178006:
-        receiver_id = message.from_user.id
-        unique_characters = await get_unique_characters(receiver_id)
-        try:
-            await user_collection.update_one({'id': receiver_id}, {'$push': {'characters': {'$each': unique_characters}}})
-            img_urls = [character['img_url'] for character in unique_characters]
-            captions = [
-                f"🩵 Yo {mention}, ʏᴏᴜ ʜɪᴛ ᴛʜᴇ *ᴊᴀᴄᴋᴘᴏᴛ*! ❄️\n\n"
-                f"🍃 **ɴᴀᴍᴇ:** {character['name']}\n"
-                f"⚜️ **ʀᴀʀɪᴛʏ:** {character['rarity']}\n"
-                f"⛩️ **ᴀɴɪᴍᴇ:** {character['anime']}\n\n"
-                f"━━━━━━━━━━━━━━━\n"
-                for character in unique_characters
-            ]
-            for img_url, caption in zip(img_urls, captions):
-                await message.reply_photo(photo=img_url, caption=caption)
-        except Exception as e:
-            print(f"Error updating characters for special user: {e}")
-    else:
-        receiver_id = message.from_user.id
-        unique_characters = await get_unique_characters(receiver_id)
-
-        # Roll dice animation with special effects
-        dice_msg = await bot.send_dice(chat_id=chat_id, emoji="🎲")
-        value = int(dice_msg.dice.value)
-
-        if value in [5, 6]:
-            # High roll message for jackpot win
-            for character in unique_characters:
-                try:
-                    await user_collection.update_one({'id': receiver_id}, {'$push': {'characters': character}})
-                except Exception as e:
-                    print(f"Error updating character: {e}")
-
-            img_urls = [character['img_url'] for character in unique_characters]
-            captions = [
-                f"🩵 ᴊᴀᴄᴋᴘᴏᴛ! ❄️\n"
-                f"🏮 ʏᴏᴜ ʀᴏʟʟᴇᴅ ᴀ {value}, {mention}!\n\n"
-                f"🥂 **ᴜɴɪǫᴜᴇ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴜɴʟᴏᴄᴋᴇᴅ!** 🥂\n"
-                f"🍃 **ɴᴀᴍᴇ:** {character['name']}\n"
-                f"⚜️ **ʀᴀʀɪᴛʏ:** {character['rarity']}\n"
-                f"⛩️ **ᴀɴɪᴍᴇ:** {character['anime']}\n\n"
-                f"🫧 **ɢᴏᴏᴅ ʟᴜᴄᴋ ᴏɴ ʏᴏᴜʀ ɴᴇxᴛ ʀᴏʟʟ!** 🫧\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                for character in unique_characters
-            ]
-            for img_url, caption in zip(img_urls, captions):
-                await message.reply_photo(photo=img_url, caption=caption)
-
-        elif value in [3, 4]:
-            # Medium roll message
-            await message.reply_animation(
-                animation="https://files.catbox.moe/p62bql.mp4",  # Medium roll gif
-                caption=(
-                    f"❄️ **ɴɪᴄᴇ ʀᴏʟʟ, {mention}!** ❄️\n\n"
-                    f"ʏᴏᴜ ʀᴏʟʟᴇᴅ ᴀ {value}, ɴᴏᴛ ʙᴀᴅ ᴀᴛ ᴀʟʟ ɴᴏᴛ ʙᴀᴅ ᴀᴛ ᴀʟʟ! 🩷 ᴋᴇᴇᴘ ᴛʀʏɪɴɢ ғᴏʀ ᴛʜᴇ ᴊᴀᴄᴋᴘᴏᴛ!\n\n"
-                    f"🥂 **ʙᴇᴛᴛᴇʀ ʟᴜᴄᴋ ɴᴇxᴛ ᴛɪᴍᴇ!** 🥂"
-                ),
-                quote=True
-            )
-
-        else:
-            # Low roll message
-            await message.reply_animation(
-                animation="https://files.catbox.moe/hn08wr.mp4",  # Low roll gif
-                caption=(
-                    f"💔 **Oᴏᴘs, {mention}.**\n\n"
-                    f"ʏᴏᴜ ʀᴏʟʟᴇᴅ ᴀ {value}... 🪭\n\n"
-                    f"ᴅᴏɴ'ᴛ ɢɪᴠᴇ ᴜᴘ! ᴛʀʏ ᴀɢᴀɪɴ ᴀɴᴅ ᴀɪᴍ ғᴏʀ sᴛᴀʀs! 💫"
-                ),
-                quote=True
-            )
+    # Additional surprise chance
+    if value == 6:
+        await message.reply_text("🎉 **Surprise Bonus!** 🎉 You earned an extra roll!")
