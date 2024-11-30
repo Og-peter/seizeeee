@@ -50,7 +50,7 @@ async def vipspin(update: Update, context: CallbackContext) -> None:
             await update.message.reply_text(
                 "⚠️ To use VIP Spin:\n"
                 "- You need at least **3 characters** in your collection.\n"
-                "- At least **2 of them** must be from **low rarity** categories (e.g., 🔵 Common, 🟢 Medium).\n"
+                "- At least **2 of them** must be from **low rarity** categories (e.g., ⚪ Common, 🔵 Medium).\n"
             )
             return
 
