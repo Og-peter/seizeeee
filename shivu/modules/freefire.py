@@ -2,9 +2,6 @@ import random
 from pyrogram import filters, Client
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 
-# Bot instance
-bot = Client("zombie_game_bot")
-
 # Weapons with damage ranges
 weapons = {
     "M1014 (Shotgun)": {"damage": (20, 40), "emoji": "🔫"},
