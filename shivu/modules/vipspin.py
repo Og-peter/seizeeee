@@ -92,7 +92,7 @@ async def vipspin(update: Update, context: CallbackContext) -> None:
             await add_characters_to_user(user_id, rewarded_character)
             daily_spin_limit[user_id]['count'] += 1
 
-            result_message = await update.message.reply_text(
+            await update.message.reply_text(
                 f"🎰 **VIP Spin Results - Character Exchange** 🎰\n\n"
                 f"🔄 **Exchanged Characters:**\n"
                 + "\n".join(f"🔸 {char['name']} ({char['rarity']})" for char in characters_to_exchange)
@@ -101,8 +101,6 @@ async def vipspin(update: Update, context: CallbackContext) -> None:
                 f"🎉 You have **{3 - daily_spin_limit[user_id]['count']} spins** left today.",
                 parse_mode='Markdown'
             )
-            await asyncio.sleep(3)
-            await result_message.delete()
         else:
             error_message = await update.message.reply_text("❌ No high-rarity rewards available. Try again later.")
             await asyncio.sleep(3)
