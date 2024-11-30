@@ -316,7 +316,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
                 f'🍵 Wait for the next character to spawn... 🌌',
                 parse_mode="HTML"
             )
-            return  # Exit after finding the match
+        return  # Exit after finding the match
 
     # If no matching chat_id is found
     await update.message.reply_text(
