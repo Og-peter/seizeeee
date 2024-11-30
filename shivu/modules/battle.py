@@ -7,127 +7,141 @@ from shivu import shivuu as bot
 from shivu import user_collection, collection
 
 # Constants
-WIN_REWARD_CHARACTER_COUNT = 1  # Number of characters a winner gets
-COOLDOWN_DURATION = 300  # Cooldown duration in seconds (5 minutes)
+COOLDOWN_DURATION = 300  # Cooldown in seconds
+MAX_HEALTH = 100  # Max health for players
+ARENAS = [
+    "🌋 Volcano Crater",
+    "🏰 Mystic Castle",
+    "🌌 Galactic Void",
+    "🌊 Ocean Battlefield",
+    "⚡ Thunder Plains",
+]
 
 # Cooldown tracker
-user_cooldowns = {}
+cooldowns = {}
 
-# Anime characters' best forms and videos
+# Anime characters with moves and effects
 CHARACTERS = {
     "Saitama": {
-        "move": "🔥 **Saitama delivers a 'Serious Punch' and obliterates the battlefield!**",
+        "move": "💥 **Serious Punch** explodes the battlefield!",
+        "damage": 30,
+        "critical": 50,
         "video_url": "https://files.catbox.moe/rw2yuz.mp4"
     },
     "Goku": {
-        "move": "🌌 **Goku unleashes 'Ultra Instinct Kamehameha', shaking the universe!**",
+        "move": "🌌 **Ultra Instinct Kamehameha** obliterates the enemy!",
+        "damage": 35,
+        "critical": 60,
         "video_url": "https://files.catbox.moe/90bga6.mp4"
     },
     "Naruto": {
-        "move": "🌀 **Naruto activates 'Baryon Mode' and overwhelms the opponent!**",
+        "move": "🌀 **Baryon Mode** overwhelms the opponent!",
+        "damage": 40,
+        "critical": 70,
         "video_url": "https://files.catbox.moe/d2iygy.mp4"
     },
     "Luffy": {
-        "move": "🌊 **Luffy goes 'Gear 5', turning the fight into cartoon chaos!**",
+        "move": "🌊 **Gear 5 Toony Chaos** wrecks the battlefield!",
+        "damage": 25,
+        "critical": 55,
         "video_url": "https://files.catbox.moe/wmc671.gif"
     },
     "Ichigo": {
-        "move": "⚡ **Ichigo transforms into 'Final Getsuga Tenshou', slashing everything!**",
+        "move": "⚡ **Final Getsuga Tenshou** slashes through everything!",
+        "damage": 30,
+        "critical": 45,
         "video_url": "https://files.catbox.moe/ky17sr.mp4"
     },
     "Madara": {
-        "move": "🌪️ **Madara casts 'Perfect Susanoo', decimating the battlefield!**",
+        "move": "🌪️ **Perfect Susanoo** crushes the battlefield!",
+        "damage": 35,
+        "critical": 65,
         "video_url": "https://files.catbox.moe/lknesv.mp4"
     },
     "Aizen": {
-        "move": "💀 **Aizen enters 'Hogyoku Form' and uses 'Kyoka Suigetsu' to confuse his enemy!**",
+        "move": "💀 **Kyoka Suigetsu** confuses the opponent!",
+        "damage": 25,
+        "critical": 50,
         "video_url": "https://files.catbox.moe/jv25db.mp4"
     },
 }
 
-# Function to get random characters as rewards
-async def get_random_characters():
-    try:
-        pipeline = [
-            {'$match': {'rarity': '🟡 Legendary'}},  # Adjust rarity as needed
-            {'$sample': {'size': WIN_REWARD_CHARACTER_COUNT}}
-        ]
-        cursor = collection.aggregate(pipeline)
-        characters = await cursor.to_list(length=None)
-        return characters
-    except Exception as e:
-        print(f"Error fetching characters: {e}")
-        return []
-
-# Battle command handler
-@bot.on_message(filters.command(["battle"]))
-async def battle(_, message: t.Message):
+# Battle command
+@bot.on_message(filters.command("battle"))
+async def battle_command(_, message: t.Message):
     if not message.reply_to_message:
-        return await message.reply_text("⚠️ **Reply to another user to challenge them to a battle!**")
+        return await message.reply_text("⚠️ **Reply to someone to challenge them to an anime battle!**")
     
     challenger = message.from_user
     opponent = message.reply_to_message.from_user
 
-    # Check if the opponent is the bot itself
     if opponent.is_bot:
-        return await message.reply_text("🤖 **You can't battle against the bot! Challenge another user instead.**")
-
-    # Check if the challenger is replying to their own message
+        return await message.reply_text("🤖 **You can't battle a bot! Challenge a human!**")
     if challenger.id == opponent.id:
-        return await message.reply_text("⚠️ **You can't battle against yourself. Challenge someone else!**")
+        return await message.reply_text("⚠️ **You can't battle yourself!**")
 
-    # Cooldown check for the challenger
+    # Cooldown check
     current_time = time.time()
-    if challenger.id in user_cooldowns and current_time - user_cooldowns[challenger.id] < COOLDOWN_DURATION:
-        return await message.reply_text("⏳ **You need to wait before challenging someone again.**")
+    if cooldowns.get(challenger.id, 0) > current_time:
+        remaining_time = int(cooldowns[challenger.id] - current_time)
+        return await message.reply_text(f"⏳ **Wait {remaining_time}s before battling again!**")
 
-    # Start battle sequence
-    challenger_move = random.choice(list(CHARACTERS.items()))
-    opponent_move = random.choice(list(CHARACTERS.items()))
+    # Select random arena
+    arena = random.choice(ARENAS)
+    await message.reply_text(f"⚔️ **The battle will take place in:** {arena}")
 
-    # Send moves with videos
-    await message.reply_video(
-        video=challenger_move[1]['video_url'],
-        caption=f"**{challenger.first_name} uses:** {challenger_move[1]['move']}"
-    )
+    # Initialize health points
+    challenger_health = MAX_HEALTH
+    opponent_health = MAX_HEALTH
+
+    # Battle starts
     await asyncio.sleep(2)
-    await message.reply_video(
-        video=opponent_move[1]['video_url'],
-        caption=f"**{opponent.first_name} counters with:** {opponent_move[1]['move']}"
-    )
-    await asyncio.sleep(2)
-
-    # Decide the winner
-    winner = random.choice([challenger, opponent])
-    loser = challenger if winner == opponent else opponent
-
-    # Reward the winner
-    random_characters = await get_random_characters()
-    if random_characters:
-        for character in random_characters:
-            await user_collection.update_one(
-                {'id': winner.id}, {'$push': {'characters': character}}
+    while challenger_health > 0 and opponent_health > 0:
+        # Challenger's move
+        challenger_move = random.choice(list(CHARACTERS.items()))
+        damage = random.choice([challenger_move[1]["damage"], challenger_move[1]["critical"]])
+        opponent_health -= damage
+        opponent_health = max(opponent_health, 0)  # Prevent negative health
+        await message.reply_video(
+            video=challenger_move[1]["video_url"],
+            caption=(
+                f"🔥 **{challenger.first_name} attacks with:** {challenger_move[1]['move']}\n"
+                f"💥 **Damage:** {damage} HP\n"
+                f"❤️ **{opponent.first_name}'s Health:** {opponent_health}/{MAX_HEALTH}"
             )
+        )
+        if opponent_health <= 0:
+            break
 
-        reward_message = (
-            f"🏆 **{winner.first_name} wins the battle!**\n\n"
-            f"🎁 **Reward:**\n"
-        )
-        for character in random_characters:
-            reward_message += (
-                f"🍁 **Name:** {character['name']}\n"
-                f"🥂 **Rarity:** {character['rarity']}\n"
-                f"⛩️ **Anime:** {character['anime']}\n\n"
+        # Opponent's move
+        await asyncio.sleep(2)
+        opponent_move = random.choice(list(CHARACTERS.items()))
+        damage = random.choice([opponent_move[1]["damage"], opponent_move[1]["critical"]])
+        challenger_health -= damage
+        challenger_health = max(challenger_health, 0)  # Prevent negative health
+        await message.reply_video(
+            video=opponent_move[1]["video_url"],
+            caption=(
+                f"⚡ **{opponent.first_name} counters with:** {opponent_move[1]['move']}\n"
+                f"💥 **Damage:** {damage} HP\n"
+                f"❤️ **{challenger.first_name}'s Health:** {challenger_health}/{MAX_HEALTH}"
             )
-        await message.reply_photo(
-            photo=random_characters[0]['img_url'],
-            caption=reward_message
         )
+
+    # Determine winner
+    if challenger_health > opponent_health:
+        winner = challenger
+        loser = opponent
     else:
-        await message.reply_text("⚠️ **Something went wrong while fetching the reward. Please try again later.**")
+        winner = opponent
+        loser = challenger
 
-    # Send a message about the loss
-    await message.reply_text(f"💀 **{loser.first_name} loses the battle. Better luck next time!**")
+    # Announce winner
+    await asyncio.sleep(2)
+    await message.reply_text(
+        f"🏆 **{winner.first_name} wins the epic battle in {arena}!**\n"
+        f"💀 **{loser.first_name} is defeated! Better luck next time.**"
+    )
 
-    # Set cooldown for the challenger
-    user_cooldowns[challenger.id] = current_time
+    # Set cooldown for challenger
+    cooldowns[challenger.id] = current_time + COOLDOWN_DURATION
