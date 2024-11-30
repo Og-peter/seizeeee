@@ -303,7 +303,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
         return
 
     # Check if the character has already been guessed
-    if chat_id in first_correct_guesses:
+    if chat_id in first_correct_guesses:  # Ensure it's a dict
         correct_guess_user = first_correct_guesses[chat_id]['user']
         seized_character = first_correct_guesses[chat_id]['character']
         time_guessed = first_correct_guesses[chat_id]['time']
