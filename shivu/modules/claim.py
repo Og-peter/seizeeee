@@ -199,6 +199,7 @@ async def reset_claims_command(_, message: t.Message):
 async def send_winter_reward(_, message: t.Message):
     target_rarities = ["🔮 Limited Edition", "💮 Exclusive", "🫧 Premium"]
     try:
+        # Fetch a random character from the specified rarities
         pipeline = [
             {'$match': {'rarity': {'$in': target_rarities}}},
             {'$sample': {'size': 1}}
@@ -209,6 +210,7 @@ async def send_winter_reward(_, message: t.Message):
         if not character:
             return await message.reply_text("⚠️ No characters found in the specified rarities.")
 
+        # Extract character details
         character = character[0]
         img_url = character.get('img_url')
         char_name = character.get('name', 'Unknown')
@@ -216,12 +218,15 @@ async def send_winter_reward(_, message: t.Message):
         char_id = character.get('id', 'Unknown')
         rarity = character.get('rarity', 'Unknown')
 
+        # Fetch all users
         users = await user_collection.find({}, {'id': 1}).to_list(None)
         user_ids = [user.get('id') for user in users if 'id' in user]
 
         sent_count, failed_count = 0, 0
+
         for user_id in user_ids:
             try:
+                # Send the character to the user
                 await bot.send_photo(
                     chat_id=user_id,
                     photo=img_url,
@@ -234,11 +239,25 @@ async def send_winter_reward(_, message: t.Message):
                         f"🌟 This character is a special winter season gift from **Seize Bot**!"
                     )
                 )
+
+                # Add the character to the user's collection
+                await user_collection.update_one(
+                    {"id": user_id},
+                    {"$push": {"collection": {
+                        "id": char_id,
+                        "name": char_name,
+                        "anime": anime,
+                        "rarity": rarity
+                    }}},
+                    upsert=True
+                )
+
                 sent_count += 1
             except Exception as e:
                 print(f"Failed to send to {user_id}: {e}")
                 failed_count += 1
 
+        # Send a summary message
         await message.reply_text(
             f"✅ Successfully sent the winter reward to {sent_count} users.\n"
             f"⚠️ Failed to send to {failed_count} users."
