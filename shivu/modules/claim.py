@@ -194,3 +194,64 @@ async def reset_claims_command(_, message: t.Message):
         await message.reply_text(f"✅ Successfully reset claim cooldown for {reset_count} users (excluding developers).")
     except Exception as e:
         await message.reply_text(f"⚠️ An error occurred while resetting claims: {e}")
+
+@bot.on_message(filters.command(["send_winter_reward"]) & filters.user(OWNER_ID))
+async def send_winter_reward(_, message: t.Message):
+    """
+    Sends a random character from the specified target rarities (🔮 Limited Edition, 💮 Exclusive, 🫧 Premium)
+    to all users.
+    Only the owner can use this command.
+    """
+    target_rarities = ["🔮 Limited Edition", "💮 Exclusive", "🫧 Premium"]  # Define the target rarities
+
+    try:
+        # Fetch a random character from the target rarities
+        pipeline = [
+            {'$match': {'rarity': {'$in': target_rarities}}},  # Match characters only from the specified rarities
+            {'$sample': {'size': 1}}  # Randomly select one character
+        ]
+        cursor = collection.aggregate(pipeline)
+        character = await cursor.to_list(length=1)  # Convert cursor to a list
+
+        if not character:
+            return await message.reply_text("⚠️ No characters found in the specified rarities.")
+        
+        character = character[0]
+        img_url = character.get('img_url')
+        char_name = character.get('name', 'Unknown')
+        anime = character.get('anime', 'Unknown')
+        char_id = character.get('id', 'Unknown')
+        rarity = character.get('rarity', 'Unknown')
+
+        # Fetch all user IDs
+        users = await user_collection.find({}, {'id': 1}).to_list(None)
+        user_ids = [user['id'] for user in users]
+
+        sent_count = 0
+        failed_count = 0
+        for user_id in user_ids:
+            try:
+                # Send the character to the user
+                await bot.send_photo(
+                    chat_id=user_id,
+                    photo=img_url,
+                    caption=(
+                        f"🎄 **Winter Special Reward!** 🎄\n"
+                        f"🔮 **Character ID:** `{char_id}`\n"
+                        f"❄️ **Character:** {char_name}\n"
+                        f"⛩️ **Anime:** {anime}\n"
+                        f"⚜️ **Rarity:** {rarity}\n\n"
+                        f"🌟 This character is a special winter season gift from **Seize Bot**!"
+                    )
+                )
+                sent_count += 1
+            except Exception as e:
+                print(f"Failed to send character to {user_id}: {e}")
+                failed_count += 1
+
+        await message.reply_text(
+            f"✅ Successfully sent the winter reward to {sent_count} users.\n"
+            f"⚠️ Failed to send to {failed_count} users."
+        )
+    except Exception as e:
+        await message.reply_text(f"⚠️ An error occurred: {e}")
