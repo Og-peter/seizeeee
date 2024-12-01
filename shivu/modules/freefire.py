@@ -1,14 +1,13 @@
 import time
 import asyncio
 import random
-import os  # Import os for environment variables
+import os
 from pyrogram import filters, Client, types as t
 from shivu import shivuu as bot
 from shivu import shivuu as app
 from shivu import user_collection
 from pyrogram.errors import UserNotParticipant, ChatWriteForbidden
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
-
 
 # Weapons with damage ranges
 weapons = {
@@ -44,6 +43,17 @@ characters = {
     "K": {"ability": "Max HP Boost", "value": 50, "emoji": "💪"}
 }
 
+# Zombie images (add image paths to your bot's directory)
+zombie_images = {
+    "Normal Zombie": "images/normal_zombie.jpg",
+    "Fast Zombie": "images/fast_zombie.jpg",
+    "Tank Zombie": "images/tank_zombie.jpg",
+    "Exploding Zombie": "images/exploding_zombie.jpg",
+    "Boss Zombie": "images/boss_zombie.jpg"
+}
+
+# Initialize player stats and active battles
+player_stats = {}
 active_battles = {}
 
 # Function to generate a health bar
@@ -51,6 +61,13 @@ def generate_health_bar(current_hp, max_hp, length=10):
     filled = int((current_hp / max_hp) * length)
     empty = length - filled
     return f"{'▰' * filled}{'▱' * empty} ({current_hp}/{max_hp})"
+
+# Function to update XP and level
+def update_xp_and_level(user_id, xp_gain):
+    player_stats[user_id]["xp"] += xp_gain
+    if player_stats[user_id]["xp"] >= player_stats[user_id]["level"] * 100:
+        player_stats[user_id]["level"] += 1
+        player_stats[user_id]["hp"] += 20  # Increase max HP
 
 # Start battle
 @bot.on_message(filters.command("startbattle"))
@@ -60,12 +77,19 @@ async def start_battle(client, message: Message):
         await message.reply_text("You are already in a battle!")
         return
 
+    # Initialize player stats if new player
+    if user_id not in player_stats:
+        player_stats[user_id] = {"xp": 0, "level": 1, "hp": 100}
+
     character_buttons = [
         [InlineKeyboardButton(f"{data['emoji']} {char} ({data['ability']})", callback_data=f"choose_{char}")]
         for char, data in characters.items()
     ]
     await message.reply_text(
-        "🎮 Choose your character:\n\n"
+        f"🎮 Choose your character:\n\n"
+        f"🧍 <b>Level:</b> {player_stats[user_id]['level']}\n"
+        f"❤️ <b>HP:</b> {player_stats[user_id]['hp']}\n"
+        f"⭐ <b>XP:</b> {player_stats[user_id]['xp']}\n\n"
         "Each character has a unique ability. Choose wisely!",
         reply_markup=InlineKeyboardMarkup(character_buttons)
     )
@@ -82,7 +106,7 @@ async def choose_character(client, callback_query):
     character = characters[char_name]
     first_zombie = random.choice(list(zombies.items()))
     battle_data = {
-        "user_hp": 100 + (character["value"] if character["ability"] == "Max HP Boost" else 0),
+        "user_hp": player_stats[user_id]["hp"] + (character["value"] if character["ability"] == "Max HP Boost" else 0),
         "character": character,
         "character_name": char_name,
         "zombies": [{"name": first_zombie[0], **first_zombie[1], "current_hp": first_zombie[1]["hp"]}],
@@ -90,35 +114,32 @@ async def choose_character(client, callback_query):
     }
     active_battles[user_id] = battle_data
 
+    # Send zombie image if available
+    zombie_image = zombie_images.get(first_zombie[0], None)
+    if zombie_image:
+        await client.send_photo(
+            chat_id=callback_query.message.chat.id,
+            photo=zombie_image,
+            caption=f"🚨 Battle Started with {character['emoji']} <b>{char_name}</b>! 🚨"
+        )
+
     await callback_query.message.edit_text(
-        f"🚨 Battle Started with {character['emoji']} <b>{char_name}</b>! 🚨\n\n"
         f"You are facing:\n{generate_health_bar(first_zombie[1]['hp'], first_zombie[1]['hp'])} {first_zombie[1]['emoji']} <b>{first_zombie[0]}</b>\n\n"
-        f"<b>Your HP:</b> {generate_health_bar(battle_data['user_hp'], 100)}\n\n"
+        f"<b>Your HP:</b> {generate_health_bar(battle_data['user_hp'], player_stats[user_id]['hp'])}\n\n"
         f"Select your weapon or use an item:",
     reply_markup=InlineKeyboardMarkup(
         [
-            # Weapons in rows of 3
-            *[
-                [
-                    InlineKeyboardButton(f"{data['emoji']} {weapon}", callback_data=f"attack_{weapon}")
-                    for weapon, data in list(weapons.items())[i:i+3]
-                ]
-                for i in range(0, len(weapons), 3)
+            [
+                InlineKeyboardButton(f"{data['emoji']} {weapon}", callback_data=f"attack_{weapon}")
+                for weapon, data in list(weapons.items())[:3]
             ],
-            # Items in rows of 3
-            *[
-                [
-                    InlineKeyboardButton(f"{items[item]['emoji']} {item}", callback_data=f"item_{item}")
-                    for item in battle_data["items"][j:j+3]
-                ]
-                for j in range(0, len(battle_data["items"]), 3)
+            [
+                InlineKeyboardButton(f"{data['emoji']} {weapon}", callback_data=f"attack_{weapon}")
+                for weapon, data in list(weapons.items())[3:]
             ],
-            # Stop button
             [InlineKeyboardButton("🛑 Stop Battle", callback_data="stop_battle")]
         ]
-    )
-    )
-
+    ))
 # Stop battle
 @bot.on_callback_query(filters.regex("^stop_battle"))
 async def stop_battle(client, callback_query):
