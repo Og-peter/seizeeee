@@ -243,12 +243,15 @@ async def send_winter_reward(_, message: t.Message):
                 # Add the character to the user's collection
                 await user_collection.update_one(
                     {"id": user_id},
-                    {"$push": {"collection": {
-                        "id": char_id,
-                        "name": char_name,
-                        "anime": anime,
-                        "rarity": rarity
-                    }}},
+                    {
+                        "$setOnInsert": {"collection": []},  # Ensure 'collection' is initialized as an array
+                        "$push": {"collection": {
+                            "id": char_id,
+                            "name": char_name,
+                            "anime": anime,
+                            "rarity": rarity
+                        }}
+                    },
                     upsert=True
                 )
 
