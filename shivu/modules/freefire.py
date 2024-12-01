@@ -1,38 +1,34 @@
 import time
 import asyncio
 import random
-import os  # Import os for environment variables
 from pyrogram import filters, Client, types as t
 from shivu import shivuu as bot
-from shivu import shivuu as app
 from shivu import user_collection
-from pyrogram.errors import UserNotParticipant, ChatWriteForbidden
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 
-
-# Weapons with damage ranges
+# Weapons with damage and upgrade levels
 weapons = {
-    "M1014 (Shotgun)": {"damage": (20, 40), "emoji": "🔫"},
-    "AWM (Sniper)": {"damage": (50, 80), "emoji": "🎯"},
-    "M249 (Machine Gun)": {"damage": (30, 50), "emoji": "🔥"},
-    "Grenade": {"damage": (70, 100), "emoji": "💣"},
-    "Rocket Launcher": {"damage": (90, 150), "emoji": "🚀"}
+    "M1014 (Shotgun)": {"damage": (20, 40), "emoji": "🔫", "level": 1},
+    "AWM (Sniper)": {"damage": (50, 80), "emoji": "🎯", "level": 1},
+    "M249 (Machine Gun)": {"damage": (30, 50), "emoji": "🔥", "level": 1},
+    "Grenade": {"damage": (70, 100), "emoji": "💣", "level": 1},
+    "Rocket Launcher": {"damage": (90, 150), "emoji": "🚀", "level": 1},
 }
 
-# Zombies with health and attack power
+# Zombies with health, attack, and images
 zombies = {
-    "Normal Zombie": {"hp": 100, "attack": (5, 15), "emoji": "🧟"},
-    "Fast Zombie": {"hp": 150, "attack": (10, 20), "emoji": "⚡"},
-    "Tank Zombie": {"hp": 200, "attack": (15, 25), "emoji": "💪"},
-    "Exploding Zombie": {"hp": 120, "attack": (20, 30), "emoji": "💥", "special": "explodes"},
-    "Boss Zombie": {"hp": 500, "attack": (30, 50), "emoji": "👹", "special": "spawns minions"}
+    "Normal Zombie": {"hp": 100, "attack": (5, 15), "emoji": "🧟", "image": "zombie1.jpg"},
+    "Fast Zombie": {"hp": 150, "attack": (10, 20), "emoji": "⚡", "image": "zombie2.jpg"},
+    "Tank Zombie": {"hp": 200, "attack": (15, 25), "emoji": "💪", "image": "zombie3.jpg"},
+    "Exploding Zombie": {"hp": 120, "attack": (20, 30), "emoji": "💥", "special": "explodes", "image": "zombie4.jpg"},
+    "Boss Zombie": {"hp": 500, "attack": (30, 50), "emoji": "👹", "special": "spawns minions", "image": "zombie_boss.jpg"},
 }
 
 # Consumable items
 items = {
     "Medkit": {"effect": "heal", "value": 50, "emoji": "🩹"},
     "Energy Drink": {"effect": "boost", "value": 20, "emoji": "⚡"},
-    "Shield": {"effect": "shield", "value": 30, "emoji": "🛡️"}
+    "Shield": {"effect": "shield", "value": 30, "emoji": "🛡️"},
 }
 
 # Free Fire-inspired characters
@@ -41,21 +37,33 @@ characters = {
     "Chrono": {"ability": "Damage Reduction", "value": 20, "duration": 3, "emoji": "🛡️"},
     "Hayato": {"ability": "Armor Pierce", "value": 25, "emoji": "⚔️"},
     "Kelly": {"ability": "Speed Boost", "value": 2, "emoji": "⚡"},
-    "K": {"ability": "Max HP Boost", "value": 50, "emoji": "💪"}
+    "K": {"ability": "Max HP Boost", "value": 50, "emoji": "💪"},
 }
 
 active_battles = {}
+user_stats = {}  # To track stats like level, XP, kills
 
-# Function to generate a health bar
+# Initialize user stats if not present
+def initialize_user_stats(user_id):
+    if user_id not in user_stats:
+        user_stats[user_id] = {"level": 1, "xp": 0, "kills": 0}
+
+# Generate health bar
 def generate_health_bar(current_hp, max_hp, length=10):
     filled = int((current_hp / max_hp) * length)
     empty = length - filled
     return f"{'▰' * filled}{'▱' * empty} ({current_hp}/{max_hp})"
 
+# Calculate level based on XP
+def calculate_level(xp):
+    return 1 + xp // 100
+
 # Start battle
 @bot.on_message(filters.command("startbattle"))
 async def start_battle(client, message: Message):
     user_id = message.from_user.id
+    initialize_user_stats(user_id)
+
     if user_id in active_battles:
         await message.reply_text("You are already in a battle!")
         return
@@ -70,11 +78,13 @@ async def start_battle(client, message: Message):
         reply_markup=InlineKeyboardMarkup(character_buttons)
     )
 
-# Character selection
+# Choose character
 @bot.on_callback_query(filters.regex("^choose_"))
 async def choose_character(client, callback_query):
     user_id = callback_query.from_user.id
     char_name = callback_query.data.split("_")[1]
+    initialize_user_stats(user_id)
+
     if user_id in active_battles:
         await callback_query.answer("You already chose your character!", show_alert=True)
         return
@@ -86,37 +96,27 @@ async def choose_character(client, callback_query):
         "character": character,
         "character_name": char_name,
         "zombies": [{"name": first_zombie[0], **first_zombie[1], "current_hp": first_zombie[1]["hp"]}],
-        "items": ["Medkit", "Shield"]
+        "items": ["Medkit", "Shield"],
+        "user_level": user_stats[user_id]["level"],
     }
     active_battles[user_id] = battle_data
 
     await callback_query.message.edit_text(
         f"🚨 Battle Started with {character['emoji']} <b>{char_name}</b>! 🚨\n\n"
-        f"You are facing:\n{generate_health_bar(first_zombie[1]['hp'], first_zombie[1]['hp'])} {first_zombie[1]['emoji']} <b>{first_zombie[0]}</b>\n\n"
-        f"<b>Your HP:</b> {generate_health_bar(battle_data['user_hp'], 100)}\n\n"
-        f"Select your weapon or use an item:",
-    reply_markup=InlineKeyboardMarkup(
-        [
-            # Weapons in rows of 3
-            *[
+        f"Facing Zombie:\n{generate_health_bar(first_zombie[1]['hp'], first_zombie[1]['hp'])} {first_zombie[1]['emoji']} <b>{first_zombie[0]}</b>\n\n"
+        f"<b>Your Stats:</b> Level {battle_data['user_level']}, Kills {user_stats[user_id]['kills']}\n"
+        f"<b>Your HP:</b> {generate_health_bar(battle_data['user_hp'], 100)}",
+        reply_markup=InlineKeyboardMarkup(
+            [
                 [
                     InlineKeyboardButton(f"{data['emoji']} {weapon}", callback_data=f"attack_{weapon}")
-                    for weapon, data in list(weapons.items())[i:i+3]
-                ]
-                for i in range(0, len(weapons), 3)
-            ],
-            # Items in rows of 3
-            *[
+                    for weapon, data in weapons.items()
+                ],
                 [
-                    InlineKeyboardButton(f"{items[item]['emoji']} {item}", callback_data=f"item_{item}")
-                    for item in battle_data["items"][j:j+3]
-                ]
-                for j in range(0, len(battle_data["items"]), 3)
-            ],
-            # Stop button
-            [InlineKeyboardButton("🛑 Stop Battle", callback_data="stop_battle")]
-        ]
-    )
+                    InlineKeyboardButton("🛑 Stop Battle", callback_data="stop_battle")
+                ],
+            ]
+        ),
     )
 
 # Stop battle
