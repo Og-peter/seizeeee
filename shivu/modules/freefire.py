@@ -45,11 +45,11 @@ characters = {
 
 # Zombie images (add image paths to your bot's directory)
 zombie_images = {
-    "Normal Zombie": "images/normal_zombie.jpg",
-    "Fast Zombie": "images/fast_zombie.jpg",
-    "Tank Zombie": "images/tank_zombie.jpg",
-    "Exploding Zombie": "images/exploding_zombie.jpg",
-    "Boss Zombie": "images/boss_zombie.jpg"
+    "Normal Zombie": "https://files.catbox.moe/tvjhmj.jpg",
+    "Fast Zombie": "https://files.catbox.moe/l387v7.jpg",
+    "Tank Zombie": "https://files.catbox.moe/qr6ad9.jpg",
+    "Exploding Zombie": "https://files.catbox.moe/1sipya.jpg",
+    "Boss Zombie": "https://files.catbox.moe/hiniq5.jpg"
 }
 
 # Initialize player stats and active battles
