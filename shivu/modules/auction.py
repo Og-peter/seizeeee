@@ -8,9 +8,9 @@ import aiocron
 from shivu import user_collection, shivuu as bot
 
 CHANNEL_ID = -1002208875879
-CHANNEL_USERNAME = "seize_market"  # Replace with your channel username
-SUPPORT_GROUP_ID = -1002104939708  # Replace with your support group ID
-OWNER_ID = 6402009857  # Replace with the owner ID
+CHANNEL_USERNAME = "seize_market"  
+SUPPORT_GROUP_ID = -1002104939708  
+OWNER_ID = 6402009857  
 
 # Auction data storage
 auction_data = {
@@ -25,16 +25,22 @@ auction_data = {
 # Timeout duration for no new bids (2 minutes)
 AUCTION_TIMEOUT = timedelta(minutes=2)
 
-# Morning message to request character IDs for auction
-@aiocron.crontab('0 8 * * *')
-async def morning_auction_request():
+# Morning, Afternoon, and Evening auction reminders
+@aiocron.crontab('0 6,14,20 * * *')
+async def auction_reminder():
+    message = "Ready to start an auction? Send the character ID you'd like to auction!"
+    
     await bot.send_message(
         chat_id=CHANNEL_ID,
-        text="Good morning! Ready to start an auction? Send the character ID you'd like to auction!"
+        text=f"📢 {message}"
     )
     await bot.send_message(
         chat_id=SUPPORT_GROUP_ID,
-        text="Attention! Ready to start an auction today? Please provide a character ID to participate."
+        text=f"📢 {message}"
+    )
+    await bot.send_message(
+        chat_id=OWNER_ID,
+        text=f"🔔 Reminder for auction: {message}"
     )
 
 # Check if a user is a channel member
