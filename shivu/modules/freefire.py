@@ -3,7 +3,6 @@ import asyncio
 import random
 from pyrogram import filters, Client, types as t
 from shivu import shivuu as bot
-from shivu import user_collection
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 
 # Weapons with damage and upgrade levels
@@ -41,22 +40,34 @@ characters = {
 }
 
 active_battles = {}
-user_stats = {}  # To track stats like level, XP, kills
+user_stats = {}  # To track stats like level, XP, kills, and rank
 
-# Initialize user stats if not present
+ranks = ["Beginner", "Fighter", "Warrior", "Legend"]
+
+# Initialize user stats
 def initialize_user_stats(user_id):
     if user_id not in user_stats:
-        user_stats[user_id] = {"level": 1, "xp": 0, "kills": 0}
+        user_stats[user_id] = {"level": 1, "xp": 0, "kills": 0, "rank": ranks[0]}
+
+# Calculate level and rank
+def update_level_and_rank(user_id):
+    xp = user_stats[user_id]["xp"]
+    kills = user_stats[user_id]["kills"]
+    user_stats[user_id]["level"] = 1 + xp // 100
+    if kills >= 50:
+        user_stats[user_id]["rank"] = ranks[3]
+    elif kills >= 30:
+        user_stats[user_id]["rank"] = ranks[2]
+    elif kills >= 10:
+        user_stats[user_id]["rank"] = ranks[1]
+    else:
+        user_stats[user_id]["rank"] = ranks[0]
 
 # Generate health bar
 def generate_health_bar(current_hp, max_hp, length=10):
     filled = int((current_hp / max_hp) * length)
     empty = length - filled
     return f"{'▰' * filled}{'▱' * empty} ({current_hp}/{max_hp})"
-
-# Calculate level based on XP
-def calculate_level(xp):
-    return 1 + xp // 100
 
 # Start battle
 @bot.on_message(filters.command("startbattle"))
@@ -101,23 +112,26 @@ async def choose_character(client, callback_query):
     }
     active_battles[user_id] = battle_data
 
-    await callback_query.message.edit_text(
-        f"🚨 Battle Started with {character['emoji']} <b>{char_name}</b>! 🚨\n\n"
-        f"Facing Zombie:\n{generate_health_bar(first_zombie[1]['hp'], first_zombie[1]['hp'])} {first_zombie[1]['emoji']} <b>{first_zombie[0]}</b>\n\n"
-        f"<b>Your Stats:</b> Level {battle_data['user_level']}, Kills {user_stats[user_id]['kills']}\n"
-        f"<b>Your HP:</b> {generate_health_bar(battle_data['user_hp'], 100)}",
+    await bot.send_photo(
+        chat_id=callback_query.message.chat.id,
+        photo=first_zombie[1]["image"],
+        caption=(
+            f"🚨 Battle Started with {character['emoji']} <b>{char_name}</b>! 🚨\n\n"
+            f"Facing Zombie:\n{generate_health_bar(first_zombie[1]['hp'], first_zombie[1]['hp'])} {first_zombie[1]['emoji']} <b>{first_zombie[0]}</b>\n\n"
+            f"<b>Your Stats:</b>\n"
+            f"Level {battle_data['user_level']} | Kills {user_stats[user_id]['kills']} | Rank: {user_stats[user_id]['rank']}\n"
+            f"<b>Your HP:</b> {generate_health_bar(battle_data['user_hp'], 100)}"
+        ),
         reply_markup=InlineKeyboardMarkup(
             [
                 [
                     InlineKeyboardButton(f"{data['emoji']} {weapon}", callback_data=f"attack_{weapon}")
                     for weapon, data in weapons.items()
                 ],
-                [
-                    InlineKeyboardButton("🛑 Stop Battle", callback_data="stop_battle")
-                ],
+                [InlineKeyboardButton("🛑 Stop Battle", callback_data="stop_battle")],
             ]
         ),
-    )
+               )
 
 # Stop battle
 @bot.on_callback_query(filters.regex("^stop_battle"))
