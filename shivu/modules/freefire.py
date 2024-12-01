@@ -112,6 +112,9 @@ async def choose_character(client, callback_query):
     }
     active_battles[user_id] = battle_data
 
+    # Delete the "Choose your character" message
+    await callback_query.message.delete()
+
     await bot.send_photo(
         chat_id=callback_query.message.chat.id,
         photo=first_zombie[1]["image"],
@@ -131,7 +134,7 @@ async def choose_character(client, callback_query):
                 [InlineKeyboardButton("🛑 Stop Battle", callback_data="stop_battle")],
             ]
         ),
-               )
+    )
 
 # Stop battle
 @bot.on_callback_query(filters.regex("^stop_battle"))
@@ -162,11 +165,17 @@ async def attack_zombie(client, callback_query):
     target_zombie["current_hp"] -= damage
 
     if target_zombie["current_hp"] <= 0:
-        # Zombie defeated
-        await callback_query.message.edit_text(
-            f"⚔️ You defeated {target_zombie['emoji']} <b>{target_zombie['name']}</b>!"
-        )
-        del active_battles[user_id]  # End the battle
+    # Update stats on zombie defeat
+    user_stats[user_id]["kills"] += 1
+    user_stats[user_id]["xp"] += 50
+    update_level_and_rank(user_id)
+
+    await callback_query.message.edit_text(
+        f"⚔️ You defeated {target_zombie['emoji']} <b>{target_zombie['name']}</b>!\n\n"
+        f"<b>Your Stats:</b>\n"
+        f"Level: {user_stats[user_id]['level']} | Kills: {user_stats[user_id]['kills']} | XP: {user_stats[user_id]['xp']} | Rank: {user_stats[user_id]['rank']}"
+    )
+    del active_battles[user_id]  # End the battle
     else:
         # Zombie attacks back
         user_damage = random.randint(*target_zombie["attack"])
