@@ -178,14 +178,28 @@ async def attack_zombie(client, callback_query):
                                 f"{data['emoji']} {weapon}",
                                 callback_data=f"attack_{weapon}",
                             )
-                            for weapon, data in weapons.items()
+                            for weapon, data in list(weapons.items())[:3]
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                f"{data['emoji']} {weapon}",
+                                callback_data=f"attack_{weapon}",
+                            )
+                            for weapon, data in list(weapons.items())[3:6]
                         ],
                         [
                             InlineKeyboardButton(
                                 f"{items[item]['emoji']} {item}",
                                 callback_data=f"item_{item}",
                             )
-                            for item in battle["items"]
+                            for item in battle["items"][:3]
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                f"{items[item]['emoji']} {item}",
+                                callback_data=f"item_{item}",
+                            )
+                            for item in battle["items"][3:6]
                         ],
                         [
                             InlineKeyboardButton(
@@ -228,18 +242,32 @@ async def use_item(client, callback_query):
                         f"{data['emoji']} {weapon}",
                         callback_data=f"attack_{weapon}",
                     )
-                    for weapon, data in weapons.items()
+                    for weapon, data in list(weapons.items())[:3]
+                ],
+                [
+                    InlineKeyboardButton(
+                        f"{data['emoji']} {weapon}",
+                        callback_data=f"attack_{weapon}",
+                    )
+                    for weapon, data in list(weapons.items())[3:6]
                 ],
                 [
                     InlineKeyboardButton(
                         f"{items[item]['emoji']} {item}",
                         callback_data=f"item_{item}",
                     )
-                    for item in battle["items"]
+                    for item in battle["items"][:3]
+                ],
+                [
+                    InlineKeyboardButton(
+                        f"{items[item]['emoji']} {item}",
+                        callback_data=f"item_{item}",
+                    )
+                    for item in battle["items"][3:6]
                 ],
             ]
         ),
-)
+    )
 
 # Function to handle end-of-battle cleanup
 def end_battle(user_id):
