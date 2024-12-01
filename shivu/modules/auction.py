@@ -202,7 +202,12 @@ async def view_auction(client, message: t.Message):
     else:
         await message.reply_text(caption)
 
-# Check and send warnings if no bids are placed within timeout period
+async def add_character_to_collection(user_id, character):
+    # Assuming you have a function or database interaction to add the character
+    user_collection = user_collections.get(user_id, [])
+    user_collection.append(character)
+    user_collections[user_id] = user_collection
+
 async def check_auction_timeout():
     if auction_data['active'] and auction_data['last_bid_time']:
         time_diff = datetime.now() - auction_data['last_bid_time']
@@ -234,6 +239,9 @@ async def check_auction_timeout():
                      f"Character: **{auction_data['character']['name']}**\n"
                      f"Winner: {winner_mention} with a bid of {winner['amount']} coins. 🎉"
             )
+
+            # Add character to winner's collection
+            await add_character_to_collection(winner['user_id'], auction_data['character'])
 
             # End the auction and reset the data
             auction_data.update({
