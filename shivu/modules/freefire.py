@@ -165,17 +165,17 @@ async def attack_zombie(client, callback_query):
     target_zombie["current_hp"] -= damage
 
     if target_zombie["current_hp"] <= 0:
-    # Update stats on zombie defeat
-    user_stats[user_id]["kills"] += 1
-    user_stats[user_id]["xp"] += 50
-    update_level_and_rank(user_id)
+        # Update stats on zombie defeat
+        user_stats[user_id]["kills"] += 1
+        user_stats[user_id]["xp"] += 50
+        update_level_and_rank(user_id)
 
-    await callback_query.message.edit_text(
-        f"⚔️ You defeated {target_zombie['emoji']} <b>{target_zombie['name']}</b>!\n\n"
-        f"<b>Your Stats:</b>\n"
-        f"Level: {user_stats[user_id]['level']} | Kills: {user_stats[user_id]['kills']} | XP: {user_stats[user_id]['xp']} | Rank: {user_stats[user_id]['rank']}"
-    )
-    del active_battles[user_id]  # End the battle
+        await callback_query.message.edit_text(
+            f"⚔️ You defeated {target_zombie['emoji']} <b>{target_zombie['name']}</b>!\n\n"
+            f"<b>Your Stats:</b>\n"
+            f"Level: {user_stats[user_id]['level']} | Kills: {user_stats[user_id]['kills']} | XP: {user_stats[user_id]['xp']} | Rank: {user_stats[user_id]['rank']}"
+        )
+        del active_battles[user_id]  # End the battle
     else:
         # Zombie attacks back
         user_damage = random.randint(*target_zombie["attack"])
@@ -231,7 +231,7 @@ async def attack_zombie(client, callback_query):
                         ],
                     ]
                 ),
-            )
+                                     )
 
 
 # Handle item usage
