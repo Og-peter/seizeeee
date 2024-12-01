@@ -249,33 +249,57 @@ async def send_winter_reward(_, message: t.Message):
 @bot.on_message(filters.command(["winter"]) & ~filters.Update.edited)
 async def winter_claim(_, message: t.Message):
     user_id = message.from_user.id
-    already_claimed = await user_collection.find_one({"id": user_id, "claimed_winter_reward": True})
-    if already_claimed:
-        return await message.reply_text("❄️ You have already claimed your winter reward! Enjoy your gift. 🎁")
-
+    
+    # Check if user has already claimed the winter reward
+    try:
+        already_claimed = await user_collection.find_one({"id": user_id, "claimed_winter_reward": True})
+        if already_claimed:
+            return await message.reply_text("❄️ You have already claimed your winter reward! Enjoy your gift. 🎁")
+    except Exception as e:
+        print(f"Database error while checking claim status for {user_id}: {e}")
+        return await message.reply_text("⚠️ An error occurred while checking your reward status. Please try again later.")
+    
+    # Fetch a random character from the specified rarities
     target_rarities = ["🔮 Limited Edition", "💮 Exclusive", "🫧 Premium"]
     pipeline = [
         {'$match': {'rarity': {'$in': target_rarities}}},
         {'$sample': {'size': 1}}
     ]
-    cursor = collection.aggregate(pipeline)
-    character = await cursor.to_list(length=1)
+    try:
+        cursor = collection.aggregate(pipeline)
+        character = await cursor.to_list(length=1)
+    except Exception as e:
+        print(f"Database error while fetching character for {user_id}: {e}")
+        return await message.reply_text("⚠️ An error occurred while fetching your reward. Please try again later.")
 
     if not character:
         return await message.reply_text("⚠️ No characters are currently available for the winter reward.")
     
+    # Extract character details
     character = character[0]
-    img_url = character.get('img_url')
+    img_url = character.get('img_url', None)
     char_name = character.get('name', 'Unknown')
     anime = character.get('anime', 'Unknown')
     char_id = character.get('id', 'Unknown')
     rarity = character.get('rarity', 'Unknown')
 
+    # Send the reward to the user
     try:
-        await bot.send_photo(
-            chat_id=user_id,
-            photo=img_url,
-            caption=(
+        if img_url:
+            await bot.send_photo(
+                chat_id=user_id,
+                photo=img_url,
+                caption=(
+                    f"🎄 **Winter Special Reward!** 🎄\n"
+                    f"🔮 **Character ID:** `{char_id}`\n"
+                    f"❄️ **Character:** {char_name}\n"
+                    f"⛩️ **Anime:** {anime}\n"
+                    f"⚜️ **Rarity:** {rarity}\n\n"
+                    f"🌟 This character is a special winter season gift from **Seize Bot**!"
+                )
+            )
+        else:
+            await message.reply_text(
                 f"🎄 **Winter Special Reward!** 🎄\n"
                 f"🔮 **Character ID:** `{char_id}`\n"
                 f"❄️ **Character:** {char_name}\n"
@@ -283,8 +307,8 @@ async def winter_claim(_, message: t.Message):
                 f"⚜️ **Rarity:** {rarity}\n\n"
                 f"🌟 This character is a special winter season gift from **Seize Bot**!"
             )
-        )
-
+        
+        # Update the user's claim status
         await user_collection.update_one(
             {"id": user_id},
             {"$set": {"claimed_winter_reward": True}},
