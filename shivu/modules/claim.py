@@ -246,7 +246,7 @@ async def send_winter_reward(_, message: t.Message):
     except Exception as e:
         await message.reply_text(f"⚠️ An error occurred: {e}")
 
-@bot.on_message(filters.command(["winter"]) & ~filters.Update.edited)
+@bot.on_message(filters.command(["winter"]) & ~filters.edited)
 async def winter_claim(_, message: t.Message):
     user_id = message.from_user.id
     
