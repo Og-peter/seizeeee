@@ -212,6 +212,8 @@ async def add_character_to_collection(user_id, character):
 async def check_auction_timeout():
     if auction_data['active'] and auction_data['last_bid_time']:
         time_diff = datetime.now() - auction_data['last_bid_time']
+        
+        # Send warning message if auction is inactive for a while
         if time_diff >= AUCTION_TIMEOUT and not auction_data['warning_sent']:
             await bot.send_message(
                 chat_id=CHANNEL_ID,
@@ -222,18 +224,18 @@ async def check_auction_timeout():
                 text="⏰ No new bids placed. The auction will end soon unless a new bid is made."
             )
             auction_data['warning_sent'] = True
-
+        
+        # End the auction if timeout reached
         if time_diff >= AUCTION_TIMEOUT and len(auction_data['bids']) > 0:
             winner = auction_data['bids'][0]
             winner_user = await bot.get_users(winner['user_id'])
             winner_mention = winner_user.mention
-
+            
             await bot.send_message(
                 chat_id=CHANNEL_ID,
                 text=f"🏆 Auction for **{auction_data['character']['name']}** has ended!\n\n"
                      f"Winner: {winner_mention} with {winner['amount']} coins. Congratulations!"
             )
-            
             await bot.send_message(
                 chat_id=SUPPORT_GROUP_ID,
                 text=f"🏆 Auction has ended!\n\n"
@@ -241,10 +243,16 @@ async def check_auction_timeout():
                      f"Winner: {winner_mention} with a bid of {winner['amount']} coins. 🎉"
             )
 
-            # Add character to winner's collection
+            # Deduct the bid amount from winner's balance
+            await user_collection.update_one(
+                {'id': winner['user_id']},
+                {'$inc': {'balance': -winner['amount']}}
+            )
+            
+            # Add the character to the winner's collection
             await add_character_to_collection(winner['user_id'], auction_data['character'])
-
-            # End the auction and reset the data
+            
+            # Reset the auction data
             auction_data.update({
                 'active': False,
                 'character': None,
