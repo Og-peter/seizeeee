@@ -141,43 +141,61 @@ async def attack_zombie(client, callback_query):
     weapon_data = weapons[weapon_name]
     battle = active_battles[user_id]
     target_zombie = battle["zombies"][0]
-    
+
+    # Calculate damage
     base_damage = random.randint(*weapon_data["damage"])
     damage = base_damage
     target_zombie["current_hp"] -= damage
-    
+
     if target_zombie["current_hp"] <= 0:
-        await callback_query.message.edit_text(f"⚔️ You defeated {target_zombie['emoji']} <b>{target_zombie['name']}</b>!")
-        del active_battles[user_id]  # End battle for now
+        # Zombie defeated
+        await callback_query.message.edit_text(
+            f"⚔️ You defeated {target_zombie['emoji']} <b>{target_zombie['name']}</b>!"
+        )
+        del active_battles[user_id]  # End the battle
     else:
-        # Zombie's turn
+        # Zombie attacks back
         user_damage = random.randint(*target_zombie["attack"])
         battle["user_hp"] -= user_damage
-        
+
         if battle["user_hp"] <= 0:
-            await callback_query.message.edit_text("💀 You were defeated by the zombie. Better luck next time!")
+            # User defeated
+            await callback_query.message.edit_text(
+                "💀 You were defeated by the zombie. Better luck next time!"
+            )
             del active_battles[user_id]
         else:
+            # Continue battle
             await callback_query.message.edit_text(
                 f"⚔️ You attacked with {weapon_data['emoji']} <b>{weapon_name}</b> and dealt <b>{damage}</b> damage!\n\n"
                 f"Zombie attacked back and dealt <b>{user_damage}</b> damage!\n\n"
                 f"<b>Your HP:</b> {generate_health_bar(battle['user_hp'], 100)}\n\n"
                 f"<b>Zombie HP:</b> {generate_health_bar(target_zombie['current_hp'], target_zombie['hp'])}",
-                reply_markup = InlineKeyboardMarkup(
-    [
-        [
-            InlineKeyboardButton(f"{data['emoji']} {weapon}", callback_data=f"attack_{weapon}")
-            for weapon, data in weapons.items()
-        ],
-        [
-            InlineKeyboardButton(f"{items[item]['emoji']} {item}", callback_data=f"item_{item}")
-            for item in battle["items"]
-        ],
-        [
-            InlineKeyboardButton("🛑 Stop Battle", callback_data="stop_battle")
-        ]
-    ]
-                )
+                reply_markup=InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton(
+                                f"{data['emoji']} {weapon}",
+                                callback_data=f"attack_{weapon}",
+                            )
+                            for weapon, data in weapons.items()
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                f"{items[item]['emoji']} {item}",
+                                callback_data=f"item_{item}",
+                            )
+                            for item in battle["items"]
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                "🛑 Stop Battle", callback_data="stop_battle"
+                            )
+                        ],
+                    ]
+                ),
+            )
+
 
 # Handle item usage
 @bot.on_callback_query(filters.regex("^item_"))
@@ -203,18 +221,25 @@ async def use_item(client, callback_query):
     await callback_query.message.edit_text(
         f"🧰 You used {item['emoji']} <b>{item_name}</b>! Effect applied.\n\n"
         f"<b>Your HP:</b> {generate_health_bar(battle['user_hp'], 100)}",
-        reply_markup = InlineKeyboardMarkup(
-    [
-        [
-            InlineKeyboardButton(f"{data['emoji']} {weapon}", callback_data=f"attack_{weapon}")
-            for weapon, data in weapons.items()
-        ],
-        [
-            InlineKeyboardButton(f"{items[item]['emoji']} {item}", callback_data=f"item_{item}")
-            for item in battle["items"]
-        ]
-    ]
-        )
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        f"{data['emoji']} {weapon}",
+                        callback_data=f"attack_{weapon}",
+                    )
+                    for weapon, data in weapons.items()
+                ],
+                [
+                    InlineKeyboardButton(
+                        f"{items[item]['emoji']} {item}",
+                        callback_data=f"item_{item}",
+                    )
+                    for item in battle["items"]
+                ],
+            ]
+        ),
+)
 
 # Function to handle end-of-battle cleanup
 def end_battle(user_id):
