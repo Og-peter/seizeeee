@@ -250,7 +250,7 @@ async def send_winter_reward(_, message: t.Message):
 async def winter_claim(_, message: t.Message):
     user_id = message.from_user.id
     
-    # Check if user has already claimed the winter reward
+    # Check if the user has already claimed the winter reward
     try:
         already_claimed = await user_collection.find_one({"id": user_id, "claimed_winter_reward": True})
         if already_claimed:
@@ -277,11 +277,11 @@ async def winter_claim(_, message: t.Message):
     
     # Extract character details
     character = character[0]
-    img_url = character.get('img_url', None)
+    char_id = character.get('id', 'Unknown')
     char_name = character.get('name', 'Unknown')
     anime = character.get('anime', 'Unknown')
-    char_id = character.get('id', 'Unknown')
     rarity = character.get('rarity', 'Unknown')
+    img_url = character.get('img_url', None)
 
     # Send the reward to the user
     try:
@@ -308,14 +308,22 @@ async def winter_claim(_, message: t.Message):
                 f"🌟 This character is a special winter season gift from **Seize Bot**!"
             )
         
-        # Update the user's claim status
+        # Update the user's claim status and add the character to their collection
         await user_collection.update_one(
             {"id": user_id},
-            {"$set": {"claimed_winter_reward": True}},
+            {
+                "$set": {"claimed_winter_reward": True},
+                "$push": {"collection": {
+                    "id": char_id,
+                    "name": char_name,
+                    "anime": anime,
+                    "rarity": rarity
+                }}
+            },
             upsert=True
         )
 
-        await message.reply_text("✅ You successfully claimed your winter reward! Enjoy your new character. 🎁")
+        await message.reply_text("✅ You successfully claimed your winter reward! The character has been added to your collection. 🎁")
     except Exception as e:
         print(f"Error sending winter reward to {user_id}: {e}")
         await message.reply_text("⚠️ An error occurred while sending your winter reward. Please try again later.")
