@@ -203,10 +203,11 @@ async def view_auction(client, message: t.Message):
         await message.reply_text(caption)
 
 async def add_character_to_collection(user_id, character):
-    # Assuming you have a function or database interaction to add the character
-    user_collection = user_collections.get(user_id, [])
-    user_collection.append(character)
-    user_collections[user_id] = user_collection
+    await user_collection.update_one(
+        {'id': user_id},
+        {'$push': {'characters': character}},
+        upsert=True
+    )
 
 async def check_auction_timeout():
     if auction_data['active'] and auction_data['last_bid_time']:
@@ -224,13 +225,13 @@ async def check_auction_timeout():
 
         if time_diff >= AUCTION_TIMEOUT and len(auction_data['bids']) > 0:
             winner = auction_data['bids'][0]
-            winner_mention = await bot.get_users(winner['user_id'])
-            winner_mention = winner_mention.mention
+            winner_user = await bot.get_users(winner['user_id'])
+            winner_mention = winner_user.mention
 
             await bot.send_message(
                 chat_id=CHANNEL_ID,
                 text=f"🏆 Auction for **{auction_data['character']['name']}** has ended!\n\n"
-                     f"{winner['amount']} coins. Congratulations!"
+                     f"Winner: {winner_mention} with {winner['amount']} coins. Congratulations!"
             )
             
             await bot.send_message(
@@ -252,7 +253,6 @@ async def check_auction_timeout():
                 'last_bid_time': None,
                 'warning_sent': False
             })
-
 # Background task to regularly check for auction timeout
 async def auction_timeout_task():
     while True:
