@@ -225,7 +225,7 @@ async def send_winter_reward(_, message: t.Message):
 
         # Fetch all user IDs
         users = await user_collection.find({}, {'id': 1}).to_list(None)
-        user_ids = [user['id'] for user in users]
+        user_ids = [user.get('id') for user in users if 'id' in user]  # Ensure only valid IDs are used
 
         sent_count = 0
         failed_count = 0
