@@ -17,11 +17,11 @@ weapons = {
 
 # Zombies with health, attack, and images
 zombies = {
-    "Normal Zombie": {"hp": 100, "attack": (5, 15), "emoji": "🧟", "image": "zombie1.jpg"},
-    "Fast Zombie": {"hp": 150, "attack": (10, 20), "emoji": "⚡", "image": "zombie2.jpg"},
-    "Tank Zombie": {"hp": 200, "attack": (15, 25), "emoji": "💪", "image": "zombie3.jpg"},
-    "Exploding Zombie": {"hp": 120, "attack": (20, 30), "emoji": "💥", "special": "explodes", "image": "zombie4.jpg"},
-    "Boss Zombie": {"hp": 500, "attack": (30, 50), "emoji": "👹", "special": "spawns minions", "image": "zombie_boss.jpg"},
+    "Normal Zombie": {"hp": 100, "attack": (5, 15), "emoji": "🧟", "image": "https://files.catbox.moe/tvjhmj.jpg"},
+    "Fast Zombie": {"hp": 150, "attack": (10, 20), "emoji": "⚡", "image": "https://files.catbox.moe/l387v7.jpg"},
+    "Tank Zombie": {"hp": 200, "attack": (15, 25), "emoji": "💪", "image": "https://files.catbox.moe/qr6ad9.jpg"},
+    "Exploding Zombie": {"hp": 120, "attack": (20, 30), "emoji": "💥", "special": "explodes", "image": "https://files.catbox.moe/1sipya.jpg"},
+    "Boss Zombie": {"hp": 500, "attack": (30, 50), "emoji": "👹", "special": "spawns minions", "image": "https://files.catbox.moe/hiniq5.jpg"},
 }
 
 # Consumable items
