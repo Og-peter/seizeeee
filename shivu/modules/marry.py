@@ -7,7 +7,6 @@ import time
 
 # Cooldown & Streaks
 cooldowns = {}
-leaderboard = {}
 roll_streaks = {}
 streak_rewards = {5: "🌟 RARE REWARD", 10: "💎 LEGENDARY BONUS"}
 
@@ -65,7 +64,6 @@ async def marry_command(_, message: t.Message):
                 await user_collection.update_one(
                     {"id": user_id}, {"$push": {"characters": character}}
                 )
-                leaderboard[mention] = leaderboard.get(mention, 0) + 1
                 roll_streaks[mention] = roll_streaks.get(mention, 0) + 1
 
                 img_url = character["img_url"]
@@ -84,14 +82,6 @@ async def marry_command(_, message: t.Message):
         # Rejection Handling
         roll_streaks[mention] = 0
         await message.reply_text(get_rejection_message(mention))
-
-    # Displaying Leaderboard in Case of High Streaks
-    if roll_streaks[mention] % 5 == 0:
-        sorted_leaderboard = sorted(leaderboard.items(), key=lambda x: x[1], reverse=True)
-        top_3 = "\n".join(
-            [f"🏆 {rank + 1}. {user}: {score} points" for rank, (user, score) in enumerate(sorted_leaderboard[:3])]
-        )
-        await message.reply_text(f"📜 **Leaderboard**\n\n{top_3}")
 
 # Fetch Unique Characters Based on User
 async def get_unique_characters(receiver_id, target_rarities=["⚪️ Common", "🔵 Medium", "🟠 Rare", "🟡 Legendary"]):
