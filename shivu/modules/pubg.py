@@ -1,11 +1,13 @@
 import time
 import asyncio
 import random
-from pyrogram import filters, Client
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
-
-# Database collection for users
+import os  # Import os for environment variables
+from pyrogram import filters, Client, types as t
+from shivu import shivuu as bot
+from shivu import shivuu as app
 from shivu import user_collection
+from pyrogram.errors import UserNotParticipant, ChatWriteForbidden
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 
 # PUBG Game Variables
 AUTHORIZED_USER_ID = 7011990425
