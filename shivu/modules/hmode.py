@@ -11,7 +11,7 @@ async def hmode_command(client, message):
     user_id = message.from_user.id
     user_data[user_id] = user_id  # Store the user ID for validation
 
-    img_url = "https://example.com/harem_interface.jpg"  # Replace with your actual image URL
+    img_url = "https://files.catbox.moe/0yr8f9.jpg"  # Replace with your actual image URL
     keyboard = [
         [InlineKeyboardButton("🧩 Sort by Rarity", callback_data="sort_rarity")],
         [InlineKeyboardButton("🎏 Reset Preferences", callback_data="reset_preferences")],
