@@ -34,7 +34,6 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         page = 0
 
     harem_message = f"<b>{escape(update.effective_user.first_name)}'s Harem - Page {page+1}/{total_pages}</b>\n"
-    harem_message += "----------------------------------\n"
 
     current_characters = unique_characters[page*15:(page+1)*15]
 
@@ -52,14 +51,22 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         '💞 Valentine': '💞'
     }
 
-    for character in current_characters:
-        count = character_counts.get(character.get('id'), 0)
-        rarity = character.get('rarity', 'Unknown')
-        rarity_emoji = rarity_emojis.get(rarity, rarity)
-        character_id = character.get("id", "Unknown")
-        harem_message += f"➥ {character_id} | {rarity_emoji} {character.get('name', 'Unknown')} x{count}\n"
+    # Group by anime and display characters under each anime
+    anime_groups = groupby(current_characters, key=lambda x: x.get('anime', 'Unknown'))
 
-    harem_message += "----------------------------------\n"
+    for anime, characters_in_anime in anime_groups:
+        characters_in_anime = list(characters_in_anime)
+        harem_message += f"❖ <b>{anime}</b> {len(characters_in_anime)}/{len([c for c in characters if c.get('anime', '') == anime])}\n"
+        harem_message += "----------------------------------\n"
+
+        for character in characters_in_anime:
+            count = character_counts.get(character.get('id'), 0)
+            rarity = character.get('rarity', 'Unknown')
+            rarity_emoji = rarity_emojis.get(rarity, rarity)
+            character_id = character.get("id", "Unknown")
+            harem_message += f"➸ {character_id} 〔 {rarity_emoji} 〕 {character.get('name', 'Unknown')} x{count}\n"
+
+        harem_message += "----------------------------------\n"
 
     total_count = len(user['characters'])
 
