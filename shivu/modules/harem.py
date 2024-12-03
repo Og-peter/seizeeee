@@ -34,10 +34,9 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         page = 0
 
     harem_message = f"<b>{escape(update.effective_user.first_name)}'s Harem - Page {page+1}/{total_pages}</b>\n"
+    harem_message += "----------------------------------\n"
 
     current_characters = unique_characters[page*15:(page+1)*15]
-
-    current_grouped_characters = {k: list(v) for k, v in groupby(current_characters, key=lambda x: x.get('anime', ''))}
 
     rarity_emojis = {
         '⚪️ Common': '⚪️',
@@ -53,28 +52,30 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
         '💞 Valentine': '💞'
     }
 
-    for anime, characters in current_grouped_characters.items():
-        harem_message += f'\n<b>❖ {anime} ﹝{len(characters)}/{await collection.count_documents({"anime": anime})}〕</b>\n'
-        
-        for character in characters:
-            count = character_counts.get(character.get('id'), 0)
-            rarity = character.get('rarity', 'Unknown')
-            rarity_emoji = rarity_emojis.get(rarity, rarity)
-            character_id = character.get("id", "Unknown")
-            harem_message += f'⌬  ⌠ {rarity_emoji} ⌡  𝐈𝐃 : {character_id}  {character.get("name", "Unknown")} ×{count}\n'
-            
+    for character in current_characters:
+        count = character_counts.get(character.get('id'), 0)
+        rarity = character.get('rarity', 'Unknown')
+        rarity_emoji = rarity_emojis.get(rarity, rarity)
+        character_id = character.get("id", "Unknown")
+        harem_message += f"➥ {character_id} | {rarity_emoji} {character.get('name', 'Unknown')} x{count}\n"
+
+    harem_message += "----------------------------------\n"
+
     total_count = len(user['characters'])
 
-    keyboard = [[InlineKeyboardButton(f"sᴇᴇ ᴄʜᴀʀᴀᴄᴛᴇʀs 🪭 ({total_count})", switch_inline_query_current_chat=f"collection.{user_id}")]]
-
-    if total_pages > 1:
-        nav_buttons = []
-        if page > 0:
-            nav_buttons.append(InlineKeyboardButton("◀ previous", callback_data=f"harem:{page-1}:{user_id}"))
-        if page < total_pages - 1:
-            nav_buttons.append(InlineKeyboardButton("Next ▶", callback_data=f"harem:{page+1}:{user_id}"))
-        keyboard.append(nav_buttons)
-    
+    # New keyboard
+    keyboard = [
+        [
+            InlineKeyboardButton("1x ◀", callback_data=f"harem:{page-1}:{user_id}"),
+            InlineKeyboardButton(f"{page+1}/{total_pages}", callback_data="noop"),
+            InlineKeyboardButton("1x ▶", callback_data=f"harem:{page+1}:{user_id}"),
+        ],
+        [
+            InlineKeyboardButton("🌐", switch_inline_query_current_chat=f"collection.{user_id}"),
+            InlineKeyboardButton("FAST ▶", callback_data=f"harem:{total_pages-1}:{user_id}"),
+            InlineKeyboardButton("🗑", callback_data="delete"),
+        ],
+    ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if 'favorites' in user and user['favorites']:
@@ -141,4 +142,3 @@ async def harem_callback(update: Update, context: CallbackContext) -> None:
 application.add_handler(CommandHandler(["harem", "collection"], harem, block=False))
 harem_handler = CallbackQueryHandler(harem_callback, pattern='^harem', block=False)
 application.add_handler(harem_handler)
-        
