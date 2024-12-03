@@ -212,7 +212,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     message = await context.bot.send_photo(
         chat_id=chat_id,
         photo=selected_character['img_url'],
-        caption=f"""<b>{rarity_emoji} ᴋᴀᴡᴀɪ! ᴀ {selected_character.get('rarity', 'Unknown')[2:]} ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀs ᴀᴘᴘᴇᴀʀᴇᴅ!</b>\n
+        caption=f"""<b>{character['rarity'][0]} ᴋᴀᴡᴀɪ! ᴀ {character['rarity'][2:]} ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀs ᴀᴘᴘᴇᴀʀᴇᴅ!</b>\n
 <b>ᴀᴅᴅ ʜᴇʀ ᴛᴏ ʏᴏᴜʀ ʜᴀʀᴇᴍ ʙʏ sᴇɴᴅɪɴɢ</b>\n<b>/seize ɴᴀᴍᴇ</b>""",
         parse_mode='HTML'
     )
