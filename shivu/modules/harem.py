@@ -56,7 +56,7 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     for anime, characters_in_anime in anime_groups:
         characters_in_anime = list(characters_in_anime)
-        harem_message += f"❖ <b>{anime}</b> {len(characters_in_anime)}/{len([c for c in characters if c.get('anime', '') == anime])}\n"
+        harem_message += f"❖ <b>{anime}</b> ⌠{len(characters_in_anime)}/{len([c for c in characters if c.get('anime', '') == anime])}⌡\n"
         harem_message += "── ⋅ ⋅ ⋅ ⋅ ─── ⋅  ⋅ ─── ⋅ ⋅ ⋅ ⋅ ──\n"
         
         for character in characters_in_anime:
