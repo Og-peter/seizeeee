@@ -50,14 +50,14 @@ async def send_rarity_preferences(callback_query: CallbackQuery):
         "⚪️ Common",
         "🔮 Limited Edition",
         "🫧 Premium",
-        "🥵 Cosplay",
+        "🌸 Exotic",
         "💮 Exclusive",
         "👶 Chibi",
         "🟡 Legendary",
         "🟠 Rare",
         "🔵 Medium",
-        "💠 Cosmic",
-        "🧿 Supreme"
+        "🎐 Astral",
+        "💞 Valentine"
         
     ]
     keyboard = [[InlineKeyboardButton(rarity, callback_data=f"rarity_{rarity}")] for rarity in rarity_order]
