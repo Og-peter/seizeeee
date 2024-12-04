@@ -5,9 +5,28 @@ import math
 from html import escape
 import random
 from itertools import groupby
+from telegram.error import BadRequest
 
+SUPPORT_CHANNEL = "@Seizer_updates"
+
+async def is_user_in_channel(user_id: int) -> bool:
+    try:
+        member = await application.bot.get_chat_member(chat_id=SUPPORT_CHANNEL, user_id=user_id)
+        return member.status not in ['left', 'kicked']
+    except BadRequest:
+        return False
+        
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
+
+    # Check if user is in the support channel
+    if not await is_user_in_channel(user_id):
+        join_message = f"⬤ ᴊᴏɪɴ [ᴏᴜʀ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ]({SUPPORT_CHANNEL}) ᴛᴏ ᴀᴄᴄᴇss ᴛʜɪs ғᴇᴀᴛᴜʀᴇ."
+        if update.message:
+            await update.message.reply_text(join_message, parse_mode='Markdown', disable_web_page_preview=True)
+        else:
+            await update.callback_query.edit_message_text(join_message, parse_mode='Markdown', disable_web_page_preview=True)
+        return
 
     user = await user_collection.find_one({'id': user_id})
     if not user:
@@ -72,16 +91,16 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     # New keyboard
     keyboard = [
-        [
-            InlineKeyboardButton("1x ◀", callback_data=f"harem:{page-1}:{user_id}"),
-            InlineKeyboardButton(f"{page+1}/{total_pages}", callback_data="noop"),
-            InlineKeyboardButton("1x ▶", callback_data=f"harem:{page+1}:{user_id}"),
-        ],
-        [
-            InlineKeyboardButton("🌐", switch_inline_query_current_chat=f"collection.{user_id}"),
-            InlineKeyboardButton("FAST ▶", callback_data=f"harem:{total_pages-1}:{user_id}"),
-            InlineKeyboardButton("🗑", callback_data="delete"),
-        ],
+    [
+        InlineKeyboardButton("◀", callback_data=f"harem:{page-1}:{user_id}"),
+        InlineKeyboardButton(f"{page+1}/{total_pages}", callback_data="noop"),
+        InlineKeyboardButton("▶", callback_data=f"harem:{page+1}:{user_id}"),
+    ],
+    [
+        InlineKeyboardButton("🌐", switch_inline_query_current_chat=f"collection.{user_id}"),
+        InlineKeyboardButton("FAST ▶", callback_data=f"harem:{total_pages-1}:{user_id}"),
+        InlineKeyboardButton("🗑", callback_data="delete"),
+    ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -137,6 +156,9 @@ async def harem_callback(update: Update, context: CallbackContext) -> None:
         await query.answer("⬤ ᴅᴏɴ'ᴛ sᴛᴀʟᴋ ᴏᴛʜᴇʀ ᴜsᴇʀ's ʜᴀʀᴇᴍ", show_alert=True)
         return
 
+    if page < 0 or page >= total_pages:
+        await query.answer("⬤ ɪɴᴠᴀʟɪᴅ ᴘᴀɢᴇ!", show_alert=True)
+        return
     if "next" in data:
         page = current_page + 1
     elif "prev" in data:
@@ -147,5 +169,5 @@ async def harem_callback(update: Update, context: CallbackContext) -> None:
     await harem(update, context, page)
 
 application.add_handler(CommandHandler(["harem", "collection"], harem, block=False))
-harem_handler = CallbackQueryHandler(harem_callback, pattern='^harem', block=False)
+application.add_handler(CallbackQueryHandler(harem_callback, pattern='^harem:', block=False))
 application.add_handler(harem_handler)
