@@ -15,18 +15,27 @@ async def is_user_in_channel(user_id: int) -> bool:
         return member.status not in ['left', 'kicked']
     except BadRequest:
         return False
-        
+
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
     user_id = update.effective_user.id
 
     # Check if user is in the support channel
     if not await is_user_in_channel(user_id):
-        join_message = f"⬤ ᴊᴏɪɴ [ᴏᴜʀ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ]({SUPPORT_CHANNEL}) ᴛᴏ ᴀᴄᴄᴇss ᴛʜɪs ғᴇᴀᴛᴜʀᴇ."
+        join_message = (
+            "⬤ ᴊᴏɪɴ [ᴏᴜʀ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ] "
+            f"({SUPPORT_CHANNEL}) ᴛᴏ ᴀᴄᴄᴇss ᴛʜɪs ғᴇᴀᴛᴜʀᴇ."
+        )
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🌀 ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ", url=f"https://t.me/{SUPPORT_CHANNEL.lstrip('@')}")],
+            [InlineKeyboardButton("🔄 ʀᴇᴛʀʏ", callback_data="retry_harem")]
+        ])
+
         if update.message:
-            await update.message.reply_text(join_message, parse_mode='Markdown', disable_web_page_preview=True)
+            await update.message.reply_text(join_message, parse_mode='Markdown', disable_web_page_preview=True, reply_markup=keyboard)
         else:
-            await update.callback_query.edit_message_text(join_message, parse_mode='Markdown', disable_web_page_preview=True)
+            await update.callback_query.edit_message_text(join_message, parse_mode='Markdown', disable_web_page_preview=True, reply_markup=keyboard)
         return
+        
 
     user = await user_collection.find_one({'id': user_id})
     if not user:
@@ -168,6 +177,14 @@ async def harem_callback(update: Update, context: CallbackContext) -> None:
 
     await harem(update, context, page)
 
+async def retry_harem(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    await query.answer()
+    await harem(update, context)
+    
 harem_handler = CallbackQueryHandler(harem_callback, pattern='^harem:', block=False)
+retry_handler = CallbackQueryHandler(retry_harem, pattern='^retry_harem$', block=False)
+
 application.add_handler(harem_handler)
+application.add_handler(retry_handler)
 application.add_handler(CommandHandler(["harem", "collection"], harem, block=False))
