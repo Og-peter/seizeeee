@@ -106,7 +106,7 @@ async def git_pull_command(client, message):
 
     try:
         result = subprocess.run(
-            ["git", "pull", "https://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@github.com/Itachiuchiha786786/seizeeee", "main"],
+            ["git", "pull", "https://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@github.com/Itachiuchiha786786/seizeeee", "main"],
             capture_output=True, text=True, check=True, timeout=60
         )
 
