@@ -22,18 +22,17 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     # Check if user is in the support channel
     if not await is_user_in_channel(user_id):
         join_message = (
-            "⬤ ᴊᴏɪɴ [ᴏᴜʀ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ] "
-            f"({SUPPORT_CHANNEL}) ᴛᴏ ᴀᴄᴄᴇss ᴛʜɪs ғᴇᴀᴛᴜʀᴇ."
+            "⬤ ᴊᴏɪɴ <a href='https://t.me/Seizer_updates'>ᴏᴜʀ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ</a> ᴛᴏ ᴀᴄᴄᴇss ᴛʜɪs ғᴇᴀᴛᴜʀᴇ."
         )
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🌀 ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ", url=f"https://t.me/{SUPPORT_CHANNEL.lstrip('@')}")],
+            [InlineKeyboardButton("🌀 ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ", url="https://t.me/Seizer_updates")],
             [InlineKeyboardButton("🔄 ʀᴇᴛʀʏ", callback_data="retry_harem")]
         ])
 
         if update.message:
-            await update.message.reply_text(join_message, parse_mode='Markdown', disable_web_page_preview=True, reply_markup=keyboard)
+            await update.message.reply_text(join_message, parse_mode='HTML', disable_web_page_preview=True, reply_markup=keyboard)
         else:
-            await update.callback_query.edit_message_text(join_message, parse_mode='Markdown', disable_web_page_preview=True, reply_markup=keyboard)
+            await update.callback_query.edit_message_text(join_message, parse_mode='HTML', disable_web_page_preview=True, reply_markup=keyboard)
         return
         
 
