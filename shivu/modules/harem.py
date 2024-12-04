@@ -91,17 +91,17 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
 
     # New keyboard
     keyboard = [
-    [
-        InlineKeyboardButton("◀", callback_data=f"harem:{page-1}:{user_id}"),
-        InlineKeyboardButton(f"{page+1}/{total_pages}", callback_data="noop"),
-        InlineKeyboardButton("▶", callback_data=f"harem:{page+1}:{user_id}"),
-    ],
-    [
-        InlineKeyboardButton("🌐", switch_inline_query_current_chat=f"collection.{user_id}"),
-        InlineKeyboardButton("FAST ▶", callback_data=f"harem:{total_pages-1}:{user_id}"),
-        InlineKeyboardButton("🗑", callback_data="delete"),
-    ],
-    ]
+        [
+            InlineKeyboardButton("◀", callback_data=f"harem:{page-1}:{user_id}"),
+            InlineKeyboardButton(f"{page+1}/{total_pages}", callback_data="noop"),
+            InlineKeyboardButton("▶", callback_data=f"harem:{page+1}:{user_id}"),
+        ],
+        [
+            InlineKeyboardButton("🌐", switch_inline_query_current_chat=f"collection.{user_id}"),
+            InlineKeyboardButton("FAST ▶", callback_data=f"harem:{total_pages-1}:{user_id}"),
+            InlineKeyboardButton("🗑", callback_data="delete"),
+        ],
+        ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if 'favorites' in user and user['favorites']:
