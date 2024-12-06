@@ -9,7 +9,7 @@ from shivu import user_collection
 from pyrogram.errors import UserNotParticipant, ChatWriteForbidden
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 
-MUST_JOIN = "dynamic_gangs"
+MUST_JOIN = "Dyna_community"
 
 gem_prices = {
     "Wood": {"price": 2, "emoji": "🪵", "aliases": ["wood", "w"]},
