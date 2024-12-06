@@ -9,9 +9,9 @@ from pyrogram.enums import ChatMemberStatus
 
 OWNER_ID = 6402009857  # Replace with the owner user ID
 DEVS = (6995317382,)
-SUPPORT_CHAT_ID = -1002104939708
+SUPPORT_CHAT_ID = -1002466950912
 CHANNEL_ID = -1002122552289
-COMMUNITY_GROUP_ID = -1002104939708
+COMMUNITY_GROUP_ID = -1002466950912
 
 # Keyboards
 keyboard_support = t.InlineKeyboardMarkup([
