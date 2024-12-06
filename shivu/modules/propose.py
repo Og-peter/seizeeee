@@ -13,8 +13,8 @@ WIN_RATE_PERCENTAGE = 5  # Win rate in percentage
 FIGHT_FEE = 200000  # Proposal fee
 COOLDOWN_TIME = 600  # Cooldown time (10 minutes)
 SPAM_THRESHOLD = 5  # Spam threshold in seconds
-MUST_JOIN = 'dynamic_gangs'
-OWNER_ID = 6402009857  # Owner ID
+MUST_JOIN = 'Dyna_community'
+OWNER_ID = 6835013483  # Owner ID
 
 # Message Templates
 START_MESSAGES = [
