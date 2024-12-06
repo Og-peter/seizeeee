@@ -13,8 +13,8 @@ user_streaks = {}
 character_message_links = {}
 
 # Allowed group and support group URL
-ALLOWED_GROUP_ID = -1002104939708  # Replace with your allowed group's chat ID
-SUPPORT_GROUP_URL = "https://t.me/dynamic_gangs"  # Replace with your actual support group URL
+ALLOWED_GROUP_ID = -1002466950912  # Replace with your allowed group's chat ID
+SUPPORT_GROUP_URL = "https://t.me/Dyna_community"  # Replace with your actual support group URL
 
 # Function to fetch a random anime character from the database
 async def get_random_character():
