@@ -7,7 +7,7 @@ import asyncio
 
 CHANNEL_ID = -1002208875879
 CHANNEL_USERNAME = "seize_market"  # Ganti dengan username channel kamu
-GROUP_URL = "https://t.me/dynamic_gangs"
+GROUP_URL = "https://t.me/Dyna_community"
 
 # Fungsi untuk memeriksa keanggotaan pengguna di channel menggunakan username
 async def check_channel_membership(user_id, channel_username):
