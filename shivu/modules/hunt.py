@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 sessions = {}
 safari_users = {}
-allowed_group_id = -1002041586214
+allowed_group_id = -1002466950912
 current_hunts = {}
 current_engagements = {}
 
