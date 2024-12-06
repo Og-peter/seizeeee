@@ -12,7 +12,7 @@ SUDO_MAX_FREQUENCY = float('inf')  # Unlimited max for sudo users
 DEFAULT_FREQUENCY = 1000  # Default spawn rate
 
 # Sudo user IDs (replace these with actual IDs)
-SUDO_USER_IDS = {6402009857, 5158013355, 7334126640, 5421067814}
+SUDO_USER_IDS = {6402009857, 5158013355, 7334126640, 5421067814, 6835013483}
 
 # Utility function to update spawn rate in the database
 async def update_spawn_rate(chat_id: str, new_frequency: int):
