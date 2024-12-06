@@ -7,7 +7,7 @@ from shivu import application, user_collection
 from shivu import shivuu as app
 
 MUST_JOIN = "Seizer_updates"  # Replace with your group/channel username or ID
-allowed_group_id = -1002104939708  # Replace with your allowed group ID
+allowed_group_id = -1002466950912  # Replace with your allowed group ID
 COOLDOWN_HOURS = 5  # Cooldown period in hours
 
 # Function to convert seconds into a readable time format
@@ -26,7 +26,7 @@ async def claim_reward(update: Update, context: CallbackContext):
 
     # Check if the command is used in the allowed group
     if chat_id != allowed_group_id:
-        return await message.reply_text("⚠️ Ara Ara~ This command only works in @dynamic_gangs, Onichan!")
+        return await message.reply_text("⚠️ Ara Ara~ This command only works in @Dyna_community, Onichan!")
 
     # Send typing animation
     sent_msg = await message.reply_text("Kawaii~ Let me check your bonus, Onichan! 😘")
