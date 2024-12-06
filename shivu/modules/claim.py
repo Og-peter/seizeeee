@@ -15,18 +15,18 @@ COMMUNITY_GROUP_ID = -1002466950912
 
 # Keyboards
 keyboard_support = t.InlineKeyboardMarkup([
-    [t.InlineKeyboardButton("Official Grap group", url="https://t.me/dynamic_gangs")]
+    [t.InlineKeyboardButton("Official Seize group", url="https://t.me/Dyna_community")]
 ])
 keyboard_channel = t.InlineKeyboardMarkup([
-    [t.InlineKeyboardButton("Official Grap W/H", url="https://t.me/Seizer_updates")]
+    [t.InlineKeyboardButton("Official Seize W/H", url="https://t.me/Seizer_updates")]
 ])
 keyboard_community = t.InlineKeyboardMarkup([
-    [t.InlineKeyboardButton("Community Groups", url="https://t.me/dynamic_gangs")]
+    [t.InlineKeyboardButton("Community Groups", url="https://t.me/Dyna_community")]
 ])
 keyboard_all = t.InlineKeyboardMarkup([
-    [t.InlineKeyboardButton("Official Grap W/H Groups", url="https://t.me/dynamic_gangs")],
-    [t.InlineKeyboardButton("Official Grap W/H", url="https://t.me/Seizer_updates")],
-    [t.InlineKeyboardButton("Community Groups", url="https://t.me/dynamic_gangs")]
+    [t.InlineKeyboardButton("Official Seize W/H Groups", url="https://t.me/Dyna_community")],
+    [t.InlineKeyboardButton("Official Seize W/H", url="https://t.me/Seizer_updates")],
+    [t.InlineKeyboardButton("Community Groups", url="https://t.me/Dyna_community")]
 ])
 
 
