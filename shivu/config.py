@@ -6,14 +6,14 @@ class Development:
     api_id = 29098103
     api_hash = "06baef4020832888ccf3ebf4e746d52b"
     TOKEN = "7335799800:AAEqEIH_FqVnSJB8C6Czcx6btuchVFvMuVQ"  # Replace with your actual bot token
-    GROUP_ID = -1002104939708
+    GROUP_ID = -1002466950912
     CHARA_CHANNEL_ID = -1002049694247
     mongo_url = "mongodb+srv://seizewaifubot:seizewaifubot@itachi.9qya0.mongodb.net/?retryWrites=true&w=majority&appName=itachi"  # Replace with your actual MongoDB URL
     PHOTO_URL = [
         "https://telegra.ph/file/c74151f4c2b56a107a24b.jpg",
         "https://telegra.ph/file/6a81a91aa4a660a73194b.jpg"
     ]
-    SUPPORT_CHAT = "dynamic_gangs"
+    SUPPORT_CHAT = "Dyna_community"
     UPDATE_CHAT = "Seizer_update"
     BOT_USERNAME = "Character_seize_bot"
     OWNER_ID = "6402009857"
