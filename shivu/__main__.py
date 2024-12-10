@@ -158,10 +158,10 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
     # Prepare available characters
     available_characters = [
-        c for c in all_characters 
-        if 'id' in c 
+        c for c in all_characters
+        if 'id' in c
         and c['id'] not in sent_characters[chat_id]
-        and c.get('rarity') is not None 
+        and c.get('rarity') is not None
         and c.get('rarity') != '💞 Valentine Special'
     ]
 
@@ -208,21 +208,30 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
     rarity_emoji = rarity_to_emoji.get(selected_character.get('rarity'), "❓")
 
-    # Send the character's image and message
-    message = await context.bot.send_photo(
+    # Calculate rarity balance
+    rarity_balance = RARITY_WEIGHTS.get(selected_character.get('rarity'), 1)
+
+    # Send the character's image and message with button
+    keyboard = [[
+        InlineKeyboardButton(
+            text=f"{selected_character['name']} (Balance: {rarity_balance})",
+            url=selected_character['profile_url']
+        )
+    ]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await context.bot.send_photo(
         chat_id=chat_id,
         photo=selected_character['img_url'],
-        caption=f"""<b>{character['rarity'][0]} ᴋᴀᴡᴀɪ! ᴀ {character['rarity'][2:]} ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀs ᴀᴘᴘᴇᴀʀᴇᴅ!</b>\n
-<b>ᴀᴅᴅ ʜᴇʀ ᴛᴏ ʏᴏᴜʀ ʜᴀʀᴇᴍ ʙʏ sᴇɴᴅɪɴɢ</b>\n<b>/seize ɴᴀᴍᴇ</b>""",
-        parse_mode='HTML'
+        caption=(
+            f"<b>{rarity_emoji} ᴋᴀᴡᴀɪ! ᴀ {selected_character['rarity'][2:]} "
+            "ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀs ᴀᴘᴘᴇᴀʀᴇᴅ!</b>\n\n"
+            f"<b>ᴀᴅᴅ ʜᴇʀ ᴛᴏ ʏᴏᴜʀ ʜᴀʀᴇᴍ ʙʏ sᴇɴᴅɪɴɢ</b>\n"
+            f"<b>/seize ɴᴀᴍᴇ</b>"
+        ),
+        parse_mode='HTML',
+        reply_markup=reply_markup
     )
-
-    # Save the message link for retry/reference
-    if update.effective_chat.type == "private":
-        message_link = f"https://t.me/c/{chat_id}/{message.message_id}"
-    else:
-        message_link = f"https://t.me/{update.effective_chat.username}/{message.message_id}"
-    character_message_links[chat_id] = message_link
 
 # Schedule the "flew away" logic after 2 minutes
 async def character_flew_away(context: CallbackContext):
