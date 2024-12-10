@@ -49,8 +49,8 @@ async def broadcast(update: Update, context: CallbackContext) -> None:
     )
 
 
-async def handle_broadcast(update: Update, context: CallbackContext) -> None:
-    """Process the broadcast based on the selected option."""
+async def handle_broadcast_callback(update: Update, context: CallbackContext) -> None:
+    """Handle callback queries for broadcast options."""
     query = update.callback_query
     await query.answer()
 
@@ -59,14 +59,16 @@ async def handle_broadcast(update: Update, context: CallbackContext) -> None:
         await query.edit_message_text("Broadcast data not found. Please try again.")
         return
 
-    # Extract details
+    # Extract broadcast details
     message_id = broadcast_data["message_id"]
     chat_id = broadcast_data["chat_id"]
     users = broadcast_data["users"]
     groups = broadcast_data["groups"]
 
-    # Determine the broadcast type
     option = query.data
+    targets = []
+    target_type = ""
+
     if option == "broadcast_users":
         targets = users
         target_type = "Users"
@@ -98,7 +100,6 @@ async def handle_broadcast(update: Update, context: CallbackContext) -> None:
             )
             success_sends += 1
 
-            # Pin the message if required
             if option == "broadcast_pin":
                 try:
                     await context.bot.pin_chat_message(chat_id=target, message_id=sent_message.message_id)
@@ -109,17 +110,15 @@ async def handle_broadcast(update: Update, context: CallbackContext) -> None:
             print(f"Failed to send message to {target}: {e}")
             failed_sends += 1
 
-    # Send final stats
     await query.edit_message_text(
         f"Broadcast complete to {target_type}.\n\n"
         f"✅ Successfully sent to: {success_sends}\n"
         f"❌ Failed to send to: {failed_sends}\n"
         f"Total: {len(targets)}"
     )
-    # Clean up broadcast data
     context.user_data.pop("broadcast_data", None)
 
 
 # Register handlers
 application.add_handler(CommandHandler("broadcast", broadcast, block=False))
-application.add_handler(CallbackQueryHandler(handle_broadcast, pattern="^broadcast_.*$"))
+application.add_handler(CallbackQueryHandler(handle_broadcast_callback))
