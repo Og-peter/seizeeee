@@ -4,6 +4,7 @@ from shivu import application, top_global_groups_collection, user_collection
 
 OWNER_ID = 6835013483
 
+
 async def broadcast(update: Update, context: CallbackContext) -> None:
     """Initiate broadcast with options for user/group/combined broadcasts."""
     if update.effective_user.id != OWNER_ID:
@@ -66,8 +67,6 @@ async def handle_broadcast(update: Update, context: CallbackContext) -> None:
 
     # Determine the broadcast type
     option = query.data
-    targets = []
-
     if option == "broadcast_users":
         targets = users
         target_type = "Users"
