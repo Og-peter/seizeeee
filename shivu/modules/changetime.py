@@ -42,7 +42,12 @@ async def change_spawn_rate(update: Update, context: CallbackContext) -> None:
             projection={'message_frequency': 1}
         )
         current_rate = current_frequency['message_frequency'] if current_frequency else DEFAULT_FREQUENCY
-        await update.message.reply_text(f"ℹ️ **Current Spawn Rate**: Every **{current_rate}** messages.")
+        min_rate = SUDO_MIN_FREQUENCY if is_sudo else ADMIN_MIN_FREQUENCY
+        max_rate = "Unlimited" if is_sudo else ADMIN_MAX_FREQUENCY
+        await update.message.reply_text(
+            f"ℹ️ **Current Spawn Rate**: Every **{current_rate}** messages.\n"
+            f"💡 **Allowed Range**: {min_rate} to {max_rate} messages."
+        )
         return
 
     # Ensure the user has admin or sudo privileges
@@ -52,7 +57,8 @@ async def change_spawn_rate(update: Update, context: CallbackContext) -> None:
             if member.status not in ('administrator', 'creator'):
                 await update.message.reply_text("🚫 **Permission Denied**: Only administrators can change the spawn rate.")
                 return
-        except Exception:
+        except Exception as e:
+            logging.error(f"Error verifying admin status for user {user.id}: {e}")
             await update.message.reply_text("❌ **Error**: Unable to verify your admin status. Please try again.")
             return
 
@@ -64,7 +70,9 @@ async def change_spawn_rate(update: Update, context: CallbackContext) -> None:
         try:
             new_frequency = int(args[0])
         except ValueError:
-            await update.message.reply_text("❌ **Invalid Input**: Please provide a valid number or use `/changetime reset` to reset.")
+            await update.message.reply_text(
+                "❌ **Invalid Input**: Please provide a valid number or use `/changetime reset` to reset."
+            )
             return
 
         # Determine allowed limits based on user type
@@ -72,7 +80,9 @@ async def change_spawn_rate(update: Update, context: CallbackContext) -> None:
         max_frequency = SUDO_MAX_FREQUENCY if is_sudo else ADMIN_MAX_FREQUENCY
 
         if new_frequency < min_frequency:
-            await update.message.reply_text(f"⚠️ **Invalid Rate**: The spawn rate must be at least `{min_frequency}` messages.")
+            await update.message.reply_text(
+                f"⚠️ **Invalid Rate**: The spawn rate must be at least `{min_frequency}` messages."
+            )
             return
         if new_frequency > max_frequency:
             await update.message.reply_text(
