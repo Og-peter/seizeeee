@@ -331,6 +331,20 @@ async def placeholder_callback(update: Update, context: CallbackContext):
         )    
 
 
+rarity_token_rewards = {
+    "⚪️ 𝘾𝙊𝙈𝙈𝙊𝙉": 1,
+    "🔵 𝙈𝙀𝘿𝙄𝙐𝙈": 5,
+    "👶 𝘾𝙃𝙄𝘽𝙄": 8,
+    "🟠 𝙍𝘼𝙍𝙀": 12,
+    "🟡 𝙇𝙀𝙂𝙀𝙉𝘿𝘼𝙍𝙔": 20,
+    "💮 𝙀𝙓𝘾𝙇𝙐𝙎𝙄𝙑𝙀": 30,
+    "🫧 𝙋𝙍𝙀𝙈𝙄𝙐𝙈": 40,
+    "🔮 𝙇𝙄𝙈𝙄𝙏𝙀𝘿 𝙀𝘿𝙄𝙏𝙄𝙊𝙉": 50,
+    "🌸 𝙀𝙓𝙊𝙏𝙄𝘾": 70,
+    "🎐 𝘼𝙎𝙏𝙍𝘼𝙇": 90,
+    "💞 𝙑𝘼𝙇𝙀𝙉𝙏𝙄𝙉𝙀": 100
+}
+
 async def guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
@@ -367,18 +381,8 @@ async def guess(update: Update, context: CallbackContext) -> None:
     name_parts = character_name.split()
 
     if sorted(name_parts) == sorted(guess.split()) or any(part == guess for part in name_parts):
-        time_sent = None
-        if isinstance(sent_characters.get(chat_id), dict):
-            time_sent = sent_characters[chat_id].get(character['id'], time.time())
-        elif isinstance(sent_characters.get(chat_id), list):
-            for entry in sent_characters[chat_id]:
-                if isinstance(entry, dict) and entry.get('id') == character['id']:
-                    time_sent = entry.get('time', time.time())
-                    break
-
-        if time_sent is None:
-            time_sent = time.time()
-
+        # Time tracking and token reward
+        time_sent = sent_characters.get(chat_id, {}).get(character['id'], time.time())
         time_taken = time.time() - time_sent
         minutes, seconds = divmod(int(time_taken), 60)
 
@@ -390,17 +394,16 @@ async def guess(update: Update, context: CallbackContext) -> None:
         if user_id not in [user.id for user in first_correct_guesses[chat_id]]:
             first_correct_guesses[chat_id].append(update.effective_user)
 
-            # Update user database
+            # Calculate tokens based on rarity
+            rarity = character["rarity"]
+            token_reward = rarity_token_rewards.get(rarity, 0)
+
+            # Update user database and token balance
             user = await user_collection.find_one({'id': user_id})
             update_fields = {}
-
             if user:
-                if hasattr(update.effective_user, 'username') and update.effective_user.username != user.get('username'):
-                    update_fields['username'] = update.effective_user.username
-                if update.effective_user.first_name != user.get('first_name'):
-                    update_fields['first_name'] = update.effective_user.first_name
-                if update_fields:
-                    await user_collection.update_one({'id': user_id}, {'$set': update_fields})
+                update_fields['tokens'] = user.get('tokens', 0) + token_reward
+                await user_collection.update_one({'id': user_id}, {'$set': update_fields})
                 await user_collection.update_one(
                     {'id': user_id},
                     {'$push': {'characters': character}}
@@ -411,8 +414,10 @@ async def guess(update: Update, context: CallbackContext) -> None:
                     'username': getattr(update.effective_user, 'username', None),
                     'first_name': update.effective_user.first_name,
                     'characters': [character],
+                    'tokens': token_reward,
                 })
 
+            # Group stats update
             group_user_total = await group_user_totals_collection.find_one({'user_id': user_id, 'group_id': chat_id})
             if group_user_total:
                 await group_user_totals_collection.update_one(
@@ -428,41 +433,34 @@ async def guess(update: Update, context: CallbackContext) -> None:
                     'count': 1,
                 })
 
-        keyboard = [[InlineKeyboardButton(
-            f"🏮 {escape(update.effective_user.first_name)}'s Harem 🏮",
-            switch_inline_query_current_chat=f"collection.{user_id}"
-        )]]
+            keyboard = [[InlineKeyboardButton(
+                f"🏮 {escape(update.effective_user.first_name)}'s Harem 🏮",
+                switch_inline_query_current_chat=f"collection.{user_id}"
+            )]]
 
-        await update.message.reply_text(
-            f'✅ <b><a href="tg://user?id={user_id}">{escape(update.effective_user.first_name)}</a></b> You got a new character!\n\n'
-            f'🌸 𝗡𝗔𝗠𝗘: <b>{last_characters[chat_id]["name"]}</b>\n'
-            f'❇️ 𝗔𝗡𝗜𝗠𝗘: <b>{last_characters[chat_id]["anime"]}</b>\n'
-            f'{last_characters[chat_id]["rarity"][0]} 𝗥𝗔𝗥𝗜𝗧𝗬: <b>{last_characters[chat_id]["rarity"]}</b>\n'
-            f'⏱️ Time taken: <b>{minutes}m {seconds}s</b>',
-            parse_mode='HTML',
-            reply_markup=InlineKeyboardMarkup(keyboard)
-                       )
+            await update.message.reply_text(
+                f'✅ <b><a href="tg://user?id={user_id}">{escape(update.effective_user.first_name)}</a></b> You got a new character!\n\n'
+                f'🌸 𝗡𝗔𝗠𝗘: <b>{last_characters[chat_id]["name"]}</b>\n'
+                f'❇️ 𝗔𝗡𝗜𝗠𝗘: <b>{last_characters[chat_id]["anime"]}</b>\n'
+                f'{last_characters[chat_id]["rarity"][0]} 𝗥𝗔𝗥𝗜𝗧𝗬: <b>{last_characters[chat_id]["rarity"]}</b>\n'
+                f'⏱️ Time taken: <b>{minutes}m {seconds}s</b>\n\n'
+                f'🎁 You earned <b>{token_reward} tokens</b>! 🎉',
+                parse_mode='HTML',
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
     else:
-        # Extract user input and remove the bot mention and command prefix
-        user_input = update.message.text.strip()  # Full input with command
-        command_parts = user_input.split(" ")  # Split based on spaces
+        # Wrong guess logic
+        user_input = update.message.text.strip()
+        command_parts = user_input.split(" ")
+        wrong_letter = command_parts[-1].strip() if len(command_parts) > 1 else ""
 
-        # Ignore the command and bot mention, take the guess part only
-        if len(command_parts) > 1:
-            user_guess = command_parts[-1].strip()  # Last part is user's guess
-        else:
-            user_guess = ""
-
-        wrong_letter = user_guess
-
-        # Prepare the retry message with a character link
         message_link = character_message_links.get(chat_id, "#")
         keyboard = [[InlineKeyboardButton("★ See Character ★", url=message_link)]]
 
         await update.message.reply_text(
-                  f"❌ Wrong guess: '{wrong_letter}'!\n\nPlease try again.",
-        reply_markup=InlineKeyboardMarkup(keyboard)
-)
+            f"❌ Wrong guess: '{wrong_letter}'!\n\nPlease try again.",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
         
 # Assuming rarity_map and rarity_active are predefined dictionaries
 # rarity_map = {1: "Common", 2: "Rare", ...}
