@@ -144,6 +144,7 @@ RARITY_WEIGHTS = {
 }
 async def send_image(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
+    user_id = update.effective_user.id
 
     # Fetch all characters from the database
     all_characters = list(await collection.find({}).to_list(length=None))
@@ -183,6 +184,35 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         # Fallback: choose randomly if no character was selected
         selected_character = random.choice(all_characters)
 
+    # Fetch user balance
+    user_data = await user_collection.find_one({'id': user_id})
+    if not user_data:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="You need to register first to participate!",
+            parse_mode='HTML'
+        )
+        return
+
+    # Calculate rarity balance and subtract from user balance
+    rarity_balance = RARITY_WEIGHTS.get(selected_character.get('rarity'), 1) * 100
+    current_balance = user_data.get('balance', 0)
+
+    if current_balance < rarity_balance:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="Insufficient balance to claim this character!",
+            parse_mode='HTML'
+        )
+        return
+
+    # Deduct balance and update the database
+    new_balance = current_balance - rarity_balance
+    await user_collection.update_one(
+        {'id': user_id},
+        {'$set': {'balance': new_balance}}
+    )
+
     # Update sent_characters and last_characters
     sent_characters[chat_id].append(selected_character['id'])
     last_characters[chat_id] = selected_character
@@ -208,13 +238,10 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
     rarity_emoji = rarity_to_emoji.get(selected_character.get('rarity'), "❓")
 
-    # Calculate rarity balance
-    rarity_balance = RARITY_WEIGHTS.get(selected_character.get('rarity'), 1)
-
     # Send the character's image and message with button
     keyboard = [[
         InlineKeyboardButton(
-            text=f"{selected_character['name']} (Balance: {rarity_balance})",
+            text=f"{selected_character['name']} (Cost: {rarity_balance})",
             url=selected_character['profile_url']
         )
     ]]
