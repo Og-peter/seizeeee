@@ -149,6 +149,14 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     # Fetch all characters from the database
     all_characters = list(await collection.find({}).to_list(length=None))
 
+    if not all_characters:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="No characters available in the database!",
+            parse_mode='HTML'
+        )
+        return
+
     # Initialize sent_characters if not already done
     if chat_id not in sent_characters:
         sent_characters[chat_id] = []
@@ -163,8 +171,17 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         if 'id' in c
         and c['id'] not in sent_characters[chat_id]
         and c.get('rarity') is not None
+        and c.get('img_url')  # Ensure img_url is valid
         and c.get('rarity') != '💞 Valentine Special'
     ]
+
+    if not available_characters:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="No valid characters left to display!",
+            parse_mode='HTML'
+        )
+        return
 
     # Weighted random selection based on rarity
     cumulative_weights = []
@@ -180,9 +197,13 @@ async def send_image(update: Update, context: CallbackContext) -> None:
             selected_character = character
             break
 
-    if not selected_character:
-        # Fallback: choose randomly if no character was selected
-        selected_character = random.choice(all_characters)
+    if not selected_character or 'img_url' not in selected_character:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="Failed to select a valid character. Please try again later!",
+            parse_mode='HTML'
+        )
+        return
 
     # Fetch user balance
     user_data = await user_collection.find_one({'id': user_id})
@@ -194,14 +215,14 @@ async def send_image(update: Update, context: CallbackContext) -> None:
         )
         return
 
-    # Calculate rarity balance and subtract from user balance
+    # Calculate rarity balance and check user balance
     rarity_balance = RARITY_WEIGHTS.get(selected_character.get('rarity'), 1) * 100
     current_balance = user_data.get('balance', 0)
 
     if current_balance < rarity_balance:
         await context.bot.send_message(
             chat_id=chat_id,
-            text="Insufficient balance to claim this character!",
+            text=f"Insufficient balance to claim this character! (Required: {rarity_balance}, You have: {current_balance})",
             parse_mode='HTML'
         )
         return
@@ -242,7 +263,7 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     keyboard = [[
         InlineKeyboardButton(
             text=f"{selected_character['name']} (Cost: {rarity_balance})",
-            url=selected_character['profile_url']
+            url=selected_character.get('profile_url', '#')
         )
     ]]
     reply_markup = InlineKeyboardMarkup(keyboard)
