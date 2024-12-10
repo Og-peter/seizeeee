@@ -144,18 +144,9 @@ RARITY_WEIGHTS = {
 }
 async def send_image(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
-    user_id = update.effective_user.id
 
     # Fetch all characters from the database
     all_characters = list(await collection.find({}).to_list(length=None))
-
-    if not all_characters:
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="No characters available in the database!",
-            parse_mode='HTML'
-        )
-        return
 
     # Initialize sent_characters if not already done
     if chat_id not in sent_characters:
@@ -167,21 +158,12 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
     # Prepare available characters
     available_characters = [
-        c for c in all_characters
-        if 'id' in c
+        c for c in all_characters 
+        if 'id' in c 
         and c['id'] not in sent_characters[chat_id]
-        and c.get('rarity') is not None
-        and c.get('img_url')  # Ensure img_url is valid
+        and c.get('rarity') is not None 
         and c.get('rarity') != '💞 Valentine Special'
     ]
-
-    if not available_characters:
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="No valid characters left to display!",
-            parse_mode='HTML'
-        )
-        return
 
     # Weighted random selection based on rarity
     cumulative_weights = []
@@ -197,42 +179,9 @@ async def send_image(update: Update, context: CallbackContext) -> None:
             selected_character = character
             break
 
-    if not selected_character or 'img_url' not in selected_character:
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="Failed to select a valid character. Please try again later!",
-            parse_mode='HTML'
-        )
-        return
-
-    # Fetch user balance
-    user_data = await user_collection.find_one({'id': user_id})
-    if not user_data:
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="You need to register first to participate!",
-            parse_mode='HTML'
-        )
-        return
-
-    # Calculate rarity balance and check user balance
-    rarity_balance = RARITY_WEIGHTS.get(selected_character.get('rarity'), 1) * 100
-    current_balance = user_data.get('balance', 0)
-
-    if current_balance < rarity_balance:
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text=f"Insufficient balance to claim this character! (Required: {rarity_balance}, You have: {current_balance})",
-            parse_mode='HTML'
-        )
-        return
-
-    # Deduct balance and update the database
-    new_balance = current_balance - rarity_balance
-    await user_collection.update_one(
-        {'id': user_id},
-        {'$set': {'balance': new_balance}}
-    )
+    if not selected_character:
+        # Fallback: choose randomly if no character was selected
+        selected_character = random.choice(all_characters)
 
     # Update sent_characters and last_characters
     sent_characters[chat_id].append(selected_character['id'])
@@ -259,27 +208,21 @@ async def send_image(update: Update, context: CallbackContext) -> None:
 
     rarity_emoji = rarity_to_emoji.get(selected_character.get('rarity'), "❓")
 
-    # Send the character's image and message with button
-    keyboard = [[
-        InlineKeyboardButton(
-            text=f"{selected_character['name']} (Cost: {rarity_balance})",
-            url=selected_character.get('profile_url', '#')
-        )
-    ]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    await context.bot.send_photo(
+    # Send the character's image and message
+    message = await context.bot.send_photo(
         chat_id=chat_id,
         photo=selected_character['img_url'],
-        caption=(
-            f"<b>{rarity_emoji} ᴋᴀᴡᴀɪ! ᴀ {selected_character['rarity'][2:]} "
-            "ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀs ᴀᴘᴘᴇᴀʀᴇᴅ!</b>\n\n"
-            f"<b>ᴀᴅᴅ ʜᴇʀ ᴛᴏ ʏᴏᴜʀ ʜᴀʀᴇᴍ ʙʏ sᴇɴᴅɪɴɢ</b>\n"
-            f"<b>/seize ɴᴀᴍᴇ</b>"
-        ),
-        parse_mode='HTML',
-        reply_markup=reply_markup
+        caption=f"""<b>{character['rarity'][0]} ᴋᴀᴡᴀɪ! ᴀ {character['rarity'][2:]} ᴄʜᴀʀᴀᴄᴛᴇʀ ʜᴀs ᴀᴘᴘᴇᴀʀᴇᴅ!</b>\n
+<b>ᴀᴅᴅ ʜᴇʀ ᴛᴏ ʏᴏᴜʀ ʜᴀʀᴇᴍ ʙʏ sᴇɴᴅɪɴɢ</b>\n<b>/seize ɴᴀᴍᴇ</b>""",
+        parse_mode='HTML'
     )
+
+    # Save the message link for retry/reference
+    if update.effective_chat.type == "private":
+        message_link = f"https://t.me/c/{chat_id}/{message.message_id}"
+    else:
+        message_link = f"https://t.me/{update.effective_chat.username}/{message.message_id}"
+    character_message_links[chat_id] = message_link
 
 # Schedule the "flew away" logic after 2 minutes
 async def character_flew_away(context: CallbackContext):
