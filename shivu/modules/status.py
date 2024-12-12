@@ -28,7 +28,7 @@ async def my_profile(update: Update, context: CallbackContext):
     if update.message:
         loading_message = await update.message.reply_animation(
             animation="https://files.catbox.moe/gujd6o.mp4",  # Replace with an appropriate GIF URL
-            caption="🌟 Loading your profile, please wait..."
+            caption="🌟 Fetching your profile details, please wait..."
         )
 
         user_id = update.effective_user.id
@@ -44,9 +44,10 @@ async def my_profile(update: Update, context: CallbackContext):
             username = user_data.get('username', 'Not set')
             global_rank, total_users = await get_global_rank(username)
 
+            # Progress bar with percentages
             progress_bar_length = 10
             filled_blocks = int((character_percentage / 100) * progress_bar_length)
-            progress_bar = "▰" * filled_blocks + "▱" * (progress_bar_length - filled_blocks)
+            progress_bar = f"[{'■' * filled_blocks}{'□' * (progress_bar_length - filled_blocks)} {character_percentage:.2f}%]"
 
             user_tag = f"<a href='tg://user?id={user_id}'>{html.escape(user_first_name)}</a>"
             user_bio = user_data.get('bio', "Bio not set")
@@ -71,21 +72,20 @@ async def my_profile(update: Update, context: CallbackContext):
                     rarity_counts[rarity] += 1
 
             rarity_message = "\n".join([
-                f"  ❍ {rarity} ▷ {count}" for rarity, count in rarity_counts.items()
+                f"  ❍ {rarity} ➥ {count}" for rarity, count in rarity_counts.items()
             ])
 
             profile_message = (
-                f"ㅤ◦•●◉✿ ᴜsᴇʀ ɪɴғᴏʀᴍᴀᴛɪᴏɴ ✿◉●•◦\n"
-                f"▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭\n"
-                f"❍ ᴜsᴇʀ ɪᴅ ɴᴏ. ▷ {user_id}\n"
-                f"❍ ᴍᴇɴᴛɪᴏɴ ▷ {user_tag}\n"
-                f"━─━────༺༻────━─━\n"
-                f"❍ ᴄᴏɪɴ ▷ {user_balance}\n"
-                f"❍ ᴄʜᴀʀᴀᴄᴛᴇʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ ▷ {characters_count}/{total_characters} ({character_percentage:.2f}%)\n"
-                f"❍ ᴘʀᴏɢʀᴇss ʙᴀʀ ▷ {progress_bar}\n"
-                f"❍ ɢʟᴏʙᴀʟ ʀᴀɴᴋ ▷ {global_rank}/{total_users}\n"
-                f"❍ ʀᴀʀɪᴛʏ ᴄᴏᴜɴᴛ:\n{rarity_message}\n"
-                f"▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭"
+                f"❖ <b>{user_tag} ɪɴғᴏʀᴍᴀᴛɪᴏɴ</b> ❖\n"
+                f"━━━━━━━━━━━━━━━━━━━━━\n"
+                f"⬤ <b>ᴜsᴇʀ ɪᴅ</b> ➥ <code>{user_id}</code>\n"
+                f"⬤ <b>ᴍᴇɴᴛɪᴏɴ</b> ➥ {user_tag}\n"
+                f"⬤ <b>ᴄᴏɪɴ</b> ➥ {user_balance}\n"
+                f"⬤ <b>ᴄʜᴀʀᴀᴄᴛᴇʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ</b> ➥ {characters_count}/{total_characters}\n"
+                f"⬤ <b>ᴘʀᴏɢʀᴇss ʙᴀʀ</b> ➥ {progress_bar}\n"
+                f"⬤ <b>ɢʟᴏʙᴀʟ ʀᴀɴᴋ</b> ➥ {global_rank}/{total_users}\n"
+                f"⬤ <b>ʀᴀʀɪᴛʏ ᴄᴏᴜɴᴛ</b> ➥\n{rarity_message}\n"
+                f"━━━━━━━━━━━━━━━━━━━━━"
             )
 
             media_id = user_data.get("custom_photo")
@@ -106,7 +106,11 @@ async def my_profile(update: Update, context: CallbackContext):
                         await update.message.reply_sticker(media_id)
                         await update.message.reply_text(profile_message, reply_markup=keyboard, parse_mode='HTML')
                 else:
-                    await update.message.reply_text(profile_message, reply_markup=keyboard, parse_mode='HTML')
+                    profile_pic = update.effective_user.photo
+                    if profile_pic:
+                        await update.message.reply_photo(profile_pic.file_id, caption=profile_message, reply_markup=keyboard, parse_mode='HTML')
+                    else:
+                        await update.message.reply_text(profile_message, reply_markup=keyboard, parse_mode='HTML')
                 await loading_message.delete()
             except Exception as e:
                 print(f"Error in sending message: {e}")
@@ -114,29 +118,6 @@ async def my_profile(update: Update, context: CallbackContext):
             await update.message.reply_text("⚠️ Unable to retrieve your profile data.")
     else:
         print("No message to reply to.")
-
-async def set_profile_pic(update: Update, context: CallbackContext):
-    reply = update.message.reply_to_message
-    user_id = update.effective_user.id
-
-    if reply and (reply.photo or reply.video or reply.animation or reply.sticker):
-        if reply.photo:
-            media_id, media_type = reply.photo[-1].file_id, "photo"
-        elif reply.video:
-            media_id, media_type = reply.video.file_id, "video"
-        elif reply.animation:
-            media_id, media_type = reply.animation.file_id, "animation"
-        elif reply.sticker:
-            media_id, media_type = reply.sticker.file_id, "sticker"
-
-        await user_collection.update_one(
-            {'id': user_id},
-            {'$set': {'custom_photo': media_id, 'custom_media_type': media_type}},
-            upsert=True
-        )
-        await update.message.reply_text("✅ Profile picture updated successfully!")
-    else:
-        await update.message.reply_text("⚠️ Please reply with an image, video, GIF, or sticker.")
 
 application.add_handler(CommandHandler("status", my_profile))
 application.add_handler(CommandHandler("setpic", set_profile_pic))
