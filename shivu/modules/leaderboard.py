@@ -12,7 +12,7 @@ from shivu import sudo_users as SUDO_USERS
 
 
 # Assuming VIDEO_URL is defined similarly to PHOTO_URL.
-VIDEO_URL = ['your_video_url1.mp4', 'your_video_url2.mp4', 'your_video_url3.mp4']
+VIDEO_URL = ['https://files.catbox.moe/7ksrco.mp4', 'https://files.catbox.moe/ahbgky.mp4', 'https://files.catbox.moe/4f43hu.mp4']
 
 async def global_leaderboard(update: Update, context: CallbackContext, is_callback=False) -> None:
     cursor = top_global_groups_collection.aggregate([
