@@ -11,6 +11,9 @@ from shivu import (application, PHOTO_URL, OWNER_ID, user_collection, top_global
 from shivu import sudo_users as SUDO_USERS
 
 
+# Assuming VIDEO_URL is defined similarly to PHOTO_URL.
+VIDEO_URL = ['your_video_url1.mp4', 'your_video_url2.mp4', 'your_video_url3.mp4']
+
 async def global_leaderboard(update: Update, context: CallbackContext, is_callback=False) -> None:
     cursor = top_global_groups_collection.aggregate([
         {"$project": {"group_name": 1, "count": 1}},
@@ -20,7 +23,6 @@ async def global_leaderboard(update: Update, context: CallbackContext, is_callba
     leaderboard_data = await cursor.to_list(length=10)
 
     leaderboard_message = "<b>🌍 Global Group Leaderboard</b>\n\n┏━┅┅┄┄⟞⟦🌐⟧⟝┄┄┉┉━┓\n"
-
     for i, group in enumerate(leaderboard_data, start=1):
         group_name = html.escape(group.get('group_name', 'Unknown'))
         if len(group_name) > 10:
@@ -29,7 +31,8 @@ async def global_leaderboard(update: Update, context: CallbackContext, is_callba
         leaderboard_message += f'┣ {i}. <b>{group_name}</b> ⇒ <code>{count}</code>\n'
     leaderboard_message += '┗━┅┅┄┄⟞⟦🌐⟧⟝┄┄┉┉━┛'
 
-    photo_url = random.choice(PHOTO_URL)
+    # Select a random video URL
+    video_url = random.choice(VIDEO_URL)
 
     keyboard = [
         [InlineKeyboardButton("👑 𝑪𝒉𝒂𝒕 𝑻𝒐𝒑", callback_data='ctop')],
@@ -40,11 +43,11 @@ async def global_leaderboard(update: Update, context: CallbackContext, is_callba
 
     if is_callback:
         await update.callback_query.edit_message_media(
-            media=InputMediaPhoto(photo_url, caption=leaderboard_message, parse_mode='HTML'),
+            media=InputMediaVideo(video_url, caption=leaderboard_message, parse_mode='HTML'),
             reply_markup=reply_markup
         )
     else:
-        message = await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML', reply_markup=reply_markup)
+        message = await update.message.reply_video(video=video_url, caption=leaderboard_message, parse_mode='HTML', reply_markup=reply_markup)
         context.user_data['message_to_delete'] = message.message_id
 
 
@@ -70,7 +73,9 @@ async def ctop(update: Update, context: CallbackContext, is_callback=False) -> N
         character_count = user['character_count']
         leaderboard_message += f'┣ {i}. <a href="https://t.me/{username}"><b>{first_name}</b></a> ⇒ <code>{character_count}</code>\n'
     leaderboard_message += '┗━┅┅┄┄⟞⟦👑⟧⟝┄┄┉┉━┛'
-    photo_url = random.choice(PHOTO_URL)
+    
+    # Select a random video URL
+    video_url = random.choice(VIDEO_URL)
 
     keyboard = [
         [InlineKeyboardButton("⬅️ 𝑩𝒂𝒄𝒌", callback_data='topgroups')],
@@ -80,11 +85,11 @@ async def ctop(update: Update, context: CallbackContext, is_callback=False) -> N
 
     if is_callback:
         await update.callback_query.edit_message_media(
-            media=InputMediaPhoto(photo_url, caption=leaderboard_message, parse_mode='HTML'),
+            media=InputMediaVideo(video_url, caption=leaderboard_message, parse_mode='HTML'),
             reply_markup=reply_markup
         )
     else:
-        message = await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML', reply_markup=reply_markup)
+        message = await update.message.reply_video(video=video_url, caption=leaderboard_message, parse_mode='HTML', reply_markup=reply_markup)
         context.user_data['message_to_delete'] = message.message_id
 
 
@@ -116,7 +121,9 @@ async def leaderboard(update: Update, context: CallbackContext, is_callback=Fals
         character_count = user['character_count']
         leaderboard_message += f'┣ {i}. <a href="https://t.me/{username}"><b>{first_name}</b></a> ➾ <code>{character_count}</code>\n'
     leaderboard_message += '┗━┅┅┄┄⟞⟦🌐⟧⟝┄┄┉┉━┛'
-    photo_url = random.choice(PHOTO_URL)
+    
+    # Select a random video URL
+    video_url = random.choice(VIDEO_URL)
 
     keyboard = [
         [InlineKeyboardButton("⬅️ 𝑩𝒂𝒄𝒌", callback_data='topgroups')],
@@ -126,11 +133,11 @@ async def leaderboard(update: Update, context: CallbackContext, is_callback=Fals
 
     if is_callback:
         await update.callback_query.edit_message_media(
-            media=InputMediaPhoto(photo_url, caption=leaderboard_message, parse_mode='HTML'),
+            media=InputMediaVideo(video_url, caption=leaderboard_message, parse_mode='HTML'),
             reply_markup=reply_markup
         )
     else:
-        message = await update.message.reply_photo(photo=photo_url, caption=leaderboard_message, parse_mode='HTML', reply_markup=reply_markup)
+        message = await update.message.reply_video(video=video_url, caption=leaderboard_message, parse_mode='HTML', reply_markup=reply_markup)
         context.user_data['message_to_delete'] = message.message_id
 
 
