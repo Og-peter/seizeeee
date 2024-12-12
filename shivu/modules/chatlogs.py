@@ -10,7 +10,7 @@ WELCOME_TEMPLATE = """
 ๏ ɴᴀᴍᴇ ➛ {user_mention}
 ๏ ɪᴅ ➛ `{user_id}`
 ๏ ᴜsᴇʀɴᴀᴍᴇ ➛ @{user_username}
-๏ ᴍᴀᴅᴇ ʙʏ ➛ [ɪᴛᴀᴄʜɪ](https://t.me/aboutitachi9)
+๏ ᴍᴀᴅᴇ ʙʏ ➛ [ᴅʏɴᴀᴍɪᴄ sᴜᴘᴘᴏʀᴛ](https://t.me/dynamic_supports)
 """
 
 # Bot added in group notification format
