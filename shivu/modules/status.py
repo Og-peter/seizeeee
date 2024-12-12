@@ -119,6 +119,27 @@ async def my_profile(update: Update, context: CallbackContext):
     else:
         print("No message to reply to.")
 
+async def set_profile_pic(update: Update, context: CallbackContext):
+    reply = update.message.reply_to_message
+    user_id = update.effective_user.id
+    if reply and (reply.photo or reply.video or reply.animation or reply.sticker):
+        if reply.photo:
+            media_id, media_type = reply.photo[-1].file_id, "photo"
+        elif reply.video:
+            media_id, media_type = reply.video.file_id, "video"
+        elif reply.animation:
+            media_id, media_type = reply.animation.file_id, "animation"
+        elif reply.sticker:
+            media_id, media_type = reply.sticker.file_id, "sticker"
+        await user_collection.update_one(
+            {'id': user_id},
+            {'$set': {'custom_photo': media_id, 'custom_media_type': media_type}},
+            upsert=True
+        )
+        await update.message.reply_text("✅ Profile picture updated successfully!")
+    else:
+        await update.message.reply_text("⚠️ Please reply with an image, video, GIF, or sticker.")
+        
 application.add_handler(CommandHandler("status", my_profile))
 application.add_handler(CommandHandler("setpic", set_profile_pic))
 
