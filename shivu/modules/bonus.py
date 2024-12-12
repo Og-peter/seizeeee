@@ -75,7 +75,7 @@ async def claim_reward(update: Update, context: CallbackContext):
     )
 
     # Send a sticker first
-    await send_sticker(chat_id, "CAACAgUAAxkBAAEEnlpkVXjXDlOKhzVx0g8Z5mc5UOnrBQACNAEAAma9kFWODDudm8gBRi4E", app)
+    await send_sticker(chat_id, "CAACAgUAAyEFAASC_Np2AAKg7GdaeMz-doB0adsZqIxa5n-F4PGQAAJJCQACgdQpV9n6Jzs4kf7NNgQ", app)
 
     # Send a success message as a reply
     await sent_msg.delete()  # Delete the processing message
