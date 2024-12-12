@@ -1,53 +1,35 @@
-import random
 import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
-from shivu import user_collection, shivuu as app, LEAVELOGS, JOINLOGS
-
-# Welcome messages with styled text and emojis
-WELCOME_MESSAGES = [
-    "🎉✨ 𝗪𝗲𝗹𝗰𝗼𝗺𝗲, {user}! ✨ Thrilled to have you here!",
-    "😊 𝗛𝗲𝗹𝗹𝗼, {user}! Happy to see you! 🎈",
-    "🚀 𝗪𝗲𝗹𝗰𝗼𝗺𝗲 𝗮𝗯𝗼𝗮𝗿𝗱, {user}! Let’s make magic! 🌟",
-    "🌼 𝗪𝗲𝗹𝗰𝗼𝗺𝗲, {user}! We’re glad you joined! 🌈"
-]
-
-# Fun facts or quotes for messages
-FACTS_QUOTES = [
-    "🔍 𝗗𝗶𝗱 𝘆𝗼𝘂 𝗸𝗻𝗼𝘄? The Eiffel Tower grows 15 cm in summer!",
-    "✨ “𝗧𝗵𝗲 𝗳𝘂𝘁𝘂𝗿𝗲 𝗶𝘀 𝗯𝗮𝘀𝗲𝗱 𝗼𝗻 𝘁𝗼𝗱𝗮𝘆.” – 𝗢𝗿𝗲𝘀𝘁𝗲𝘀",
-    "🍯 𝗙𝘂𝗻 𝗳𝗮𝗰𝘁: Honey never spoils, even after 3000 years!"
-]
-
-# Group rules message
-RULES = (
-    "🚨 **𝗚𝗿𝗼𝘂𝗽 𝗥𝘂𝗹𝗲𝘀** 🚨\n\n"
-    "1️⃣ Be respectful at all times.\n"
-    "2️⃣ No spamming or self-promotion.\n"
-    "3️⃣ Stay on topic.\n"
-    "4️⃣ Follow Telegram's terms.\n\n"
-    "🚫 Violation may result in removal."
-)
+from shivu import shivuu as app, LEAVELOGS, JOINLOGS
 
 # Template for custom welcome messages
 WELCOME_TEMPLATE = """
-╭─────────★
-🌟 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 🌟
-╰─────────★
+❀ ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴛʜᴇ {chat_title} ɢʀᴏᴜᴘ ❀
 
-👤 **Name:** {name}
-🆔 **ID:** `{user_id}`
-🔗 **Username:** @{username}
-👥 **Total Members:** {total_members}
+๏ ɴᴀᴍᴇ ➛ {user_mention}
+๏ ɪᴅ ➛ `{user_id}`
+๏ ᴜsᴇʀɴᴀᴍᴇ ➛ @{user_username}
+๏ ᴍᴀᴅᴇ ʙʏ ➛ [ɪᴛᴀᴄʜɪ](https://t.me/aboutitachi9)
+"""
 
-🔰 Enjoy your stay and feel free to interact with our community!
+# Bot added in group notification format
+JOIN_TEXT_TEMPLATE = """
+⬤ ʙᴏᴛ ᴀᴅᴅᴇᴅ ɪɴ ᴀ #ɴᴇᴡ_ɢʀᴏᴜᴘ
+
+● ɢʀᴏᴜᴘ ɴᴀᴍᴇ ➠ {chat_title}
+● ɢʀᴏᴜᴘ ɪᴅ ➠ `{chat_id}`
+● ɢʀᴏᴜᴘ ᴜsᴇʀɴᴀᴍᴇ ➠ @{chat_username}
+● ɢʀᴏᴜᴘ ʟɪɴᴋ ➠ {chat_link}
+● ɢʀᴏᴜᴘ ᴍᴇᴍʙᴇʀs ➠ {total_members}
+⬤ ᴀᴅᴅᴇᴅ ʙʏ ➠ {added_by_mention}
 """
 
 # Handler for new chat members
 @app.on_message(filters.new_chat_members)
 async def on_new_chat_members(client: Client, message: Message):
     total_members = await client.get_chat_members_count(message.chat.id)
-    
+
     # Leave if the group has less than 15 members
     if total_members < 15:
         leave_note = "🌿 𝗦𝗼𝗿𝗿𝘆, 𝗹𝗲𝗮𝘃𝗶𝗻𝗴 𝗮𝘀 𝘁𝗵𝗲 𝗴𝗿𝗼𝘂𝗽 𝗵𝗮𝘀 𝗹𝗲𝘀𝘀 𝘁𝗵𝗮𝗻 𝟭𝟱 𝗺𝗲𝗺𝗯𝗲𝗿𝘀. 🌱"
@@ -55,41 +37,30 @@ async def on_new_chat_members(client: Client, message: Message):
         await send_photo_message(message.chat.id, leave_note, leave_photo_url)
         await client.leave_chat(message.chat.id)
         return
-    
+
     for user in message.new_chat_members:
-        # Custom welcome message using the template
         name = user.first_name
         user_id = user.id
         username = user.username if user.username else "No Username"
 
         welcome_text = WELCOME_TEMPLATE.format(
-            name=name,
+            chat_title=message.chat.title,
+            user_mention=user.mention,
             user_id=user_id,
-            username=username,
-            total_members=total_members
+            user_username=username
         )
 
         # Inline keyboard buttons for the welcome message
         buttons = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("❖ ᴠɪєᴡ ᴍєϻʙєʀ ❖", url=f"tg://user?id={user_id}")],
-                [InlineKeyboardButton("✜ ᴧᴅᴅ ϻє ɪη ʏσυʀ ɢʀσυᴘ ✜", url="https://t.me/Character_seize_bot?startgroup=new")]
+                [InlineKeyboardButton("✜ ᴀᴅᴅ ᴍᴇ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ ✜", url="https://t.me/Character_seize_bot?startgroup=new")]
             ]
         )
 
-        # Welcome photo URL
         welcome_photo_url = "https://files.catbox.moe/h8hiod.jpg"
-        
+
         # Send welcome message with photo and buttons
         await send_photo_message(message.chat.id, welcome_text, welcome_photo_url, buttons)
-        
-        # Fun fact after welcome message
-        fun_fact = random.choice(FACTS_QUOTES)
-        await app.send_message(message.chat.id, text=fun_fact)
-        
-        # Send group rules after a delay
-        await asyncio.sleep(5)
-        await app.send_message(message.chat.id, text=RULES)
 
         # Send notification to the user who added the bot
         if user.id == (await client.get_me()).id:
@@ -114,13 +85,13 @@ async def on_new_chat_members(client: Client, message: Message):
                 await app.send_message(added_by.id, text=thank_you_message)
 
             # Log the bot being added to a new group
-            join_text = (
-                f"✨ 𝗕𝗼𝘁 𝗔𝗱𝗱𝗲𝗱 𝗶𝗻 𝗮 𝗡𝗲𝘄 𝗚𝗿𝗼𝘂𝗽 ✨\n\n"
-                f"🏠 **Group**: {message.chat.title}\n"
-                f"🆔 **Chat ID**: {message.chat.id}\n"
-                f"👥 **Members**: {total_members}\n"
-                f"🔗 **Link**: @{message.chat.username or 'none'}\n"
-                f"👤 **Added by**: {added_by.mention}"
+            join_text = JOIN_TEXT_TEMPLATE.format(
+                chat_title=message.chat.title,
+                chat_id=message.chat.id,
+                chat_username=message.chat.username or "No Username",
+                chat_link=f"https://t.me/{message.chat.username}" if message.chat.username else "No Link",
+                total_members=total_members,
+                added_by_mention=added_by.mention
             )
             join_photo_url = "https://i.ibb.co/0B6KsPm/photo-2024-10-25-11-14-35.jpg"
             await send_photo_message(JOINLOGS, join_text, join_photo_url)
