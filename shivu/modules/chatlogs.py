@@ -53,7 +53,7 @@ async def on_new_chat_members(client: Client, message: Message):
         # Inline keyboard buttons for the welcome message
         buttons = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("✜ ᴀᴅᴅ ᴍᴇ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ ✜", url="https://t.me/Character_seize_bot?startgroup=new")]
+                [InlineKeyboardButton("✜ ᴀᴅᴅ ᴍᴇ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ ✜", url="https://t.me/Seize_Characters_Bot?startgroup=new")]
             ]
         )
 
