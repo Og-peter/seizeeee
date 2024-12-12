@@ -48,7 +48,7 @@ async def check_balance(_, message: Message):
     formatted_balance = "{:,.0f}".format(balance)
     first_name = user_data.get('first_name', 'User')
     # Reply to the user with their balance
-    await message.reply_text(f"{first_name}'s Wealth: ₩`{formatted_balance}`[.](https://telegra.ph/file/af20fd1f2bed03d2bc438.jpg)")
+    await message.reply_text(f"{first_name}'s Wealth: ₩`{formatted_balance}`[.](https://files.catbox.moe/fruhx3.mp4)")
     
 # Command: Pay
 async def pay(update: Update, context: ContextTypes.DEFAULT_TYPE):
