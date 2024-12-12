@@ -1,6 +1,7 @@
 import logging
 from pymongo import ReturnDocument
 from telegram import Update
+from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, CallbackContext
 from shivu import application, user_totals_collection
 
@@ -45,8 +46,10 @@ async def change_spawn_rate(update: Update, context: CallbackContext) -> None:
         min_rate = SUDO_MIN_FREQUENCY if is_sudo else ADMIN_MIN_FREQUENCY
         max_rate = "Unlimited" if is_sudo else ADMIN_MAX_FREQUENCY
         await update.message.reply_text(
-            f"ℹ️ **Current Spawn Rate**: Every **{current_rate}** messages.\n"
-            f"💡 **Allowed Range**: {min_rate} to {max_rate} messages."
+            f"<b>ℹ️ Current Spawn Rate:</b> Every <code>{current_rate}</code> messages.\n"
+            f"<b>💡 Allowed Range:</b> <code>{min_rate}</code> to <code>{max_rate}</code> messages.",
+            parse_mode=ParseMode.HTML,
+            reply_to_message_id=update.message.message_id
         )
         return
 
@@ -55,11 +58,19 @@ async def change_spawn_rate(update: Update, context: CallbackContext) -> None:
         try:
             member = await chat.get_member(user.id)
             if member.status not in ('administrator', 'creator'):
-                await update.message.reply_text("🚫 **Permission Denied**: Only administrators can change the spawn rate.")
+                await update.message.reply_text(
+                    "🚫 <b>Permission Denied:</b> Only administrators can change the spawn rate.",
+                    parse_mode=ParseMode.HTML,
+                    reply_to_message_id=update.message.message_id
+                )
                 return
         except Exception as e:
             logging.error(f"Error verifying admin status for user {user.id}: {e}")
-            await update.message.reply_text("❌ **Error**: Unable to verify your admin status. Please try again.")
+            await update.message.reply_text(
+                "❌ <b>Error:</b> Unable to verify your admin status. Please try again.",
+                parse_mode=ParseMode.HTML,
+                reply_to_message_id=update.message.message_id
+            )
             return
 
     # Parse and validate the new frequency
@@ -71,7 +82,9 @@ async def change_spawn_rate(update: Update, context: CallbackContext) -> None:
             new_frequency = int(args[0])
         except ValueError:
             await update.message.reply_text(
-                "❌ **Invalid Input**: Please provide a valid number or use `/changetime reset` to reset."
+                "❌ <b>Invalid Input:</b> Please provide a valid number or use <code>/changetime reset</code> to reset.",
+                parse_mode=ParseMode.HTML,
+                reply_to_message_id=update.message.message_id
             )
             return
 
@@ -81,13 +94,17 @@ async def change_spawn_rate(update: Update, context: CallbackContext) -> None:
 
         if new_frequency < min_frequency:
             await update.message.reply_text(
-                f"⚠️ **Invalid Rate**: The spawn rate must be at least `{min_frequency}` messages."
+                f"⚠️ <b>Invalid Rate:</b> The spawn rate must be at least <code>{min_frequency}</code> messages.",
+                parse_mode=ParseMode.HTML,
+                reply_to_message_id=update.message.message_id
             )
             return
         if new_frequency > max_frequency:
             await update.message.reply_text(
-                f"⚠️ **Invalid Rate**: The spawn rate cannot exceed **{max_frequency}** messages."
-                + (" (Unlimited for sudo users)" if is_sudo else "")
+                f"⚠️ <b>Invalid Rate:</b> The spawn rate cannot exceed <code>{max_frequency}</code> messages."
+                + (" (Unlimited for sudo users)" if is_sudo else ""),
+                parse_mode=ParseMode.HTML,
+                reply_to_message_id=update.message.message_id
             )
             return
 
@@ -95,15 +112,23 @@ async def change_spawn_rate(update: Update, context: CallbackContext) -> None:
     try:
         await update_spawn_rate(chat_id, new_frequency)
         message = (
-            f"✅ **Spawn Rate Updated!**\n\n"
-            f"💡 **New Rate**: Every `{new_frequency}` messages."
+            f"✅ <b>Spawn Rate Updated!</b>\n\n"
+            f"💡 <b>New Rate:</b> Every <code>{new_frequency}</code> messages."
         )
         if new_frequency == DEFAULT_FREQUENCY:
             message += "\nℹ️ The spawn rate has been reset to the default."
-        await update.message.reply_text(message)
+        await update.message.reply_text(
+            message,
+            parse_mode=ParseMode.HTML,
+            reply_to_message_id=update.message.message_id
+        )
     except Exception as e:
         logging.error(f"Error updating spawn rate for chat {chat_id}: {e}")
-        await update.message.reply_text("❌ **Error**: Failed to update the spawn rate. Please try again later.")
+        await update.message.reply_text(
+            "❌ <b>Error:</b> Failed to update the spawn rate. Please try again later.",
+            parse_mode=ParseMode.HTML,
+            reply_to_message_id=update.message.message_id
+        )
 
 # Register the command handler
 application.add_handler(CommandHandler("changetime", change_spawn_rate, block=False))
