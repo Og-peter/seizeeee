@@ -58,7 +58,7 @@ async def check_character(update: Update, context: CallbackContext) -> None:
 
                 # Create mention link for the user
                 mention = f"<a href='tg://user?id={user['id']}'>{escape(full_name)}</a>"
-                response_message += f"┣ {i:02d}.➥ {mention} (Count: {seized_count})\n"
+                response_message += f"{mention}\n"
         else:
             response_message += "\n\nNo users found with this character."
         
