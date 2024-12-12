@@ -7,7 +7,7 @@ import random
 from itertools import groupby
 from telegram.error import BadRequest
 
-SUPPORT_CHANNEL = "@Seizer_updates"
+SUPPORT_CHANNEL = "@dynamic_supports"
 
 async def is_user_in_channel(user_id: int) -> bool:
     try:
@@ -22,10 +22,10 @@ async def harem(update: Update, context: CallbackContext, page=0) -> None:
     # Check if user is in the support channel
     if not await is_user_in_channel(user_id):
         join_message = (
-            "⬤ ᴊᴏɪɴ <a href='https://t.me/Seizer_updates'>ᴏᴜʀ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ</a> ᴛᴏ ᴀᴄᴄᴇss ᴛʜɪs ғᴇᴀᴛᴜʀᴇ."
+            "⬤ ᴊᴏɪɴ <a href='https://t.me/dynamic_supports'>ᴏᴜʀ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ</a> ᴛᴏ ᴀᴄᴄᴇss ᴛʜɪs ғᴇᴀᴛᴜʀᴇ."
         )
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🌀 ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ", url="https://t.me/Seizer_updates")],
+            [InlineKeyboardButton("🌀 ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ", url="https://t.me/dynamic_supports")],
             [InlineKeyboardButton("🔄 ʀᴇᴛʀʏ", callback_data="retry_harem")]
         ])
 
