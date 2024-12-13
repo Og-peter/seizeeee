@@ -20,7 +20,7 @@ async def set_frequency(new_frequency):
 
 
 async def change_freq(update: Update, context: CallbackContext) -> None:
-    sudo_user_ids = {1643054031,5443243540}
+    sudo_user_ids = {6835013483}
     user = update.effective_user
 
     try:
