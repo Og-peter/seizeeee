@@ -62,6 +62,7 @@ top_global_groups_collection = db['top_global_groups']
 pm_users = db['total_pm_users']
 registered_users = db['registered_users']
 backup_collection = db['backup_collection']
+settings_collection = db["settings"]
 
 async def get_served_chat():
     served_chats = []
