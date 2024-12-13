@@ -1,189 +1,216 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
-from shivu import collection, user_collection, application
-import math
-from html import escape
-import random
+from telegram import Update
 from itertools import groupby
-from telegram.error import BadRequest
-
-SUPPORT_CHANNEL = "@dynamic_supports"
-
-async def is_user_in_channel(user_id: int) -> bool:
-    try:
-        member = await application.bot.get_chat_member(chat_id=SUPPORT_CHANNEL, user_id=user_id)
-        return member.status not in ['left', 'kicked']
-    except BadRequest:
-        return False
+import urllib.request
+import re
+import math
+import html
+import random
+from collections import Counter
+from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, filters
+from shivu import collection, user_collection, application
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultPhoto, InputTextMessageContent, InputMediaPhoto
+from telegram import InlineQueryResultArticle, InputTextMessageContent, InlineKeyboardMarkup, InlineKeyboardButton
+import asyncio
+from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, filters
+from telegram.ext import InlineQueryHandler, CallbackQueryHandler, ChosenInlineResultHandler
 
 async def harem(update: Update, context: CallbackContext, page=0) -> None:
-    user_id = update.effective_user.id
-
-    # Check if user is in the support channel
-    if not await is_user_in_channel(user_id):
-        join_message = (
-            "⬤ ᴊᴏɪɴ <a href='https://t.me/dynamic_supports'>ᴏᴜʀ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ</a> ᴛᴏ ᴀᴄᴄᴇss ᴛʜɪs ғᴇᴀᴛᴜʀᴇ."
-        )
-        keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🌀 ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ", url="https://t.me/dynamic_supports")],
-            [InlineKeyboardButton("🔄 ʀᴇᴛʀʏ", callback_data="retry_harem")]
-        ])
-
-        if update.message:
-            await update.message.reply_text(join_message, parse_mode='HTML', disable_web_page_preview=True, reply_markup=keyboard)
-        else:
-            await update.callback_query.edit_message_text(join_message, parse_mode='HTML', disable_web_page_preview=True, reply_markup=keyboard)
-        return
-        
-
+    user_id = update.effective_user.id  
     user = await user_collection.find_one({'id': user_id})
     if not user:
+        print(user)
         if update.message:
-            await update.message.reply_text('You have not looted any characters yet..')
+            await update.message.reply_text('ʏᴏᴜ ʜᴀᴠᴇ ɴᴏᴛ ɢᴜᴇssᴇᴅ ᴀɴʏ ᴄʜᴀʀᴀᴄᴛᴇʀs ʏᴇᴛ.')
         else:
-            await update.callback_query.edit_message_text('You have not looted any characters yet..')
+            await update.callback_query.edit_message_text('ʏᴏᴜ ʜᴀᴠᴇ ɴᴏᴛ ɢᴜᴇssᴇᴅ ᴀɴʏ ᴄʜᴀʀᴀᴄᴛᴇʀs ʏᴇᴛ.')
         return
+    # Retrieve selected rarity from the user's document
+    selected_rarity = user.get('selected_rarity')
 
-    characters = sorted(user['characters'], key=lambda x: (x.get('anime', ''), x.get('id', '')))
+    characters = sorted(user['characters'], key=lambda x: (x['anime'], x['id']))
+    
+    # Filter characters based on the selected rarity
+    if selected_rarity:
+        characters = [character for character in characters if character['rarity'][0] == selected_rarity[0]]
 
-    # Check if the user has chosen a rarity preference
-    if 'rarity_preference' in user:
-        rarity = user['rarity_preference']
-        characters = [char for char in characters if char.get('rarity') == rarity]
+    if selected_rarity == 'Default':
+        characters = sorted(user['characters'], key=lambda x: (x['anime'], x['id']))
+        
 
-    character_counts = {k: len(list(v)) for k, v in groupby(characters, key=lambda x: x.get('id'))}
+    character_counts = {k: len(list(v)) for k, v in groupby(characters, key=lambda x: x['id'])}
 
-    unique_characters = list({character.get('id'): character for character in characters}.values())
-
+    unique_characters = list({character['id']: character for character in characters}.values())
     total_pages = math.ceil(len(unique_characters) / 15)
 
     if page < 0 or page >= total_pages:
         page = 0
-
-    harem_message = f"<b>{escape(update.effective_user.first_name)}'s Harem</b>\n\n"
-
+    harem_message = f"{update.effective_user.first_name}'s ʜᴀʀᴇᴍ - ᴘᴀɢᴇ {page+1}/{total_pages}\n"   
     current_characters = unique_characters[page*15:(page+1)*15]
-
-    rarity_emojis = {
-        '⚪️ Common': '⚪️',
-        '🔮 Limited Edition': '🔮',
-        '🫧 Premium': '🫧',
-        '🌸 Exotic': '🌸',
-        '💮 Exclusive': '💮',
-        '👶 Chibi': '👶',
-        '🟡 Legendary': '🟡',
-        '🟠 Rare': '🟠',
-        '🔵 Medium': '🔵',
-        '🎐 Astral': '🎐',
-        '💞 Valentine': '💞'
-    }
-
-    # Group by anime and display characters under each anime
-    anime_groups = groupby(current_characters, key=lambda x: x.get('anime', 'Unknown'))
-
-    for anime, characters_in_anime in anime_groups:
-        characters_in_anime = list(characters_in_anime)
-        harem_message += f"❖ <b>{anime}</b> ⌠{len(characters_in_anime)}/{len([c for c in characters if c.get('anime', '') == anime])}⌡\n"
-        harem_message += "── ⋅ ⋅ ⋅ ⋅ ─── ⋅  ⋅ ─── ⋅ ⋅ ⋅ ⋅ ──\n"
-        
-        for character in characters_in_anime:
-            count = character_counts.get(character.get('id'), 0)
-            rarity = character.get('rarity', 'Unknown')
-            rarity_emoji = rarity_emojis.get(rarity, rarity)
-            character_id = character.get("id", "Unknown")
-            harem_message += f"➸ {character_id} 〔 {rarity_emoji} 〕 {character.get('name', 'Unknown')} x{count}\n"
-
-        harem_message += "── ⋅ ⋅ ⋅ ⋅ ─── ⋅  ⋅ ─── ⋅ ⋅ ⋅ ⋅ ──\n\n"
+    current_grouped_characters = {k: list(v) for k, v in groupby(current_characters, key=lambda x: x['anime'])}
+    for anime, characters in current_grouped_characters.items():
+        harem_message += f'\n⌬ {anime} 〔{len(characters)}/{await collection.count_documents({"anime": anime})}〕\n'
+        for character in characters:
+            count = character_counts[character['id']]  
+            if character["rarity"] == "🎐 Celestial":
+                rarity_symbol = "🎐"
+            else:
+                rarity_symbol = character["rarity"][0]  
+            
+            harem_message += f'◈⌠{rarity_symbol}⌡ {character["id"]} {character["name"]} ×{count}\n'
 
     total_count = len(user['characters'])
-
-    # New keyboard
     keyboard = [
-        [
-            InlineKeyboardButton("◀", callback_data=f"harem:{page-1}:{user_id}"),
-            InlineKeyboardButton(f"{page+1}/{total_pages}", callback_data="noop"),
-            InlineKeyboardButton("▶", callback_data=f"harem:{page+1}:{user_id}"),
-        ],
-        [
-            InlineKeyboardButton("🌐", switch_inline_query_current_chat=f"collection.{user_id}"),
-            InlineKeyboardButton("FAST ▶", callback_data=f"harem:{total_pages-1}:{user_id}"),
-            InlineKeyboardButton("🗑", callback_data="delete"),
-        ],
+        [InlineKeyboardButton(f"sᴇᴇ ᴄᴏʟʟᴇᴄᴛɪᴏɴ ({total_count})", switch_inline_query_current_chat=f"collection.{user_id}")],
+        [InlineKeyboardButton(f"{page+1}/{total_pages}", callback_data="ignore")]
+    ]
+    if total_pages > 1:
+        nav_buttons = [
+            InlineKeyboardButton("⬅️1x", callback_data=f"harem:{page-1}:{user_id}") if page > 0 else None,
+            InlineKeyboardButton("1x➡️", callback_data=f"harem:{page+1}:{user_id}") if page < total_pages - 1 else None
         ]
+        # Add buttons for page-6 and page+6
+        if page >= 6:
+            nav_buttons.insert(0, InlineKeyboardButton("⏪x6", callback_data=f"harem:{page-6}:{user_id}"))
+        if page + 6 < total_pages:
+            nav_buttons.append(InlineKeyboardButton("6x⏩", callback_data=f"harem:{page+6}:{user_id}"))
+        keyboard.append(list(filter(None, nav_buttons)))
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if 'favorites' in user and user['favorites']:
         fav_character_id = user['favorites'][0]
-        fav_character = next((c for c in user['characters'] if c.get('id') == fav_character_id), None)
-
+        fav_character = next((c for c in user['characters'] if c['id'] == fav_character_id), None)
         if fav_character and 'img_url' in fav_character:
             if update.message:
-                await update.message.reply_photo(photo=fav_character['img_url'], caption=harem_message, reply_markup=reply_markup, parse_mode='HTML')
+                await update.message.reply_photo(photo=fav_character['img_url'], caption=harem_message, reply_markup=reply_markup)
             else:
-                if update.callback_query.message.photo:
+                if update.callback_query.message.caption != harem_message:
                     await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup, parse_mode='HTML')
-                else:
-                    await update.callback_query.edit_message_text(harem_message, reply_markup=reply_markup, parse_mode='HTML')
         else:
             if update.message:
-                await update.message.reply_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
+                await update.message.reply_text(harem_message, reply_markup=reply_markup)
             else:
-                await update.callback_query.edit_message_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
+                if update.callback_query.message.text != harem_message:
+                    await update.callback_query.edit_message_text(harem_message, reply_markup=reply_markup)
     else:
         if user['characters']:
             random_character = random.choice(user['characters'])
             if 'img_url' in random_character:
                 if update.message:
-                    await update.message.reply_photo(photo=random_character['img_url'], caption=harem_message, reply_markup=reply_markup, parse_mode='HTML')
+                    await update.message.reply_photo(photo=random_character['img_url'], caption=harem_message, reply_markup=reply_markup)
                 else:
-                    if update.callback_query.message.photo:
-                        await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup, parse_mode='HTML')
-                    else:
-                        await update.callback_query.edit_message_text(harem_message, reply_markup=reply_markup, parse_mode='HTML')
+                    if update.callback_query.message.caption != harem_message:
+                        await update.callback_query.edit_message_caption(caption=harem_message, reply_markup=reply_markup)
             else:
                 if update.message:
-                    await update.message.reply_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
+                    await update.message.reply_text(harem_message, reply_markup=reply_markup)
                 else:
-                    await update.callback_query.edit_message_text(harem_message, parse_mode='HTML', reply_markup=reply_markup)
+                    if update.callback_query.message.text != harem_message:
+                        await update.callback_query.edit_message_text(harem_message, reply_markup=reply_markup)
         else:
             if update.message:
-                await update.message.reply_text("⬤ ʏᴏᴜʀ ʟɪsᴛ ɪs sᴏ ᴇᴍᴘᴛʏ :)")
-            else:
-                await update.callback_query.edit_message_text("⬤ ʏᴏᴜʀ ʟɪsᴛ ɪs sᴏ ᴇᴍᴘᴛʏ :)")
+                await update.message.reply_text("ʏᴏᴜʀ ʟɪsᴛ ɪs ᴇᴍᴘᴛʏ :)")
 
 async def harem_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     data = query.data
-
-    _, page_str, user_id = data.split(':')
-
-    current_page = int(page_str)
+    _, page, user_id = data.split(':')
+    page = int(page)
     user_id = int(user_id)
 
     if query.from_user.id != user_id:
-        await query.answer("⬤ ᴅᴏɴ'ᴛ sᴛᴀʟᴋ ᴏᴛʜᴇʀ ᴜsᴇʀ's ʜᴀʀᴇᴍ", show_alert=True)
+        await query.answer("ᴅᴏɴ'ᴛ sᴛᴀʟᴋ ᴏᴛʜᴇʀ ᴜsᴇʀ's ʜᴀʀᴇᴍ..  OK", show_alert=True)
         return
-
-    if page < 0 or page >= total_pages:
-        await query.answer("⬤ ɪɴᴠᴀʟɪᴅ ᴘᴀɢᴇ!", show_alert=True)
-        return
-    if "next" in data:
-        page = current_page + 1
-    elif "prev" in data:
-        page = current_page - 1
-    else:
-        page = current_page
 
     await harem(update, context, page)
 
-async def retry_harem(update: Update, context: CallbackContext) -> None:
-    query = update.callback_query
-    await query.answer()
-    await harem(update, context)
+async def add_rarity(update: Update, context: CallbackContext) -> None:
+    global user_idh
+    user_idh = update.effective_user.id
+    user_id = update.effective_user.id
+    user = await user_collection.find_one({'id': user_id})
+    user_name = update.effective_user.first_name
     
-harem_handler = CallbackQueryHandler(harem_callback, pattern='^harem:', block=False)
-retry_handler = CallbackQueryHandler(retry_harem, pattern='^retry_harem$', block=False)
+    
+    if not user:
+        await update.message.reply_text("You haven't caught any characters yet.")
+        return
+    
+    rarities = ["⚪️ Common", "🟣 Rare" , "🟡 Legendary", "🟢 Medium", "💮 Exclusive", "🔮 Mythical" , "🫧 Special", "🌤 Summer", "🎐 Celestial", "⚡ Galactic"]
+    
+    # Get the user's current rarity, if available
+    current_rarity = user.get('selected_rarity')
+    
+    # Arrange rarities in rows of two
+    keyboard = []
+    for i in range(0, len(rarities), 2):
+        row = [InlineKeyboardButton(f"{rarities[i].title()} {'✅️' if rarities[i] == current_rarity else ''}", 
+                                     callback_data=f"add_rarity:{rarities[i]}")]
+        if i + 1 < len(rarities):
+            row.append(InlineKeyboardButton(f"{rarities[i + 1].title()} {'✅️' if rarities[i + 1] == current_rarity else ''}", 
+                                             callback_data=f"add_rarity:{rarities[i + 1]}"))
+        keyboard.append(row)
+    
+    # Add Default button with ✅️ if current_rarity is "Default"
+    keyboard.append([InlineKeyboardButton(f"ᴅᴇꜰᴀᴜʟᴛ {'✅️' if current_rarity == 'Default' else ''}", callback_data="add_rarity:Default")])
+    
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    image_url = "https://telegra.ph/file/202774af0d3e0544029ba.png"
+    caption = f"{user_name} ᴘʟᴇᴀꜱᴇ ᴄʜᴏᴏꜱᴇ ʀᴀʀɪᴛʏ ᴛʜᴀᴛ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ꜱᴇᴛ ᴀꜱ ʜᴀʀᴇᴍ ᴍᴏᴅᴇ"
+    
+    # Send image with caption and markup keyboard
+    await context.bot.send_photo(chat_id=update.effective_chat.id, photo=image_url, caption=caption, reply_markup=reply_markup)
 
+
+
+async def add_rarity_callback(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    data = query.data
+    user_id = query.from_user.id
+
+    if query.from_user.id != user_idh:
+        await query.answer("its Not Your Harem", show_alert=True)
+        return
+        
+    if data == "add_rarity:Default":
+        # Set default rarity in the user's collection
+        await user_collection.update_one({'id': user_id}, {'$set': {'selected_rarity': 'Default'}})
+        
+        # Edit caption to show selected rarity
+        await query.message.edit_caption(caption="ʏᴏᴜ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ ꜱᴇᴛ ʏᴏᴜʀ ʜᴀʀᴇᴍ ᴍᴏᴅᴇ ᴀꜱ ᴅᴇꜰᴀᴜʟᴛ")
+        
+        rarities = ["1⚪️ Common", "🟣 Rare" , " 🟡 Legendary", "🟢 Medium", "💮 Exclusive", "🔮 Mythical" , "🫧 Special", "🌤 Summer", "🎐 Celestial", "⚡ Galactic"]
+        # Arrange rarities in rows of two
+        keyboard = []
+        for i in range(0, len(rarities), 2):
+            row = [InlineKeyboardButton(f"{rarities[i].title()} {'✅️' if rarities[i] == 'Default' else ''}", 
+                                         callback_data=f"add_rarity:{rarities[i]}")]
+            if i + 1 < len(rarities):
+                row.append(InlineKeyboardButton(f"{rarities[i + 1].title()} {'✅️' if rarities[i + 1] == 'Default' else ''}", 
+                                                 callback_data=f"add_rarity:{rarities[i + 1]}"))
+            keyboard.append(row)
+        
+        # Add Default button with ✅️
+        keyboard.append([InlineKeyboardButton("ᴅᴇꜰᴀᴜʟᴛ ✅️", callback_data="add_rarity:Default")])
+        
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        # Edit message reply markup
+        await query.message.edit_reply_markup(reply_markup=reply_markup)
+    else:
+        # If a rarity button other than Default is clicked
+        rarity = data.split(":")[1]
+        
+        # Update the user's collection with the selected rarity
+        await user_collection.update_one({'id': user_id}, {'$set': {'selected_rarity': rarity}})
+    
+        # Edit caption to show selected rarity
+        await query.message.edit_caption(caption=f"ʏᴏᴜ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ ꜱᴇᴛ ʏᴏᴜʀ ʜᴀʀᴇᴍ ᴍᴏᴅᴇ ʀᴀʀɪᴛʏ ᴀꜱ {rarity}")
+
+application.add_handler(CommandHandler("whmode", add_rarity, block=False))
+add_rarity_handler = CallbackQueryHandler(add_rarity_callback, pattern='^add_rarity', block=False)
+application.add_handler(add_rarity_handler)
+
+application.add_handler(CommandHandler("harem", harem, block=False))
+harem_handler = CallbackQueryHandler(harem_callback, pattern='^harem', block=False)
 application.add_handler(harem_handler)
-application.add_handler(retry_handler)
-application.add_handler(CommandHandler(["harem", "collection"], harem, block=False))
