@@ -1,5 +1,6 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
+from shivu import application, user_collection
 from datetime import datetime, timedelta
 import random
 
