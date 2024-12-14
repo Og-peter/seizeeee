@@ -14,29 +14,26 @@ CHANNEL_ID = -1002122552289
 COMMUNITY_GROUP_ID = -1002466950912
 
 # Keyboards
-keyboard_support = t.InlineKeyboardMarkup([
-    [t.InlineKeyboardButton("Official Seize group", url="https://t.me/Dyna_community")]
+keyboard_all = InlineKeyboardMarkup([
+    [InlineKeyboardButton("🎭 Official Group", url="https://t.me/Dyna_community")],
+    [InlineKeyboardButton("📢 Official Channel", url="https://t.me/Seizer_updates")],
+    [InlineKeyboardButton("🌟 Community Groups", url="https://t.me/Dyna_community")]
 ])
-keyboard_channel = t.InlineKeyboardMarkup([
-    [t.InlineKeyboardButton("Official Seize W/H", url="https://t.me/Seizer_updates")]
+
+keyboard_support = InlineKeyboardMarkup([
+    [InlineKeyboardButton("🎭 Join Group", url="https://t.me/Dyna_community")]
 ])
-keyboard_community = t.InlineKeyboardMarkup([
-    [t.InlineKeyboardButton("Community Groups", url="https://t.me/Dyna_community")]
+keyboard_channel = InlineKeyboardMarkup([
+    [InlineKeyboardButton("📢 Join Channel", url="https://t.me/Seizer_updates")]
 ])
-keyboard_all = t.InlineKeyboardMarkup([
-    [t.InlineKeyboardButton("Official Seize W/H Groups", url="https://t.me/Dyna_community")],
-    [t.InlineKeyboardButton("Official Seize W/H", url="https://t.me/Seizer_updates")],
-    [t.InlineKeyboardButton("Community Groups", url="https://t.me/Dyna_community")]
+keyboard_community = InlineKeyboardMarkup([
+    [InlineKeyboardButton("🌟 Join Community", url="https://t.me/Dyna_community")]
 ])
 
 
 async def check_membership(user_id):
     is_member_group, is_member_channel, is_member_community = False, False, False
-    valid_statuses = [
-        ChatMemberStatus.MEMBER,
-        ChatMemberStatus.ADMINISTRATOR,
-        ChatMemberStatus.OWNER
-    ]
+    valid_statuses = [ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER]
 
     try:
         member_group = await bot.get_chat_member(SUPPORT_CHAT_ID, user_id)
@@ -89,34 +86,17 @@ async def claim_command(_, message: t.Message):
     mention = message.from_user.mention
 
     # Initial animation message
-    anim_msg = await message.reply_text("🔄 Processing your claim...")
+    anim_msg = await message.reply_text("✨ **Processing your claim...**\n🔄 Please wait while we prepare your reward!")
 
     # Check user's group/channel membership
     is_member_group, is_member_channel, is_member_community = await check_membership(user_id)
-    if not is_member_group and not is_member_channel and not is_member_community:
+    if not is_member_group or not is_member_channel or not is_member_community:
         await anim_msg.delete()
-        return await message.reply_text(
-            "You must join the official groups, channels, and community group to use this command.",
-            reply_markup=keyboard_all
+        missing_message = (
+            "⚠️ **You need to join all our official platforms to use this command.**\n\n"
+            "📢 Join our community and claim exclusive rewards!"
         )
-    elif not is_member_group:
-        await anim_msg.delete()
-        return await message.reply_text(
-            "You must join the official group to use this command.",
-            reply_markup=keyboard_support
-        )
-    elif not is_member_channel:
-        await anim_msg.delete()
-        return await message.reply_text(
-            "You must join the official channel to use this command.",
-            reply_markup=keyboard_channel
-        )
-    elif not is_member_community:
-        await anim_msg.delete()
-        return await message.reply_text(
-            "You must join the community group to use this command.",
-            reply_markup=keyboard_community
-        )
+        return await message.reply_text(missing_message, reply_markup=keyboard_all)
 
     # Ensure user exists in the database
     user_data = await user_collection.find_one({'id': user_id})
@@ -130,11 +110,13 @@ async def claim_command(_, message: t.Message):
         cooldown_end = last_claim_time + timedelta(hours=24)
         await anim_msg.delete()
         return await message.reply_text(
-            f"You've already claimed your character today! Cooldown ends at {cooldown_end.time()} UTC."
+            f"⏳ **You've already claimed your character today!**\n"
+            f"✨ Cooldown ends at `{cooldown_end.time()} UTC`.\n"
+            "🔁 Come back tomorrow for your next reward!"
         )
 
     # Simulate claim process
-    await anim_msg.edit_text("🔎 Searching for a unique character...")
+    await anim_msg.edit_text("🔎 **Searching for a unique character...**")
     await asyncio.sleep(2)
 
     # Update last claim time
@@ -148,36 +130,22 @@ async def claim_command(_, message: t.Message):
         await user_collection.update_one({'id': user_id}, {'$push': {'characters': character}})
         img_url = character['img_url']
         caption = (
-            f"╭── ˹ ᴛᴏᴅᴀʏ'ꜱ ʀᴇᴡᴀʀᴅ ˼ ──•\n"
-            f"┆\n"
-            f"┊◍ 𝖮𝗐𝖮 {mention} won this character today! 💘\n"
-            f"┆◍ ❄️ Name: {character['name']}\n"
-            f"┊● ⚜️ Rarity: {character['rarity']}\n"
-            f"┆● ⛩️ Anime: {character['anime']}\n"
-            f"├──˹ ᴄᴏᴍᴇ ʙᴀᴄᴋ ᴛᴏᴍᴏʀʀᴏᴡ ˼──•\n"
-            f"╰───────────────•\n"
+            f"🎉 **Congratulations, {mention}!**\n\n"
+            f"✨ **You’ve claimed a unique character today!**\n"
+            f"🎭 **Name:** `{character['name']}`\n"
+            f"⚜️ **Rarity:** `{character['rarity']}`\n"
+            f"⛩️ **Anime:** `{character['anime']}`\n\n"
+            f"🔁 **Come back tomorrow for more rewards!**"
         )
-        cooldown_end = now + timedelta(hours=24)
-
-        await anim_msg.edit_text("✨ Found your reward! Preparing it...")
+        await anim_msg.edit_text("🎁 **Reward found! Sending your character...**")
         await asyncio.sleep(2)
-
-        async def notify_user():
-            await asyncio.sleep(24 * 60 * 60)  # Wait for cooldown (24 hours)
-            try:
-                await bot.send_message(
-                    chat_id=user_id,
-                    text=f"🎉 Hey {mention}! Your cooldown has ended. You can now claim another character!"
-                )
-            except Exception as e:
-                print(f"Failed to notify user {user_id}: {e}")
-
-        asyncio.create_task(notify_user())
         await anim_msg.delete()
-        return await message.reply_photo(photo=img_url, caption=caption)
+        return await message.reply_photo(photo=img_url, caption=caption, reply_markup=keyboard_all)
     else:
         await anim_msg.delete()
-        return await message.reply_text("An unexpected error occurred. Please try again later.")
+        return await message.reply_text("⚠️ **An unexpected error occurred.** Please try again later!")
+
+
 @bot.on_message(filters.command(["reset_claims"]) & filters.user(OWNER_ID))
 async def reset_claims_command(_, message: t.Message):
     """
@@ -191,7 +159,6 @@ async def reset_claims_command(_, message: t.Message):
             {'$set': {'last_claim_time': None}}
         )
         reset_count = result.modified_count
-        await message.reply_text(f"✅ Successfully reset claim cooldown for {reset_count} users (excluding developers).")
+        await message.reply_text(f"✅ **Successfully reset claim cooldown for {reset_count} users (excluding developers).**")
     except Exception as e:
-        await message.reply_text(f"⚠️ An error occurred while resetting claims: {e}")
-
+        await message.reply_text(f"⚠️ **An error occurred while resetting claims:** `{e}`")
