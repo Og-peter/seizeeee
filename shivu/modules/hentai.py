@@ -34,8 +34,7 @@ async def find_character(_, message: t.Message):
     # Cooldown check
     if user_id in cooldowns and time.time() - cooldowns[user_id] < 30:
         cooldown_time = int(30 - (time.time() - cooldowns[user_id]))
-        return await message.reply_text(f"⏳ Wait {cooldown_time} seconds before searching again.", quote=True)
-
+        return await message.reply_text(f"⏳ Horny? Wait {cooldown_time} seconds to start a new round with a new character 🌚.", quote=True)
     # Update cooldown
     cooldowns[user_id] = time.time()
 
