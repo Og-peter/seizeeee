@@ -25,15 +25,6 @@ async def fetch_character(query=None):
         print(e)
         return None
 
-async def calculate_stats():
-    """Generate random stats for a fight."""
-    return {
-        'strength': random.randint(50, 100),
-        'agility': random.randint(40, 90),
-        'defense': random.randint(30, 80),
-        'luck': random.randint(1, 20),
-    }
-
 @bot.on_message(filters.command(["find"]))
 async def find_character(_, message: t.Message):
     """Discover a random character."""
@@ -53,11 +44,15 @@ async def find_character(_, message: t.Message):
     if not character:
         return await message.reply_text("No character found. Please try again later.", quote=True)
 
-    # Generate random stats for the character
-    character['stats'] = await calculate_stats()
+    # Check if character is already in session or defeated
+    if user_sessions.get(user_id) == character['id']:
+        return await message.reply_text(
+            f"❌ {mention}, you already interacted with {character['name']}. Try finding another character.",
+            quote=True
+        )
 
     # Save session
-    user_sessions[user_id] = character
+    user_sessions[user_id] = character['id']
 
     # Display character with options
     keyboard = InlineKeyboardMarkup(
@@ -73,11 +68,6 @@ async def find_character(_, message: t.Message):
             f"⛱️ Name: {character['name']}\n"
             f"🏮 Rarity: {character['rarity']}\n"
             f"⛩️ Anime: {character['anime']}\n\n"
-            f"✨ **Stats**:\n"
-            f"🔹 Strength: {character['stats']['strength']}\n"
-            f"🔹 Agility: {character['stats']['agility']}\n"
-            f"🔹 Defense: {character['stats']['defense']}\n"
-            f"🔹 Luck: {character['stats']['luck']}\n\n"
             f"⚔️ Choose to fight or ignore!"
         ),
         reply_markup=keyboard,
@@ -99,11 +89,15 @@ async def hfind_character(_, message: t.Message):
     if not character:
         return await message.reply_text(f"No character found with ID `{character_id}`. Please try another.", quote=True)
 
-    # Generate random stats for the character
-    character['stats'] = await calculate_stats()
+    # Check if character is already in session or defeated
+    if user_sessions.get(user_id) == character['id']:
+        return await message.reply_text(
+            f"❌ {mention}, you already interacted with {character['name']}. Try another character.",
+            quote=True
+        )
 
     # Save session
-    user_sessions[user_id] = character
+    user_sessions[user_id] = character['id']
 
     # Display character with options
     keyboard = InlineKeyboardMarkup(
@@ -119,11 +113,6 @@ async def hfind_character(_, message: t.Message):
             f"⛱️ Name: {character['name']}\n"
             f"🏮 Rarity: {character['rarity']}\n"
             f"⛩️ Anime: {character['anime']}\n\n"
-            f"✨ **Stats**:\n"
-            f"🔹 Strength: {character['stats']['strength']}\n"
-            f"🔹 Agility: {character['stats']['agility']}\n"
-            f"🔹 Defense: {character['stats']['defense']}\n"
-            f"🔹 Luck: {character['stats']['luck']}\n\n"
             f"⚔️ Ready to fight or ignore?"
         ),
         reply_markup=keyboard,
@@ -141,7 +130,7 @@ async def fight_or_ignore_callback(_, callback_query: t.CallbackQuery):
         return await callback_query.answer("This is not your interaction!", show_alert=True)
 
     # Fetch character data from session
-    character = user_sessions.get(user_id)
+    character = await fetch_character(user_sessions.get(user_id))
     if not character:
         return await callback_query.answer("Character data not found. Please use /find or /hfind again.", show_alert=True)
 
@@ -150,38 +139,23 @@ async def fight_or_ignore_callback(_, callback_query: t.CallbackQuery):
         user_sessions.pop(user_id, None)
     elif action == "fight":
         await callback_query.answer("⚔️ Fight initiated!", show_alert=True)
-        await initiate_bed_fight(callback_query, user_id, character)
+        await handle_fight(callback_query, user_id, character)
 
-async def initiate_bed_fight(callback_query, user_id, character):
-    """Simulate a fight."""
+async def handle_fight(callback_query, user_id, character):
+    """Handle fight simulation."""
     mention = callback_query.from_user.mention
 
-    # User stats
-    user_stats = await calculate_stats()
-    user_score = sum(user_stats.values())
+    # Random outcome for fight
+    user_wins = random.choice([True, False])
 
-    # Character stats
-    char_stats = character['stats']
-    char_score = sum(char_stats.values())
-
-    # Simulate fight
-    fight_text = (
-        f"🛏️ **Bed Fight Begins!**\n\n"
-        f"🔹 Your Stats:\n"
-        f"Strength: {user_stats['strength']}, Agility: {user_stats['agility']}, Defense: {user_stats['defense']}, Luck: {user_stats['luck']}\n\n"
-        f"🔸 {character['name']}'s Stats:\n"
-        f"Strength: {char_stats['strength']}, Agility: {char_stats['agility']}, Defense: {char_stats['defense']}, Luck: {char_stats['luck']}\n\n"
-        f"⚔️ Calculating the winner...\n"
-    )
-    await callback_query.message.edit_text(fight_text)
-
-    await asyncio.sleep(2)  # Add suspense
-
-    if user_score > char_score:
+    if user_wins:
         result_text = f"🎉 {mention}, you won the bed fight against {character['name']}!\nThe character is now yours!"
         await user_collection.update_one({'id': user_id}, {'$push': {'characters': character}})
     else:
-        result_text = f"💔 {mention}, you lost the fight against {character['name']}.\nBetter luck next time!"
+        result_text = (
+            f"💔 {mention}, you lost the fight against {character['name']}.\n"
+            f"😔 Seems like your dick is not useful on the bed. Better luck next time!"
+        )
 
     await callback_query.message.edit_text(result_text)
 
