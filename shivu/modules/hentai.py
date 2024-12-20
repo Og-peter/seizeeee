@@ -94,7 +94,8 @@ async def hfind_character(_, message: t.Message):
     # Check if character is already in session or defeated
     if user_sessions.get(user_id) == character['id']:
         return await message.reply_text(
-            f"❌ {mention}, you already interacted with {character['name']}. Try another character.",
+            f"❌ {mention}, you're already on the bed with {character['name']}! 🛏️\n"
+            f"First finish your job with them, then try another one. 😏",
             quote=True
         )
 
@@ -111,12 +112,15 @@ async def hfind_character(_, message: t.Message):
     await message.reply_photo(
         photo=character['img_url'],
         caption=(
-            f"🔍 {mention}, you found **{character['name']}** by ID!\n\n"
-            f"⛱️ Name: {character['name']}\n"
-            f"🏮 Rarity: {character['rarity']}\n"
-            f"⛩️ Anime: {character['anime']}\n\n"
-            f"⚔️ Ready to fight or ignore?"
-        ),
+            f"🌚 {mention}, a random character is ready on your bed 🌚🌚\n\n"
+            f"❄️ **Name**: {character['name']}\n"
+            f"🏮 **Rarity**: {character['rarity']}\n"
+            f"⛩️ **Anime**: {character['anime']}\n"
+            f"👀 **Age**: <b><font color='pink'>{random.randint(18, 40)}</font></b> (Just the right age 😉)\n\n"
+            f"⚔️ Ready to fight on the bed? Choose to **fight** or **ignore**!\n\n"
+            f"Use the buttons below to make your move! 🗿"
+    ),
+            
         reply_markup=keyboard,
     )
 
