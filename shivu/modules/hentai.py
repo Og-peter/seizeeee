@@ -42,7 +42,7 @@ async def find_character(_, message: t.Message):
     # Fetch a random character
     character = await fetch_character()
     if not character:
-        return await message.reply_text("No character found. Please try again later.", quote=True)
+        return await message.reply_text("❌ Character not found because your dick size is too small. Please try again later.", quote=True)
 
     # Check if character is already in session or defeated
     if user_sessions.get(user_id) == character['id']:
