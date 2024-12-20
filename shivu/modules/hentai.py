@@ -47,7 +47,8 @@ async def find_character(_, message: t.Message):
     # Check if character is already in session or defeated
     if user_sessions.get(user_id) == character['id']:
         return await message.reply_text(
-            f"❌ {mention}, you already interacted with {character['name']}. Try finding another character.",
+            f"❌ {mention}, you're already on the bed with {character['name']}! 🛏️\n"
+            f"First finish your job with them, then try another one. 😏",
             quote=True
         )
 
