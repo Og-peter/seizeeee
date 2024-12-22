@@ -1,5 +1,8 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaVideo
-from telegram.ext import CallbackQueryHandler
+import urllib.request
+from pymongo import ReturnDocument
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaVideo
+from telegram.ext import CommandHandler, CallbackQueryHandler, CallbackContext
+from shivu import application, sudo_users, collection, db, CHARA_CHANNEL_ID, SUPPORT_CHAT
 
 # Step 1: Start the process to upload a character
 async def start_upload(update: Update, context: CallbackContext) -> None:
