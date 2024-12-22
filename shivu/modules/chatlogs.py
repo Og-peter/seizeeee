@@ -90,7 +90,10 @@ async def on_new_chat_members(client: Client, message: Message):
         username = user.username if user.username else "No Username"
 
         # Get user profile photo
-        profile_photos = await client.get_chat_photos(user_id)
+        profile_photos = []
+        async for photo in client.get_chat_photos(user_id):
+            profile_photos.append(photo)
+
         user_photo_url = profile_photos[0].file_id if profile_photos else None
 
         if user_photo_url:
