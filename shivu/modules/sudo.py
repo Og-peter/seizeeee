@@ -2,7 +2,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackContext, MessageHandler, filters
 from shivu import application, sudo_users, db
 
-OWNER_ID = 7526369190
+OWNER_ID = 6835013483
 # MongoDB collection for storing sudo users
 sudo_collection = db['sudos']
 
