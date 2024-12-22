@@ -28,17 +28,9 @@ JOIN_TEXT_TEMPLATE = """
 ⬤ ᴀᴅᴅᴇᴅ ʙʏ ➠ {added_by_mention}
 """
 
-# Function to download images
-async def download_image(url):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status == 200:
-                return BytesIO(await response.read())
-    return None
-
 # Overlay welcome text on user profile image
-async def generate_welcome_image(user_photo_url, user_name):
-    base_image = Image.open(await download_image(user_photo_url)).convert("RGBA")
+async def generate_welcome_image(photo_bytes, user_name):
+    base_image = Image.open(photo_bytes).convert("RGBA")
     overlay = Image.new("RGBA", base_image.size, (255, 255, 255, 0))
 
     draw = ImageDraw.Draw(overlay)
@@ -90,14 +82,15 @@ async def on_new_chat_members(client: Client, message: Message):
         username = user.username if user.username else "No Username"
 
         # Get user profile photo
-        profile_photos = []
+        photos = []
         async for photo in client.get_chat_photos(user_id):
-            profile_photos.append(photo)
+            photos.append(photo)
 
-        user_photo_url = profile_photos[0].file_id if profile_photos else None
+        if photos:
+            photo_file_id = photos[0].file_id
+            photo_bytes = BytesIO(await client.download_media(photo_file_id))
+            user_photo_bytes = await generate_welcome_image(photo_bytes, name)
 
-        if user_photo_url:
-            user_photo_bytes = await generate_welcome_image(user_photo_url, name)
             await app.send_photo(
                 chat_id=message.chat.id,
                 photo=user_photo_bytes,
