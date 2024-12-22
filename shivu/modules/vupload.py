@@ -1,4 +1,5 @@
-import urllib.request
+import os
+import requests
 from pymongo import ReturnDocument
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CommandHandler, CallbackContext
@@ -9,7 +10,7 @@ Please use the correct format:
 `/up <Video_URL> <character_name> <anime_name> <rarity_number>`.
 
 Examples:
-- `/up http://example.com/video.mp4 Naruto Naruto_Shonen 1`
+- `/up https://files.catbox.moe/btit4d.mp4 Naruto Naruto_Shonen 1`
 """
 
 RARITY_MAP = {
@@ -61,13 +62,6 @@ async def upload_video(update: Update, context: CallbackContext) -> None:
         character_name = character_name.replace('-', ' ').title()
         anime_name = anime_name.replace('-', ' ').title()
 
-        # Validate video URL
-        try:
-            urllib.request.urlopen(video_url)
-        except:
-            await update.message.reply_text('❌ *Invalid URL!*\nPlease provide a valid video URL.', parse_mode='Markdown')
-            return
-
         # Validate rarity
         rarity = RARITY_MAP.get(int(rarity_number))
         if not rarity:
@@ -101,34 +95,55 @@ async def upload_video(update: Update, context: CallbackContext) -> None:
 
         # Buttons
         buttons = [
-            [InlineKeyboardButton("View in Channel", url=f"https://t.me/{CHARA_CHANNEL_ID}/{character_id}")],
-            [InlineKeyboardButton("Report Issue", url=f"https://t.me/{SUPPORT_CHAT}")]
+            [
+                InlineKeyboardButton("📺 View in Channel", url=f"https://t.me/{CHARA_CHANNEL_ID}/{character_id}"),
+            ],
+            [
+                InlineKeyboardButton(f"🔍 Search {anime_name}", callback_data=f"search_anime_{anime_name}"),
+                InlineKeyboardButton(f"🔍 Search {character_name}", callback_data=f"search_character_{character_name}")
+            ],
+            [
+                InlineKeyboardButton("📩 Report Issue", url=f"https://t.me/{SUPPORT_CHAT}")
+            ]
         ]
+
+        # Handle Catbox URL
+        local_file = None
+        try:
+            response = requests.get(video_url)
+            if response.status_code == 200:
+                local_file = f"{character_id}.mp4"
+                with open(local_file, "wb") as file:
+                    file.write(response.content)
+            else:
+                raise Exception("Failed to download the video from the provided URL.")
+        except Exception as e:
+            await update.message.reply_text(f"❌ *Invalid URL or Unable to Download Video!*\nError: {str(e)}", parse_mode='Markdown')
+            return
 
         # Upload video to channel
         try:
-            message = await context.bot.send_video(
-                chat_id=CHARA_CHANNEL_ID,
-                video=video_url,
-                caption=caption,
-                parse_mode='Markdown',
-                reply_markup=InlineKeyboardMarkup(buttons)
-            )
-            character_data['message_id'] = message.message_id
-            await collection.insert_one(character_data)
-            await update.message.reply_text("✅ *Character Added Successfully!*", parse_mode='Markdown')
-        except Exception as e:
-            # Notify admin on failure
-            await update.message.reply_text(f"❌ *Failed to Upload Character!*\nError: {str(e)}", parse_mode='Markdown')
-            await context.bot.send_message(
-                chat_id=SUPPORT_CHAT,
-                text=f"❌ *Character Upload Failed!*\n\nError: {str(e)}\nBy: [{update.effective_user.first_name}](tg://user?id={update.effective_user.id})",
-                parse_mode='Markdown'
-            )
-            await collection.insert_one(character_data)
+            if local_file:
+                with open(local_file, "rb") as video:
+                    message = await context.bot.send_video(
+                        chat_id=CHARA_CHANNEL_ID,
+                        video=video,
+                        caption=caption,
+                        parse_mode='Markdown',
+                        reply_markup=InlineKeyboardMarkup(buttons)
+                    )
+                    character_data['message_id'] = message.message_id
 
-        # Notify support chat
-        await context.bot.send_message(chat_id=SUPPORT_CHAT, text=caption, parse_mode='Markdown')
+                await collection.insert_one(character_data)
+                await update.message.reply_text("✅ *Character Added Successfully!*", parse_mode='Markdown')
+            else:
+                raise Exception("Local file is missing.")
+        except Exception as e:
+            await update.message.reply_text(f"❌ *Failed to Upload Character!*\nError: {str(e)}", parse_mode='Markdown')
+        finally:
+            # Clean up local file
+            if local_file and os.path.exists(local_file):
+                os.remove(local_file)
 
     except Exception as e:
         await update.message.reply_text(f"❌ *Unexpected Error:*\n{str(e)}", parse_mode='Markdown')
