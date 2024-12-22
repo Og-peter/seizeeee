@@ -92,7 +92,11 @@ async def on_new_chat_members(client: Client, message: Message):
         # Get user profile photo
         user_info = await app.get_users(user_id)
         profile_photo = user_info.photo
-        user_photo_url = photos[0].file_id if photos else None
+        if profile_photo:
+            photos = await app.get_profile_photos(user_id)
+            user_photo_url = photos[0].file_id if photos else None
+        else:
+            user_photo_url = None
 
         if user_photo_url:
             user_photo_bytes = await generate_welcome_image(user_photo_url, name)
