@@ -5,6 +5,7 @@ from pyrogram.types import (
     Message, InlineQuery, InlineQueryResultArticle, InputTextMessageContent
 )
 from pymongo import ReturnDocument
+from shivu import user_collection, collection, CHARA_CHANNEL_ID, SUPPORT_CHAT, shivuu as app, sudo_users, db
 
 # Constants
 CHARA_CHANNEL_ID = -1001234567890  # Replace with your channel ID
