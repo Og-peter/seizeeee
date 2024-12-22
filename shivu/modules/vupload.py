@@ -107,16 +107,20 @@ async def upload_video(update: Update, context: CallbackContext) -> None:
             ]
         ]
 
-        # Handle Catbox URL
+        # Handle Catbox URL with custom headers
         local_file = None
         try:
-            response = requests.get(video_url)
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            }
+            response = requests.get(video_url, headers=headers, stream=True)
             if response.status_code == 200:
                 local_file = f"{character_id}.mp4"
                 with open(local_file, "wb") as file:
-                    file.write(response.content)
+                    for chunk in response.iter_content(chunk_size=8192):
+                        file.write(chunk)
             else:
-                raise Exception("Failed to download the video from the provided URL.")
+                raise Exception(f"Failed to download video. HTTP Status Code: {response.status_code}")
         except Exception as e:
             await update.message.reply_text(f"❌ *Invalid URL or Unable to Download Video!*\nError: {str(e)}", parse_mode='Markdown')
             return
