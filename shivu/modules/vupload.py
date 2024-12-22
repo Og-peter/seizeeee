@@ -10,7 +10,7 @@ from shivu import user_collection, collection, CHARA_CHANNEL_ID, SUPPORT_CHAT, s
 # Constants
 CHARA_CHANNEL_ID = -1001234567890  # Replace with your channel ID
 SUPPORT_CHAT = -1009876543210  # Replace with your support group ID
-sudo_users = ["123456789", "987654321"]  # Replace with your sudo users
+sudo_users = ["6835013483", "987654321"]  # Replace with your sudo users
 user_states = {}
 collection = None  # Replace with your MongoDB character collection
 rarity_emojis = {"⚜️ Animated": "animated", "⭐ Rare": "rare", "🌟 Ultra Rare": "ultra_rare"}
