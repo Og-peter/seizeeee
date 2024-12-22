@@ -28,6 +28,14 @@ JOIN_TEXT_TEMPLATE = """
 ⬤ ᴀᴅᴅᴇᴅ ʙʏ ➠ {added_by_mention}
 """
 
+# Function to download images
+async def download_image(url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            if response.status == 200:
+                return BytesIO(await response.read())
+    return None
+
 # Overlay welcome text on user profile image
 async def generate_welcome_image(photo_bytes, user_name):
     base_image = Image.open(photo_bytes).convert("RGBA")
@@ -82,13 +90,14 @@ async def on_new_chat_members(client: Client, message: Message):
         username = user.username if user.username else "No Username"
 
         # Get user profile photo
-        photos = []
-        async for photo in client.get_chat_photos(user_id):
-            photos.append(photo)
-
+        photos = await client.get_chat_photos(user_id)
         if photos:
             photo_file_id = photos[0].file_id
-            photo_bytes = BytesIO(await client.download_media(photo_file_id))
+            photo_path = await client.download_media(photo_file_id)
+            with open(photo_path, "rb") as f:
+                photo_bytes = BytesIO(f.read())
+            os.remove(photo_path)
+
             user_photo_bytes = await generate_welcome_image(photo_bytes, name)
 
             await app.send_photo(
