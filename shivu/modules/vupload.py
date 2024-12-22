@@ -1,150 +1,137 @@
 import urllib.request
-from pyrogram import Client, filters
-from pyrogram.types import (
-    InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery,
-    Message, InlineQuery, InlineQueryResultArticle, InputTextMessageContent
-)
-from pymongo import MongoClient
-from shivu import shivuu as app
+from pymongo import ReturnDocument
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import CommandHandler, CallbackContext
+from shivu import application, sudo_users, collection, db, CHARA_CHANNEL_ID, SUPPORT_CHAT
 
-# Constants
-CHARA_CHANNEL_ID = -1001234567890  # Replace with your channel ID
-SUPPORT_CHAT = -1009876543210  # Replace with your support group ID
-sudo_users = ["6835013483", "987654321"]  # Replace with your sudo users
-user_states = {}
-rarity_emojis = {"⚜️ Animated": "animated", "⭐ Rare": "rare", "🌟 Ultra Rare": "ultra_rare"}
+WRONG_FORMAT_TEXT_VIDEO = """⚠️ *Invalid Format!*
+Please use the correct format:
+`/up <Video_URL> <character_name> <anime_name> <rarity_number>`.
 
-# MongoDB Setup
-mongo_client = MongoClient("mongodb://localhost:27017/")
-db = mongo_client["anime_game"]  # Replace with your database name
-collection = db["characters"]
+Examples:
+- `/up http://example.com/video.mp4 Naruto Naruto_Shonen 1`
+"""
 
-# Helper Function to Get Next ID
-async def get_next_sequence_number(field: str) -> int:
-    sequence_doc = await db["sequences"].find_one_and_update(
-        {"_id": field},
-        {"$inc": {"value": 1}},
-        return_document=ReturnDocument.AFTER,
-        upsert=True
+RARITY_MAP = {
+    1: "⚜️ Animated",
+    2: "🌟 Ultra Rare",
+    3: "⭐ Rare",
+    4: "✨ Common",
+    5: "🔸 Basic",
+}
+
+CATEGORY_MAP = {
+    '❄️': '❄️ Infinity ❄️',
+    '🔥': '🔥 Flame Master 🔥',
+    '🌊': '🌊 Water Bender 🌊',
+    '⚡': '⚡ Lightning Wizard ⚡',
+    # Add more categories here
+}
+
+def get_category(name):
+    for emoji, category in CATEGORY_MAP.items():
+        if emoji in name:
+            return category
+    return "🌟 Unknown"
+
+async def get_next_sequence_number(sequence_name):
+    sequence_collection = db.sequences
+    sequence_document = await sequence_collection.find_one_and_update(
+        {'_id': sequence_name},
+        {'$inc': {'sequence_value': 1}},
+        return_document=ReturnDocument.AFTER
     )
-    return sequence_doc["value"]
+    if not sequence_document:
+        await sequence_collection.insert_one({'_id': sequence_name, 'sequence_value': 0})
+        return 0
+    return sequence_document['sequence_value']
 
-# Admin Panel Command
-@app.on_message(filters.command("admin_panel") & filters.private)
-async def admin_panel(client, message):
-    if str(message.from_user.id) in sudo_users:
-        total_characters = await collection.count_documents({})
-        total_animes = len(await collection.distinct("anime"))
-        admin_message = (
-            f"👑 <b>Admin Panel</b>\n\n"
-            f"📊 Total Characters: <b>{total_characters}</b>\n"
-            f"📚 Total Animes: <b>{total_animes}</b>\n"
-        )
-        keyboard = InlineKeyboardMarkup(
-            [
-                [InlineKeyboardButton("➕ Add Character", callback_data="add_waifu")],
-                [InlineKeyboardButton("📖 View Anime List", switch_inline_query_current_chat="search_anime ")],
-                [InlineKeyboardButton("🔙 Exit", callback_data="admin_exit")]
-            ]
-        )
-        await message.reply_text(admin_message, reply_markup=keyboard)
-    else:
-        await message.reply_text("❌ You are not authorized to use this command.")
+async def upload_video(update: Update, context: CallbackContext) -> None:
+    if str(update.effective_user.id) not in sudo_users:
+        await update.message.reply_text('⛔ *Access Denied!* Only the owner can use this command.')
+        return
 
-# Add Character Workflow
-@app.on_callback_query(filters.regex("^add_waifu$"))
-async def start_add_waifu(client, callback_query):
-    user_states[callback_query.from_user.id] = {"state": "selecting_anime"}
-    await callback_query.message.edit_text(
-        "📚 Please search for the anime to add the character to:",
-        reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("🔍 Search Anime", switch_inline_query_current_chat="search_anime ")],
-             [InlineKeyboardButton("❌ Cancel", callback_data="cancel_add_waifu")]]
-        )
-    )
+    try:
+        args = context.args
+        if len(args) != 4:
+            await update.message.reply_text(WRONG_FORMAT_TEXT_VIDEO, parse_mode='Markdown')
+            return
 
-@app.on_inline_query()
-async def search_anime(client, inline_query: InlineQuery):
-    if inline_query.query.lower().startswith("search_anime "):
-        query = inline_query.query.replace("search_anime ", "").strip()
-        anime_results = await collection.aggregate([
-            {"$match": {"anime": {"$regex": query, "$options": "i"}}},
-            {"$group": {"_id": "$anime", "count": {"$sum": 1}}},
-            {"$limit": 10}
-        ]).to_list(length=None)
+        video_url, character_name, anime_name, rarity_number = args
+        character_name = character_name.replace('-', ' ').title()
+        anime_name = anime_name.replace('-', ' ').title()
 
-        results = [
-            InlineQueryResultArticle(
-                title=anime["_id"],
-                description=f"{anime['count']} Characters",
-                input_message_content=InputTextMessageContent(f"Anime: {anime['_id']}"),
-                reply_markup=InlineKeyboardMarkup(
-                    [[InlineKeyboardButton("Select", callback_data=f"select_anime_{anime['_id']}")]]
-                )
-            ) for anime in anime_results
-        ]
-        await inline_query.answer(results, cache_time=1)
+        # Validate video URL
+        try:
+            urllib.request.urlopen(video_url)
+        except:
+            await update.message.reply_text('❌ *Invalid URL!*\nPlease provide a valid video URL.', parse_mode='Markdown')
+            return
 
-@app.on_callback_query(filters.regex("^select_anime_"))
-async def select_anime(client, callback_query):
-    anime_name = callback_query.data.split("_", 2)[-1]
-    user_states[callback_query.from_user.id] = {"state": "awaiting_character_name", "anime": anime_name}
-    await callback_query.message.edit_text(
-        f"✅ Anime selected: <b>{anime_name}</b>\n\nPlease enter the character's name:",
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="cancel_add_waifu")]])
-    )
+        # Validate rarity
+        rarity = RARITY_MAP.get(int(rarity_number))
+        if not rarity:
+            await update.message.reply_text(f"❌ *Invalid Rarity!*\nValid rarities: {', '.join(map(str, RARITY_MAP.keys()))}", parse_mode='Markdown')
+            return
 
-@app.on_message(filters.private & filters.text)
-async def handle_character_name(client, message):
-    user_data = user_states.get(message.from_user.id)
-    if user_data and user_data["state"] == "awaiting_character_name":
-        user_data["name"] = message.text.strip()
-        user_data["state"] = "awaiting_character_rarity"
-        await message.reply_text(
-            "📌 Select the character's rarity:",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton(rarity, callback_data=f"select_rarity_{rarity}")]
-                 for rarity in rarity_emojis.keys()]
-            )
-        )
+        # Generate unique ID
+        character_id = str(await get_next_sequence_number('character_id')).zfill(3)
+        category = get_category(character_name)
 
-@app.on_callback_query(filters.regex("^select_rarity_"))
-async def select_rarity(client, callback_query):
-    rarity = callback_query.data.split("_", 2)[-1]
-    user_states[callback_query.from_user.id]["rarity"] = rarity
-    user_states[callback_query.from_user.id]["state"] = "awaiting_character_video"
-    await callback_query.message.edit_text("📽️ Send the character's video:")
-
-@app.on_message(filters.private & filters.video)
-async def handle_character_video(client, message):
-    user_data = user_states.get(message.from_user.id)
-    if user_data and user_data["state"] == "awaiting_character_video":
-        character_id = str(await get_next_sequence_number("character_id")).zfill(4)
-        character = {
-            "id": character_id,
-            "name": user_data["name"],
-            "anime": user_data["anime"],
-            "rarity": user_data["rarity"],
-            "video_file_id": message.video.file_id
+        # Character data
+        character_data = {
+            'img_url': video_url,
+            'name': character_name,
+            'anime': anime_name,
+            'rarity': rarity,
+            'id': character_id,
+            'category': category
         }
 
+        # Caption for the channel
         caption = (
-            f"🎉 <b>New Character Added!</b>\n\n"
-            f"🎬 <b>Anime:</b> {user_data['anime']}\n"
-            f"🆔 <b>ID:</b> {character_id}\n"
-            f"📛 <b>Name:</b> {user_data['name']}\n"
-            f"✨ <b>Rarity:</b> {user_data['rarity']}"
+            f"🎥 *New Character Added!*\n\n"
+            f"🎭 *Anime:* {anime_name}\n"
+            f"🆔 *ID:* {character_id}\n"
+            f"🌟 *Name:* {character_name}\n"
+            f"🏆 *Rarity:* {rarity}\n"
+            f"🔖 *Category:* {category}\n\n"
+            f"➼ *Added By:* [{update.effective_user.first_name}](tg://user?id={update.effective_user.id})"
         )
 
+        # Buttons
+        buttons = [
+            [InlineKeyboardButton("View in Channel", url=f"https://t.me/{CHARA_CHANNEL_ID}/{character_id}")],
+            [InlineKeyboardButton("Report Issue", url=f"https://t.me/{SUPPORT_CHAT}")]
+        ]
+
+        # Upload video to channel
         try:
-            await app.send_video(
+            message = await context.bot.send_video(
                 chat_id=CHARA_CHANNEL_ID,
-                video=message.video.file_id,
+                video=video_url,
                 caption=caption,
-                parse_mode="html"
+                parse_mode='Markdown',
+                reply_markup=InlineKeyboardMarkup(buttons)
             )
-            await collection.insert_one(character)
-            await message.reply_text("✅ Character added successfully!")
-            user_states.pop(message.from_user.id, None)
+            character_data['message_id'] = message.message_id
+            await collection.insert_one(character_data)
+            await update.message.reply_text("✅ *Character Added Successfully!*", parse_mode='Markdown')
         except Exception as e:
-            await message.reply_text(f"❌ Failed to add character: {e}")
+            # Notify admin on failure
+            await update.message.reply_text(f"❌ *Failed to Upload Character!*\nError: {str(e)}", parse_mode='Markdown')
+            await context.bot.send_message(
+                chat_id=SUPPORT_CHAT,
+                text=f"❌ *Character Upload Failed!*\n\nError: {str(e)}\nBy: [{update.effective_user.first_name}](tg://user?id={update.effective_user.id})",
+                parse_mode='Markdown'
+            )
+            await collection.insert_one(character_data)
+
+        # Notify support chat
+        await context.bot.send_message(chat_id=SUPPORT_CHAT, text=caption, parse_mode='Markdown')
+
+    except Exception as e:
+        await update.message.reply_text(f"❌ *Unexpected Error:*\n{str(e)}", parse_mode='Markdown')
+
+# Add handler for the command
+application.add_handler(CommandHandler('upvideo', upload_video))
