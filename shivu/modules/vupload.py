@@ -7,7 +7,6 @@ from pyrogram.types import (
 from pymongo import ReturnDocument
 
 # Constants
-app = Client("anime_bot")  # Replace with your bot's credentials
 CHARA_CHANNEL_ID = -1001234567890  # Replace with your channel ID
 SUPPORT_CHAT = -1009876543210  # Replace with your support group ID
 sudo_users = ["123456789", "987654321"]  # Replace with your sudo users
@@ -153,5 +152,3 @@ async def search_anime(client, inline_query: InlineQuery):
             ) for anime in anime_results
         ]
         await inline_query.answer(results, cache_time=1)
-
-app.run()
