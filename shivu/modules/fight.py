@@ -12,7 +12,7 @@ COOLDOWN_DURATION = 300  # Set the cooldown duration in seconds (5 minutes)
 FIGHT_FEE = 30000  # Set the fee for the fight command
 
 # Logs Channel ID (replace with actual channel ID)
-LOGS_CHANNEL_ID = -1002446048543  # Replace with your logs channel's chat ID
+LOGS_CHANNEL_ID = -1002293637907  # Replace with your logs channel's chat ID
 
 # Tracking cooldowns
 user_cooldowns = {}  # Dictionary to track user cooldowns
