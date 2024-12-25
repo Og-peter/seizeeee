@@ -15,19 +15,19 @@ COMMUNITY_GROUP_ID = -1002480876264
 
 # Keyboards
 keyboard_all = InlineKeyboardMarkup([
-    [InlineKeyboardButton("🎭 Official Group", url="https://t.me/Dyna_community")],
-    [InlineKeyboardButton("📢 Official Channel", url="https://t.me/Seizer_updates")],
-    [InlineKeyboardButton("🌟 Community Groups", url="https://t.me/Dyna_community")]
+    [InlineKeyboardButton("🎭 Official Group", url="https://t.me/The_Og_Clan")],
+    [InlineKeyboardButton("📢 Official Channel", url="https://t.me/dynamic_supports")],
+    [InlineKeyboardButton("🌟 Community Groups", url="https://t.me/Tokyo_Og_Gang")]
 ])
 
 keyboard_support = InlineKeyboardMarkup([
-    [InlineKeyboardButton("🎭 Join Group", url="https://t.me/Dyna_community")]
+    [InlineKeyboardButton("🎭 Join Group", url="https://t.me/The_Og_Clan")]
 ])
 keyboard_channel = InlineKeyboardMarkup([
-    [InlineKeyboardButton("📢 Join Channel", url="https://t.me/Seizer_updates")]
+    [InlineKeyboardButton("📢 Join Channel", url="https://t.me/dynamic_supports")]
 ])
 keyboard_community = InlineKeyboardMarkup([
-    [InlineKeyboardButton("🌟 Join Community", url="https://t.me/Dyna_community")]
+    [InlineKeyboardButton("🌟 Join Community", url="https://t.me/Tokyo_Og_Gang")]
 ])
 
 
