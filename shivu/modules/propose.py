@@ -3,171 +3,159 @@ from shivu import shivuu as bot
 from shivu import user_collection, collection
 import asyncio
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
-from pyrogram.errors import UserNotParticipant
-from datetime import datetime
+from pyrogram.errors import UserNotParticipant, ChatWriteForbidden
+from datetime import datetime, timedelta
 import random
 import time
 
 # Constants
-SUCCESS_PROBABILITY = 0.15  # 15% success rate
-PROPOSAL_COST = 180000  # Tokens required per proposal
-COOLDOWN_DURATION = 7 * 60  # Cooldown of 7 minutes
-ANTI_SPAM_TIME = 4  # Prevent spam: 4 seconds
-MANDATORY_GROUP = "Dyna_community"  # Group user must join
-ADMIN_ID = 6835013483  # Bot owner/admin
+WIN_RATE_PERCENTAGE = 5  # Win rate in percentage
+FIGHT_FEE = 200000  # Proposal fee
+COOLDOWN_TIME = 600  # Cooldown time (10 minutes)
+SPAM_THRESHOLD = 5  # Spam threshold in seconds
+MUST_JOIN = 'dynamic_supports'
+OWNER_ID = 6835013483  # Owner ID
 
-# Dynamic content
-PROPOSAL_STEPS = [
-    "✨ Preparing your speech...",
-    "💌 Writing heartfelt words...",
-    "💍 Presenting the ring..."
+# Message Templates
+START_MESSAGES = [
+    "🥂 ᴛʜᴇ ᴍᴏᴍᴇɴᴛ ʜᴀs ᴀʀʀɪᴠᴇᴅ 🥂",
+    "🫧 ʟᴇᴛ's ɢᴏ! 🫧",
+    "💐 ᴛɪᴍᴇ ғᴏʀ ʏᴏᴜʀ ʟᴜᴄᴋʏ sʜᴏᴛ 💐"
 ]
-FAILURE_MESSAGES = [
-    "💔 They walked away, leaving you in the rain... 🌧️",
-    "😔 Not this time. Try again with more charm! 🪷",
-    "🛑 A harsh 'NO!' echoes... but don't lose hope. 🌟"
+REJECTION_CAPTIONS = [
+    "💔 sʜᴇ sʟᴀᴘᴘᴇᴅ ᴀɴᴅ ʀᴀɴ! 🥀",
+    "💀 sʜᴇ sᴀɪᴅ 'ɴᴏ'! 🌬️",
+    "😞 sᴏʀʀʏ, ʙᴜᴛ ɪᴛ's ᴀ ʀᴇᴊᴇᴄᴛ! 🏮"
 ]
-SUCCESS_MESSAGES = [
-    "🎉 They said YES! A magical journey begins! 🌹",
-    "🌟 You won their heart! Cherish this bond forever! 💖",
-    "💌 It's a perfect match! A bond written in the stars! ✨"
+ACCEPTANCE_IMAGES = [
+    "https://te.legra.ph/file/4fe133737bee4866a3549.png",
+    "https://te.legra.ph/file/28d46e4656ee2c3e7dd8f.png",
+    "https://te.legra.ph/file/d32c6328c6d271dd00816.png"
 ]
-IMAGES = {
-    "success": [
-        "https://te.legra.ph/file/6e1234abcd5678ef9012.png",
-        "https://te.legra.ph/file/09876cdeff56789a1234.png"
-    ],
-    "failure": [
-        "https://te.legra.ph/file/bc12345ed67890ff1234.png",
-        "https://te.legra.ph/file/abc67890def1234gh567.png"
-    ]
-}
+REJECTION_IMAGES = [
+    "https://te.legra.ph/file/d6e784e5cda62ac27541f.png",
+    "https://te.legra.ph/file/e4e1ba60b4e79359bf9e7.png",
+    "https://te.legra.ph/file/81d011398da3a6f49fa7f.png"
+]
 
-# Cooldown and spam tracking
-user_last_action = {}
-cooldown_tracker = {}
+# Track cooldowns and last command usage
+user_cooldowns = {}
+user_last_command_times = {}
 
-# Get random characters
-async def fetch_character():
-    rarity_filter = ["🎀 Rare Edition", "✨ Ultra Rare"]
-    return await collection.aggregate([
-        {"$match": {"rarity": {"$in": rarity_filter}}},
-        {"$sample": {"size": 1}}
-    ]).to_list(length=1)
-
-# Join group verification
-async def verify_membership(user_id):
+# Fetch random characters with specific rarities
+async def get_random_characters():
+    target_rarities = ['🟡 Legendary', '🟠 Rare']
     try:
-        await bot.get_chat_member(MANDATORY_GROUP, user_id)
-    except UserNotParticipant:
-        join_link = f"https://t.me/{MANDATORY_GROUP}"
-        return False, join_link
-    return True, None
+        pipeline = [
+            {'$match': {'rarity': {'$in': target_rarities}}},
+            {'$sample': {'size': 1}}
+        ]
+        cursor = collection.aggregate(pipeline)
+        return await cursor.to_list(length=None)
+    except Exception as e:
+        print(f"Error fetching characters: {e}")
+        return []
 
-# Log activity
-async def record_action(user_id, description):
-    log_group = -1001992198513
-    await bot.send_message(log_group, f"📋 User {user_id} action: {description} at {datetime.now()}")
+# Log user interaction to a group
+async def log_interaction(user_id):
+    group_id = -1001992198513  # Replace with your group ID
+    await bot.send_message(group_id, f"👤 𝑼𝒔𝒆𝒓: {user_id} used the propose command at {datetime.now()}")
 
-# Propose command
+# Reset cooldown for a user (admin only)
+@bot.on_message(filters.command("cd"))
+async def reset_cooldown_command(_: bot, message: t.Message):
+    if message.from_user.id != OWNER_ID:
+        return await message.reply_text("🚫 You lack permission to use this command.")
+    if not message.reply_to_message:
+        return await message.reply_text("❌ Please reply to a user's message to reset their cooldown.")
+    target_user_id = message.reply_to_message.from_user.id
+    user_cooldowns.pop(target_user_id, None)
+    await message.reply_text(f"✅ Cooldown reset for user {target_user_id}.")
+
+# Propose Command with Cooldown and Retry
 @bot.on_message(filters.command("propose"))
-async def propose(_, message: Message):
-    user_id = message.from_user.id
-    target_user = message.reply_to_message.from_user if message.reply_to_message else None
+async def propose_command(_: bot, message: t.Message):
+    chat_id, user_id = message.chat.id, message.from_user.id
     current_time = time.time()
 
-    # Group membership check
-    is_member, join_link = await verify_membership(user_id)
-    if not is_member:
+    # Check group membership
+    try:
+        await bot.get_chat_member(MUST_JOIN, user_id)
+    except UserNotParticipant:
+        link = f"https://t.me/{MUST_JOIN}"
         return await message.reply_text(
-            "📢 Please join our support group to use this feature!",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Join Now", url=join_link)]])
+            "🔔 Join the support group to use this command!",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Join", url=link)]]),
+            disable_web_page_preview=True
         )
 
-    # Cooldown validation
-    if user_id in cooldown_tracker and current_time - cooldown_tracker[user_id] < COOLDOWN_DURATION:
-        remaining = int(COOLDOWN_DURATION - (current_time - cooldown_tracker[user_id]))
-        minutes, seconds = divmod(remaining, 60)
-        return await message.reply_text(f"⏳ Cooldown active. Wait {minutes}m {seconds}s.")
+    # Group restriction check
+    allowed_group_id = -1002466950912  # Replace with your group ID
+    if chat_id != allowed_group_id:
+        return await message.reply_text("⚠️ This command only works in @Dyna_community")
 
-    # Anti-spam
-    if user_id in user_last_action and current_time - user_last_action[user_id] < ANTI_SPAM_TIME:
-        return await message.reply_text("⚠️ You're sending commands too quickly!")
+    # Cooldown check
+    if user_id in user_cooldowns and current_time - user_cooldowns[user_id] < COOLDOWN_TIME:
+        remaining_time = COOLDOWN_TIME - (current_time - user_cooldowns[user_id])
+        minutes, seconds = divmod(int(remaining_time), 60)
+        return await message.reply_text(f"⏳ Cooldown active. Wait for {minutes}:{seconds}")
 
-    # Check balance
-    user_data = await user_collection.find_one({"id": user_id}, {"balance": 1})
-    user_balance = user_data.get("balance", 0)
-    if user_balance < PROPOSAL_COST:
-        return await message.reply_text(f"💰 Not enough tokens! You need {PROPOSAL_COST}.")
+    # Spam prevention
+    if user_id in user_last_command_times and current_time - user_last_command_times[user_id] < SPAM_THRESHOLD:
+        return await message.reply_text("🚨 Command spam detected. Please wait.")
 
-    # Deduct cost and record cooldown
-    await user_collection.update_one({"id": user_id}, {"$inc": {"balance": -PROPOSAL_COST}})
-    cooldown_tracker[user_id] = current_time
-    user_last_action[user_id] = current_time
+    # Balance check
+    user_data = await user_collection.find_one({'id': user_id}, projection={'balance': 1})
+    user_balance = user_data.get('balance', 0)
+    if user_balance < FIGHT_FEE:
+        return await message.reply_text("⚠️ Insufficient balance. You need 200,000 tokens.")
 
-    # Log action
-    await record_action(user_id, "Attempted proposal")
+    # Deduct proposal fee
+    await user_collection.update_one({'id': user_id}, {'$inc': {'balance': -FIGHT_FEE}})
+    user_cooldowns[user_id] = current_time
+    user_last_command_times[user_id] = current_time
 
-    # If targeting another user
-    if target_user:
-        accept_button = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("💖 Accept", callback_data=f"accept_{user_id}_{target_user.id}"),
-              InlineKeyboardButton("❌ Reject", callback_data=f"reject_{user_id}_{target_user.id}")]]
-        )
-        return await bot.send_message(
-            target_user.id,
-            f"💌 {message.from_user.mention} has proposed to you! Will you accept?",
-            reply_markup=accept_button
-        )
+    # Log the interaction
+    await log_interaction(user_id)
 
-    # Single propose process
-    for step in PROPOSAL_STEPS:
+    # Proposal start message
+    start_message = random.choice(START_MESSAGES)
+    await bot.send_photo(chat_id, photo=random.choice(ACCEPTANCE_IMAGES), caption=start_message)
+
+    # Animated steps of proposal
+    for step in ["💍 ᴋɴᴇᴇʟɪɴɢ ᴅᴏᴡɴ...", "💞 ᴇxᴛᴇɴᴅɪɴɢ ᴛʜᴇ ʀɪɴɢ...", "🎉 ᴀsᴋɪɴɢ ᴛʜᴇ ʙɪɢ ǫᴜᴇsᴛɪᴏɴ..."]:
         await message.reply_text(step)
-        await asyncio.sleep(1.5)
+        await asyncio.sleep(1)
 
-    # Outcome determination
-    if random.random() < SUCCESS_PROBABILITY:
-        # Successful proposal
-        characters = await fetch_character()
-        for char in characters:
-            await user_collection.update_one({"id": user_id}, {"$push": {"characters": char}})
+    # Win/lose calculation
+    if random.random() < (WIN_RATE_PERCENTAGE / 100):
+        random_characters = await get_random_characters()
+        for character in random_characters:
+            await user_collection.update_one({'id': user_id}, {'$push': {'characters': character}})
+        await asyncio.sleep(2)
+        for character in random_characters:
             await message.reply_photo(
-                char["img_url"],
-                caption=(
-                    f"💖 Success! {char['name']} accepted your proposal! 🌹\n"
-                    f"🏷️ **Rarity**: {char['rarity']}\n"
-                    f"📺 **Anime**: {char['anime']}"
-                )
+                photo=character['img_url'],
+                caption=(f"🥂 <b>{character['name']}</b> ᴀᴄᴄᴇᴘᴛᴇᴅ! 🌹\n"
+                         f"❄️ ɴᴀᴍᴇ: {character['name']}\n"
+                         f"🫧 ʀᴀʀɪᴛʏ: {character['rarity']}\n"
+                         f"⛩️ ᴀɴɪᴍᴇ: {character['anime']}")
             )
         await message.reply_text(
-            random.choice(SUCCESS_MESSAGES),
+            "💖 ᴛʀʏ ᴀɢᴀɪɴ ᴏʀ ᴠɪᴇᴡ ʏᴏᴜʀ ᴄʜᴀʀᴀᴄᴛᴇʀs!",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🔄 Try Again", callback_data="retry_proposal")],
-                [InlineKeyboardButton("📂 View Collection", url=f"https://t.me/{MANDATORY_GROUP}")]
+                [InlineKeyboardButton("🌿 ʀᴇᴛʀʏ ᴘʀᴏᴘᴏsᴀʟ", callback_data="retry_proposal")],
+                [InlineKeyboardButton("🪭 ᴠɪᴇᴡ ᴄʜᴀʀᴀᴄᴛᴇʀs", url=f"https://t.me/{MUST_JOIN}")]
             ])
         )
     else:
-        # Failed proposal
+        await asyncio.sleep(2)
         await message.reply_photo(
-            random.choice(IMAGES["failure"]),
-            caption=random.choice(FAILURE_MESSAGES)
+            photo=random.choice(REJECTION_IMAGES),
+            caption=random.choice(REJECTION_CAPTIONS)
         )
 
-# Callback for accept/reject
-@bot.on_callback_query(filters.regex("accept_"))
-async def accept_proposal(_, callback_query: t.CallbackQuery):
-    data = callback_query.data.split("_")
-    proposer_id = int(data[1])
-    target_id = int(data[2])
-    if callback_query.from_user.id != target_id:
-        return await callback_query.answer("This proposal is not for you!", show_alert=True)
-    await bot.send_message(proposer_id, f"🎉 {callback_query.from_user.mention} has accepted your proposal!")
-
-@bot.on_callback_query(filters.regex("reject_"))
-async def reject_proposal(_, callback_query: t.CallbackQuery):
-    data = callback_query.data.split("_")
-    proposer_id = int(data[1])
-    target_id = int(data[2])
-    if callback_query.from_user.id != target_id:
-        return await callback_query.answer("This proposal is not for you!", show_alert=True)
-    await bot.send_message(proposer_id, f"❌ {callback_query.from_user.mention} has rejected your proposal.")
+# Retry proposal callback
+@bot.on_callback_query(filters.regex("retry_proposal"))
+async def retry_proposal(_, callback_query: t.CallbackQuery):
+    await propose_command(_, callback_query.message)
