@@ -77,8 +77,8 @@ async def send_group_profile_image(client, chat, join_text):
 async def on_new_chat_members(client: Client, message: Message):
     total_members = await client.get_chat_members_count(message.chat.id)
 
-    if total_members < 15:
-        leave_note = "🌿 𝗦𝗼𝗿𝗿𝘆, 𝗹𝗲𝗮𝘃𝗶𝗻𝗴 𝗮𝘀 𝘁𝗵𝗲 𝗴𝗿𝗼𝘂𝗽 𝗵𝗮𝘀 𝗹𝗲𝘀𝘀 𝘁𝗵𝗮𝗻 𝟭𝟱 𝗺𝗲𝗺𝗯𝗲𝗿𝘀. 🌱"
+    if total_members < 0:
+        leave_note = "🌿 𝗦𝗼𝗿𝗿𝘆, 𝗹𝗲𝗮𝘃𝗶𝗻𝗴 𝗮𝘀 𝘁𝗵𝗲 𝗴𝗿𝗼𝘂𝗽 𝗵𝗮𝘀 𝗹𝗲𝘀𝘀 𝘁𝗵𝗮𝗻 15 𝗺𝗲𝗺𝗯𝗲𝗿𝘀. 🌱"
         leave_photo_url = "https://i.ibb.co/0B6KsPm/photo-2024-10-25-11-14-35.jpg"
         await send_photo_message(message.chat.id, leave_note, leave_photo_url)
         await client.leave_chat(message.chat.id)
