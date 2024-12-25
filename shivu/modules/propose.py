@@ -90,7 +90,7 @@ async def propose_command(_: bot, message: t.Message):
         )
 
     # Group restriction check
-    allowed_group_id = -1002466950912  # Replace with your group ID
+    allowed_group_id = -1002261317132  # Replace with your group ID
     if chat_id != allowed_group_id:
         return await message.reply_text("⚠️ This command only works in @Dyna_community")
 
