@@ -1,95 +1,63 @@
 from telegram import Update
-from telegram.ext import CallbackContext, CommandHandler
-from shivu import application, top_global_groups_collection, user_collection
+from telegram.ext import CallbackContext, CommandHandler 
 
-OWNER_ID = 6835013483
+from shivu import application, top_global_groups_collection, DEV_LIST 
+from shivu.modules.start import collection as pm_users
+
 
 
 async def broadcast(update: Update, context: CallbackContext) -> None:
-    """Broadcast a message based on command arguments."""
-    if update.effective_user.id != OWNER_ID:
-        await update.message.reply_text("You are not authorized to use this command.")
+    user_id = update.effective_user.id
+    if user_id not in DEV_LIST:
+        await update.message.reply_text("Access Denied!")
+        return
+
+    if not context.args:
+        await update.message.reply_text("Usage: /broadcast -chat|-user|-all")
+        return
+    
+    target = context.args[0]
+
+    if target not in ["-chat", "-user", "-all"]:
+        await update.message.reply_text("Invalid target specified. Use -chat, -user, or -all.")
         return
 
     message_to_broadcast = update.message.reply_to_message
+
     if message_to_broadcast is None:
         await update.message.reply_text("Please reply to a message to broadcast.")
         return
+    
 
-    # Extract command arguments
-    args = context.args
-    if not args:
-        await update.message.reply_text(
-            "Please specify the broadcast type:\n"
-            "`/broadcast -user` for users only\n"
-            "`/broadcast -group` for groups only\n"
-            "`/broadcast -both` for both users and groups\n"
-            "`/broadcast -pin` for groups with pinning",
-            parse_mode="Markdown",
-        )
-        return
 
-    all_groups = await top_global_groups_collection.distinct("group_id")
-    all_users = await user_collection.distinct("id")
+    all_chats = await top_global_groups_collection.distinct("group_id")
+    all_users = await pm_users.distinct("_id")
 
-    # Determine broadcast type
-    option = args[0].lower()
     targets = []
-    target_type = ""
-
-    if option == "-user":
+    if target == "-chat":
+        targets = all_chats
+    elif target == "-user":
         targets = all_users
-        target_type = "Users"
-    elif option == "-group":
-        targets = all_groups
-        target_type = "Groups"
-    elif option == "-both":
-        targets = list(set(all_users + all_groups))
-        target_type = "Both Users and Groups"
-    elif option == "-pin":
-        targets = all_groups
-        target_type = "Groups (with Pin)"
-    else:
-        await update.message.reply_text(
-            "Invalid option. Use:\n"
-            "`/broadcast -user` for users only\n"
-            "`/broadcast -group` for groups only\n"
-            "`/broadcast -both` for both users and groups\n"
-            "`/broadcast -pin` for groups with pinning",
-            parse_mode="Markdown",
-        )
-        return
+    elif target == "-all":
+        targets = list(set(all_chats + all_users))
 
-    # Start broadcasting
     failed_sends = 0
-    success_sends = 0
+    success = 0
 
-    for target in targets:
+    await update.message.reply_text("Broadcasting...Please Wait")
+    for chat_id in targets:
         try:
-            sent_message = await context.bot.forward_message(
-                chat_id=target,
+            await context.bot.forward_message(
+                chat_id=chat_id,
                 from_chat_id=message_to_broadcast.chat_id,
-                message_id=message_to_broadcast.message_id,
+                message_id=message_to_broadcast.message_id
             )
-            success_sends += 1
-
-            if option == "-pin":
-                try:
-                    await context.bot.pin_chat_message(chat_id=target, message_id=sent_message.message_id)
-                except Exception as e:
-                    print(f"Failed to pin message in {target}: {e}")
-
+            success +=1
         except Exception as e:
-            print(f"Failed to send message to {target}: {e}")
             failed_sends += 1
 
-    await update.message.reply_text(
-        f"Broadcast complete to {target_type}.\n\n"
-        f"✅ Successfully sent to: {success_sends}\n"
-        f"❌ Failed to send to: {failed_sends}\n"
-        f"Total: {len(targets)}"
-    )
-
-
-# Register the command handler
+    await update.message.reply_text(f"""Broadcast completed.
+Succeed: {success}
+Failed: {failed_sends}""")
+    
 application.add_handler(CommandHandler("broadcast", broadcast, block=False))
