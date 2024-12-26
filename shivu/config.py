@@ -16,7 +16,7 @@ class Development:
     SUPPORT_CHAT = "Dyna_community"
     UPDATE_CHAT = "Seizer_update"
     BOT_USERNAME = "Character_seize_bot"
-    OWNER_ID = "6402009857"
+    OWNER_ID = "6835013483"
     sudo_users = [
         "6402009857", "7004889403", "1135445089", "5158013355", "5630057244", 
         "1374057577", "6305653111", "5421067814", "7497950160", "7334126640", 
