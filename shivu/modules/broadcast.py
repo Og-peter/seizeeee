@@ -1,14 +1,14 @@
 from telegram import Update
 from telegram.ext import CallbackContext, CommandHandler 
 
-from shivu import application, top_global_groups_collection, DEV_LIST 
+from shivu import application, top_global_groups_collection, SPECIALGRADE
 from shivu.modules.start import collection as pm_users
 
 
 
 async def broadcast(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
-    if user_id not in DEV_LIST:
+    if user_id not in SPECIALGRADE:
         await update.message.reply_text("Access Denied!")
         return
 
