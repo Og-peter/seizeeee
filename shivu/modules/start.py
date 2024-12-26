@@ -2,8 +2,9 @@ import asyncio
 from html import escape
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackContext, CommandHandler, CallbackQueryHandler
+from shivu import db, GROUP_ID, OWNER_ID 
 from shivu import application, GROUP_ID, user_collection
-
+collection = db['total_pm_users']
 # Define your sudo users' IDs here
 sudo_user_ids = [6402009857]  # Replace with actual user IDs of the sudo users
 SUPPORT_GROUP_ID = "@Dyna_community"  # Replace with the actual group username or ID
