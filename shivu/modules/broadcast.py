@@ -7,14 +7,23 @@ import asyncio
 async def broadcast(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
 
-    # Debugging user_id and SPECIALGRADE
-    if user_id not in SPECIALGRADE:
+    # Debugging user_id and SPECIALGRADE types
+    print(f"user_id: {user_id}, type: {type(user_id)}")
+    print(f"SPECIALGRADE: {SPECIALGRADE}, types: {[type(id) for id in SPECIALGRADE]}")
+
+    # Ensure both user_id and SPECIALGRADE elements are integers
+    if isinstance(user_id, str):
+        user_id = int(user_id)
+    SPECIALGRADE_INT = [int(uid) for uid in SPECIALGRADE]
+
+    if user_id not in SPECIALGRADE_INT:
         await update.message.reply_text(
             f"Access Denied! Your user ID: {user_id}. "
-            f"Authorized users: {SPECIALGRADE}"
+            f"Authorized users: {SPECIALGRADE_INT}"
         )
         return
 
+    # Rest of the code remains unchanged
     if not context.args:
         await update.message.reply_text("Usage: /broadcast -chat|-user|-all")
         return
