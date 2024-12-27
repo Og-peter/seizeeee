@@ -27,13 +27,19 @@ def is_valid_url(url: str) -> bool:
 
 async def get_next_sequence_number(sequence_name: str) -> int:
     """Generate the next sequence number for a given sequence name in the database."""
-    sequence_document = await collection.find_one_and_update(
-        {"_id": sequence_name},
-        {"$inc": {"sequence_value": 1}},
-        upsert=True,
-        return_document=True
-    )
-    return sequence_document["sequence_value"]
+    try:
+        sequence_document = await collection.find_one_and_update(
+            {"_id": sequence_name},
+            {"$inc": {"sequence_value": 1}},
+            upsert=True,
+            return_document=True
+        )
+        if not sequence_document:  # Handle NoneType
+            sequence_document = {"sequence_value": 1}
+        return sequence_document.get("sequence_value", 1)
+    except Exception as e:
+        print(f"Error fetching sequence number: {e}")
+        return 1
 
 async def add_anime(update: Update, context: CallbackContext) -> None:
     """Handler for the /addanime command."""
