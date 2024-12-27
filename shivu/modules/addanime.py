@@ -26,6 +26,16 @@ def is_valid_url(url: str) -> bool:
     )
     return bool(regex.match(url))
 
+async def get_next_sequence_number(sequence_name: str) -> int:
+    """Generate the next sequence number for a given sequence name in the database."""
+    sequence_document = await collection.find_one_and_update(
+        {"_id": sequence_name},
+        {"$inc": {"sequence_value": 1}},
+        upsert=True,
+        return_document=True
+    )
+    return sequence_document["sequence_value"]
+
 async def add_anime(update: Update, context: CallbackContext) -> None:
     """Handler for the /addanime command."""
     if str(update.effective_user.id) not in sudo_users:
