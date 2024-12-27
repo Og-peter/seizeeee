@@ -1,7 +1,6 @@
 import urllib.request
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, MessageHandler, filters, CallbackContext
-
 from shivu import application, sudo_users, collection, SUPPORT_CHAT
 
 # A global cache for anime data
@@ -38,7 +37,7 @@ async def add_anime(update: Update, context: CallbackContext) -> None:
         try:
             urllib.request.urlopen(post_url)
             urllib.request.urlopen(img_url)
-        except:
+        except Exception:
             await update.message.reply_text("One or more provided URLs are invalid. Please check and try again.")
             return
 
@@ -123,8 +122,9 @@ async def get_anime(update: Update, context: CallbackContext) -> None:
 # Handler registration
 ADD_ANIME_HANDLER = CommandHandler("addanime", add_anime, block=False)
 RELOAD_HANDLER = CommandHandler("reload", reload_anime_data, block=False)
-ANIME_FETCH_HANDLER = MessageHandler(filters.TEXT & ~filters.Command, get_anime, block=False)
+ANIME_FETCH_HANDLER = MessageHandler(filters.TEXT & ~filters.COMMAND, get_anime, block=False)
 
+# Adding handlers to the application
 application.add_handler(ADD_ANIME_HANDLER)
 application.add_handler(RELOAD_HANDLER)
 application.add_handler(ANIME_FETCH_HANDLER)
