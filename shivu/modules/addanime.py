@@ -34,11 +34,21 @@ async def add_anime(update: Update, context: CallbackContext) -> None:
         img_url = args[2]
 
         # Validate URLs
-        try:
-            urllib.request.urlopen(post_url)
-            urllib.request.urlopen(img_url)
-        except Exception:
-            await update.message.reply_text("One or more provided URLs are invalid. Please check and try again.")
+        def is_valid_url(url: str) -> bool:
+            """Check if a URL is valid."""
+            if url.startswith("https://t.me/"):  # Skip validation for Telegram links
+                return True
+            try:
+                urllib.request.urlopen(url)
+                return True
+            except Exception:
+                return False
+
+        if not (is_valid_url(post_url) and is_valid_url(img_url)):
+            await update.message.reply_text(
+                "One or more provided URLs are invalid or unreachable. "
+                "Ensure both URLs are correct and accessible, then try again."
+            )
             return
 
         # Generate unique anime ID
