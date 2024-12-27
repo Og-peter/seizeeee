@@ -1,3 +1,4 @@
+import re
 import urllib.request
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, MessageHandler, filters, CallbackContext
@@ -15,6 +16,15 @@ Ensure:
 - img_url: Direct URL to an image of the anime.
 
 Please try again."""
+
+def is_valid_url(url: str) -> bool:
+    """Check if a URL is valid by pattern matching."""
+    regex = re.compile(
+        r'^(https?://)'  # http:// or https://
+        r'(([A-Za-z0-9-]+\.)+[A-Za-z]{2,})'  # Domain name
+        r'(/[A-Za-z0-9-._~:/?#@!$&\'()*+,;=]*)?$'  # Path
+    )
+    return bool(regex.match(url))
 
 async def add_anime(update: Update, context: CallbackContext) -> None:
     """Handler for the /addanime command."""
@@ -34,20 +44,9 @@ async def add_anime(update: Update, context: CallbackContext) -> None:
         img_url = args[2]
 
         # Validate URLs
-        def is_valid_url(url: str) -> bool:
-            """Check if a URL is valid."""
-            if url.startswith("https://t.me/"):  # Skip validation for Telegram links
-                return True
-            try:
-                urllib.request.urlopen(url)
-                return True
-            except Exception:
-                return False
-
         if not (is_valid_url(post_url) and is_valid_url(img_url)):
             await update.message.reply_text(
-                "One or more provided URLs are invalid or unreachable. "
-                "Ensure both URLs are correct and accessible, then try again."
+                "One or more provided URLs are invalid. Ensure both URLs are properly formatted and try again."
             )
             return
 
