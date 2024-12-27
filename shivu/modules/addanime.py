@@ -123,7 +123,7 @@ async def get_anime(update: Update, context: CallbackContext) -> None:
 # Handler registration
 ADD_ANIME_HANDLER = CommandHandler("addanime", add_anime, block=False)
 RELOAD_HANDLER = CommandHandler("reload", reload_anime_data, block=False)
-ANIME_FETCH_HANDLER = MessageHandler(Filters.text & ~Filters.command, get_anime, block=False)
+ANIME_FETCH_HANDLER = MessageHandler(filters.text & ~filters.command, get_anime, block=False)
 
 application.add_handler(ADD_ANIME_HANDLER)
 application.add_handler(RELOAD_HANDLER)
