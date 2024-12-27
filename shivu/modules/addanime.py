@@ -1,6 +1,6 @@
 import urllib.request
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import CommandHandler, MessageHandler, filters, CallbackContext
 
 from shivu import application, sudo_users, collection, SUPPORT_CHAT
 
