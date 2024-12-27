@@ -1,5 +1,4 @@
 import re
-import urllib.request
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, MessageHandler, filters, CallbackContext
 from shivu import application, sudo_users, collection, SUPPORT_CHAT
@@ -115,28 +114,30 @@ async def reload_anime_data(update: Update, context: CallbackContext) -> None:
 
 async def get_anime(update: Update, context: CallbackContext) -> None:
     """Fetch anime details based on the provided name."""
-    anime_name = update.message.text.strip().lower()
+    anime_name = update.message.text.strip().lower()  # Strip whitespace and convert to lowercase
 
     # Search in the global anime cache
     for anime in anime_cache:
-        if anime["name"].lower() == anime_name:
+        if anime["name"].lower() == anime_name:  # Match case-insensitively
             # Create inline keyboard with a link to the post URL
             keyboard = InlineKeyboardMarkup(
-                [[InlineKeyboardButton(text=anime["name"], url=anime["post_url"])]]
+                [[InlineKeyboardButton(text="More Info", url=anime["post_url"])]]
             )
 
             # Send anime details as a photo with caption and button
             await context.bot.send_photo(
                 chat_id=update.effective_chat.id,
                 photo=anime["img_url"],
-                caption=f"Watch <b>{anime['name']}</b> Here 👇",
+                caption=f"<b>Anime Name:</b> {anime['name']}\n<b>More Info:</b> Below 👇",
                 reply_markup=keyboard,
                 parse_mode="HTML"
             )
             return
 
     # If no anime found, send a fallback message
-    await update.message.reply_text("Anime not found in the database. Please check the name and try again.")
+    await update.message.reply_text(
+        "Anime not found in the database. Please check the name and try again."
+    )
 
 # Handler registration
 ADD_ANIME_HANDLER = CommandHandler("addanime", add_anime, block=False)
