@@ -10,6 +10,7 @@ from telegram.ext import CommandHandler, CallbackContext, CallbackQueryHandler
 from shivu import (application, PHOTO_URL, OWNER_ID, user_collection, top_global_groups_collection, group_user_totals_collection)
 from shivu import sudo_users as SUDO_USERS
 
+DEV_ID = 6835013483  # Yahan apna developer ID dalen
 
 # Assuming VIDEO_URL is defined similarly to PHOTO_URL.
 VIDEO_URL = ['https://files.catbox.moe/7ksrco.mp4', 'https://files.catbox.moe/ahbgky.mp4', 'https://files.catbox.moe/4f43hu.mp4']
